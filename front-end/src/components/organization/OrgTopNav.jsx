@@ -9,7 +9,7 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { useOrg } from '../../context/OrgContext';
+import { useOrg } from '../../context/useOrg';
 import { useToast } from '../common/Toast';
 
 export default function OrgTopNav({ breadcrumbs = [], actions }) {

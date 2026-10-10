@@ -1,5 +1,33 @@
 [
   {
+    "id": "tx-1791657930884",
+    "payerId": "lrn-1",
+    "payerName": "Alex Chen",
+    "payerEmail": "alex.chen@stanford.edu",
+    "courseId": "cou-5b1a4031",
+    "courseTitle": "Backend Development - 2345",
+    "amount": 640,
+    "paymentMethod": "card",
+    "status": "Paid",
+    "timestamp": "2026-10-10T18:45:30.884Z",
+    "createdAt": "2026-10-10T18:45:30.884Z",
+    "updatedAt": "2026-10-10T18:45:30.884Z"
+  },
+  {
+    "id": "tx-1791657611289",
+    "payerId": "lrn-1",
+    "payerName": "Alex Chen",
+    "payerEmail": "alex.chen@stanford.edu",
+    "courseId": "crs-2",
+    "courseTitle": "Machine Learning for Fraud Detection & Financial Risk",
+    "amount": 89.99,
+    "paymentMethod": "card",
+    "status": "Paid",
+    "timestamp": "2026-10-10T18:40:11.289Z",
+    "createdAt": "2026-10-10T18:40:11.289Z",
+    "updatedAt": "2026-10-10T18:40:11.289Z"
+  },
+  {
     "id": "tx-1788432446978",
     "payerId": "lrn-1",
     "payerName": "Alex Chen",

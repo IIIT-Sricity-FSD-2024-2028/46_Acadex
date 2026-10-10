@@ -10,7 +10,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useOrg } from '../../context/OrgContext';
+import { useOrg } from '../../context/useOrg';
 
 export default function Instructors() {
   const { instructors } = useOrg();

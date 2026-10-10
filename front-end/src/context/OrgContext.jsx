@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
+import OrgContext from './orgContextInstance';
 
-const OrgContext = createContext();
 
 const defaultOrgInfo = {
   id: "org-101",
@@ -550,10 +550,3 @@ export function OrgProvider({ children }) {
   );
 }
 
-export function useOrg() {
-  const context = useContext(OrgContext);
-  if (!context) {
-    throw new Error('useOrg must be used within an OrgProvider');
-  }
-  return context;
-}

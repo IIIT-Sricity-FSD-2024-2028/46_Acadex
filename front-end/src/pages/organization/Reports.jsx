@@ -8,7 +8,7 @@ import {
   BarChart2
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useOrg } from '../../context/OrgContext';
+import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
 import { exportToCSV } from '../../utils/csvDownload';
 

@@ -19,6 +19,48 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 
+// The API, seeded data, and identity providers use a few names for the same
+// actor (for example, Learner/Student and Super Admin/SuperAdmin). Keep the
+// route decision independent of the exact spelling returned by a provider.
+const DASHBOARD_BY_ROLE = {
+  student: '/student/dashboard',
+  instructor: '/instructor/dashboard',
+  organization: '/org/dashboard',
+  admin: '/admin/dashboard',
+  superadmin: '/super-admin/dashboard',
+};
+
+function getDashboardForRole(role) {
+  const normalizedRole = String(role || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+
+  const canonicalRole = {
+    learner: 'student',
+    educator: 'instructor',
+    faculty: 'instructor',
+    org: 'organization',
+    superadmin: 'superadmin',
+  }[normalizedRole] || normalizedRole;
+
+  return DASHBOARD_BY_ROLE[canonicalRole];
+}
+
+function persistSession({ token, user = {}, fallbackRole, fallbackName, fallbackEmail }) {
+  const role = user.role || fallbackRole;
+
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('nexuspay_auth_token', token);
+  localStorage.setItem('user_id', user.id || '');
+  localStorage.setItem('nexuspay_active_role', role);
+  localStorage.setItem('user_role', role);
+  localStorage.setItem('user_name', user.name || fallbackName || '');
+  localStorage.setItem('user_email', user.email || fallbackEmail || '');
+
+  return getDashboardForRole(role);
+}
+
 export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -222,28 +264,25 @@ export default function SignIn() {
       const res = await api.auth.login(email.trim(), password, selectedRole);
 
       if (res && res.token) {
-        localStorage.setItem('auth_token', res.token);
-        localStorage.setItem('nexuspay_auth_token', res.token);
-        localStorage.setItem('user_id', res.user?.id || '');
-        localStorage.setItem('nexuspay_active_role', res.user?.role || selectedRole);
-        localStorage.setItem('user_role', res.user?.role || selectedRole);
-        localStorage.setItem('user_name', res.user?.name || demoAccounts[selectedRole].name);
-        localStorage.setItem('user_email', res.user?.email || email);
+        const dashboard = persistSession({
+          token: res.token,
+          user: res.user,
+          fallbackRole: selectedRole,
+          fallbackName: demoAccounts[selectedRole].name,
+          fallbackEmail: email,
+        });
 
-        const authenticatedRole = res.user?.role || selectedRole;
-        const redirectByRole = {
-          Student: '/student/dashboard',
-          Learner: '/student/dashboard',
-          Instructor: '/instructor/dashboard',
-          Educator: '/instructor/dashboard',
-          Organization: '/org/dashboard',
-          Admin: '/admin/dashboard',
-        };
+        if (!dashboard) {
+          throw new Error('Your account has an unsupported role. Please contact support.');
+        }
+
         setSuccessMsg(`Welcome back, ${res.user?.name || email}! Redirecting to your portal...`);
 
         setTimeout(() => {
-          navigate(redirectByRole[authenticatedRole] || '/student/dashboard');
+          navigate(dashboard, { replace: true });
         }, 600);
+      } else {
+        throw new Error('Authentication did not return a valid session. Please try again.');
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please verify credentials.');
@@ -259,13 +298,14 @@ export default function SignIn() {
     setError('');
     setSuccessMsg(`Signing in with Google as ${acc.name} (${acc.email})...`);
 
-    localStorage.setItem('auth_token', `jwt-google-${Date.now()}`);
-    localStorage.setItem('user_role', acc.role);
-    localStorage.setItem('user_name', acc.name);
-    localStorage.setItem('user_email', acc.email);
+    const dashboard = persistSession({
+      token: `jwt-google-${Date.now()}`,
+      user: acc,
+      fallbackRole: acc.role,
+    });
 
     setTimeout(() => {
-      navigate(acc.redirect);
+      navigate(dashboard || acc.redirect, { replace: true });
     }, 700);
   };
 
@@ -281,13 +321,15 @@ export default function SignIn() {
     setError('');
     setSuccessMsg(`Signing in with Google as ${customGoogleEmail}...`);
 
-    localStorage.setItem('auth_token', `jwt-google-${Date.now()}`);
-    localStorage.setItem('user_role', 'Student');
-    localStorage.setItem('user_name', customGoogleEmail.split('@')[0]);
-    localStorage.setItem('user_email', customGoogleEmail);
+    const dashboard = persistSession({
+      token: `jwt-google-${Date.now()}`,
+      fallbackRole: 'Student',
+      fallbackName: customGoogleEmail.split('@')[0],
+      fallbackEmail: customGoogleEmail,
+    });
 
     setTimeout(() => {
-      navigate('/student/dashboard');
+      navigate(dashboard, { replace: true });
     }, 700);
   };
 
@@ -298,13 +340,15 @@ export default function SignIn() {
     setError('');
     setSuccessMsg(`Authenticating via ${prov.university} (${prov.protocol})...`);
 
-    localStorage.setItem('auth_token', `jwt-saml-${Date.now()}`);
-    localStorage.setItem('user_role', prov.role);
-    localStorage.setItem('user_name', `${prov.university} Verified User`);
-    localStorage.setItem('user_email', prov.sampleEmail);
+    const dashboard = persistSession({
+      token: `jwt-saml-${Date.now()}`,
+      fallbackRole: prov.role,
+      fallbackName: `${prov.university} Verified User`,
+      fallbackEmail: prov.sampleEmail,
+    });
 
     setTimeout(() => {
-      navigate(prov.redirect);
+      navigate(dashboard || prov.redirect, { replace: true });
     }, 700);
   };
 

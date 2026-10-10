@@ -6,7 +6,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useOrg } from '../../context/OrgContext';
+import { useOrg } from '../../context/useOrg';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
 
 export default function Enrollments() {

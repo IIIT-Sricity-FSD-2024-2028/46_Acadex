@@ -34,13 +34,35 @@ export class AuthService {
     }
   }
 
+  private normalizeRole(role?: string) {
+    const value = String(role || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+    return ({
+      learner: 'student',
+      educator: 'instructor',
+      faculty: 'instructor',
+      org: 'organization',
+      superadmin: 'superadmin',
+    } as Record<string, string>)[value] || value;
+  }
+
+  private rolesMatch(accountRole: string, requestedRole?: string) {
+    if (!requestedRole) return true;
+
+    const account = this.normalizeRole(accountRole);
+    const requested = this.normalizeRole(requestedRole);
+
+    // The unified sign-in page exposes the platform-super-admin account under
+    // its Admin portal; the dedicated super-admin login still uses SuperAdmin.
+    return account === requested || (account === 'superadmin' && requested === 'admin');
+  }
+
   async login(dto: LoginDto) {
     this.ensurePasswordCriteria(dto.password);
     const user = await this.usersRepo.findOne({ email: dto.email });
     if (!user) {
       // If not in users repo, try matching in learners or instructors
       const learner = await this.learnersRepo.findOne({ email: dto.email });
-      if (learner) {
+      if (learner && this.rolesMatch('Student', dto.role)) {
         return {
           token: `jwt-token-${learner.id}-${Date.now()}`,
           user: {
@@ -54,6 +76,14 @@ export class AuthService {
         };
       }
       throw new UnauthorizedException('Invalid email or password credentials');
+    }
+
+    if (user.password && user.password !== dto.password) {
+      throw new UnauthorizedException('Invalid email or password credentials');
+    }
+
+    if (!this.rolesMatch(user.role as string, dto.role)) {
+      throw new UnauthorizedException('This account does not have access to the selected portal');
     }
 
     // Update lastLogin

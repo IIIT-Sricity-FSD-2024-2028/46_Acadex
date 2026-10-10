@@ -1,5 +1,20 @@
 [
   {
+    "id": "lrn-1791104380788",
+    "userId": "usr-1791104380784",
+    "name": "test student 1",
+    "email": "test@gmail.com",
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+    "learnerType": "Undergraduate",
+    "university": "Indian Institute of Information Technology Sricity",
+    "enrolledCourses": 0,
+    "overallProgress": 0,
+    "certificatesEarned": 0,
+    "status": "Active",
+    "createdAt": "2026-10-04T08:59:40.788Z",
+    "updatedAt": "2026-10-04T08:59:40.788Z"
+  },
+  {
     "id": "lrn-1",
     "name": "Alex Chen",
     "email": "alex.chen@stanford.edu",

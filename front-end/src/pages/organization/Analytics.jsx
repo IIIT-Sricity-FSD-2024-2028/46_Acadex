@@ -12,7 +12,7 @@ import {
   BarChart2
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useOrg } from '../../context/OrgContext';
+import { useOrg } from '../../context/useOrg';
 
 export default function Analytics() {
   const { courses, instructors, stats } = useOrg();

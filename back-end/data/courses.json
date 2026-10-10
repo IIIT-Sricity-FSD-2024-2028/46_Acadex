@@ -1,5 +1,56 @@
 [
   {
+    "title": "Backend Development - 2345",
+    "category": "Cloud Architecture",
+    "level": "Intermediate",
+    "instructorId": "inst-6",
+    "instructorName": "Amara Patel, David Kalu",
+    "leadInstructorName": "Amara Patel",
+    "instructors": [
+      {
+        "id": "inst-6",
+        "name": "Amara Patel",
+        "role": "Lead Instructor",
+        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
+        "specialization": "Data Engineering & Kafka"
+      },
+      {
+        "id": "inst-5",
+        "name": "David Kalu",
+        "role": "Co-Instructor",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+        "specialization": "Blockchain & Smart Contracts"
+      }
+    ],
+    "enrolledCount": 1,
+    "price": 650,
+    "revenue": 0,
+    "rating": 5,
+    "totalHours": "18h 30m",
+    "lessonsCount": 7,
+    "modulesCount": 2,
+    "status": "Published",
+    "thumbnail": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=80",
+    "description": "backend course covering NESTJS",
+    "modules": [
+      {
+        "id": "1",
+        "title": "Module 1: Introduction to Architecture Patterns",
+        "lessons": 3,
+        "duration": "2h 15m"
+      },
+      {
+        "id": "2",
+        "title": "Module 2: High Throughput Consensus & Failover",
+        "lessons": 4,
+        "duration": "3h 30m"
+      }
+    ],
+    "id": "cou-5b1a4031",
+    "createdAt": "2026-10-10T18:36:42.392Z",
+    "updatedAt": "2026-10-10T18:45:30.895Z"
+  },
+  {
     "title": "Reinforcement Learning ",
     "category": "Machine Learning",
     "level": "Intermediate",
@@ -246,7 +297,7 @@
     ],
     "level": "Advanced",
     "price": 99.99,
-    "enrolledCount": 142,
+    "enrolledCount": 143,
     "rating": 4.9,
     "status": "Published",
     "revenue": 14198,
@@ -282,7 +333,7 @@
       }
     ],
     "createdAt": "2026-02-15T10:00:00.000Z",
-    "updatedAt": "2026-08-22T10:00:00.000Z"
+    "updatedAt": "2026-10-10T18:40:11.300Z"
   },
   {
     "id": "crs-3",

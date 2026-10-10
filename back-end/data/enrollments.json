@@ -1,5 +1,35 @@
 [
   {
+    "id": "enr-1791657930890",
+    "learnerId": "lrn-1",
+    "learnerName": "Alex Chen",
+    "learnerEmail": "alex.chen@stanford.edu",
+    "learnerAvatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+    "courseId": "cou-5b1a4031",
+    "courseTitle": "Backend Development - 2345",
+    "enrolledDate": "2026-10-10",
+    "enrolledAt": "2026-10-10T18:45:30.890Z",
+    "progress": 0,
+    "status": "Active",
+    "createdAt": "2026-10-10T18:45:30.890Z",
+    "updatedAt": "2026-10-10T18:45:30.890Z"
+  },
+  {
+    "id": "enr-1791657611296",
+    "learnerId": "lrn-1",
+    "learnerName": "Alex Chen",
+    "learnerEmail": "alex.chen@stanford.edu",
+    "learnerAvatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+    "courseId": "crs-2",
+    "courseTitle": "Machine Learning for Fraud Detection & Financial Risk",
+    "enrolledDate": "2026-10-10",
+    "enrolledAt": "2026-10-10T18:40:11.296Z",
+    "progress": 0,
+    "status": "Active",
+    "createdAt": "2026-10-10T18:40:11.296Z",
+    "updatedAt": "2026-10-10T18:40:11.296Z"
+  },
+  {
     "id": "enr-1788420557191",
     "learnerId": "lrn-1",
     "learnerName": "Alex Chen",
