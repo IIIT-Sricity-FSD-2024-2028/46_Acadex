@@ -12,7 +12,7 @@ ExploreCoursesAssign
 */ 
 
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Bookmark, Clock, Search, Star } from 'lucide-react';
 
 const courses = [
@@ -62,6 +62,25 @@ export default function ExploreCoursesAssign() {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('popular');
   const [bookmarkedIds, setBookmarkedIds] = useState(['aws-solutions-architect']);
+
+  // useEffect Side Effect: Load persisted bookmarks from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('s20240010035_bookmarks');
+      if (saved) setBookmarkedIds(JSON.parse(saved));
+    } catch (e) {
+      console.warn('LocalStorage load error:', e);
+    }
+  }, []);
+
+  // useEffect Side Effect: Persist bookmarks whenever bookmarkedIds changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('s20240010035_bookmarks', JSON.stringify(bookmarkedIds));
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
+  }, [bookmarkedIds]);
 
   const toggleBookmark = (courseId) => setBookmarkedIds((ids) => ids.includes(courseId) ? ids.filter((id) => id !== courseId) : [...ids, courseId]);
   const toggleLevel = (level) => setSelectedLevels((levels) => levels.includes(level) ? levels.filter((item) => item !== level) : [...levels, level]);
@@ -118,6 +137,11 @@ All shared state is stored in the common parent component, ExploreCoursesAssign:
 - minRating — minimum course rating filter
 - sortBy — selected sorting option
 - bookmarkedIds — IDs of bookmarked courses
+
+useEffect / Side Effects
+- On initial component mount ([] dependency): reads saved bookmarked courses from localStorage.
+- On bookmarkedIds change ([bookmarkedIds] dependency): synchronizes bookmarked IDs into localStorage.
+- Demonstrates persistent browser storage side effects and synchronization across sessions.
 
 */
 

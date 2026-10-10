@@ -36,7 +36,7 @@ export default function ExploreCourses() {
   const [sortBy, setSortBy] = useState('popular');
   const [bookmarkedIds, setBookmarkedIds] = useState([]);
 
-  // Synchronize with URL search parameters (e.g. from Navbar search)
+  // useEffect 1: Synchronize with URL search parameters (e.g. from Navbar search)
   useEffect(() => {
     const q = searchParams.get('q') || searchParams.get('search') || '';
     const cat = searchParams.get('category') || 'All Subjects';
@@ -44,17 +44,39 @@ export default function ExploreCourses() {
     setSelectedCategory(cat);
   }, [searchParams]);
 
+  // useEffect 2: Fetch courses catalog from backend API on mount with cancellation pattern
   useEffect(() => {
+    let isMounted = true;
     api.courses.list()
       .then((res) => {
+        if (!isMounted) return;
         setCourses(Array.isArray(res) ? res : (res?.items || []));
         setLoading(false);
       })
       .catch((err) => {
+        if (!isMounted) return;
         console.error('Failed to fetch courses catalog:', err);
         setLoading(false);
       });
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // useEffect 3: Read bookmarked course wishlist from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nexuspay_student_wishlist');
+      if (saved) setBookmarkedIds(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
+
+  // useEffect 4: Persist bookmarked courses to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem('nexuspay_student_wishlist', JSON.stringify(bookmarkedIds));
+    } catch (e) {}
+  }, [bookmarkedIds]);
 
   const toggleBookmark = (id) => {
     setBookmarkedIds((prev) => {

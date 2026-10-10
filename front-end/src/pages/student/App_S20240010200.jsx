@@ -33,7 +33,7 @@ course cards, and lesson rows all depend on the same completion state.
 
 */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { CheckCircle2, Circle, Clock3, ListChecks, RotateCcw } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 
@@ -118,6 +118,25 @@ export default function StudyPlan() {
   const [completedLessonIds, setCompletedLessonIds] = useState(['payments-1']);
   const totalCount = useMemo(() => studyPlan.reduce((count, plan) => count + plan.lessons.length, 0), []);
 
+  // useEffect Side Effect: Load persisted study plan completions from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('s20240010200_studyplan');
+      if (saved) setCompletedLessonIds(JSON.parse(saved));
+    } catch (e) {
+      console.warn('LocalStorage load error:', e);
+    }
+  }, []);
+
+  // useEffect Side Effect: Persist completed lesson IDs to localStorage whenever state updates
+  useEffect(() => {
+    try {
+      localStorage.setItem('s20240010200_studyplan', JSON.stringify(completedLessonIds));
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
+  }, [completedLessonIds]);
+
   const toggleLesson = (lessonId) => {
     setCompletedLessonIds((ids) => ids.includes(lessonId) ? ids.filter((id) => id !== lessonId) : [...ids, lessonId]);
   };
@@ -141,5 +160,10 @@ Component responsibilities
 - StudyPlanSummary displays the weekly completion total and reset action.
 - PlanCard displays one course plan and calculates its progress.
 - LessonRow renders one lesson and reports completion changes to StudyPlan.
+
+useEffect / Side Effects
+- On component mount ([] dependency): loads persisted study plan progress from localStorage.
+- On completedLessonIds update ([completedLessonIds] dependency): serializes and saves progress to localStorage.
+- Demonstrates resilient browser lifecycle side effects and state synchronization.
 
 */

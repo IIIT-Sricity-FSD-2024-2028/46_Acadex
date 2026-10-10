@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   CreditCard, 
@@ -58,6 +58,32 @@ export default function Checkout() {
   });
 
   const [formErrors, setFormErrors] = useState({});
+
+  // useEffect Side Effect: Set dynamic document title and cleanup on unmount
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = `Enrollment Checkout - ${courseTitle} | NexusPay`;
+    return () => {
+      document.title = prevTitle;
+    };
+  }, [courseTitle]);
+
+  // useEffect Side Effect: Prepopulate student billing information from backend profile
+  useEffect(() => {
+    let isMounted = true;
+    api.student.getProfile('lrn-1')
+      .then((p) => {
+        if (!isMounted || !p) return;
+        setFormData((prev) => ({
+          ...prev,
+          cardName: prev.cardName || p.name || 'Alex Chen',
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleCardNumberChange = (e) => {
     let val = e.target.value.replace(/\D/g, '').slice(0, 16);

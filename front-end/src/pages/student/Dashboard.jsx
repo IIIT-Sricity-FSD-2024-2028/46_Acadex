@@ -47,7 +47,11 @@ export default function Dashboard() {
     } catch (e) {}
   };
 
+  // useEffect Side Effect: Concurrent API data fetch on mount with cancellation pattern
   useEffect(() => {
+    let isMounted = true;
+    document.title = 'Student Dashboard | NexusPay Learning';
+
     Promise.all([
       api.student.getProfile('lrn-1').catch(() => null),
       api.student.getEnrollments('lrn-1').catch(() => []),
@@ -55,6 +59,7 @@ export default function Dashboard() {
       api.student.getOrganizations().catch(() => []),
     ])
       .then(([p, e, c, o]) => {
+        if (!isMounted) return;
         setProfile(p || {
           name: 'Alex Chen',
           streakDays: 14,
@@ -71,9 +76,14 @@ export default function Dashboard() {
         setLoading(false);
       })
       .catch((err) => {
+        if (!isMounted) return;
         console.error('Failed to load student dashboard:', err);
         setLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleRequestJoinOrg = async () => {
