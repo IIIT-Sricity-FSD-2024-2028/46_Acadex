@@ -136,9 +136,15 @@ export const api = {
   courses: {
     list: (params = {}) => {
       const query = new URLSearchParams(params).toString();
-      return request(`/courses${query ? `?${query}` : ''}`);
+      return request(`/courses${query ? `?${query}` : ''}`).catch(() => {
+        return jsonDataClient.getCourses();
+      });
     },
-    get: (id) => request(`/courses/${id}`),
+    get: (id) =>
+      request(`/courses/${id}`).catch(() => {
+        const courses = jsonDataClient.getCourses();
+        return courses.find((c) => c.id === id || String(c.id) === String(id)) || courses[0];
+      }),
     create: (data) => request('/courses', { method: 'POST', body: data }),
     update: (id, data) => request(`/courses/${id}`, { method: 'PATCH', body: data }),
     delete: (id) => request(`/courses/${id}`, { method: 'DELETE' }),

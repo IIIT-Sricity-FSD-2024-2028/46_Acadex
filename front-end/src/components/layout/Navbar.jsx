@@ -199,6 +199,19 @@ export default function Navbar() {
     }
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('nexuspay_auth_token');
+    localStorage.removeItem('nexuspay_student_token');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('nexuspay_active_role');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_email');
+    addToast('Signed out successfully', 'info');
+    navigate('/signin?role=Student');
+  };
+
   // SaaS Coursera Style Sidebar Pages
   const learningPages = [
     { name: 'Dashboard', path: '/student', icon: LayoutDashboard },
@@ -471,10 +484,7 @@ export default function Navbar() {
 
                   <div className="pt-1 border-t border-slate-100">
                     <button
-                      onClick={() => {
-                        addToast('Logged out', 'info');
-                        navigate('/');
-                      }}
+                      onClick={handleSignOut}
                       className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -672,8 +682,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   setIsDrawerOpen(false);
-                  addToast('Signed out of demo session', 'info');
-                  navigate('/');
+                  handleSignOut();
                 }}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-200 hover:bg-red-100 text-red-700 text-xs font-bold transition-colors"
               >

@@ -276,10 +276,12 @@ export default function SignIn() {
           throw new Error('Your account has an unsupported role. Please contact support.');
         }
 
+        const fromPath = location.state?.from?.pathname ? `${location.state.from.pathname}${location.state.from.search || ''}` : null;
+        const targetPath = fromPath || dashboard;
         setSuccessMsg(`Welcome back, ${res.user?.name || email}! Redirecting to your portal...`);
 
         setTimeout(() => {
-          navigate(dashboard, { replace: true });
+          navigate(targetPath, { replace: true });
         }, 600);
       } else {
         throw new Error('Authentication did not return a valid session. Please try again.');
@@ -304,8 +306,11 @@ export default function SignIn() {
       fallbackRole: acc.role,
     });
 
+    const fromPath = location.state?.from?.pathname ? `${location.state.from.pathname}${location.state.from.search || ''}` : null;
+    const targetPath = fromPath || dashboard || acc.redirect;
+
     setTimeout(() => {
-      navigate(dashboard || acc.redirect, { replace: true });
+      navigate(targetPath, { replace: true });
     }, 700);
   };
 
@@ -328,8 +333,11 @@ export default function SignIn() {
       fallbackEmail: customGoogleEmail,
     });
 
+    const fromPath = location.state?.from?.pathname ? `${location.state.from.pathname}${location.state.from.search || ''}` : null;
+    const targetPath = fromPath || dashboard;
+
     setTimeout(() => {
-      navigate(dashboard, { replace: true });
+      navigate(targetPath, { replace: true });
     }, 700);
   };
 
@@ -347,8 +355,11 @@ export default function SignIn() {
       fallbackEmail: prov.sampleEmail,
     });
 
+    const fromPath = location.state?.from?.pathname ? `${location.state.from.pathname}${location.state.from.search || ''}` : null;
+    const targetPath = fromPath || dashboard || prov.redirect;
+
     setTimeout(() => {
-      navigate(dashboard || prov.redirect, { replace: true });
+      navigate(targetPath, { replace: true });
     }, 700);
   };
 

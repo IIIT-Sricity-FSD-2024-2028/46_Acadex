@@ -27,6 +27,7 @@ import StudentLearningPlayer from './pages/student/LearningPlayer';
 import StudentQuiz from './pages/student/Quiz';
 import StudentCertificates from './pages/student/Certificates';
 import StudentProfile from './pages/student/Profile';
+import StudentGuard from './components/student/layout/StudentGuard';
 
 // ──────────────────────────────────────────────────────────────
 // 2. INSTRUCTOR / EDUCATOR PAGES & LAYOUTS
@@ -153,37 +154,37 @@ export default function App() {
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 1. STUDENT / LEARNER ROUTES */}
       {/* ────────────────────────────────────────────────────────────── */}
-      <Route path="/student" element={<StudentDashboard />} />
-      <Route path="/student/dashboard" element={<StudentDashboard />} />
+      <Route path="/student" element={<StudentGuard><StudentDashboard /></StudentGuard>} />
+      <Route path="/student/dashboard" element={<StudentGuard><StudentDashboard /></StudentGuard>} />
       <Route path="/student/explore" element={<StudentExplore />} />
       <Route path="/student/explore-assignment" element={<ExploreCoursesAssign />} />
-      <Route path="/student/quiz-assignment" element={<QuizAssign />} />
-      <Route path="/student/study-plan" element={<StudentStudyPlan />} />
+      <Route path="/student/quiz-assignment" element={<StudentGuard><QuizAssign /></StudentGuard>} />
+      <Route path="/student/study-plan" element={<StudentGuard><StudentStudyPlan /></StudentGuard>} />
       <Route path="/student/course/:id" element={<StudentCourseDetails />} />
       <Route path="/student/course-details" element={<StudentCourseDetails />} />
-      <Route path="/student/checkout" element={<StudentCheckout />} />
-      <Route path="/student/payment-success" element={<StudentPaymentSuccess />} />
-      <Route path="/student/my-learning" element={<StudentMyLearning />} />
-      <Route path="/student/course-progress" element={<StudentCourseProgress />} />
-      <Route path="/student/course-progress/:courseId" element={<StudentCourseProgress />} />
-      <Route path="/student/player" element={<StudentLearningPlayer />} />
-      <Route path="/student/quiz" element={<StudentQuiz />} />
-      <Route path="/student/certificates" element={<StudentCertificates />} />
-      <Route path="/student/profile" element={<StudentProfile />} />
+      <Route path="/student/checkout" element={<StudentGuard><StudentCheckout /></StudentGuard>} />
+      <Route path="/student/payment-success" element={<StudentGuard><StudentPaymentSuccess /></StudentGuard>} />
+      <Route path="/student/my-learning" element={<StudentGuard><StudentMyLearning /></StudentGuard>} />
+      <Route path="/student/course-progress" element={<StudentGuard><StudentCourseProgress /></StudentGuard>} />
+      <Route path="/student/course-progress/:courseId" element={<StudentGuard><StudentCourseProgress /></StudentGuard>} />
+      <Route path="/student/player" element={<StudentGuard><StudentLearningPlayer /></StudentGuard>} />
+      <Route path="/student/quiz" element={<StudentGuard><StudentQuiz /></StudentGuard>} />
+      <Route path="/student/certificates" element={<StudentGuard><StudentCertificates /></StudentGuard>} />
+      <Route path="/student/profile" element={<StudentGuard><StudentProfile /></StudentGuard>} />
 
       {/* Student Direct Fallback Aliases */}
       <Route path="/explore" element={<StudentExplore />} />
-      <Route path="/my-learning" element={<StudentMyLearning />} />
-      <Route path="/player" element={<StudentLearningPlayer />} />
-      <Route path="/checkout" element={<StudentCheckout />} />
-      <Route path="/quiz" element={<StudentQuiz />} />
-      <Route path="/certificates" element={<StudentCertificates />} />
-      <Route path="/profile" element={<StudentProfile />} />
-      <Route path="/course-progress" element={<StudentCourseProgress />} />
-      <Route path="/course-progress/:courseId" element={<StudentCourseProgress />} />
+      <Route path="/my-learning" element={<StudentGuard><StudentMyLearning /></StudentGuard>} />
+      <Route path="/player" element={<StudentGuard><StudentLearningPlayer /></StudentGuard>} />
+      <Route path="/checkout" element={<StudentGuard><StudentCheckout /></StudentGuard>} />
+      <Route path="/quiz" element={<StudentGuard><StudentQuiz /></StudentGuard>} />
+      <Route path="/certificates" element={<StudentGuard><StudentCertificates /></StudentGuard>} />
+      <Route path="/profile" element={<StudentGuard><StudentProfile /></StudentGuard>} />
+      <Route path="/course-progress" element={<StudentGuard><StudentCourseProgress /></StudentGuard>} />
+      <Route path="/course-progress/:courseId" element={<StudentGuard><StudentCourseProgress /></StudentGuard>} />
       <Route path="/course/:id" element={<StudentCourseDetails />} />
       <Route path="/course-details" element={<StudentCourseDetails />} />
-      <Route path="/payment-success" element={<StudentPaymentSuccess />} />
+      <Route path="/payment-success" element={<StudentGuard><StudentPaymentSuccess /></StudentGuard>} />
 
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 2. INSTRUCTOR / EDUCATOR ROUTES */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { 
   Play, 
   Pause, 
@@ -37,6 +37,10 @@ import HumanAvatar from '../../components/common/HumanAvatar';
 export default function LearningPlayer() {
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const targetCourseId = location.state?.courseId || searchParams.get('courseId') || 'crs-1';
 
   const [course, setCourse] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -48,7 +52,7 @@ export default function LearningPlayer() {
   
   // Fetch course details and syllabus from backend API
   useEffect(() => {
-    api.courses.get('crs-1')
+    api.courses.get(targetCourseId)
       .then((res) => {
         if (res) setCourse(res);
       })
@@ -56,11 +60,12 @@ export default function LearningPlayer() {
         api.courses.list()
           .then((res) => {
             const list = Array.isArray(res) ? res : (res?.items || []);
-            if (list.length > 0) setCourse(list[0]);
+            const matched = list.find(c => c.id === targetCourseId) || list[0];
+            if (matched) setCourse(matched);
           })
           .catch(() => {});
       });
-  }, []);
+  }, [targetCourseId]);
   
   // Real-time video play timer simulation
   useEffect(() => {
@@ -685,7 +690,8 @@ export default function LearningPlayer() {
                 </div>
 
                 <Link
-                  to="/quiz"
+                  to="/student/quiz"
+                  state={{ courseId: course?.id || targetCourseId }}
                   className="p-2.5 rounded-xl text-tertiary font-bold hover:bg-tertiary-fixed/30 flex items-center justify-between transition-colors text-xs border border-tertiary/20 mt-2 block"
                 >
                   <span className="flex items-center gap-1.5">
@@ -706,7 +712,8 @@ export default function LearningPlayer() {
                   <span>Previous</span>
                 </button>
                 <Link
-                  to="/quiz"
+                  to="/student/quiz"
+                  state={{ courseId: course?.id || targetCourseId }}
                   className="flex-1 py-2 px-3 rounded-xl bg-primary text-white text-xs font-bold flex items-center justify-center gap-1 hover:bg-primary-container shadow-xs transition-all"
                 >
                   <span>Take Quiz</span>

@@ -5,7 +5,7 @@
 // =========================================================================================
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -139,7 +139,11 @@ const getCorrectAnswerIndex = (q) => {
 
 export default function Quiz() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { addToast } = useToast();
+
+  const targetCourseId = location.state?.courseId || searchParams.get('courseId') || 'crs-1';
   
   const [quizData, setQuizData] = useState(DEFAULT_COURSERA_QUIZ);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -152,11 +156,21 @@ export default function Quiz() {
   const [showExplanations, setShowExplanations] = useState(false);
 
   useEffect(() => {
+    // Reset answers and state whenever quiz mounts or courseId changes
+    setSelectedAnswers({});
+    setFlaggedQuestions([]);
+    setIsSubmitted(false);
+    setScore(0);
+    setCurrentIdx(0);
+
     api.quizzes.list()
       .then((res) => {
         const list = Array.isArray(res) ? res : (res?.items || []);
         if (list.length > 0) {
-          const active = list.find(q => q.id === 'qz-101') || list[0];
+          const active =
+            list.find(q => q.courseId === targetCourseId) ||
+            list.find(q => q.id === 'qz-101') ||
+            list[0];
           const hasQuestions = Array.isArray(active.questions) && active.questions.length > 0;
           setQuizData({
             ...DEFAULT_COURSERA_QUIZ,
@@ -164,12 +178,15 @@ export default function Quiz() {
             questions: hasQuestions ? active.questions : DEFAULT_COURSERA_QUIZ.questions,
             totalQuestions: hasQuestions ? active.questions.length : DEFAULT_COURSERA_QUIZ.totalQuestions,
           });
+          if (active.durationMinutes) {
+            setTimeLeft(active.durationMinutes * 60);
+          }
         }
       })
       .catch((err) => {
         console.warn('Using default Coursera assessment data:', err.message);
       });
-  }, []);
+  }, [targetCourseId]);
 
   // Timer countdown
   useEffect(() => {
@@ -194,14 +211,27 @@ export default function Quiz() {
   };
 
   const handleSelectOption = (optIdx) => {
-    setSelectedAnswers({ ...selectedAnswers, [currentIdx]: optIdx });
+    setSelectedAnswers(prev => ({ ...prev, [currentIdx]: optIdx }));
   };
 
   const handleClearSelection = () => {
-    const updated = { ...selectedAnswers };
-    delete updated[currentIdx];
-    setSelectedAnswers(updated);
+    setSelectedAnswers(prev => {
+      const updated = { ...prev };
+      delete updated[currentIdx];
+      return updated;
+    });
     addToast('Answer selection cleared', 'info');
+  };
+
+  const handleRetakeQuiz = () => {
+    setSelectedAnswers({});
+    setFlaggedQuestions([]);
+    setIsSubmitted(false);
+    setScore(0);
+    setCurrentIdx(0);
+    setTimeLeft(quizData.durationMinutes ? quizData.durationMinutes * 60 : 1500);
+    setShowExplanations(false);
+    addToast('Assessment reset. Good luck!', 'info');
   };
 
   const handleToggleFlag = () => {
@@ -326,10 +356,19 @@ export default function Quiz() {
                   </Link>
                   <Link
                     to="/student/course-progress"
+                    state={{ courseId: targetCourseId }}
                     className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
                   >
                     Return to Course Progress
                   </Link>
+                  <button
+                    type="button"
+                    onClick={handleRetakeQuiz}
+                    className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Retake Assessment</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setShowExplanations(!showExplanations)}
@@ -496,7 +535,7 @@ export default function Quiz() {
                     {/* Options list */}
                     <div className="space-y-3">
                       {getQuestionOptions(currentQ).map((opt, optIdx) => {
-                        const isSelected = selectedAnswers[currentIdx] === optIdx;
+                        const isSelected = selectedAnswers[currentIdx] !== undefined && selectedAnswers[currentIdx] === optIdx;
 
                         return (
                           <div
@@ -505,13 +544,13 @@ export default function Quiz() {
                             className={`p-4 rounded-xl border text-xs md:text-sm font-medium flex items-start gap-4 cursor-pointer transition-all ${
                               isSelected
                                 ? 'border-coursera bg-blue-50/60 text-slate-900 shadow-sm ring-1 ring-coursera font-semibold'
-                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-700'
+                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-700 bg-white'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                              isSelected ? 'border-coursera bg-coursera text-white' : 'border-slate-400 bg-white'
+                              isSelected ? 'border-coursera bg-coursera text-white' : 'border-slate-300 bg-white'
                             }`}>
-                              {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                              {isSelected ? <div className="w-2 h-2 rounded-full bg-white"></div> : null}
                             </div>
                             <span className="leading-relaxed">{opt}</span>
                           </div>
