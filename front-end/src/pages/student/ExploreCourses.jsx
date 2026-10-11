@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { 
-  Search, 
   Sparkles,
   X,
   SlidersHorizontal,
@@ -102,19 +101,6 @@ export default function ExploreCourses() {
     setSearchParams(newParams);
   };
 
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    const newParams = new URLSearchParams(searchParams);
-    if (val.trim()) {
-      newParams.set('q', val);
-    } else {
-      newParams.delete('q');
-      newParams.delete('search');
-    }
-    setSearchParams(newParams);
-  };
-
   const handleClearSearch = () => {
     setSearchQuery('');
     setSelectedCategory('All Subjects');
@@ -166,40 +152,35 @@ export default function ExploreCourses() {
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 tracking-tight">
               Explore Masterclass Tracks
             </h1>
-            <p className="text-blue-100 text-xs md:text-sm leading-relaxed mb-6 font-normal max-w-2xl">
+            <p className="text-blue-100 text-xs md:text-sm leading-relaxed font-normal max-w-2xl">
               Discover accredited enterprise architecture, distributed payments, AI, and cybersecurity courses taught by industry principal faculty.
             </p>
-
-            <form onSubmit={(e) => e.preventDefault()} className="relative max-w-xl">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-blue-200 pointer-events-none" />
-              <input
-                type="text"
-                autoComplete="off"
-                spellCheck="false"
-                placeholder="Search courses, instructors, or topics (e.g. Distributed, Kafka, AWS)..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full pl-11 pr-10 py-3 bg-white/15 backdrop-blur-md border border-white/25 rounded-xl text-xs md:text-sm text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all shadow-inner"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    const newParams = new URLSearchParams(searchParams);
-                    newParams.delete('q');
-                    newParams.delete('search');
-                    setSearchParams(newParams);
-                  }}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white transition-colors"
-                  title="Clear search"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </form>
           </div>
         </section>
+
+        {/* Active Search Filter indicator from Navbar Search */}
+        {searchQuery && (
+          <div className="flex items-center gap-2 -mb-4">
+            <span className="text-xs text-slate-500 font-medium">Search result:</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 text-coursera rounded-full text-xs font-bold shadow-xs">
+              "{searchQuery}"
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete('q');
+                  newParams.delete('search');
+                  setSearchParams(newParams);
+                }}
+                className="hover:text-red-600 transition-colors ml-0.5 p-0.5"
+                title="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          </div>
+        )}
 
         {/* Filter Categories Bar (Horizontal Pills) - Words Stay Black In All States */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
