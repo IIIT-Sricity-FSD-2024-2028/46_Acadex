@@ -134,6 +134,8 @@ export default function MyLearning() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
             <input
               type="text"
+              autoComplete="off"
+              spellCheck="false"
               placeholder="Search my enrolled courses..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

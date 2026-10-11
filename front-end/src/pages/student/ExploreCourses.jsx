@@ -126,7 +126,11 @@ export default function ExploreCourses() {
   };
 
   const filteredCourses = useMemo(() => {
+    const seen = new Set();
     return courses.filter((course) => {
+      const key = (course.id || course.title || '').toLowerCase().trim();
+      if (!key || seen.has(key)) return false;
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase().trim();
         const matchesTitle = course.title?.toLowerCase().includes(query);
@@ -138,6 +142,7 @@ export default function ExploreCourses() {
       if (selectedCategory !== 'All Subjects' && course.category !== selectedCategory) {
         return false;
       }
+      seen.add(key);
       return true;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return (a.price || 0) - (b.price || 0);
@@ -165,10 +170,12 @@ export default function ExploreCourses() {
               Discover accredited enterprise architecture, distributed payments, AI, and cybersecurity courses taught by industry principal faculty.
             </p>
 
-            <div className="relative max-w-xl">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-blue-200" />
+            <form onSubmit={(e) => e.preventDefault()} className="relative max-w-xl">
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-blue-200 pointer-events-none" />
               <input
                 type="text"
+                autoComplete="off"
+                spellCheck="false"
                 placeholder="Search courses, instructors, or topics (e.g. Distributed, Kafka, AWS)..."
                 value={searchQuery}
                 onChange={handleSearchChange}
@@ -176,6 +183,7 @@ export default function ExploreCourses() {
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => {
                     setSearchQuery('');
                     const newParams = new URLSearchParams(searchParams);
@@ -189,11 +197,11 @@ export default function ExploreCourses() {
                   <X className="w-4 h-4" />
                 </button>
               )}
-            </div>
+            </form>
           </div>
         </section>
 
-        {/* Filter Categories Bar (Horizontal Pills) */}
+        {/* Filter Categories Bar (Horizontal Pills) - Words Stay Black In All States */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {categories.map((cat) => {
             const isActive = selectedCategory === cat;
@@ -202,10 +210,10 @@ export default function ExploreCourses() {
                 key={cat}
                 type="button"
                 onClick={() => handleCategorySelect(cat)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-xs ${
+                className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition-all shadow-xs ${
                   isActive
-                    ? 'bg-coursera text-white shadow-sm ring-1 ring-coursera'
-                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80 hover:text-coursera'
+                    ? 'bg-blue-100 text-black border-2 border-blue-600 shadow-sm ring-2 ring-blue-500/20 font-black'
+                    : 'bg-white text-black hover:bg-slate-100 border border-slate-200/90 font-semibold'
                 }`}
               >
                 {cat}

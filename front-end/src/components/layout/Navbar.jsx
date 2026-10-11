@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Search, 
@@ -100,7 +100,14 @@ export default function Navbar() {
   const { addToast } = useToast();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || params.get('search') || '';
+    } catch {
+      return '';
+    }
+  });
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -139,6 +146,15 @@ export default function Navbar() {
       .catch(() => {});
   }, []);
 
+  // Sync search query with URL params so what was typed stays in the search bar
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q') || params.get('search') || '';
+    if (q) {
+      setSearchQuery(q);
+    }
+  }, [location.search]);
+
   // Close search suggestions on outside click
   useEffect(() => {
     function handleClickOutside(event) {
@@ -162,25 +178,37 @@ export default function Navbar() {
     };
   }, [isDrawerOpen]);
 
-  const searchSuggestions = (searchQuery.trim().length > 0)
-    ? coursesData.filter(c => {
-        const q = searchQuery.toLowerCase().trim();
-        return (
-          c.title?.toLowerCase().includes(q) ||
-          c.category?.toLowerCase().includes(q) ||
-          c.description?.toLowerCase().includes(q) ||
-          c.institution?.toLowerCase().includes(q) ||
-          c.instructorName?.toLowerCase().includes(q) ||
-          c.leadInstructorName?.toLowerCase().includes(q)
-        );
-      }).slice(0, 5)
-    : [];
+  // Deduplicate suggestions so no course is shown 2 times
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const seen = new Set();
+    return coursesData.filter(c => {
+      const key = (c.id || c.title || '').toLowerCase().trim();
+      if (!key || seen.has(key)) return false;
+      const matches = (
+        c.title?.toLowerCase().includes(q) ||
+        c.category?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q) ||
+        c.institution?.toLowerCase().includes(q) ||
+        c.instructorName?.toLowerCase().includes(q) ||
+        c.leadInstructorName?.toLowerCase().includes(q)
+      );
+      if (matches) {
+        seen.add(key);
+        return true;
+      }
+      return false;
+    }).slice(0, 5);
+  }, [coursesData, searchQuery]);
 
   const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/student/explore?q=${encodeURIComponent(searchQuery)}`);
+    e?.preventDefault();
+    const q = searchQuery.trim();
+    if (q) {
+      navigate(`/student/explore?q=${encodeURIComponent(q)}`);
       setShowSearchResults(false);
+      // Retains searchQuery in state so what we typed stays in the search bar
     }
   };
 
@@ -311,6 +339,8 @@ export default function Navbar() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-coursera transition-colors pointer-events-none" />
               <input
                 type="text"
+                autoComplete="off"
+                spellCheck="false"
                 placeholder="Search courses, skills, topics (e.g. AWS, Microservices, Python)..."
                 value={searchQuery}
                 onChange={(e) => {

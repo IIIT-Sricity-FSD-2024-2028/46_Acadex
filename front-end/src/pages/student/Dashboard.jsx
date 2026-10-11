@@ -454,6 +454,8 @@ export default function Dashboard() {
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
+                autoComplete="off"
+                spellCheck="false"
                 placeholder="Search university or organization..."
                 value={orgSearchQuery}
                 onChange={(e) => setOrgSearchQuery(e.target.value)}
