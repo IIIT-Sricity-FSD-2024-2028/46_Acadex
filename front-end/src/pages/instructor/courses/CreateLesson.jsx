@@ -1,24 +1,46 @@
 import { Card, CardContent } from "../../../components/instructor/ui/Card";
 import { Button } from "../../../components/instructor/ui/Button";
 import { Input } from "../../../components/instructor/ui/Input";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PlayCircle, FileText, UploadCloud, Paperclip } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
 
 export function CreateLesson() {
   const navigate = useNavigate();
+  const { id: paramId } = useParams();
+  const [searchParams] = useSearchParams();
+  const courseId = paramId || searchParams.get('courseId') || '1';
+
   const [lessonType, setLessonType] = useState('video');
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(10);
   const [saving, setSaving] = useState(false);
 
+  // Track the actual uploaded file
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadedFile(e.target.files[0]);
+    }
+  };
+
+  const formatBytes = (bytes) => {
+    if (!bytes) return '';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const handleSave = () => {
     if (!title.trim()) return;
     setSaving(true);
 
-    api.get("/courses/1", "instructor")
+    api.get(`/courses/${courseId}`, "instructor")
       .then((course) => {
         const currentModules = course.modules || [];
         if (currentModules.length > 0) {
@@ -28,18 +50,18 @@ export function CreateLesson() {
             type: lessonType === 'video' ? 'Video' : 'Reading',
             title,
             duration: Number(duration) || 10,
-            fileName: lessonType === 'video' ? 'lesson_video.mp4' : 'lesson_reading.pdf',
-            fileSize: '15.4 MB',
+            fileName: uploadedFile ? uploadedFile.name : '',
+            fileSize: uploadedFile ? formatBytes(uploadedFile.size) : '',
             url: '',
           };
           firstMod.items = [...(firstMod.items || []), newItem];
         }
-        return api.patch("/courses/1", {
+        return api.patch(`/courses/${courseId}`, {
           modules: currentModules,
         }, "instructor");
       })
       .then(() => {
-        navigate("/instructor/courses/1/content");
+        navigate(`/instructor/courses/${courseId}/content`);
       })
       .catch((err) => {
         console.error("Error creating lesson:", err);
@@ -105,10 +127,29 @@ export function CreateLesson() {
                     value={duration} 
                     onChange={e => setDuration(e.target.value)} 
                   />
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-primary-500 hover:bg-primary-50/20 transition-all cursor-pointer">
-                    <UploadCloud className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-slate-900">Upload video file</p>
-                    <p className="text-xs text-slate-500 mt-1">MP4, MOV up to 2GB</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-navy-200 rounded-xl p-8 text-center hover:border-primary-500 hover:bg-primary-50/20 transition-all cursor-pointer"
+                  >
+                    <UploadCloud className="w-10 h-10 text-navy-400 mx-auto mb-2" />
+                    {uploadedFile ? (
+                      <>
+                        <p className="text-sm font-medium text-navy-900">{uploadedFile.name}</p>
+                        <p className="text-xs text-navy-500 mt-1">{formatBytes(uploadedFile.size)}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-navy-900">Upload video file</p>
+                        <p className="text-xs text-navy-500 mt-1">MP4, MOV up to 2GB</p>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -143,7 +184,7 @@ export function CreateLesson() {
                 <Button onClick={handleSave} disabled={saving} className="w-full">
                   {saving ? "Saving..." : "Save Lesson"}
                 </Button>
-                <Link to="/instructor/courses/1/content" className="w-full">
+                <Link to={`/instructor/courses/${courseId}/content`} className="w-full">
                   <Button variant="outline" className="w-full">Cancel</Button>
                 </Link>
               </div>

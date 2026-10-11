@@ -1,9 +1,31 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../../components/instructor/ui/Button";
 import { Input } from "../../../components/instructor/ui/Input";
 import { BookOpen } from "lucide-react";
 
 export function Login() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    setLoading(true);
+    // TODO: replace with real API call, e.g. api.post('/auth/login', { email, password }, 'instructor')
+    setTimeout(() => {
+      setLoading(false);
+      navigate("/instructor");
+    }, 600);
+  };
+
   return (
     <div className="flex w-full min-h-screen bg-white">
       {/* Left Form Side */}
@@ -22,7 +44,7 @@ export function Login() {
           </p>
 
           <div className="mt-8">
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleLogin}>
               <div>
                 <label className="block text-sm font-medium text-slate-700">
                   Email address
@@ -32,6 +54,8 @@ export function Login() {
                     type="email" 
                     placeholder="Enter your email" 
                     required 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -45,6 +69,8 @@ export function Login() {
                     type="password" 
                     placeholder="••••••••" 
                     required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
               </div>
@@ -69,10 +95,16 @@ export function Login() {
                 </div>
               </div>
 
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {error}
+                </p>
+              )}
+
               <div className="space-y-3">
-                <Link to="/instructor" className="w-full">
-                  <Button className="w-full" size="lg">Log In</Button>
-                </Link>
+                <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                  {loading ? "Logging in..." : "Log In"}
+                </Button>
                 
                 <Button variant="outline" className="w-full" size="lg">
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">

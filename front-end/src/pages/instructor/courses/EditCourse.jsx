@@ -277,7 +277,7 @@ export function EditCourse() {
       </Card>
 
       {/* Sticky Actions */}
-      <div className="fixed bottom-0 left-0  right-0 bg-white border-t border-slate-200 p-4 px-8 z-10 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0 lg:left-72 right-0 bg-white border-t border-navy-200 p-4 px-8 z-10 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-slate-500">Status:</span>
           <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded">
