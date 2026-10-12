@@ -282,7 +282,7 @@ function CertificateCard({ certificate, isBookmarked, onBookmarkToggle, onView }
         <button
           type="button"
           onClick={() => onView(certificate)}
-          className="px-4 py-2 rounded-lg bg-coursera hover:bg-primary text-white text-xs font-bold transition-all shadow-xs"
+          className="px-4 py-2 rounded-lg bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
         >
           Verify Credential
         </button>

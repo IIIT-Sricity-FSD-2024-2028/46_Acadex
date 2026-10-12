@@ -83,7 +83,7 @@ export default function QuestionCard({
       {/* Progress Bar Line */}
       <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
         <div 
-          className="h-full bg-coursera rounded-full transition-all duration-500"
+          className="h-full bg-[#0056D2] rounded-full transition-all duration-500"
           style={{ width: `${progressPercent}%` }}
         ></div>
       </div>
@@ -106,12 +106,12 @@ export default function QuestionCard({
                   onClick={() => onSelectOption(optIdx)}
                   className={`p-4 rounded-xl border text-xs md:text-sm font-medium flex items-start gap-4 cursor-pointer transition-all ${
                     isSelected
-                      ? 'border-coursera bg-blue-50/60 text-slate-900 shadow-sm ring-1 ring-coursera font-semibold'
+                      ? 'border-[#0056D2] bg-blue-50/70 text-slate-900 shadow-sm ring-1 ring-[#0056D2] font-semibold'
                       : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-700 bg-white'
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                    isSelected ? 'border-coursera bg-coursera text-white' : 'border-slate-300 bg-white'
+                    isSelected ? 'border-[#0056D2] bg-[#0056D2] text-white' : 'border-slate-300 bg-white'
                   }`}>
                     {isSelected ? <div className="w-2 h-2 rounded-full bg-white"></div> : null}
                   </div>
@@ -147,7 +147,7 @@ export default function QuestionCard({
               <button
                 type="button"
                 onClick={onNext}
-                className="px-6 py-2.5 rounded-lg bg-coursera hover:bg-primary text-white font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-6 py-2.5 rounded-lg bg-[#0056D2] hover:bg-[#00419E] text-white font-semibold text-xs shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
               >
                 <span>Next</span>
                 <ArrowRight className="w-3.5 h-3.5" />

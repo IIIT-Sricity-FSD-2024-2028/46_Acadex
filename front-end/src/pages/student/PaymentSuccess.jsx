@@ -19,7 +19,7 @@ export default function PaymentSuccess() {
   const state = location.state || {};
 
   const courseTitle = state.courseTitle || "Advanced Enterprise Architecture & Payment Systems";
-  const amount = state.amount || "$89.99";
+  const amount = state.amount || "₹4,999";
   const transactionId = state.transactionId || "#NX-48291";
   const date = state.date || "October 2026";
   const courseId = state.courseId || "crs-1";
@@ -108,7 +108,7 @@ export default function PaymentSuccess() {
             <div className="w-full space-y-3">
               <Link
                 to="/student/player"
-                className="w-full py-3.5 bg-coursera hover:bg-primary text-white rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>Go to Course Player</span>

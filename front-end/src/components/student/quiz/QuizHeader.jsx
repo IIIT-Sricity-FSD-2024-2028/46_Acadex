@@ -37,7 +37,7 @@ export default function QuizHeader({ quizData, isSubmitted, onSubmitClick }) {
         <button
           type="button"
           onClick={onSubmitClick}
-          className="px-5 py-2.5 rounded-xl bg-coursera hover:bg-primary text-white text-xs font-bold shadow-sm transition-all shrink-0 active:scale-95"
+          className="px-5 py-2.5 rounded-xl bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold shadow-sm transition-all shrink-0 active:scale-95"
         >
           Submit Exam
         </button>

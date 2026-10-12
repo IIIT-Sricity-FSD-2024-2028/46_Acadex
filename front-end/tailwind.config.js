@@ -16,6 +16,7 @@ export default {
           'fixed-dim': '#b2c5ff',
         },
         coursera: {
+          DEFAULT: '#0056D2',
           blue: '#0056D2',
           darkBlue: '#002554',
           lightBlue: '#E8EDF5',

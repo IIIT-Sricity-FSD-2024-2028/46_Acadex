@@ -372,7 +372,7 @@ export default function Dashboard() {
                       </Link>
                       <Link
                         to="/student/player"
-                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-coursera text-white text-xs font-bold hover:bg-primary shadow-xs transition-all"
+                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] shadow-xs transition-all cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
                         <span>Resume Lesson</span>
@@ -509,7 +509,7 @@ export default function Dashboard() {
                 type="button"
                 disabled={!selectedOrg || submittingOrg}
                 onClick={handleRequestJoinOrg}
-                className="px-5 py-2 text-xs font-bold text-white bg-coursera hover:bg-primary disabled:opacity-50 rounded-lg shadow-sm transition-all"
+                className="px-5 py-2 text-xs font-bold text-white bg-[#0056D2] hover:bg-[#00419E] disabled:opacity-50 rounded-lg shadow-sm transition-all cursor-pointer"
               >
                 {submittingOrg ? 'Submitting...' : 'Submit Join Request'}
               </button>

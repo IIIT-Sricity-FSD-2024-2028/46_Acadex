@@ -238,7 +238,7 @@ export default function ExploreCourses() {
             </p>
             <button
               onClick={handleClearSearch}
-              className="px-4 py-2 rounded-xl bg-coursera text-white text-xs font-bold hover:bg-primary transition-all shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] transition-all shadow-xs cursor-pointer"
             >
               Show All Courses
             </button>

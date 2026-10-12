@@ -37,11 +37,11 @@ export default function QuestionNavigator({
           const isAnswered = selectedAnswers[idx] !== undefined;
           const isFlagged = flaggedQuestions.includes(idx);
 
-          let btnClass = "bg-slate-100 text-slate-600 hover:bg-slate-200";
+          let btnClass = "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200";
           if (isCurrent) {
-            btnClass = "bg-coursera text-white ring-2 ring-blue-500 ring-offset-2 font-bold shadow-xs";
+            btnClass = "bg-[#0056D2] text-white ring-2 ring-[#0056D2] ring-offset-2 font-bold shadow-sm";
           } else if (isAnswered) {
-            btnClass = "bg-emerald-100 text-secondary font-bold hover:bg-emerald-200";
+            btnClass = "bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-2xs";
           }
 
           return (
@@ -63,11 +63,11 @@ export default function QuestionNavigator({
 
       <div className="pt-5 mt-5 border-t border-slate-100 space-y-2 text-[11px] text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-300"></span>
+          <span className="w-3 h-3 rounded-full bg-emerald-600"></span>
           <span>Answered</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-coursera"></span>
+          <span className="w-3 h-3 rounded-full bg-[#0056D2]"></span>
           <span>Current</span>
         </div>
         <div className="flex items-center gap-2">

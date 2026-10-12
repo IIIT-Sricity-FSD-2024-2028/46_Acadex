@@ -35,8 +35,8 @@ export default function Checkout() {
   const courseInstructor = course?.instructorName || course?.instructors?.[0]?.name || 'Dr. Eleanor Rigby, Stanford University';
 
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'paypal'
-  const [couponCode, setCouponCode] = useState('WELCOME10');
-  const [appliedCoupon, setAppliedCoupon] = useState({ code: 'WELCOME10', discount: 10.00 });
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -46,18 +46,19 @@ export default function Checkout() {
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const [pinError, setPinError] = useState('');
 
-  const originalPrice = Number(course?.price) || 99.99;
-  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0.00;
+  const originalPrice = Number(course?.price) || 4999;
+  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
   const totalPrice = Math.max(0, originalPrice - discountAmount);
 
+  // Card details are initially empty so student manually enters their details
   const [formData, setFormData] = useState({
-    cardName: student?.name || 'Vujja Punith Sai',
-    cardNumber: '4242 8849 2014 4242',
-    expDate: '12/28',
-    cvv: '884',
-    saveCard: true,
+    cardName: '',
+    cardNumber: '',
+    expDate: '',
+    cvv: '',
+    saveCard: false,
     country: 'India',
-    zipCode: '517646'
+    zipCode: ''
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -70,23 +71,6 @@ export default function Checkout() {
       document.title = prevTitle;
     };
   }, [courseTitle]);
-
-  // useEffect Side Effect: Prepopulate student billing information from backend profile
-  useEffect(() => {
-    let isMounted = true;
-    api.student.getProfile('lrn-1')
-      .then((p) => {
-        if (!isMounted || !p) return;
-        setFormData((prev) => ({
-          ...prev,
-          cardName: prev.cardName || p.name || 'Alex Chen',
-        }));
-      })
-      .catch(() => {});
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const handleCardNumberChange = (e) => {
     let val = e.target.value.replace(/\D/g, '').slice(0, 16);
@@ -112,17 +96,17 @@ export default function Checkout() {
     e.preventDefault();
     const cleanCode = couponCode.trim().toUpperCase();
     if (cleanCode === 'WELCOME10') {
-      setAppliedCoupon({ code: 'WELCOME10', discount: 10.00 });
+      setAppliedCoupon({ code: 'WELCOME10', discount: 500 });
       setCouponError('');
-      addToast('Coupon WELCOME10 applied: $10.00 off!', 'success');
+      addToast('Coupon WELCOME10 applied: ₹500 off!', 'success');
     } else if (cleanCode === 'NEXUS20') {
-      setAppliedCoupon({ code: 'NEXUS20', discount: 20.00 });
+      setAppliedCoupon({ code: 'NEXUS20', discount: 1000 });
       setCouponError('');
-      addToast('Coupon NEXUS20 applied: $20.00 off!', 'success');
+      addToast('Coupon NEXUS20 applied: ₹1,000 off!', 'success');
     } else if (cleanCode === 'FREE100' || cleanCode === 'DEV100') {
-      setAppliedCoupon({ code: 'DEV100', discount: 99.99 });
+      setAppliedCoupon({ code: 'DEV100', discount: originalPrice });
       setCouponError('');
-      addToast('Full Scholarship Coupon Applied: $0.00 Total!', 'success');
+      addToast('Full Scholarship Coupon Applied: ₹0 Total!', 'success');
     } else {
       setAppliedCoupon(null);
       setCouponError('Invalid promo code. Try "WELCOME10" or "NEXUS20"');
@@ -167,7 +151,7 @@ export default function Checkout() {
       navigate('/student/payment-success', {
         state: {
           courseTitle: result?.courseTitle || courseTitle,
-          amount: `$${Number(result?.amount || totalPrice).toFixed(2)}`,
+          amount: `₹${Number(result?.amount || totalPrice).toLocaleString('en-IN')}`,
           transactionId: result?.transactionId || `#NX-${Math.floor(10000 + Math.random() * 90000)}`,
           date: result?.date || 'October 2026',
           courseId: targetCourseId,
@@ -282,7 +266,7 @@ export default function Checkout() {
                   </div>
                 </div>
                 <div className="text-right text-sm font-bold text-slate-900 shrink-0">
-                  ${originalPrice.toFixed(2)}
+                  ₹{originalPrice.toLocaleString('en-IN')}
                 </div>
               </div>
 
@@ -292,12 +276,12 @@ export default function Checkout() {
                   type="text"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Enter promo code (e.g. WELCOME10)"
-                  className="flex-grow h-10 border border-slate-200/80 rounded-lg px-3.5 text-xs font-semibold uppercase bg-white focus:outline-none focus:border-coursera text-slate-900"
+                  placeholder="Enter promo code (e.g. WELCOME10, NEXUS20)"
+                  className="flex-grow h-10 border border-slate-200/80 rounded-lg px-3.5 text-xs font-semibold uppercase bg-white focus:outline-none focus:border-[#0056D2] text-slate-900"
                 />
                 <button 
                   type="submit"
-                  className="h-10 px-5 bg-white border border-coursera text-coursera font-bold text-xs rounded-lg hover:bg-coursera hover:text-white transition-colors"
+                  className="h-10 px-5 bg-white border border-[#0056D2] text-[#0056D2] font-bold text-xs rounded-lg hover:bg-[#0056D2] hover:text-white transition-colors cursor-pointer"
                 >
                   Apply
                 </button>
@@ -305,7 +289,7 @@ export default function Checkout() {
 
               {appliedCoupon && (
                 <p className="text-xs text-secondary font-semibold flex items-center gap-1 -mt-3">
-                  <Check className="w-3.5 h-3.5" /> Coupon <strong>{appliedCoupon.code}</strong> applied (-${appliedCoupon.discount.toFixed(2)})
+                  <Check className="w-3.5 h-3.5" /> Coupon <strong>{appliedCoupon.code}</strong> applied (-₹{appliedCoupon.discount.toLocaleString('en-IN')})
                 </p>
               )}
               {couponError && (
@@ -318,18 +302,18 @@ export default function Checkout() {
               <div className="bg-white border border-slate-200/80 rounded-xl p-5 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] text-xs text-slate-600">
                 <div className="flex justify-between">
                   <span>Original Price</span>
-                  <span className="font-semibold text-slate-900">${originalPrice.toFixed(2)}</span>
+                  <span className="font-semibold text-slate-900">₹{originalPrice.toLocaleString('en-IN')}</span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-secondary font-bold">
                     <span>Discount ({appliedCoupon.code})</span>
-                    <span>-${discountAmount.toFixed(2)}</span>
+                    <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="h-px bg-slate-100 w-full my-1"></div>
                 <div className="flex justify-between text-base font-bold text-slate-900">
                   <span>Total</span>
-                  <span className="text-xl text-coursera font-extrabold">${totalPrice.toFixed(2)}</span>
+                  <span className="text-xl text-[#0056D2] font-extrabold">₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
@@ -402,8 +386,8 @@ export default function Checkout() {
                         required
                         value={formData.cardNumber}
                         onChange={handleCardNumberChange}
-                        placeholder="4242 8849 2014 4242"
-                        className="w-full h-10 pl-9 pr-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-coursera"
+                        placeholder="1234 5678 9012 3456"
+                        className="w-full h-10 pl-9 pr-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
                       />
                     </div>
                     {formErrors.cardNumber && <span className="text-[10px] text-rose-600">{formErrors.cardNumber}</span>}
@@ -421,7 +405,7 @@ export default function Checkout() {
                         onChange={handleExpiryChange}
                         placeholder="MM/YY"
                         maxLength={5}
-                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-coursera"
+                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
                       />
                       {formErrors.expDate && <span className="text-[10px] text-rose-600">{formErrors.expDate}</span>}
                     </div>
@@ -436,8 +420,8 @@ export default function Checkout() {
                         maxLength={4}
                         value={formData.cvv}
                         onChange={(e) => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
-                        placeholder="884"
-                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-coursera"
+                        placeholder="•••"
+                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
                       />
                       {formErrors.cvv && <span className="text-[10px] text-rose-600">{formErrors.cvv}</span>}
                     </div>
@@ -451,10 +435,10 @@ export default function Checkout() {
                       <select 
                         value={formData.country}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-coursera"
+                        className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
                       >
-                        <option>United States</option>
                         <option>India</option>
+                        <option>United States</option>
                         <option>United Kingdom</option>
                         <option>Canada</option>
                       </select>
@@ -468,8 +452,8 @@ export default function Checkout() {
                         type="text"
                         value={formData.zipCode}
                         onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                        placeholder="94107"
-                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-coursera"
+                        placeholder="e.g. 517646"
+                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
                       />
                     </div>
                   </div>
@@ -477,10 +461,10 @@ export default function Checkout() {
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full mt-2 py-3.5 bg-coursera hover:bg-primary text-white rounded-xl text-sm font-bold shadow-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+                    className="w-full mt-2 py-3.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <Lock className="w-4 h-4" />
-                    <span>Pay ${totalPrice.toFixed(2)}</span>
+                    <span>Pay ₹{totalPrice.toLocaleString('en-IN')}</span>
                   </button>
 
                   <p className="text-[11px] text-slate-400 text-center leading-tight">
@@ -499,14 +483,14 @@ export default function Checkout() {
         {showPinModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-blue-50 text-coursera flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0056D2] flex items-center justify-center mx-auto">
                 <KeyRound className="w-6 h-6" />
               </div>
 
               <div>
                 <h3 className="text-base font-bold text-slate-900">Enter Card Security PIN</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Authorize payment of <strong>${totalPrice.toFixed(2)}</strong> for {courseTitle}
+                  Authorize payment of <strong>₹{totalPrice.toLocaleString('en-IN')}</strong> for {courseTitle}
                 </p>
               </div>
 
@@ -520,7 +504,7 @@ export default function Checkout() {
                     value={pinCode[idx]}
                     onChange={(e) => handlePinChange(idx, e.target.value)}
                     onKeyDown={(e) => handlePinKeyDown(idx, e)}
-                    className="w-12 h-12 text-center text-lg font-bold border border-slate-300 rounded-xl focus:border-coursera focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-12 h-12 text-center text-lg font-bold border border-slate-300 rounded-xl focus:border-[#0056D2] focus:ring-2 focus:ring-blue-100 focus:outline-none"
                   />
                 ))}
               </div>
@@ -531,7 +515,7 @@ export default function Checkout() {
                 <button
                   type="button"
                   onClick={() => setShowPinModal(false)}
-                  className="flex-1 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg"
+                  className="flex-1 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -539,7 +523,7 @@ export default function Checkout() {
                   type="button"
                   disabled={isVerifyingPin}
                   onClick={handleVerifyPinAndPay}
-                  className="flex-1 py-2.5 bg-coursera hover:bg-primary text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+                  className="flex-1 py-2.5 bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold rounded-lg transition-colors shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {isVerifyingPin ? 'Verifying...' : 'Authorize'}
                 </button>

@@ -88,7 +88,7 @@ const FALLBACK_NAVBAR_COURSES = [
     category: 'Cloud Architecture',
     institution: 'NexusTech Institute',
     rating: 5.0,
-    thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=80',
+    thumbnail: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&auto=format&fit=crop&q=80',
     description: 'Fundamental principles of distributed consensus, state replication, and RPC.',
   },
 ];

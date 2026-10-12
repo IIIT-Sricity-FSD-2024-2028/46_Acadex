@@ -199,7 +199,7 @@ export class StudentService {
       payerEmail: learner.email,
       courseId: dto.courseId,
       courseTitle: course?.title || 'Masterclass Track',
-      amount: dto.amount || course?.price || 89.99,
+      amount: dto.amount || course?.price || 4999,
       paymentMethod: dto.paymentMethod || 'Credit Card',
       status: 'Paid',
       timestamp: new Date().toISOString(),

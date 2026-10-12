@@ -410,7 +410,7 @@ export default function Profile() {
                       <button
                         type="submit"
                         disabled={isSavingProfile}
-                        className="px-4 py-2 bg-coursera text-white rounded-lg text-xs font-bold hover:bg-primary transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-[#0056D2] text-white rounded-lg text-xs font-bold hover:bg-[#00419E] transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isSavingProfile ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -682,7 +682,7 @@ export default function Profile() {
                   type="button"
                   disabled={!selectedOrg || submittingOrg}
                   onClick={handleRequestJoinOrg}
-                  className="px-5 py-2 rounded-lg bg-coursera text-white text-xs font-bold hover:bg-primary disabled:opacity-50 transition-all shadow-xs"
+                  className="px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] disabled:opacity-50 transition-all shadow-xs cursor-pointer"
                 >
                   {submittingOrg ? 'Submitting...' : 'Submit Request'}
                 </button>

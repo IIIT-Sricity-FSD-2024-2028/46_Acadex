@@ -304,7 +304,7 @@ export default function CourseDetails() {
             <div className="p-5 space-y-4">
               <div>
                 <div className="font-headline-lg text-2xl font-bold text-on-surface mb-0.5">
-                  ₹{course.price || 89.99}
+                  ₹{Number(course.price || 4999).toLocaleString('en-IN')}
                 </div>
                 <div className="font-body-md text-xs text-on-surface-variant font-medium">
                   Full Lifetime Access • Accredited Certification

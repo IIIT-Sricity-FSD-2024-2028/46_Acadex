@@ -50,7 +50,7 @@ export default function SubmitConfirmationModal({
           <button
             type="button"
             onClick={onConfirmSubmit}
-            className="px-5 py-2 rounded-xl bg-coursera hover:bg-primary text-white text-xs font-bold shadow-xs"
+            className="px-5 py-2 rounded-xl bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold shadow-xs"
           >
             Submit Final Grade
           </button>

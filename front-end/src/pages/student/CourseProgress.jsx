@@ -318,7 +318,7 @@ export default function CourseProgress() {
                 <Link
                   to="/student/player"
                   state={{ courseId: course?.id || targetCourseId }}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-coursera hover:bg-primary text-white rounded-xl text-sm font-bold shadow-sm transition-all active:scale-[0.99]"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all active:scale-[0.99] cursor-pointer"
                 >
                   <span>Continue Learning</span>
                   <ArrowRight className="w-4 h-4" />

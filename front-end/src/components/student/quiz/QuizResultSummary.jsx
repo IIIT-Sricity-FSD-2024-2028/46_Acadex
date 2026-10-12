@@ -84,7 +84,7 @@ export default function QuizResultSummary({
           {isPassed && (
             <Link
               to="/student/certificates"
-              className="px-6 py-3 rounded-xl bg-coursera text-white text-xs font-bold hover:bg-primary shadow-sm transition-all flex items-center gap-1.5"
+              className="px-6 py-3 rounded-xl bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
             >
               <Award className="w-4 h-4" />
               <span>View Verified Certificate</span>
