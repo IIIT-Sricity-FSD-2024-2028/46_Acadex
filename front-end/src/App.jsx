@@ -153,9 +153,9 @@ export default function App() {
       {/* ────────────────────────────────────────────────────────────── */}
       <Route path="/student" element={<StudentGuard><StudentDashboard /></StudentGuard>} />
       <Route path="/student/dashboard" element={<StudentGuard><StudentDashboard /></StudentGuard>} />
-      <Route path="/student/explore" element={<StudentExplore />} />
-      <Route path="/student/course/:id" element={<StudentCourseDetails />} />
-      <Route path="/student/course-details" element={<StudentCourseDetails />} />
+      <Route path="/student/explore" element={<StudentGuard><StudentExplore /></StudentGuard>} />
+      <Route path="/student/course/:id" element={<StudentGuard><StudentCourseDetails /></StudentGuard>} />
+      <Route path="/student/course-details" element={<StudentGuard><StudentCourseDetails /></StudentGuard>} />
       <Route path="/student/checkout" element={<StudentGuard><StudentCheckout /></StudentGuard>} />
       <Route path="/student/payment-success" element={<StudentGuard><StudentPaymentSuccess /></StudentGuard>} />
       <Route path="/student/my-learning" element={<StudentGuard><StudentMyLearning /></StudentGuard>} />
@@ -167,7 +167,7 @@ export default function App() {
       <Route path="/student/profile" element={<StudentGuard><StudentProfile /></StudentGuard>} />
 
       {/* Student Direct Fallback Aliases */}
-      <Route path="/explore" element={<StudentExplore />} />
+      <Route path="/explore" element={<StudentGuard><StudentExplore /></StudentGuard>} />
       <Route path="/my-learning" element={<StudentGuard><StudentMyLearning /></StudentGuard>} />
       <Route path="/player" element={<StudentGuard><StudentLearningPlayer /></StudentGuard>} />
       <Route path="/checkout" element={<StudentGuard><StudentCheckout /></StudentGuard>} />
@@ -176,8 +176,8 @@ export default function App() {
       <Route path="/profile" element={<StudentGuard><StudentProfile /></StudentGuard>} />
       <Route path="/course-progress" element={<StudentGuard><StudentCourseProgress /></StudentGuard>} />
       <Route path="/course-progress/:courseId" element={<StudentGuard><StudentCourseProgress /></StudentGuard>} />
-      <Route path="/course/:id" element={<StudentCourseDetails />} />
-      <Route path="/course-details" element={<StudentCourseDetails />} />
+      <Route path="/course/:id" element={<StudentGuard><StudentCourseDetails /></StudentGuard>} />
+      <Route path="/course-details" element={<StudentGuard><StudentCourseDetails /></StudentGuard>} />
       <Route path="/payment-success" element={<StudentGuard><StudentPaymentSuccess /></StudentGuard>} />
 
       {/* ────────────────────────────────────────────────────────────── */}
