@@ -25,14 +25,15 @@ import {
 } from 'lucide-react';
 import api from '../../../services/api';
 import { useToast } from '../../common/Toast';
+import { useStudent } from '../../../context/StudentContext';
 
 const defaultUser = {
-  name: "Alex Chen",
-  email: "alex.chen@stanford.edu",
+  name: "Vujja Punith Sai",
+  email: "s20240010260@iiits.in",
   avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
   streakDays: 14,
-  orgMembershipStatus: "Independent Learner",
-  university: "Independent Learner",
+  orgMembershipStatus: "Verified Student",
+  university: "IIIT Sri City",
 };
 
 const FALLBACK_NAVBAR_COURSES = [
@@ -108,7 +109,26 @@ export default function Navbar() {
   });
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [userData, setUserData] = useState(defaultUser);
+
+  let studentCtx = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    studentCtx = useStudent();
+  } catch (e) {
+    // Fallback if rendered outside StudentProvider
+  }
+  const student = studentCtx?.student;
+
+  const [userData, setUserData] = useState(() => {
+    const storedName = localStorage.getItem('user_name');
+    const storedEmail = localStorage.getItem('user_email');
+    return {
+      ...defaultUser,
+      name: storedName || defaultUser.name,
+      email: storedEmail || defaultUser.email,
+    };
+  });
+
   const [coursesData, setCoursesData] = useState(FALLBACK_NAVBAR_COURSES);
   const [orgsList, setOrgsList] = useState([]);
   const [showOrgModal, setShowOrgModal] = useState(false);
@@ -117,9 +137,23 @@ export default function Navbar() {
 
   const searchRef = useRef(null);
 
+  useEffect(() => {
+    if (student) {
+      setUserData((prev) => ({
+        ...prev,
+        name: student.name || prev.name,
+        email: student.email || prev.email,
+        streakDays: student.streakDays || prev.streakDays,
+        university: student.institution || prev.university,
+      }));
+    }
+  }, [student]);
+
   const fetchUserData = () => {
     api.student.getProfile('lrn-1')
-      .then((p) => { if (p) setUserData({ ...defaultUser, ...p }); })
+      .then((p) => { 
+        if (p) setUserData((prev) => ({ ...prev, ...p })); 
+      })
       .catch(() => {});
   };
 

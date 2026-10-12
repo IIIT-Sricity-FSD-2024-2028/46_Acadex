@@ -10,6 +10,8 @@ import PageLayout from '../../components/layout/PageLayout';
 import CourseCard from '../../components/common/CourseCard';
 import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
+import { useStudent } from '../../context/StudentContext';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const categories = [
   'All Subjects',
@@ -27,13 +29,16 @@ export default function ExploreCourses() {
   const categoryFromUrl = searchParams.get('category') || 'All Subjects';
 
   const { addToast } = useToast();
+  const { isBookmarked, toggleBookmark } = useStudent();
 
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchFromUrl);
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
   const [sortBy, setSortBy] = useState('popular');
-  const [bookmarkedIds, setBookmarkedIds] = useState([]);
+
+  // Debounced search query for performance optimization
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
 
   // useEffect 1: Synchronize with URL search parameters (e.g. from Navbar search)
   useEffect(() => {
@@ -62,32 +67,14 @@ export default function ExploreCourses() {
     };
   }, []);
 
-  // useEffect 3: Read bookmarked course wishlist from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('nexuspay_student_wishlist');
-      if (saved) setBookmarkedIds(JSON.parse(saved));
-    } catch (e) {}
-  }, []);
-
-  // useEffect 4: Persist bookmarked courses to localStorage on change
-  useEffect(() => {
-    try {
-      localStorage.setItem('nexuspay_student_wishlist', JSON.stringify(bookmarkedIds));
-    } catch (e) {}
-  }, [bookmarkedIds]);
-
-  const toggleBookmark = (id) => {
-    setBookmarkedIds((prev) => {
-      const isAlready = prev.includes(id);
-      if (isAlready) {
-        addToast('Course removed from wishlist', 'info');
-        return prev.filter((x) => x !== id);
-      } else {
-        addToast('Course added to wishlist', 'success');
-        return [...prev, id];
-      }
-    });
+  const handleToggleBookmark = (id) => {
+    const currentlyMarked = isBookmarked(id);
+    toggleBookmark(id);
+    if (currentlyMarked) {
+      addToast('Course removed from saved wishlist', 'info');
+    } else {
+      addToast('Course saved to your wishlist!', 'success');
+    }
   };
 
   const handleCategorySelect = (cat) => {
@@ -117,8 +104,8 @@ export default function ExploreCourses() {
       const key = (course.id || course.title || '').toLowerCase().trim();
       if (!key || seen.has(key)) return false;
 
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase().trim();
+      if (debouncedSearchQuery) {
+        const query = debouncedSearchQuery.toLowerCase().trim();
         const matchesTitle = course.title?.toLowerCase().includes(query);
         const matchesDesc = (course.description || course.subtitle || '')?.toLowerCase().includes(query);
         const matchesCategory = course.category?.toLowerCase().includes(query);
@@ -136,7 +123,7 @@ export default function ExploreCourses() {
       if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
       return (b.enrolledCount || 0) - (a.enrolledCount || 0);
     });
-  }, [courses, searchQuery, selectedCategory, sortBy]);
+  }, [courses, debouncedSearchQuery, selectedCategory, sortBy]);
 
   return (
     <PageLayout>
@@ -263,8 +250,8 @@ export default function ExploreCourses() {
                 key={course.id}
                 course={course}
                 variant="explore"
-                isBookmarked={bookmarkedIds.includes(course.id)}
-                onBookmarkToggle={toggleBookmark}
+                isBookmarked={isBookmarked(course.id)}
+                onBookmarkToggle={handleToggleBookmark}
               />
             ))}
           </div>

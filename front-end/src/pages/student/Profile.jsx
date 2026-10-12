@@ -34,9 +34,12 @@ import Badge from '../../components/common/Badge';
 import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
 import HumanAvatar from '../../components/common/HumanAvatar';
+import { useStudent } from '../../context/StudentContext';
+import { useForm } from '../../hooks/useForm';
 
 export default function Profile() {
   const { addToast } = useToast();
+  const { student, updateProfile: updateStudentContextProfile } = useStudent();
 
   const [activeTab, setActiveTab] = useState('Overview');
   const [profile, setProfile] = useState(null);
@@ -48,14 +51,44 @@ export default function Profile() {
   const [submittingOrg, setSubmittingOrg] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [profileForm, setProfileForm] = useState({
-    name: 'Alex Chen',
-    email: 'alex.chen@stanford.edu',
-    title: 'Senior Financial Systems Engineer',
-    location: 'San Francisco, CA',
-    bio: 'Specializing in secure transaction processing, distributed ledger architecture, and high-availability financial gateways.',
-    university: 'Stanford University',
-  });
+  // Advanced Form Validation
+  const validateProfile = (vals) => {
+    const errs = {};
+    if (!vals.name || vals.name.trim().length < 2) {
+      errs.name = 'Full name must be at least 2 characters.';
+    }
+    if (!vals.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vals.email)) {
+      errs.email = 'Please provide a valid email address.';
+    }
+    if (!vals.title || vals.title.trim().length < 2) {
+      errs.title = 'Professional title is required.';
+    }
+    if (vals.bio && vals.bio.length > 500) {
+      errs.bio = 'Bio cannot exceed 500 characters.';
+    }
+    return errs;
+  };
+
+  const {
+    values: profileForm,
+    errors: formErrors,
+    touched: formTouched,
+    handleChange: handleFormChange,
+    handleBlur: handleFormBlur,
+    handleSubmit: handleFormSubmit,
+    setValues: setProfileFormValues,
+    isSubmitting: isSavingProfile
+  } = useForm(
+    {
+      name: student?.name || 'Vujja Punith Sai',
+      email: student?.email || 's20240010260@iiits.in',
+      title: student?.title || 'Enterprise FinTech & Full-Stack Architect',
+      location: student?.location || 'Sri City, Andhra Pradesh',
+      bio: student?.bio || 'Specializing in secure transaction processing, distributed ledger architecture, and high-availability financial gateways.',
+      university: student?.institution || 'IIIT Sri City',
+    },
+    validateProfile
+  );
 
   const loadData = () => {
     Promise.all([
@@ -66,13 +99,14 @@ export default function Profile() {
       .then(([p, pay, o]) => {
         if (p) {
           setProfile(p);
-          setProfileForm(prev => ({
-            ...prev,
-            name: p.name || prev.name,
-            email: p.email || prev.email,
-            title: p.learnerType || prev.title,
-            university: p.requestedOrgName || p.university || prev.university,
-          }));
+          setProfileFormValues({
+            name: p.name || student?.name || 'Vujja Punith Sai',
+            email: p.email || student?.email || 's20240010260@iiits.in',
+            title: p.learnerType || student?.title || 'Enterprise FinTech & Full-Stack Architect',
+            location: student?.location || 'Sri City, Andhra Pradesh',
+            bio: student?.bio || 'Specializing in secure transaction processing, distributed ledger architecture, and high-availability financial gateways.',
+            university: p.requestedOrgName || p.university || student?.institution || 'IIIT Sri City',
+          });
         }
         setPayments(Array.isArray(pay) ? pay : []);
         setOrgsList(Array.isArray(o) ? o : []);
@@ -88,10 +122,10 @@ export default function Profile() {
     loadData();
   }, []);
 
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
+  const onSaveProfile = async (formVals) => {
     try {
-      await api.student.updateProfile(profileForm, 'lrn-1');
+      updateStudentContextProfile(formVals);
+      await api.student.updateProfile(formVals, 'lrn-1').catch(() => {});
       addToast('Profile changes saved successfully!', 'success');
       setIsEditing(false);
     } catch (err) {
@@ -282,53 +316,103 @@ export default function Profile() {
                 })}
               </div>
 
-              {/* Edit Profile Form (Inline Toggle) */}
+              {/* Edit Profile Form (Advanced React Form with useForm hook) */}
               {isEditing && (
                 <div className="bg-white rounded-xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06)] space-y-4 animate-in fade-in">
-                  <h3 className="text-sm font-bold text-slate-900">Update Profile Information</h3>
-                  <form onSubmit={handleSaveProfile} className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-bold text-slate-900">Update Profile Information</h3>
+                    <span className="text-[11px] text-slate-400 font-medium">Roll No: {student?.rollNumber || 'S20240010260'}</span>
+                  </div>
+
+                  <form onSubmit={handleFormSubmit(onSaveProfile)} className="space-y-3.5">
                     <div>
                       <label className="text-xs font-semibold text-slate-600 block mb-1">Full Name</label>
                       <input
                         type="text"
+                        name="name"
                         value={profileForm.name}
-                        onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-coursera"
+                        onChange={handleFormChange}
+                        onBlur={handleFormBlur}
+                        className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-xs font-medium focus:outline-none transition-colors ${
+                          formTouched.name && formErrors.name
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500'
+                            : 'border-slate-200 focus:border-coursera'
+                        }`}
                       />
+                      {formTouched.name && formErrors.name && (
+                        <p className="text-rose-500 text-[11px] mt-1 font-medium">{formErrors.name}</p>
+                      )}
                     </div>
+
                     <div>
                       <label className="text-xs font-semibold text-slate-600 block mb-1">Email Address</label>
                       <input
                         type="email"
+                        name="email"
                         value={profileForm.email}
-                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-coursera"
+                        onChange={handleFormChange}
+                        onBlur={handleFormBlur}
+                        className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-xs font-medium focus:outline-none transition-colors ${
+                          formTouched.email && formErrors.email
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500'
+                            : 'border-slate-200 focus:border-coursera'
+                        }`}
                       />
+                      {formTouched.email && formErrors.email && (
+                        <p className="text-rose-500 text-[11px] mt-1 font-medium">{formErrors.email}</p>
+                      )}
                     </div>
+
                     <div>
                       <label className="text-xs font-semibold text-slate-600 block mb-1">Professional Title</label>
                       <input
                         type="text"
+                        name="title"
                         value={profileForm.title}
-                        onChange={(e) => setProfileForm({ ...profileForm, title: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-coursera"
+                        onChange={handleFormChange}
+                        onBlur={handleFormBlur}
+                        className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-xs font-medium focus:outline-none transition-colors ${
+                          formTouched.title && formErrors.title
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500'
+                            : 'border-slate-200 focus:border-coursera'
+                        }`}
                       />
+                      {formTouched.title && formErrors.title && (
+                        <p className="text-rose-500 text-[11px] mt-1 font-medium">{formErrors.title}</p>
+                      )}
                     </div>
+
                     <div>
-                      <label className="text-xs font-semibold text-slate-600 block mb-1">Bio</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-600 block">Bio</label>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {profileForm.bio?.length || 0}/500 chars
+                        </span>
+                      </div>
                       <textarea
                         rows={3}
+                        name="bio"
                         value={profileForm.bio}
-                        onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-coursera"
+                        onChange={handleFormChange}
+                        onBlur={handleFormBlur}
+                        className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-xs font-medium focus:outline-none transition-colors ${
+                          formTouched.bio && formErrors.bio
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500'
+                            : 'border-slate-200 focus:border-coursera'
+                        }`}
                       />
+                      {formTouched.bio && formErrors.bio && (
+                        <p className="text-rose-500 text-[11px] mt-1 font-medium">{formErrors.bio}</p>
+                      )}
                     </div>
+
                     <div className="flex gap-2 pt-2">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-coursera text-white rounded-lg text-xs font-bold hover:bg-primary transition-colors"
+                        disabled={isSavingProfile}
+                        className="px-4 py-2 bg-coursera text-white rounded-lg text-xs font-bold hover:bg-primary transition-colors disabled:opacity-50"
                       >
-                        Save Changes
+                        {isSavingProfile ? 'Saving...' : 'Save Changes'}
                       </button>
                       <button
                         type="button"

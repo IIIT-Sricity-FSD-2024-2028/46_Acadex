@@ -29,12 +29,12 @@ import { useToast } from '../common/Toast';
 import HumanAvatar from '../common/HumanAvatar';
 
 const defaultUser = {
-  name: "Alex Chen",
-  email: "alex.chen@stanford.edu",
+  name: "Vujja Punith Sai",
+  email: "s20240010260@iiits.in",
   avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
   streakDays: 14,
-  orgMembershipStatus: "Independent Learner",
-  university: "Independent Learner",
+  orgMembershipStatus: "Verified Student",
+  university: "IIIT Sri City",
 };
 
 const FALLBACK_NAVBAR_COURSES = [
@@ -111,7 +111,15 @@ export default function Navbar() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [userData, setUserData] = useState(defaultUser);
+  const [userData, setUserData] = useState(() => {
+    const storedName = localStorage.getItem('user_name');
+    const storedEmail = localStorage.getItem('user_email');
+    return {
+      ...defaultUser,
+      name: storedName || defaultUser.name,
+      email: storedEmail || defaultUser.email,
+    };
+  });
   const [coursesData, setCoursesData] = useState(FALLBACK_NAVBAR_COURSES);
   const [orgsList, setOrgsList] = useState([]);
   const [showOrgModal, setShowOrgModal] = useState(false);

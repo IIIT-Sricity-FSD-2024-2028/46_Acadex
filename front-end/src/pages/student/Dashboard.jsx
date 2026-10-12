@@ -28,8 +28,11 @@ import PageLayout from '../../components/layout/PageLayout';
 import CourseCard from '../../components/common/CourseCard';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
 import api from '../../services/api';
+import { useStudent } from '../../context/StudentContext';
 
 export default function Dashboard() {
+  const { student, enrolledCourses: contextEnrollments } = useStudent();
+
   const [profile, setProfile] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
@@ -61,8 +64,8 @@ export default function Dashboard() {
       .then(([p, e, c, o]) => {
         if (!isMounted) return;
         setProfile(p || {
-          name: 'Alex Chen',
-          streakDays: 14,
+          name: student?.name || 'Vujja Punith Sai',
+          streakDays: student?.streakDays || 14,
           weeklyGoalHours: 10,
           completedHoursThisWeek: 8.5,
           enrolledCourses: 5,
@@ -139,10 +142,10 @@ export default function Dashboard() {
   const inProgressCourses = allCourses.slice(1, 4);
   const recommendedCourses = allCourses.slice(0, 4);
 
-  const studentName = profile?.name || 'Alex Chen';
+  const studentName = student?.name || profile?.name || 'Vujja Punith Sai';
   const firstName = studentName.split(' ')[0];
   const membershipStatus = profile?.orgMembershipStatus || (profile?.university && profile?.university !== 'Independent Learner' ? 'Verified Student' : 'Independent Learner');
-  const universityName = profile?.requestedOrgName || profile?.university || 'Stanford University';
+  const universityName = profile?.requestedOrgName || student?.institution || profile?.university || 'IIIT Sri City';
 
   return (
     <PageLayout>

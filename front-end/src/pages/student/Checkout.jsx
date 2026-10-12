@@ -20,11 +20,14 @@ import {
 import PageLayout from '../../components/layout/PageLayout';
 import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
+import { useStudent } from '../../context/StudentContext';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
+  const { student, enrollInCourse } = useStudent();
+
   const course = location.state?.course;
   const courseTitle = course?.title || 'Advanced Machine Learning & Distributed Systems Architecture';
   const courseThumbnail = course?.thumbnail || 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&auto=format&fit=crop&q=80';
@@ -48,13 +51,13 @@ export default function Checkout() {
   const totalPrice = Math.max(0, originalPrice - discountAmount);
 
   const [formData, setFormData] = useState({
-    cardName: 'Alex Chen',
+    cardName: student?.name || 'Vujja Punith Sai',
     cardNumber: '4242 8849 2014 4242',
     expDate: '12/28',
     cvv: '884',
     saveCard: true,
-    country: 'United States',
-    zipCode: '94107'
+    country: 'India',
+    zipCode: '517646'
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -152,6 +155,15 @@ export default function Checkout() {
 
     try {
       const result = await api.student.checkout(targetCourseId, paymentMethod, totalPrice, 'lrn-1');
+      
+      // Dispatch enrollment to centralized StudentContext
+      enrollInCourse({
+        id: targetCourseId,
+        title: result?.courseTitle || courseTitle,
+        institution: courseProvider,
+        thumbnail: courseThumbnail
+      });
+
       navigate('/student/payment-success', {
         state: {
           courseTitle: result?.courseTitle || courseTitle,
