@@ -15,9 +15,6 @@ import ForgotPassword from './pages/Forgot_Password';
 // ──────────────────────────────────────────────────────────────
 import StudentDashboard from './pages/student/Dashboard';
 import StudentExplore from './pages/student/ExploreCourses';
-import ExploreCoursesAssign from './pages/student/App_S20240010035';
-import QuizAssign from './pages/student/App_S20240010198';
-import StudentStudyPlan from './pages/student/App_S20240010200';
 import StudentCourseDetails from './pages/student/CourseDetails';
 import StudentCheckout from './pages/student/Checkout';
 import StudentPaymentSuccess from './pages/student/PaymentSuccess';
@@ -157,9 +154,6 @@ export default function App() {
       <Route path="/student" element={<StudentGuard><StudentDashboard /></StudentGuard>} />
       <Route path="/student/dashboard" element={<StudentGuard><StudentDashboard /></StudentGuard>} />
       <Route path="/student/explore" element={<StudentExplore />} />
-      <Route path="/student/explore-assignment" element={<ExploreCoursesAssign />} />
-      <Route path="/student/quiz-assignment" element={<StudentGuard><QuizAssign /></StudentGuard>} />
-      <Route path="/student/study-plan" element={<StudentGuard><StudentStudyPlan /></StudentGuard>} />
       <Route path="/student/course/:id" element={<StudentCourseDetails />} />
       <Route path="/student/course-details" element={<StudentCourseDetails />} />
       <Route path="/student/checkout" element={<StudentGuard><StudentCheckout /></StudentGuard>} />
