@@ -530,7 +530,7 @@ export default function CourseProgress() {
                                   <Link
                                     to="/student/player"
                                     state={{ courseId: course?.id || targetCourseId }}
-                                    className="px-3 py-1 bg-coursera hover:bg-primary text-white rounded-md text-xs font-bold shadow-xs transition-colors"
+                                    className="px-3 py-1 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-md text-xs font-bold shadow-xs transition-colors cursor-pointer"
                                   >
                                     Resume
                                   </Link>
@@ -540,7 +540,7 @@ export default function CourseProgress() {
                                   <Link
                                     to="/student/quiz"
                                     state={{ courseId: course?.id || targetCourseId }}
-                                    className="px-3 py-1 bg-blue-50 text-coursera hover:bg-blue-100 rounded-md text-xs font-bold transition-colors"
+                                    className="px-3 py-1 bg-blue-50 text-[#0056D2] hover:bg-blue-100 rounded-md text-xs font-bold transition-colors cursor-pointer"
                                   >
                                     Start Quiz
                                   </Link>

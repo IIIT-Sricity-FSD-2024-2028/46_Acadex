@@ -377,8 +377,9 @@ export default function LearningPlayer() {
                     Bookmark
                   </button>
                   <Link
-                    to="/quiz"
-                    className="px-5 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-container shadow-xs transition-all"
+                    to="/student/quiz"
+                    state={{ courseId: targetCourseId }}
+                    className="px-5 py-2 rounded-xl bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] shadow-xs transition-all cursor-pointer"
                   >
                     Next: Module Quiz →
                   </Link>
@@ -714,7 +715,7 @@ export default function LearningPlayer() {
                 <Link
                   to="/student/quiz"
                   state={{ courseId: course?.id || targetCourseId }}
-                  className="flex-1 py-2 px-3 rounded-xl bg-primary text-white text-xs font-bold flex items-center justify-center gap-1 hover:bg-primary-container shadow-xs transition-all"
+                  className="flex-1 py-2 px-3 rounded-xl bg-[#0056D2] text-white text-xs font-bold flex items-center justify-center gap-1 hover:bg-[#00419E] shadow-xs transition-all cursor-pointer"
                 >
                   <span>Take Quiz</span>
                   <ChevronRight className="w-3.5 h-3.5" />

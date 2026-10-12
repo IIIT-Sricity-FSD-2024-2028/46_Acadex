@@ -443,11 +443,11 @@ export default function Profile() {
                     <div className="grid grid-cols-7 gap-2 mt-3">
                       <div className="h-8 rounded-md bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-bold">M</div>
                       <div className="h-8 rounded-md bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-bold">T</div>
-                      <div className="h-8 rounded-md bg-coursera text-white flex items-center justify-center text-[10px] font-bold shadow-xs">W</div>
-                      <div className="h-8 rounded-md bg-coursera text-white flex items-center justify-center text-[10px] font-bold shadow-xs">T</div>
-                      <div className="h-8 rounded-md bg-coursera text-white flex items-center justify-center text-[10px] font-bold shadow-xs">F</div>
-                      <div className="h-8 rounded-md bg-coursera text-white flex items-center justify-center text-[10px] font-bold shadow-xs">S</div>
-                      <div className="h-8 rounded-md border-2 border-coursera bg-blue-50 text-coursera flex items-center justify-center text-[10px] font-bold">S</div>
+                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">W</div>
+                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">T</div>
+                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">F</div>
+                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">S</div>
+                      <div className="h-8 rounded-md border-2 border-[#0056D2] bg-blue-50 text-[#0056D2] flex items-center justify-center text-[10px] font-bold">S</div>
                     </div>
                   </section>
 
@@ -455,7 +455,7 @@ export default function Profile() {
                   <section className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-base font-bold text-slate-900">Continue Learning</h2>
-                      <Link to="/student/my-learning" className="text-xs font-bold text-coursera hover:underline">
+                      <Link to="/student/my-learning" className="text-xs font-bold text-[#0056D2] hover:underline">
                         View All
                       </Link>
                     </div>
@@ -472,7 +472,7 @@ export default function Profile() {
                         </div>
                         <div className="p-4 space-y-3">
                           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-coursera h-full rounded-full" style={{ width: '65%' }}></div>
+                            <div className="bg-[#0056D2] h-full rounded-full" style={{ width: '65%' }}></div>
                           </div>
                           <div className="flex justify-between items-center text-xs text-slate-500 font-medium">
                             <span>65% Complete</span>
@@ -480,7 +480,7 @@ export default function Profile() {
                           </div>
                           <Link 
                             to="/student/player"
-                            className="w-full py-2 bg-blue-50 hover:bg-coursera text-coursera hover:text-white rounded-lg text-xs font-bold text-center block transition-colors"
+                            className="w-full py-2 bg-blue-50 hover:bg-[#0056D2] text-[#0056D2] hover:text-white rounded-lg text-xs font-bold text-center block transition-colors cursor-pointer"
                           >
                             Resume Learning
                           </Link>
@@ -497,7 +497,7 @@ export default function Profile() {
                         </div>
                         <div className="p-4 space-y-3">
                           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-coursera h-full rounded-full" style={{ width: '30%' }}></div>
+                            <div className="bg-[#0056D2] h-full rounded-full" style={{ width: '30%' }}></div>
                           </div>
                           <div className="flex justify-between items-center text-xs text-slate-500 font-medium">
                             <span>30% Complete</span>
@@ -505,7 +505,7 @@ export default function Profile() {
                           </div>
                           <Link 
                             to="/student/player"
-                            className="w-full py-2 bg-blue-50 hover:bg-coursera text-coursera hover:text-white rounded-lg text-xs font-bold text-center block transition-colors"
+                            className="w-full py-2 bg-blue-50 hover:bg-[#0056D2] text-[#0056D2] hover:text-white rounded-lg text-xs font-bold text-center block transition-colors cursor-pointer"
                           >
                             Resume Learning
                           </Link>
@@ -528,7 +528,7 @@ export default function Profile() {
                         <h4 className="text-xs font-bold text-slate-900">Advanced Enterprise Architecture & Payment Systems</h4>
                         <p className="text-[11px] text-slate-500">Stanford University • 65% Completed</p>
                       </div>
-                      <Link to="/student/player" className="px-3 py-1.5 bg-coursera text-white rounded text-xs font-bold">
+                      <Link to="/student/player" className="px-3 py-1.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded text-xs font-bold cursor-pointer">
                         Continue
                       </Link>
                     </div>
@@ -537,7 +537,7 @@ export default function Profile() {
                         <h4 className="text-xs font-bold text-slate-900">Distributed Ledgers and Two-Phase Commits</h4>
                         <p className="text-[11px] text-slate-500">MIT FinTech Lab • 30% Completed</p>
                       </div>
-                      <Link to="/student/player" className="px-3 py-1.5 bg-coursera text-white rounded text-xs font-bold">
+                      <Link to="/student/player" className="px-3 py-1.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded text-xs font-bold cursor-pointer">
                         Continue
                       </Link>
                     </div>

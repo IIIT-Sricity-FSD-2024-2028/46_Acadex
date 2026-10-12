@@ -269,7 +269,7 @@ export default function Dashboard() {
         {/* Milestone Reminder Announcement Strip (Enhancement: Academic Deadline Awareness) */}
         <div className="bg-blue-50/80 border border-blue-200/80 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
           <div className="flex items-center gap-2.5 text-slate-800">
-            <span className="p-1 rounded bg-coursera text-white font-bold flex-shrink-0">
+            <span className="p-1 rounded bg-[#0056D2] text-white font-bold flex-shrink-0">
               <Sparkles className="w-3.5 h-3.5" />
             </span>
             <span className="font-semibold">
@@ -351,7 +351,7 @@ export default function Dashboard() {
                     <LinearProgressBar 
                       progress={activeCourse.progress ?? 65}
                       showLabel={false}
-                      color="bg-coursera"
+                      color="bg-[#0056D2]"
                       height="h-2"
                     />
                   </div>

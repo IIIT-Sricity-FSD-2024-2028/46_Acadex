@@ -176,10 +176,23 @@ export default function CourseDetails() {
           {/* Navigation Tabs (Stitch) */}
           <div className="border-b border-outline-variant/80 pt-2">
             <nav className="flex gap-6 -mb-px text-xs font-bold">
-              <button className="border-b-2 border-primary text-primary pb-3">About</button>
-              <button className="border-b-2 border-transparent text-on-surface-variant hover:text-on-surface pb-3 transition-colors">Syllabus</button>
-              <button className="border-b-2 border-transparent text-on-surface-variant hover:text-on-surface pb-3 transition-colors">Reviews</button>
-              <button className="border-b-2 border-transparent text-on-surface-variant hover:text-on-surface pb-3 transition-colors">Faculty</button>
+              {['about', 'syllabus', 'reviews', 'faculty'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById(tab);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`pb-3 capitalize transition-colors cursor-pointer border-b-2 ${
+                    tab === 'about'
+                      ? 'border-[#0056D2] text-[#0056D2]'
+                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </nav>
           </div>
 
@@ -313,7 +326,7 @@ export default function CourseDetails() {
 
               <button
                 onClick={() => navigate('/student/checkout', { state: { course } })}
-                className="w-full bg-primary hover:bg-primary-container text-white font-title-md text-xs font-bold py-3 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="w-full bg-[#0056D2] hover:bg-[#00419E] text-white font-title-md text-xs font-bold py-3 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Enroll in Course</span>
                 <ArrowRight className="w-4 h-4" />
