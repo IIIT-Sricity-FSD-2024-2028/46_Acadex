@@ -330,142 +330,178 @@ export default function Checkout() {
                 <h2 className="text-lg font-bold text-slate-900 mb-2">Payment Details</h2>
 
                 {/* Card vs PayPal selector (Stitch Spec) */}
-                <div className="flex gap-2">
+                <div className="flex gap-3 mb-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('card')}
-                    className={`flex-1 py-2.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-colors ${
+                    className={`flex-1 py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
                       paymentMethod === 'card'
-                        ? 'border-coursera bg-blue-50/60 text-coursera ring-1 ring-coursera'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        ? 'bg-[#0056D2] border-[#0056D2] text-white shadow-md ring-2 ring-[#0056D2]/25'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
                     }`}
                   >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Card</span>
+                    <CreditCard className={`w-4 h-4 ${paymentMethod === 'card' ? 'text-white' : 'text-slate-500'}`} />
+                    <span>Credit / Debit Card</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('paypal')}
-                    className={`flex-1 py-2.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-colors ${
+                    className={`flex-1 py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
                       paymentMethod === 'paypal'
-                        ? 'border-coursera bg-blue-50/60 text-coursera ring-1 ring-coursera'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        ? 'bg-[#003087] border-[#003087] text-white shadow-md ring-2 ring-[#003087]/25'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
                     }`}
                   >
-                    <Wallet className="w-4 h-4" />
+                    <Wallet className={`w-4 h-4 ${paymentMethod === 'paypal' ? 'text-white' : 'text-[#003087]'}`} />
                     <span>PayPal</span>
                   </button>
                 </div>
 
-                {/* Form fields */}
+                {/* Form fields: Conditional on paymentMethod */}
                 <form onSubmit={handleInitiatePayment} className="space-y-3.5 pt-1">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                      Name on Card
-                    </label>
-                    <input 
-                      type="text"
-                      required
-                      value={formData.cardName}
-                      onChange={(e) => setFormData({ ...formData, cardName: e.target.value })}
-                      placeholder="Alex Chen"
-                      className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-coursera"
-                    />
-                    {formErrors.cardName && <span className="text-[10px] text-rose-600">{formErrors.cardName}</span>}
-                  </div>
+                  {paymentMethod === 'card' ? (
+                    <>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                          Name on Card
+                        </label>
+                        <input 
+                          type="text"
+                          required
+                          value={formData.cardName}
+                          onChange={(e) => setFormData({ ...formData, cardName: e.target.value })}
+                          placeholder="Alex Chen"
+                          className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                        />
+                        {formErrors.cardName && <span className="text-[10px] text-rose-600">{formErrors.cardName}</span>}
+                      </div>
 
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                      Card Number
-                    </label>
-                    <div className="relative">
-                      <CreditCard className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input 
-                        type="text"
-                        required
-                        value={formData.cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full h-10 pl-9 pr-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
-                      />
-                    </div>
-                    {formErrors.cardNumber && <span className="text-[10px] text-rose-600">{formErrors.cardNumber}</span>}
-                  </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                          Card Number
+                        </label>
+                        <div className="relative">
+                          <CreditCard className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input 
+                            type="text"
+                            required
+                            value={formData.cardNumber}
+                            onChange={handleCardNumberChange}
+                            placeholder="1234 5678 9012 3456"
+                            className="w-full h-10 pl-9 pr-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                          />
+                        </div>
+                        {formErrors.cardNumber && <span className="text-[10px] text-rose-600">{formErrors.cardNumber}</span>}
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                        Expiry (MM/YY)
-                      </label>
-                      <input 
-                        type="text"
-                        required
-                        value={formData.expDate}
-                        onChange={handleExpiryChange}
-                        placeholder="MM/YY"
-                        maxLength={5}
-                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
-                      />
-                      {formErrors.expDate && <span className="text-[10px] text-rose-600">{formErrors.expDate}</span>}
-                    </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                            Expiry (MM/YY)
+                          </label>
+                          <input 
+                            type="text"
+                            required
+                            value={formData.expDate}
+                            onChange={handleExpiryChange}
+                            placeholder="MM/YY"
+                            maxLength={5}
+                            className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                          />
+                          {formErrors.expDate && <span className="text-[10px] text-rose-600">{formErrors.expDate}</span>}
+                        </div>
 
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                        CVV
-                      </label>
-                      <input 
-                        type="password"
-                        required
-                        maxLength={4}
-                        value={formData.cvv}
-                        onChange={(e) => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
-                        placeholder="•••"
-                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
-                      />
-                      {formErrors.cvv && <span className="text-[10px] text-rose-600">{formErrors.cvv}</span>}
-                    </div>
-                  </div>
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                            CVV
+                          </label>
+                          <input 
+                            type="password"
+                            required
+                            maxLength={4}
+                            value={formData.cvv}
+                            onChange={(e) => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
+                            placeholder="•••"
+                            className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                          />
+                          {formErrors.cvv && <span className="text-[10px] text-rose-600">{formErrors.cvv}</span>}
+                        </div>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                        Country
-                      </label>
-                      <select 
-                        value={formData.country}
-                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                            Country
+                          </label>
+                          <select 
+                            value={formData.country}
+                            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                            className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                          >
+                            <option>India</option>
+                            <option>United States</option>
+                            <option>United Kingdom</option>
+                            <option>Canada</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                            Postal Code
+                          </label>
+                          <input 
+                            type="text"
+                            value={formData.zipCode}
+                            onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                            placeholder="e.g. 517646"
+                            className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isProcessing}
+                        className="w-full mt-2 py-3.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
-                        <option>India</option>
-                        <option>United States</option>
-                        <option>United Kingdom</option>
-                        <option>Canada</option>
-                      </select>
-                    </div>
+                        <Lock className="w-4 h-4" />
+                        <span>Pay ₹{totalPrice.toLocaleString('en-IN')}</span>
+                      </button>
+                    </>
+                  ) : (
+                    /* PayPal Express Checkout View */
+                    <div className="space-y-4 py-2">
+                      <div className="bg-[#003087]/5 border border-[#003087]/20 rounded-xl p-4 text-center space-y-2.5">
+                        <div className="w-12 h-12 rounded-full bg-[#003087]/10 text-[#003087] flex items-center justify-center mx-auto">
+                          <Wallet className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900">PayPal Express Checkout</h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Pay safely without sharing card or bank information.
+                          </p>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-lg border border-slate-200/80 text-xs flex justify-between items-center text-slate-600">
+                          <span>Connected Account:</span>
+                          <span className="font-semibold text-slate-900">{student?.email || 's20240010260@iiits.in'}</span>
+                        </div>
+                      </div>
 
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                        Postal Code
-                      </label>
-                      <input 
-                        type="text"
-                        value={formData.zipCode}
-                        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                        placeholder="e.g. 517646"
-                        className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#0056D2]"
-                      />
-                    </div>
-                  </div>
+                      <button
+                        type="submit"
+                        disabled={isProcessing}
+                        className="w-full py-3.5 bg-[#FFC439] hover:bg-[#F4B400] text-[#003087] font-extrabold rounded-xl text-sm shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Wallet className="w-4 h-4 text-[#003087]" />
+                        <span>{isProcessing ? 'Connecting PayPal...' : `Pay with PayPal • ₹${totalPrice.toLocaleString('en-IN')}`}</span>
+                      </button>
 
-                  <button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full mt-2 py-3.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span>Pay ₹{totalPrice.toLocaleString('en-IN')}</span>
-                  </button>
+                      <p className="text-[11px] text-slate-400 text-center leading-tight">
+                        You will be connected to PayPal to authorize your payment securely.
+                      </p>
+                    </div>
+                  )}
 
                   <p className="text-[11px] text-slate-400 text-center leading-tight">
                     By completing your purchase you agree to these Terms of Service.

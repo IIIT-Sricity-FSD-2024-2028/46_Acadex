@@ -269,22 +269,15 @@ function CertificateCard({ certificate, isBookmarked, onBookmarkToggle, onView }
       </div>
 
       {/* Card Action Footer Bar */}
-      <div className="border-t border-slate-100 p-4 flex gap-2 justify-between items-center bg-slate-50/50">
+      <div className="border-t border-slate-100 p-4 flex justify-between items-center bg-slate-50/50">
+        <span className="text-[11px] text-slate-500 font-medium">ID: {certificate.credentialId}</span>
         <button
           type="button"
           onClick={() => onView(certificate)}
-          className="text-xs font-bold text-coursera hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-[#0056D2] hover:underline flex items-center gap-1 cursor-pointer"
         >
           <span>View Certificate</span>
           <ExternalLink className="w-3.5 h-3.5" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onView(certificate)}
-          className="px-4 py-2 rounded-lg bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-        >
-          Verify Credential
         </button>
       </div>
 
