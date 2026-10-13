@@ -61,19 +61,17 @@ export function StudentProvider({ children }) {
       return saved ? JSON.parse(saved) : [
         {
           id: 'crs-1',
+          courseId: 'crs-1',
           title: 'Advanced Enterprise Architecture & Payment Systems',
+          courseTitle: 'Advanced Enterprise Architecture & Payment Systems',
           institution: 'Stanford University',
-          progress: 80,
-          currentModule: 'Module 2: Distributed Consensus & Two-Phase Commit',
-          enrolledAt: '2026-09-15'
-        },
-        {
-          id: 'aws-solutions-architect',
-          title: 'Advanced AWS Solutions Architect Certification',
-          institution: 'CloudTech Academy',
-          progress: 45,
-          currentModule: 'Module 3: VPC Peering & Transit Gateways',
-          enrolledAt: '2026-09-20'
+          thumbnail: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
+          progress: 0,
+          status: 'Active',
+          currentModule: 'Module 1: Orientation & Foundations',
+          enrolledAt: '2026-10-12',
+          enrolledDate: 'Oct 12, 2026'
         }
       ];
     } catch {
@@ -147,17 +145,26 @@ export function StudentProvider({ children }) {
   const enrollInCourse = useCallback((course) => {
     if (!course) return;
     setEnrolledCourses((prev) => {
-      const exists = prev.find((c) => c.id === course.id);
-      if (exists) return prev;
+      const existsIndex = prev.findIndex((c) => c.id === course.id || c.courseId === course.id);
       const newEnrollment = {
         id: course.id,
+        courseId: course.id,
         title: course.title,
-        institution: course.institution || 'NexusPay Institute',
+        courseTitle: course.title,
+        institution: course.institution || 'Stanford University',
         thumbnail: course.thumbnail,
+        thumbnailUrl: course.thumbnail,
         progress: 0,
+        status: 'Active',
         currentModule: 'Module 1: Orientation & Architecture Foundations',
-        enrolledAt: new Date().toISOString()
+        enrolledAt: new Date().toISOString(),
+        enrolledDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       };
+      if (existsIndex >= 0) {
+        const copy = [...prev];
+        copy[existsIndex] = { ...copy[existsIndex], ...newEnrollment };
+        return copy;
+      }
       return [newEnrollment, ...prev];
     });
   }, []);

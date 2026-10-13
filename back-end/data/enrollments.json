@@ -12,7 +12,11 @@
     "progress": 0,
     "status": "Active",
     "createdAt": "2026-10-10T18:45:30.890Z",
-    "updatedAt": "2026-10-10T18:45:30.890Z"
+    "updatedAt": "2026-10-10T18:45:30.890Z",
+    "thumbnail": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "enr-1791657611296",
@@ -27,7 +31,11 @@
     "progress": 0,
     "status": "Active",
     "createdAt": "2026-10-10T18:40:11.296Z",
-    "updatedAt": "2026-10-10T18:40:11.296Z"
+    "updatedAt": "2026-10-10T18:40:11.296Z",
+    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "enr-1788420557191",
@@ -42,7 +50,11 @@
     "progress": 0,
     "status": "Active",
     "createdAt": "2026-09-03T07:29:17.191Z",
-    "updatedAt": "2026-09-03T07:29:17.191Z"
+    "updatedAt": "2026-09-03T07:29:17.191Z",
+    "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "enr-1788420312456",
@@ -57,7 +69,11 @@
     "progress": 0,
     "status": "Active",
     "createdAt": "2026-09-03T07:25:12.456Z",
-    "updatedAt": "2026-09-03T07:25:12.456Z"
+    "updatedAt": "2026-09-03T07:25:12.456Z",
+    "thumbnail": "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-823733",
@@ -71,7 +87,11 @@
     "status": "Active",
     "lastAccessed": "Aug 30, 2026",
     "createdAt": "2026-08-30T17:02:46.829Z",
-    "updatedAt": "2026-08-30T17:02:46.830Z"
+    "updatedAt": "2026-08-30T17:02:46.830Z",
+    "thumbnail": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-901",
@@ -81,11 +101,15 @@
     "courseId": "crs-1",
     "courseTitle": "Advanced Enterprise Architecture & Payment Systems",
     "enrolledDate": "Oct 12, 2026",
-    "progress": 72,
+    "progress": 0,
     "status": "Active",
     "lastAccessed": "Oct 24, 2026",
     "createdAt": "2026-10-12T10:00:00.000Z",
-    "updatedAt": "2026-10-24T14:30:00.000Z"
+    "updatedAt": "2026-10-24T14:30:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-905-COMPLETED",
@@ -101,7 +125,11 @@
     "lastAccessed": "July 20, 2026",
     "certificateId": "NX-MIT-773821",
     "createdAt": "2026-07-01T10:00:00.000Z",
-    "updatedAt": "2026-07-20T14:30:00.000Z"
+    "updatedAt": "2026-07-20T14:30:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-906-COMPLETED",
@@ -117,7 +145,11 @@
     "lastAccessed": "June 10, 2026",
     "certificateId": "NX-CMU-552190",
     "createdAt": "2026-05-15T10:00:00.000Z",
-    "updatedAt": "2026-06-10T12:00:00.000Z"
+    "updatedAt": "2026-06-10T12:00:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-902",
@@ -131,7 +163,11 @@
     "status": "Active",
     "lastAccessed": "Oct 24, 2026",
     "createdAt": "2026-10-15T10:00:00.000Z",
-    "updatedAt": "2026-10-24T11:15:00.000Z"
+    "updatedAt": "2026-10-24T11:15:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-903",
@@ -145,7 +181,11 @@
     "status": "Active",
     "lastAccessed": "Oct 22, 2026",
     "createdAt": "2026-10-18T10:00:00.000Z",
-    "updatedAt": "2026-10-22T10:20:00.000Z"
+    "updatedAt": "2026-10-22T10:20:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-904",
@@ -159,7 +199,11 @@
     "status": "Completed",
     "lastAccessed": "Oct 21, 2026",
     "createdAt": "2026-09-01T10:00:00.000Z",
-    "updatedAt": "2026-10-21T18:05:00.000Z"
+    "updatedAt": "2026-10-21T18:05:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-905",
@@ -173,7 +217,11 @@
     "status": "Active",
     "lastAccessed": "Oct 19, 2026",
     "createdAt": "2026-08-20T10:00:00.000Z",
-    "updatedAt": "2026-10-19T13:12:00.000Z"
+    "updatedAt": "2026-10-19T13:12:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   },
   {
     "id": "ENR-906",
@@ -187,6 +235,10 @@
     "status": "Dropped",
     "lastAccessed": "Jun 20, 2026",
     "createdAt": "2026-06-10T10:00:00.000Z",
-    "updatedAt": "2026-06-20T10:00:00.000Z"
+    "updatedAt": "2026-06-20T10:00:00.000Z",
+    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+    "completedLessons": [],
+    "lastAccessedLesson": null
   }
 ]

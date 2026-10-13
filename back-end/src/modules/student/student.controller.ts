@@ -50,7 +50,7 @@ export class StudentController {
     @Body() dto: StudentEnrollDto,
     @Headers('x-user-id') userId: string = 'lrn-1'
   ) {
-    return this.studentService.enrollCourse(userId, dto.courseId);
+    return this.studentService.enrollCourse(userId, dto.courseId, dto);
   }
 
   @Patch('enrollments/:id/progress')

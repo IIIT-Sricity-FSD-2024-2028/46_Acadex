@@ -119,7 +119,7 @@ export const api = {
         
       }),
     getEnrollments: (userId) => request('/student/enrollments', { headers: { 'x-user-id': userId } }),
-    enroll: (courseId, userId) => request('/student/enrollments', { method: 'POST', body: { courseId }, headers: { 'x-user-id': userId } }),
+    enroll: (courseId, userId, extra = {}) => request('/student/enrollments', { method: 'POST', body: { courseId, ...extra }, headers: { 'x-user-id': userId } }),
     updateProgress: (enrollmentId, lessonId, completed, userId) =>
       request(`/student/enrollments/${enrollmentId}/progress`, {
         method: 'PATCH',
@@ -128,10 +128,10 @@ export const api = {
       }),
     getCertificates: (userId) => request('/student/certificates', { headers: { 'x-user-id': userId } }),
     getPayments: (userId) => request('/student/payments', { headers: { 'x-user-id': userId } }),
-    checkout: (courseId, paymentMethod, amount, userId) =>
+    checkout: (courseId, paymentMethod, amount, userId, extra = {}) =>
       request('/student/payments/checkout', {
         method: 'POST',
-        body: { courseId, paymentMethod, amount },
+        body: { courseId, paymentMethod, amount, ...extra },
         headers: { 'x-user-id': userId },
       }),
   },

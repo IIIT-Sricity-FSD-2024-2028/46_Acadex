@@ -178,8 +178,8 @@ export default function Profile() {
               
               {/* Profile Card */}
               <div className="bg-white rounded-xl border border-slate-200/80 p-6 flex flex-col items-center text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border-4 border-blue-50 shadow-sm relative">
-                  <HumanAvatar name={profileForm.name} size="2xl" />
+                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border-4 border-blue-50 shadow-sm relative flex items-center justify-center">
+                  <HumanAvatar name={profileForm.name} className="w-full h-full" />
                 </div>
 
                 <div className="flex items-center gap-2 mb-1">
@@ -233,43 +233,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* External Links Card (Stitch Spec) */}
-              <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Links</h3>
-                <ul className="space-y-2.5 text-xs">
-                  <li>
-                    <a 
-                      href="https://linkedin.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 text-slate-600 hover:text-coursera transition-colors group"
-                    >
-                      <Linkedin className="w-4 h-4 text-slate-400 group-hover:text-coursera" />
-                      <span>linkedin.com/in/alexc</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href="https://github.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 text-slate-600 hover:text-coursera transition-colors group"
-                    >
-                      <Github className="w-4 h-4 text-slate-400 group-hover:text-coursera" />
-                      <span>github.com/alexc-fin</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href="#" 
-                      className="flex items-center gap-2.5 text-slate-600 hover:text-coursera transition-colors group"
-                    >
-                      <Globe className="w-4 h-4 text-slate-400 group-hover:text-coursera" />
-                      <span>alexchen.dev</span>
-                    </a>
-                  </li>
-                </ul>
-              </div>
+
 
             </aside>
 

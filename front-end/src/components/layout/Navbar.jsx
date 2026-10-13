@@ -276,7 +276,7 @@ export default function Navbar() {
     { name: 'Dashboard', path: '/student', icon: LayoutDashboard },
     { name: 'Explore Course Catalog', path: '/student/explore', icon: Search },
     { name: 'My Courses & Enrolled Tracks', path: '/student/my-learning', icon: BookOpen },
-    { name: 'Verified Certificates', path: '/student/certificates', icon: Award },
+    { name: 'Certificates', path: '/student/certificates', icon: Award },
   ];
 
   const accountPages = [
@@ -644,71 +644,7 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* 2. DYNAMIC ORGANIZATION ITEM */}
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-2 mb-2">
-                  Institution & Organization
-                </span>
 
-                {membershipStatus === 'Verified Student' ? (
-                  <div
-                    onClick={() => {
-                      setIsDrawerOpen(false);
-                      setShowOrgModal(true);
-                    }}
-                    className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 cursor-pointer hover:bg-emerald-100/60 transition-all flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                        <ShieldCheck className="w-4 h-4" />
-                      </div>
-                      <div className="overflow-hidden">
-                        <h4 className="text-xs font-bold text-emerald-900 truncate">My Organization</h4>
-                        <p className="text-[10px] text-emerald-700 truncate font-semibold">{orgName}</p>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 text-[9px] font-extrabold">Verified</span>
-                  </div>
-                ) : membershipStatus === 'Pending Organization Approval' ? (
-                  <div
-                    onClick={() => {
-                      setIsDrawerOpen(false);
-                      setShowOrgModal(true);
-                    }}
-                    className="p-3 rounded-2xl bg-amber-50 border border-amber-200 cursor-pointer hover:bg-amber-100/60 transition-all flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
-                        <Clock3 className="w-4 h-4" />
-                      </div>
-                      <div className="overflow-hidden">
-                        <h4 className="text-xs font-bold text-amber-900 truncate">Pending Approval</h4>
-                        <p className="text-[10px] text-amber-700 truncate">{orgName}</p>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[9px] font-extrabold">Pending</span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setIsDrawerOpen(false);
-                      setShowOrgModal(true);
-                    }}
-                    className="w-full p-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 transition-all flex items-center justify-between text-left group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-                        <PlusCircle className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-indigo-900">Join Organization</h4>
-                        <p className="text-[10px] text-indigo-600">Become a Verified Student</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-indigo-500" />
-                  </button>
-                )}
-              </div>
 
               {/* 3. ACCOUNT & SETTINGS */}
               <div>

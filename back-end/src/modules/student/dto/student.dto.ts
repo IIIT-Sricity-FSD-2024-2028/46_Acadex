@@ -37,6 +37,21 @@ export class StudentCheckoutDto {
   @IsOptional()
   @IsNumber()
   amount?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  thumbnail?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  institution?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  courseTitle?: string;
 }
 
 export class StudentEnrollDto {
@@ -44,6 +59,21 @@ export class StudentEnrollDto {
   @IsString()
   @IsNotEmpty()
   courseId: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  thumbnail?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  institution?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  courseTitle?: string;
 }
 
 export class UpdateProgressDto {

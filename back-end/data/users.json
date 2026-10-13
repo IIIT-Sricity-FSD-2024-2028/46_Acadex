@@ -1,17 +1,5 @@
 [
   {
-    "id": "usr-1791104380784",
-    "name": "test student 1",
-    "email": "test@gmail.com",
-    "password": "TestStudent@123",
-    "role": "Student",
-    "status": "Active",
-    "verificationStatus": "Verified",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "createdAt": "2026-10-04T08:59:40.784Z",
-    "updatedAt": "2026-10-04T08:59:40.784Z"
-  },
-  {
     "id": "usr-1",
     "name": "Dr. Sarah Jenkins",
     "email": "sarah.jenkins@university.edu",
@@ -20,9 +8,8 @@
     "status": "Active",
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
-    "lastLogin": "2026-10-12T10:37:35.147Z",
-    "createdAt": "2023-01-12T08:00:00.000Z",
-    "updatedAt": "2026-10-12T10:37:35.147Z"
+    "lastLogin": "2026-08-30T14:20:00.000Z",
+    "createdAt": "2023-01-12T08:00:00.000Z"
   },
   {
     "id": "usr-2",
@@ -38,8 +25,8 @@
   },
   {
     "id": "usr-3",
-    "name": "Marcus Vance",
-    "email": "m.vance@nexuspay.edu",
+    "name": "Robert Brown",
+    "email": "robert@codemasters.io",
     "password": "Password123!",
     "role": "Instructor",
     "status": "Active",
@@ -50,21 +37,20 @@
   },
   {
     "id": "usr-4",
-    "name": "Alex Chen",
-    "email": "alex.chen@stanford.edu",
+    "name": "Alex Johnson",
+    "email": "alex.johnson@stanford.edu",
     "password": "Password123!",
     "role": "Student",
     "status": "Active",
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "lastLogin": "2026-10-09T13:16:18.912Z",
-    "createdAt": "2023-03-10T10:00:00.000Z",
-    "updatedAt": "2026-10-13T02:12:07.581Z"
+    "lastLogin": "2026-08-31T18:00:00.000Z",
+    "createdAt": "2023-03-10T10:00:00.000Z"
   },
   {
     "id": "usr-5",
-    "name": "Sophia Martinez",
-    "email": "sophia.m@enterprise-corp.com",
+    "name": "Sarah Connor",
+    "email": "sarah.connor@caltech.edu",
     "password": "Password123!",
     "role": "Student",
     "status": "Active",
@@ -75,8 +61,8 @@
   },
   {
     "id": "usr-6",
-    "name": "Vikram Malhotra",
-    "email": "vikram.m@iitb.ac.in",
+    "name": "Michael Chang",
+    "email": "m.chang@mit.edu",
     "password": "Password123!",
     "role": "Student",
     "status": "Active",
@@ -94,34 +80,19 @@
     "status": "Active",
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80",
-    "lastLogin": "2026-10-13T02:13:44.847Z",
-    "createdAt": "2022-01-15T08:00:00.000Z",
-    "updatedAt": "2026-10-13T02:13:44.847Z"
+    "lastLogin": "2026-08-31T22:00:00.000Z",
+    "createdAt": "2022-01-15T08:00:00.000Z"
   },
   {
     "id": "usr-8",
     "name": "Platform Super Admin",
-    "email": "superadmin@nexuspay-platform.io",
-    "password": "Password123!",
-    "role": "Super Admin",
-    "status": "Active",
-    "verificationStatus": "Verified",
-    "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80",
-    "lastLogin": "2026-10-13T02:57:42.584Z",
-    "createdAt": "2022-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-13T02:57:42.584Z"
-  },
-  {
-    "id": "usr-9",
-    "name": "Operational Platform Admin",
-    "email": "admin@nexuspay-platform.io",
+    "email": "superadmin@coursera-platform.io",
     "password": "Password123!",
     "role": "Admin",
     "status": "Active",
     "verificationStatus": "Verified",
-    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-    "lastLogin": "2026-10-13T02:58:02.664Z",
-    "createdAt": "2022-06-01T00:00:00.000Z",
-    "updatedAt": "2026-10-13T02:58:02.665Z"
+    "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80",
+    "lastLogin": "2026-08-31T22:30:00.000Z",
+    "createdAt": "2022-01-01T00:00:00.000Z"
   }
 ]

@@ -19,6 +19,7 @@ export default function MyLearning() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('in-progress');
   const [enrollments, setEnrollments] = useState([]);
+  const [coursesMap, setCoursesMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('All Topics');
@@ -26,24 +27,37 @@ export default function MyLearning() {
 
   useEffect(() => {
     let active = true;
-    const loadEnrollments = () => api.student.getEnrollments('lrn-1')
-      .then((res) => {
-        if (!active) return;
-        setEnrollments(Array.isArray(res) ? res : (res?.items || []));
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!active) return;
-        console.error('Failed to fetch student enrollments:', err);
-        setLoading(false);
-      });
+    const loadData = () => {
+      Promise.all([
+        api.student.getEnrollments('lrn-1').catch(() => []),
+        api.courses.list().catch(() => [])
+      ])
+        .then(([enrRes, coursesRes]) => {
+          if (!active) return;
+          const enrList = Array.isArray(enrRes) ? enrRes : (enrRes?.items || []);
+          const cList = Array.isArray(coursesRes) ? coursesRes : (coursesRes?.items || []);
+          const cMap = {};
+          cList.forEach((c) => {
+            if (c.id) cMap[c.id] = c;
+            if (c.title) cMap[c.title.toLowerCase()] = c;
+          });
+          setCoursesMap(cMap);
+          setEnrollments(enrList);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (!active) return;
+          console.error('Failed to fetch student enrollments:', err);
+          setLoading(false);
+        });
+    };
 
     setLoading(true);
-    loadEnrollments();
-    window.addEventListener('focus', loadEnrollments);
+    loadData();
+    window.addEventListener('focus', loadData);
     return () => {
       active = false;
-      window.removeEventListener('focus', loadEnrollments);
+      window.removeEventListener('focus', loadData);
     };
   }, [location.key]);
 
@@ -180,11 +194,13 @@ export default function MyLearning() {
         ) : (
           <div className="flex flex-col gap-5">
             {filteredList.map((item) => {
-              const progress = item.progress ?? (item.status === 'Completed' ? 100 : 45);
+              const progress = typeof item.progress === 'number' ? item.progress : (item.status === 'Completed' ? 100 : 0);
               const isCompleted = item.status === 'Completed' || progress === 100;
               const circumference = 2 * Math.PI * 28; // radius 28
               const strokeOffset = circumference - (circumference * progress) / 100;
-              const institution = item.institution || "Stanford University";
+              const matchedCatalogCourse = coursesMap[item.courseId] || coursesMap[item.courseTitle?.toLowerCase()];
+              const resolvedThumbnail = item.thumbnail || item.thumbnailUrl || matchedCatalogCourse?.thumbnail || matchedCatalogCourse?.thumbnailUrl || "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80";
+              const institution = item.institution || matchedCatalogCourse?.institution || matchedCatalogCourse?.organizationName || "Stanford University";
 
               return (
                 <div 
@@ -194,10 +210,7 @@ export default function MyLearning() {
                   {/* Left: 280px aspect cover thumbnail */}
                   <div className="w-full md:w-[280px] h-[160px] md:h-auto shrink-0 relative overflow-hidden bg-surface-container">
                     <img 
-                      src={
-                        item.thumbnail || 
-                        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&auto=format&fit=crop&q=80"
-                      } 
+                      src={resolvedThumbnail} 
                       alt={item.courseTitle} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
@@ -223,14 +236,20 @@ export default function MyLearning() {
                       </Link>
 
                       <p className="font-body-md text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-3">
-                        {item.description || 'Master distributed consensus protocols, Two-Phase Commit, and cloud banking architectures.'}
+                        {item.description || matchedCatalogCourse?.description || 'Master distributed consensus protocols, Two-Phase Commit, and cloud banking architectures.'}
                       </p>
                     </div>
 
                     <div className="font-label-md text-xs text-on-surface-variant flex items-center gap-3">
-                      <span>{isCompleted ? 'All modules completed' : `${item.currentModule || 'Module 2 of 4'} • Est. 4h remaining`}</span>
+                      <span>
+                        {isCompleted 
+                          ? 'All modules completed' 
+                          : progress === 0 
+                          ? 'Not started • Ready for Module 1' 
+                          : `${item.currentModule || 'Module 1 of 4'} • In Progress`}
+                      </span>
                       <span>•</span>
-                      <span>Enrolled: {item.enrolledDate || 'Aug 2026'}</span>
+                      <span>Enrolled: {item.enrolledDate || 'Recent'}</span>
                     </div>
                   </div>
 
@@ -277,10 +296,11 @@ export default function MyLearning() {
                       ) : (
                         <Link
                           to="/student/player"
+                          state={{ courseId: item.courseId, enrollmentId: item.id }}
                           className="bg-primary hover:bg-primary-container text-white font-title-md text-xs font-bold py-2 px-4 rounded-lg transition-colors w-full text-center shadow-xs flex items-center justify-center gap-1.5"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
-                          <span>Continue</span>
+                          <span>{progress === 0 ? 'Start Course' : 'Continue'}</span>
                         </Link>
                       )}
 

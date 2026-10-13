@@ -124,22 +124,56 @@ export default function Dashboard() {
   }
 
   const activeEnrollment = enrollments.find((enrollment) => enrollment.status !== 'Completed') || enrollments[0];
-  const activeCourseData = allCourses.find((course) => course.id === activeEnrollment?.courseId) || allCourses[0];
+  const activeCourseData = allCourses.find((course) => 
+    course.id === activeEnrollment?.courseId || 
+    course.title?.toLowerCase() === activeEnrollment?.courseTitle?.toLowerCase()
+  ) || allCourses[0];
+
+  const activeProgress = activeEnrollment 
+    ? (typeof activeEnrollment.progress === 'number' ? activeEnrollment.progress : 0)
+    : 0;
+
   const activeCourse = activeCourseData ? {
     ...activeCourseData,
-    progress: activeEnrollment?.progress ?? activeCourseData.progress ?? 65,
+    id: activeEnrollment?.courseId || activeCourseData.id,
+    title: activeEnrollment?.courseTitle || activeCourseData.title,
+    subtitle: activeCourseData.subtitle || activeCourseData.description,
+    category: activeCourseData.category || 'Architecture',
+    institution: activeEnrollment?.institution || activeCourseData.institution || 'Stanford University',
+    progress: activeProgress,
+    currentModule: activeProgress === 0 ? 'Module 1: Getting Started' : (activeEnrollment?.currentModule || 'Module 1: Orientation & Foundations'),
+    thumbnail: activeEnrollment?.thumbnail || activeEnrollment?.thumbnailUrl || activeCourseData.thumbnail || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
   } : {
     id: 'crs-1',
     title: 'Advanced Enterprise Architecture & Payment Systems',
     subtitle: 'Master distributed consensus protocols and cloud banking networks.',
     category: 'Cloud Architecture',
     institution: 'Stanford University',
-    progress: activeEnrollment?.progress ?? 65,
-    currentModule: 'Module 2: Cloud Multi-Region Failover',
-    thumbnail: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&auto=format&fit=crop&q=80',
+    progress: 0,
+    currentModule: 'Module 1: Getting Started',
+    thumbnail: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
   };
 
-  const inProgressCourses = allCourses.slice(1, 4);
+  const inProgressCourses = useMemo(() => {
+    const list = enrollments
+      .filter((e) => e.status !== 'Completed')
+      .map((e) => {
+        const cData = allCourses.find((c) => c.id === e.courseId || c.title?.toLowerCase() === e.courseTitle?.toLowerCase());
+        const prog = typeof e.progress === 'number' ? e.progress : 0;
+        return {
+          id: e.courseId || cData?.id || e.id,
+          title: e.courseTitle || cData?.title,
+          subtitle: cData?.subtitle || cData?.description || 'Accredited university specialization track',
+          institution: e.institution || cData?.institution || cData?.organizationName || 'Stanford University',
+          progress: prog,
+          currentModule: prog === 0 ? 'Module 1: Getting Started' : (e.currentModule || 'In Progress'),
+          thumbnail: e.thumbnail || e.thumbnailUrl || cData?.thumbnail || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
+          status: e.status || 'Active'
+        };
+      });
+    return list.length > 0 ? list.slice(0, 4) : allCourses.slice(1, 4);
+  }, [enrollments, allCourses]);
+
   const recommendedCourses = allCourses.slice(0, 4);
 
   const studentName = student?.name || profile?.name || 'Vujja Punith Sai';
@@ -197,10 +231,11 @@ export default function Dashboard() {
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 to="/student/player"
+                state={{ courseId: activeCourse.id }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white text-[#0040A1] text-xs font-bold hover:bg-blue-50 shadow-sm transition-all hover:scale-[1.01]"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Resume Lesson 2.3</span>
+                <span>{activeCourse.progress === 0 ? 'Start Course' : 'Resume Lesson'}</span>
               </Link>
               <Link
                 to="/student/my-learning"
@@ -305,16 +340,16 @@ export default function Dashboard() {
               
               <div className="w-full lg:w-80 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 relative shadow-xs">
                 <img
-                  src={activeCourse.thumbnail || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&auto=format&fit=crop&q=80'}
+                  src={activeCourse.thumbnail || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80'}
                   alt={activeCourse.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end justify-between p-3.5">
                   <span className="px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[11px] font-bold text-white">
-                    {activeCourse.currentModule || 'Module 1: Foundations'}
+                    {activeCourse.currentModule || (activeCourse.progress === 0 ? 'Module 1: Getting Started' : 'Module 1: Foundations')}
                   </span>
                   <span className="px-2 py-0.5 rounded bg-black/60 text-[10px] font-medium text-white/90">
-                    ~45m left
+                    {activeCourse.progress === 0 ? 'Ready to Start' : '~45m left'}
                   </span>
                 </div>
               </div>
@@ -346,10 +381,12 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center justify-between text-xs text-slate-600 font-semibold mb-1.5">
                       <span>Course Progress</span>
-                      <span className="text-coursera font-bold">{activeCourse.progress ?? 65}% (4 of 6 modules)</span>
+                      <span className="text-coursera font-bold">
+                        {activeCourse.progress === 0 ? '0% (Just Enrolled)' : `${activeCourse.progress}% Completed`}
+                      </span>
                     </div>
                     <LinearProgressBar 
-                      progress={activeCourse.progress ?? 65}
+                      progress={activeCourse.progress}
                       showLabel={false}
                       color="bg-[#0056D2]"
                       height="h-2"
@@ -359,7 +396,10 @@ export default function Dashboard() {
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-slate-100">
                     <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
                       <span className="flex items-center gap-1.5 text-slate-800 font-semibold">
-                        <Clock className="w-3.5 h-3.5 text-coursera" /> Next Up: 2.3 State Management in NexusPay (10m)
+                        <Clock className="w-3.5 h-3.5 text-coursera" /> 
+                        {activeCourse.progress === 0 
+                          ? 'First Lesson: 1.1 Course Orientation & Overview (15m)' 
+                          : 'Next Up: 2.3 State Management in NexusPay (10m)'}
                       </span>
                     </div>
 
@@ -372,10 +412,11 @@ export default function Dashboard() {
                       </Link>
                       <Link
                         to="/student/player"
+                        state={{ courseId: activeCourse.id }}
                         className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] shadow-xs transition-all cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Resume Lesson</span>
+                        <span>{activeCourse.progress === 0 ? 'Start Course' : 'Resume Lesson'}</span>
                       </Link>
                     </div>
                   </div>

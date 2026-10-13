@@ -83,15 +83,38 @@ export class StudentService {
     const enrollments = await this.enrollmentsRepo.find({
       where: { learnerId: learner.id },
     });
-    return enrollments;
+    const allCourses = await this.coursesRepo.find();
+    
+    // Enrich with accurate course thumbnail and metadata
+    const enriched = enrollments.map((enr) => {
+      const course = allCourses.find((c) => c.id === enr.courseId || c.title?.toLowerCase() === enr.courseTitle?.toLowerCase());
+      const resolvedThumbnail = enr.thumbnail || enr.thumbnailUrl || course?.thumbnail || course?.thumbnailUrl;
+      const resolvedTitle = enr.courseTitle || course?.title || 'Academic Course Track';
+      const resolvedInstitution = enr.institution || course?.institution || course?.organizationName || 'Stanford University';
+      const resolvedProgress = typeof enr.progress === 'number' ? enr.progress : (enr.status === 'Completed' ? 100 : 0);
+      return {
+        ...enr,
+        courseTitle: resolvedTitle,
+        thumbnail: resolvedThumbnail,
+        thumbnailUrl: resolvedThumbnail,
+        institution: resolvedInstitution,
+        progress: resolvedProgress,
+      };
+    });
+    return enriched;
   }
 
-  async enrollCourse(userId: string, courseId: string) {
+  async enrollCourse(userId: string, courseId: string, extra?: { thumbnail?: string; institution?: string; courseTitle?: string }) {
     const learner = await this.getProfile(userId);
-    const course = await this.coursesRepo.findById(courseId);
+    let course = await this.coursesRepo.findById(courseId);
     if (!course) {
-      throw new NotFoundException(`Course '${courseId}' not found`);
+      const allCourses = await this.coursesRepo.find();
+      course = allCourses.find((c) => c.id === courseId || c.title?.toLowerCase() === extra?.courseTitle?.toLowerCase());
     }
+
+    const resolvedThumbnail = extra?.thumbnail || course?.thumbnail || course?.thumbnailUrl;
+    const resolvedInstitution = extra?.institution || course?.institution || course?.organizationName || 'Stanford University';
+    const resolvedTitle = extra?.courseTitle || course?.title || 'Masterclass Track';
 
     const existing = await this.enrollmentsRepo.findOne({
       learnerId: learner.id,
@@ -99,7 +122,24 @@ export class StudentService {
     });
 
     if (existing) {
-      return existing;
+      // Ensure existing record has latest course thumbnail, institution, and resets to 0 if newly purchased
+      await this.enrollmentsRepo.update(existing.id, {
+        thumbnail: resolvedThumbnail || existing.thumbnail,
+        thumbnailUrl: resolvedThumbnail || existing.thumbnailUrl,
+        institution: resolvedInstitution || existing.institution,
+        courseTitle: resolvedTitle || existing.courseTitle,
+        progress: 0,
+        status: 'Active',
+      });
+      return {
+        ...existing,
+        thumbnail: resolvedThumbnail || existing.thumbnail,
+        thumbnailUrl: resolvedThumbnail || existing.thumbnailUrl,
+        institution: resolvedInstitution || existing.institution,
+        courseTitle: resolvedTitle || existing.courseTitle,
+        progress: 0,
+        status: 'Active',
+      };
     }
 
     const newEnrollment = await this.enrollmentsRepo.create({
@@ -108,17 +148,24 @@ export class StudentService {
       learnerName: learner.name,
       learnerEmail: learner.email,
       learnerAvatar: learner.avatar,
-      courseId: course.id,
-      courseTitle: course.title,
+      courseId: course?.id || courseId,
+      courseTitle: resolvedTitle,
+      thumbnail: resolvedThumbnail,
+      thumbnailUrl: resolvedThumbnail,
+      institution: resolvedInstitution,
       enrolledDate: new Date().toISOString().split('T')[0],
       enrolledAt: new Date().toISOString(),
       progress: 0,
       status: 'Active',
+      completedLessons: [],
+      lastAccessedLesson: null,
     });
 
-    await this.coursesRepo.update(course.id, {
-      enrolledCount: (course.enrolledCount || 0) + 1,
-    });
+    if (course) {
+      await this.coursesRepo.update(course.id, {
+        enrolledCount: (course.enrolledCount || 0) + 1,
+      });
+    }
 
     return newEnrollment;
   }
@@ -198,19 +245,23 @@ export class StudentService {
       payerName: learner.name,
       payerEmail: learner.email,
       courseId: dto.courseId,
-      courseTitle: course?.title || 'Masterclass Track',
+      courseTitle: dto.courseTitle || course?.title || 'Masterclass Track',
       amount: dto.amount || course?.price || 4999,
       paymentMethod: dto.paymentMethod || 'Credit Card',
       status: 'Paid',
       timestamp: new Date().toISOString(),
     });
 
-    await this.enrollCourse(userId, dto.courseId);
+    await this.enrollCourse(userId, dto.courseId, {
+      thumbnail: dto.thumbnail,
+      institution: dto.institution,
+      courseTitle: dto.courseTitle,
+    });
 
     return {
       success: true,
       transactionId: transaction.id,
-      courseTitle: course?.title || 'Masterclass Track',
+      courseTitle: dto.courseTitle || course?.title || 'Masterclass Track',
       amount: transaction.amount,
       date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     };

@@ -138,14 +138,29 @@ export default function Checkout() {
     const targetCourseId = course?.id || 'crs-1';
 
     try {
-      const result = await api.student.checkout(targetCourseId, paymentMethod, totalPrice, 'lrn-1');
+      const resolvedThumbnail = course?.thumbnail || courseThumbnail;
+      const resolvedTitle = course?.title || courseTitle;
+      const resolvedInstitution = course?.institution || course?.organizationName || courseProvider;
+
+      const result = await api.student.checkout(
+        targetCourseId,
+        paymentMethod,
+        totalPrice,
+        'lrn-1',
+        {
+          thumbnail: resolvedThumbnail,
+          institution: resolvedInstitution,
+          courseTitle: resolvedTitle,
+        }
+      );
       
       // Dispatch enrollment to centralized StudentContext
       enrollInCourse({
         id: targetCourseId,
-        title: result?.courseTitle || courseTitle,
-        institution: courseProvider,
-        thumbnail: courseThumbnail
+        title: result?.courseTitle || resolvedTitle,
+        institution: resolvedInstitution,
+        thumbnail: resolvedThumbnail,
+        progress: 0,
       });
 
       navigate('/student/payment-success', {

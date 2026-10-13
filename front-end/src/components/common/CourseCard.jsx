@@ -42,7 +42,7 @@ export default function CourseCard({
         <div>
           <div className="mb-4">
             <LinearProgressBar 
-              progress={course.progress || 45} 
+              progress={typeof course.progress === 'number' ? course.progress : 0} 
               showLabel={true}
               color={course.progress >= 70 ? "bg-secondary" : "bg-primary"}
             />
@@ -54,7 +54,7 @@ export default function CourseCard({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary-container shadow-sm transition-all"
             >
               <PlayCircle className="w-4 h-4" />
-              <span>Resume</span>
+              <span>{course.progress === 0 ? 'Start' : 'Resume'}</span>
             </Link>
             <Link
               to={`/student/course-progress/${course.id || 'crs-1'}`}

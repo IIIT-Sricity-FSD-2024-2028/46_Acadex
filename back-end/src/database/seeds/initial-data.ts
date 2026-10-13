@@ -512,7 +512,7 @@ export const initialEnrollmentsData = [
     courseTitle: "AWS Cloud Solutions Architect - Masterclass",
     enrolledDate: "2026-08-15",
     enrolledAt: "2026-08-15T10:30:00.000Z",
-    progress: 82,
+    progress: 0,
     status: "Active",
     createdAt: "2026-08-15T10:30:00.000Z"
   },
