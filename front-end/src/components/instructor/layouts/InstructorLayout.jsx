@@ -11,17 +11,22 @@ import {
   ShieldCheck, 
   ChevronDown, 
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  Clock,
+  Loader2,
+  Building2,
 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { InstructorSidebar } from "./InstructorSidebar";
-import { cn } from "../../../utils/cn";
+import { InstructorProvider, useInstructor } from "../../../context/InstructorContext";
+import { ConnectUniversity } from "../../../pages/instructor/onboarding/ConnectUniversity";
 
 export function InstructorLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const location = useLocation();
   const dropdownRef = useRef(null);
+
+  const { instructor, isAffiliated, loading } = useInstructor();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -44,16 +49,20 @@ export function InstructorLayout() {
     window.location.href = '/signin?role=Instructor';
   };
 
+  const displayName = instructor?.name || 'Faculty Member';
+  const displayEmail = instructor?.email || 'faculty@university.edu';
+  const displayOrg = instructor?.organizationName || 'Affiliation Pending';
+
   return (
     <div className="min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 1. LEFT SIDEBAR (Consistent with Student & Coursera System)   */}
+      {/* 1. LEFT SIDEBAR                                               */}
       {/* ───────────────────────────────────────────────────────────── */}
       <InstructorSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 2. MAIN COLUMN (Top Navbar + Content Viewport + Footer)       */}
+      {/* 2. MAIN COLUMN                                                */}
       {/* ───────────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         
@@ -77,10 +86,18 @@ export function InstructorLayout() {
                   <BookOpen className="w-3.5 h-3.5" />
                   <span>Instructor Studio</span>
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Stanford University</span>
-                </span>
+
+                {isAffiliated ? (
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Verified Faculty • {displayOrg}</span>
+                  </span>
+                ) : (
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Awaiting University Affiliation</span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -112,10 +129,10 @@ export function InstructorLayout() {
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
                 >
-                  <Avatar fallback="Dr. Sarah Jenkins" size="sm" />
+                  <Avatar fallback={displayName} size="sm" />
                   <div className="hidden md:flex flex-col text-left leading-tight">
-                    <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">Dr. Sarah Jenkins</span>
-                    <span className="text-[10px] text-slate-500 truncate max-w-[130px]">Senior Faculty</span>
+                    <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">{displayName}</span>
+                    <span className="text-[10px] text-slate-500 truncate max-w-[130px]">{displayOrg}</span>
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </button>
@@ -123,11 +140,11 @@ export function InstructorLayout() {
                 {profileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-lg py-2 z-50 text-slate-700 animate-in fade-in-50 duration-150">
                     <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                      <p className="text-xs font-bold text-slate-900">Dr. Sarah Jenkins</p>
-                      <p className="text-[11px] text-slate-500 truncate">s.jenkins@stanford.edu</p>
+                      <p className="text-xs font-bold text-slate-900">{displayName}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{displayEmail}</p>
                       <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-[#0056D2] text-[10px] font-bold">
-                        <GraduationCap className="w-3 h-3" />
-                        Stanford Dept of EECS
+                        <Building2 className="w-3 h-3" />
+                        <span className="truncate max-w-[180px]">{displayOrg}</span>
                       </div>
                     </div>
 
@@ -175,13 +192,20 @@ export function InstructorLayout() {
         </header>
 
         {/* ───────────────────────────────────────────────────────────── */}
-        {/* MAIN VIEWPORT                                                 */}
+        {/* MAIN VIEWPORT: Onboarding if unaffiliated, or Normal Outlet   */}
         {/* ───────────────────────────────────────────────────────────── */}
         <main className="flex-1 w-full max-w-[1560px] mx-auto px-4 md:px-8 lg:px-10 py-8 space-y-8">
-          <Outlet />
+          {loading ? (
+            <div className="flex flex-col items-center justify-center min-h-[350px] gap-3 text-slate-400">
+              <Loader2 className="w-7 h-7 animate-spin text-[#0056D2]" />
+              <p className="text-xs font-medium">Loading faculty workspace...</p>
+            </div>
+          ) : !isAffiliated ? (
+            <ConnectUniversity />
+          ) : (
+            <Outlet />
+          )}
         </main>
-
-                  
       </div>
     </div>
   );

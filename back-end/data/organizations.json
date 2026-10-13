@@ -13,7 +13,13 @@
     "totalRevenue": 142580,
     "monthlyRevenue": 42580,
     "currency": "USD",
-    "instructorIds": ["inst-1", "inst-3", "inst-4", "inst-5", "inst-6"],
+    "instructorIds": [
+      "inst-1",
+      "inst-3",
+      "inst-4",
+      "inst-5",
+      "inst-6"
+    ],
     "coursesCount": 8,
     "learnersCount": 650,
     "logo": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80",
@@ -34,12 +40,15 @@
     "totalRevenue": 98400,
     "monthlyRevenue": 29500,
     "currency": "USD",
-    "instructorIds": ["inst-2"],
+    "instructorIds": [
+      "inst-2",
+      "inst-1791912292835"
+    ],
     "coursesCount": 4,
     "learnersCount": 420,
     "logo": "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2022-03-10T08:00:00.000Z",
-    "updatedAt": "2026-08-28T10:00:00.000Z"
+    "updatedAt": "2026-10-13T17:41:47.859Z"
   },
   {
     "id": "org-103",
@@ -55,7 +64,10 @@
     "totalRevenue": 112000,
     "monthlyRevenue": 34000,
     "currency": "USD",
-    "instructorIds": ["inst-2", "inst-1"],
+    "instructorIds": [
+      "inst-2",
+      "inst-1"
+    ],
     "coursesCount": 5,
     "learnersCount": 510,
     "logo": "https://images.unsplash.com/photo-1562774053-701939374585?w=200&auto=format&fit=crop&q=80",
@@ -76,7 +88,9 @@
     "totalRevenue": 76500,
     "monthlyRevenue": 21800,
     "currency": "USD",
-    "instructorIds": ["inst-4"],
+    "instructorIds": [
+      "inst-4"
+    ],
     "coursesCount": 3,
     "learnersCount": 290,
     "logo": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=200&auto=format&fit=crop&q=80",

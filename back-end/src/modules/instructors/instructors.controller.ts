@@ -49,4 +49,14 @@ export class InstructorsController {
   async getCourses(@Param('id') id: string) {
     return this.instructorsService.getInstructorCourses(id);
   }
+
+  @Post(':id/connect-university')
+  @ApiOperation({ summary: 'Associate instructor with an accredited university or organization' })
+  @ApiResponse({ status: 200, description: 'University connected successfully' })
+  async connectUniversity(
+    @Param('id') id: string,
+    @Body() body: { organizationId: string; organizationName?: string }
+  ) {
+    return this.instructorsService.connectUniversity(id, body.organizationId, body.organizationName);
+  }
 }

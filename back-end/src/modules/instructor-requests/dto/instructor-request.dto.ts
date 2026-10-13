@@ -42,6 +42,16 @@ export class CreateTeachingRequestDto {
   @IsOptional()
   @IsString()
   message?: string;
+
+  @ApiPropertyOptional({ example: 'org-101' })
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @ApiPropertyOptional({ example: 'Stanford University' })
+  @IsOptional()
+  @IsString()
+  organizationName?: string;
 }
 
 export class RespondTeachingRequestDto {
@@ -68,4 +78,14 @@ export class InstructorRequestQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by instructor ID' })
+  @IsOptional()
+  @IsString()
+  instructorId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by instructor email' })
+  @IsOptional()
+  @IsString()
+  email?: string;
 }

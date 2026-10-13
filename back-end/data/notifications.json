@@ -1,5 +1,27 @@
 [
   {
+    "title": "Professor Prof. Alan Turing Accepted Course Assignment",
+    "desc": "Great news! Prof. Alan Turing has accepted the college request from Stanford University School of Engineering to teach \"Distributed Systems Architecture\" for Fall 2026.",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "green",
+    "id": "not-c6e33059",
+    "createdAt": "2026-10-13T17:41:47.815Z",
+    "updatedAt": "2026-10-13T17:41:47.815Z"
+  },
+  {
+    "title": "Teaching Invitation Dispatched: Prof. Alan Turing",
+    "desc": "Formal course teaching request sent to Prof. Alan Turing for \"Distributed Systems Architecture\".",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "blue",
+    "id": "not-3514c834",
+    "createdAt": "2026-10-13T17:40:43.113Z",
+    "updatedAt": "2026-10-13T17:40:43.113Z"
+  },
+  {
     "title": "Teaching Invitation Dispatched: David Kalu",
     "desc": "Formal course teaching request sent to David Kalu for \"Distributed Systems\".",
     "time": "Just now",

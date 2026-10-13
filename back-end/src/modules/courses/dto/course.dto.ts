@@ -214,4 +214,14 @@ export class CourseQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by assigned instructor ID' })
+  @IsOptional()
+  @IsString()
+  instructorId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by offering organization ID' })
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
 }

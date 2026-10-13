@@ -16,7 +16,7 @@ export class CoursesService {
   ) {}
 
   async findAll(query: CourseQueryDto) {
-    const { page = 1, limit = 10, search, category, level, status, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const { page = 1, limit = 10, search, category, level, status, instructorId, organizationId, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
     const skip = (page - 1) * limit;
 
     const where: QueryFilter<any> = {};
@@ -31,6 +31,17 @@ export class CoursesService {
 
     if (status && status !== 'All') {
       where.status = status;
+    }
+
+    if (instructorId) {
+      where.$or = [
+        { instructorId: instructorId },
+        { 'instructors.id': instructorId },
+      ];
+    }
+
+    if (organizationId) {
+      where.organizationId = organizationId;
     }
 
     if (search) {

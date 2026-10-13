@@ -59,6 +59,16 @@ function persistSession({ token, user = {}, fallbackRole, fallbackName, fallback
   localStorage.setItem('user_role', role);
   localStorage.setItem('user_name', user.name || fallbackName || '');
   localStorage.setItem('user_email', user.email || fallbackEmail || '');
+  if (user.organizationId) {
+    localStorage.setItem('user_organization_id', user.organizationId);
+  } else {
+    localStorage.removeItem('user_organization_id');
+  }
+  if (user.organizationName) {
+    localStorage.setItem('user_organization_name', user.organizationName);
+  } else {
+    localStorage.removeItem('user_organization_name');
+  }
 
   return getDashboardForRole(role);
 }

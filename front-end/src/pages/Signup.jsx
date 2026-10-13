@@ -160,6 +160,13 @@ export default function SignUp() {
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_name', name);
         localStorage.setItem('user_email', email);
+        if (res.user?.organizationId) {
+          localStorage.setItem('user_organization_id', res.user.organizationId);
+          localStorage.setItem('user_organization_name', res.user.organizationName || '');
+        } else {
+          localStorage.removeItem('user_organization_id');
+          localStorage.removeItem('user_organization_name');
+        }
 
         setSuccessMsg(`Welcome to EduSphere, ${name}! Your ${role} account has been created.`);
 

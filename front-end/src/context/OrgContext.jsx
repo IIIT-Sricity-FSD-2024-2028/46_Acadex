@@ -252,7 +252,7 @@ export function OrgProvider({ children }) {
   };
 
   // 3. College Course Teaching Requests
-  const sendCourseTeachingRequest = async ({ instructorId, courseId, courseTitle, semester, creditHours, proposedTerms, message }) => {
+  const sendCourseTeachingRequest = async ({ instructorId, courseId, courseTitle, semester, creditHours, proposedTerms, message, organizationId, organizationName }) => {
     try {
       const payload = {
         instructorId,
@@ -262,6 +262,8 @@ export function OrgProvider({ children }) {
         creditHours: creditHours || '4 Academic Credits',
         proposedTerms: proposedTerms || 'Departmental faculty honorarium + course royalties',
         message: message || `College administration sent formal course teaching request for ${courseTitle}.`,
+        organizationId: organizationId || state.organization?.id || 'org-101',
+        organizationName: organizationName || state.organization?.name || 'NexusPay Enterprise Academy',
       };
 
       const created = await api.instructorRequests.create(payload);

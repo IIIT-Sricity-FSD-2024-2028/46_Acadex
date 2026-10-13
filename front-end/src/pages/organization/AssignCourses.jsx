@@ -20,7 +20,7 @@ export default function AssignCourses() {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
-  const { instructors, courses, sendCourseTeachingRequest } = useOrg();
+  const { instructors, courses, sendCourseTeachingRequest, organization } = useOrg();
 
   // Read preselected instructor or course from URL if provided
   const queryParams = new URLSearchParams(location.search);
@@ -80,7 +80,9 @@ export default function AssignCourses() {
               semester,
               creditHours,
               proposedTerms,
-              message: customMessage
+              message: customMessage,
+              organizationId: organization?.id || 'org-101',
+              organizationName: organization?.name || 'NexusPay Enterprise Academy',
             })
           );
         });

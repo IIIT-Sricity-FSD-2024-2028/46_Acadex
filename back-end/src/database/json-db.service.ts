@@ -124,6 +124,20 @@ export class JsonDatabaseService implements OnModuleInit {
   }
 
   public async getCollection<T extends BaseEntity>(collection: string): Promise<T[]> {
+    const filePath = this.getCollectionFilePath(collection);
+    if (fs.existsSync(filePath)) {
+      try {
+        const raw = await fs.promises.readFile(filePath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          this.memoryStore.set(collection, parsed);
+          return JSON.parse(JSON.stringify(parsed)) as T[];
+        }
+      } catch {
+        // Fall back to in-memory store if disk read fails
+      }
+    }
+
     if (!this.memoryStore.has(collection)) {
       const defaultData = this.defaultSeedMap[collection] || [];
       this.memoryStore.set(collection, JSON.parse(JSON.stringify(defaultData)));

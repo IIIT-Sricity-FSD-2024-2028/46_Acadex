@@ -15,9 +15,13 @@ import {
   GraduationCap,
   Sparkles,
   X,
+  Lock,
+  Clock,
+  Building2,
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { cn } from '../../../utils/cn';
+import { useInstructor } from '../../../context/InstructorContext';
 
 const instructorNavGroups = [
   {
@@ -47,6 +51,9 @@ const instructorNavGroups = [
 
 export function InstructorSidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
+  const { instructor, isAffiliated, invitations } = useInstructor();
+
+  const pendingCount = (invitations || []).filter((i) => i.status?.includes('Pending')).length;
 
   const handleSignOut = () => {
     localStorage.removeItem('nexuspay_auth_token');
@@ -55,6 +62,9 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
     localStorage.removeItem('user_role');
     window.location.href = '/signin?role=Instructor';
   };
+
+  const displayName = instructor?.name || 'Faculty Member';
+  const displayOrg = instructor?.organizationName || 'Affiliation Pending';
 
   const sidebarContent = (
     <div className="h-full flex flex-col justify-between bg-white text-slate-900 border-r border-slate-200/90 select-none">
@@ -93,8 +103,30 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
           )}
         </div>
 
+        {/* Affiliation Notice when unaffiliated */}
+        {!isAffiliated && (
+          <div className="p-3">
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold text-xs">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Affiliation Required</span>
+                </div>
+                {pendingCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-extrabold">
+                    {pendingCount} new
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-amber-800 leading-snug font-normal">
+                Awaiting organization teaching invitation. Review incoming requests to accept or decline.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Groups */}
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin">
           {instructorNavGroups.map((group, idx) => (
             <div key={idx} className="space-y-1">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">
@@ -106,6 +138,25 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
                   (item.href === '/instructor/dashboard' && location.pathname === '/instructor') ||
                   (item.href !== '/instructor/dashboard' && location.pathname.startsWith(item.href));
                 const Icon = item.icon;
+
+                // When unaffiliated, core studio and insights tools require affiliation
+                const isLocked = !isAffiliated && (group.title === 'Core Studio' || group.title === 'Teaching Insights');
+
+                if (isLocked) {
+                  return (
+                    <div
+                      key={item.name}
+                      title="Connect to an accredited university to unlock this tool"
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 cursor-not-allowed bg-slate-50/50"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4 text-slate-300 shrink-0" />
+                        <span>{item.name}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-300" />
+                    </div>
+                  );
+                }
 
                 return (
                   <NavLink
@@ -134,10 +185,9 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
       {/* User Footer Dock matching Student UI */}
       <div className="p-3 border-t border-slate-200/90 bg-slate-50/50">
         <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-          <Avatar fallback="Dr. Sarah Jenkins" size="sm" />
+          <Avatar fallback={displayName} size="sm" />
           <div className="flex-1 min-w-0 leading-tight">
-            <p className="text-xs font-bold text-slate-900 truncate">Dr. Sarah Jenkins</p>
-            <p className="text-[10px] text-slate-500 truncate">Stanford Dept of EECS</p>
+            <p className="text-xs font-bold text-slate-900 truncate">{displayName}</p>
           </div>
           <button
             onClick={handleSignOut}

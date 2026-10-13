@@ -10,7 +10,11 @@ export class InstructorsService {
     @Inject(REPOSITORY_TOKENS.INSTRUCTORS)
     private readonly instructorsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.COURSES)
-    private readonly coursesRepo: JsonRepository<any>
+    private readonly coursesRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.ORGANIZATIONS)
+    private readonly orgsRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.USERS)
+    private readonly usersRepo: JsonRepository<any>,
   ) {}
 
   async findAll(query: InstructorQueryDto) {
@@ -105,5 +109,53 @@ export class InstructorsService {
         ],
       },
     });
+  }
+
+  async connectUniversity(id: string, organizationId: string, organizationName?: string) {
+    const instructor = await this.instructorsRepo.findById(id);
+    if (!instructor) {
+      throw new NotFoundException(`Instructor with ID '${id}' not found`);
+    }
+
+    let finalName = organizationName;
+    if (!finalName) {
+      const org = await this.orgsRepo.findById(organizationId);
+      finalName = org?.name || 'Partner University';
+    }
+
+    const updated = await this.instructorsRepo.update(id, {
+      organizationId,
+      organizationName: finalName,
+      status: 'Active',
+    });
+
+    if (instructor.userId) {
+      await this.usersRepo.update(instructor.userId, {
+        organizationId,
+        organizationName: finalName,
+        status: 'Active',
+      });
+    } else {
+      const user = await this.usersRepo.findOne({ email: instructor.email });
+      if (user) {
+        await this.usersRepo.update(user.id, {
+          organizationId,
+          organizationName: finalName,
+          status: 'Active',
+        });
+      }
+    }
+
+    const org = await this.orgsRepo.findById(organizationId);
+    if (org) {
+      const roster = org.instructorIds || [];
+      if (!roster.includes(id)) {
+        await this.orgsRepo.update(organizationId, {
+          instructorIds: [...roster, id],
+        });
+      }
+    }
+
+    return updated;
   }
 }

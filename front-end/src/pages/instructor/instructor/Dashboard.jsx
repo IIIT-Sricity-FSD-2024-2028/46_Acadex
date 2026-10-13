@@ -21,8 +21,10 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from "react-router-dom";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../context/InstructorContext";
 
 export function Dashboard() {
+  const { instructor, assignedCourses } = useInstructor();
   const [analytics, setAnalytics] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,12 +77,12 @@ export function Dashboard() {
           <div className="mb-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 text-xs font-semibold backdrop-blur-sm">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Stanford University</span>
+              <span>{instructor?.organizationName || 'Accredited University Partner'}</span>
             </div>
           </div>
 
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 tracking-tight">
-            Welcome back, Dr. Jenkins!
+            Welcome back, {instructor?.name || 'Professor'}!
           </h1>
 
           {/* Banner Action Buttons */}

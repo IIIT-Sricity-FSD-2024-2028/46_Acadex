@@ -77,15 +77,30 @@ export class AuthService {
           },
         };
       }
+
+      const inst = await this.instructorsRepo.findOne({ email: dto.email });
+      if (inst && this.rolesMatch('Instructor', dto.role)) {
+        return {
+          token: `jwt-token-${inst.id}-${Date.now()}`,
+          user: {
+            id: inst.userId || inst.id,
+            instructorId: inst.id,
+            name: inst.name,
+            email: inst.email,
+            role: 'Instructor',
+            avatar: inst.avatar,
+            organizationId: inst.organizationId || null,
+            organizationName: inst.organizationName || null,
+            status: inst.status || 'Pending Affiliation',
+          },
+        };
+      }
+
       throw new UnauthorizedException('Invalid email or password credentials');
     }
 
     if (user.password && user.password !== dto.password) {
       throw new UnauthorizedException('Invalid email or password credentials');
-    }
-
-    if (!this.rolesMatch(user.role as string, dto.role)) {
-      throw new UnauthorizedException('This account does not have access to the selected portal');
     }
 
     // Update lastLogin
@@ -99,15 +114,37 @@ export class AuthService {
       resolvedRole = normalizedRequested === 'admin' ? 'Admin' : 'SuperAdmin';
     }
 
+    let orgId = user.organizationId || null;
+    let orgName = user.organizationName || null;
+    let status = user.status || 'Active';
+    let instructorId = null;
+
+    if (user.role === 'Instructor') {
+      const inst = (await this.instructorsRepo.findOne({ userId: user.id })) ||
+                   (await this.instructorsRepo.findOne({ email: user.email }));
+      if (inst) {
+        instructorId = inst.id;
+        orgId = inst.organizationId || user.organizationId || null;
+        orgName = inst.organizationName || user.organizationName || null;
+        status = inst.status || user.status || 'Pending Affiliation';
+      } else {
+        status = user.organizationId ? 'Active' : 'Pending Affiliation';
+      }
+    }
+
     return {
       token: `jwt-token-${user.id}-${Date.now()}`,
       user: {
         id: user.id,
+        instructorId,
         name: user.name,
         email: user.email,
         role: resolvedRole,
         avatar: user.avatar,
         verificationStatus: user.verificationStatus,
+        organizationId: orgId,
+        organizationName: orgName,
+        status,
       },
     };
   }
@@ -119,17 +156,23 @@ export class AuthService {
       throw new BadRequestException('A user with this email address already exists');
     }
 
+    const initialStatus = dto.role === 'Instructor' ? 'Pending Affiliation' : 'Active';
+
     const newUser = await this.usersRepo.create({
       id: `usr-${Date.now()}`,
       name: dto.name,
       email: dto.email,
       password: dto.password,
       role: dto.role,
-      status: 'Active',
+      status: initialStatus,
       verificationStatus: 'Verified',
+      organizationId: null,
+      organizationName: null,
       avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80`,
       createdAt: new Date().toISOString(),
     });
+
+    let instructorId: string | null = null;
 
     if (dto.role === 'Student') {
       await this.learnersRepo.create({
@@ -146,8 +189,9 @@ export class AuthService {
         status: 'Active',
       });
     } else if (dto.role === 'Instructor') {
+      instructorId = `inst-${Date.now()}`;
       await this.instructorsRepo.create({
-        id: `inst-${Date.now()}`,
+        id: instructorId,
         userId: newUser.id,
         name: newUser.name,
         email: newUser.email,
@@ -155,17 +199,26 @@ export class AuthService {
         educatorType: 'Faculty Instructor',
         specialization: dto.expertise || 'Computer Science',
         bio: 'Newly registered faculty educator on the platform.',
-        status: 'Active',
+        status: 'Pending Affiliation',
+        organizationId: null,
+        organizationName: null,
         coursesCount: 0,
         enrolledStudents: 0,
         avgRating: 5.0,
         revenueGenerated: 0,
+        createdAt: new Date().toISOString(),
       });
     }
 
     return {
       token: `jwt-token-${newUser.id}-${Date.now()}`,
-      user: newUser,
+      user: {
+        ...newUser,
+        instructorId,
+        organizationId: null,
+        organizationName: null,
+        status: initialStatus,
+      },
     };
   }
 
@@ -220,11 +273,33 @@ export class AuthService {
 
   async getMe(userId: string) {
     const user = await this.usersRepo.findById(userId);
-    if (user) return user;
+    if (user) {
+      if (user.role === 'Instructor') {
+        const inst = (await this.instructorsRepo.findOne({ userId: user.id })) ||
+                     (await this.instructorsRepo.findOne({ email: user.email }));
+        return {
+          ...user,
+          instructorId: inst?.id || null,
+          organizationId: inst?.organizationId || user.organizationId || null,
+          organizationName: inst?.organizationName || user.organizationName || null,
+          status: inst?.status || user.status || 'Pending Affiliation',
+        };
+      }
+      return user;
+    }
     const learner = await this.learnersRepo.findById(userId);
     if (learner) return { ...learner, role: 'Student' };
     const inst = await this.instructorsRepo.findById(userId);
-    if (inst) return { ...inst, role: 'Instructor' };
+    if (inst) {
+      return {
+        ...inst,
+        instructorId: inst.id,
+        role: 'Instructor',
+        organizationId: inst.organizationId || null,
+        organizationName: inst.organizationName || null,
+        status: inst.status || 'Pending Affiliation',
+      };
+    }
     return {
       id: userId,
       name: 'Authenticated User',

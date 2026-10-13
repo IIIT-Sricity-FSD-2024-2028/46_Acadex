@@ -32,6 +32,7 @@ import StudentRouteMiddleware from './components/student/layout/StudentRouteMidd
 // ──────────────────────────────────────────────────────────────
 import { AuthLayout } from './components/instructor/layouts/AuthLayout';
 import { InstructorLayout } from './components/instructor/layouts/InstructorLayout';
+import { InstructorProvider } from './context/InstructorContext';
 import { Register as InstructorRegister } from './pages/instructor/auth/Register';
 import { Dashboard as InstructorDashboard } from './pages/instructor/instructor/Dashboard';
 import { Profile as InstructorProfile } from './pages/instructor/instructor/Profile';
@@ -194,7 +195,7 @@ export default function App() {
         <Route path="/instructor/register" element={<InstructorRegister />} />
       </Route>
 
-      <Route path="/instructor" element={<InstructorLayout />}>
+      <Route path="/instructor" element={<InstructorProvider><InstructorLayout /></InstructorProvider>}>
         <Route index element={<InstructorDashboard />} />
         <Route path="dashboard" element={<InstructorDashboard />} />
         <Route path="profile" element={<InstructorProfile />} />

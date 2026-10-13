@@ -7,8 +7,10 @@ import { Search, Star, Users, X, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../context/InstructorContext";
 
 export function MyCourses() {
+  const { instructor } = useInstructor();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,7 +21,20 @@ export function MyCourses() {
     api.get('/courses', 'instructor')
       .then(data => {
         const list = Array.isArray(data) ? data : (data?.items || []);
-        setCourses(list);
+        if (instructor?.id) {
+          const myCourses = list.filter(course => {
+            const isDirect = course.instructorId === instructor.id;
+            const isInTeam = (course.instructors || []).some(
+              inst => inst.id === instructor.id ||
+                      (instructor.email && inst.email?.toLowerCase() === instructor.email.toLowerCase()) ||
+                      (instructor.name && inst.name?.toLowerCase() === instructor.name.toLowerCase())
+            );
+            return isDirect || isInTeam;
+          });
+          setCourses(myCourses);
+        } else {
+          setCourses(list);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -27,7 +42,7 @@ export function MyCourses() {
         setCourses([]);
         setLoading(false);
       });
-  }, []);
+  }, [instructor]);
 
   const filteredCourses = useMemo(() => {
     return courses
@@ -158,9 +173,13 @@ export function MyCourses() {
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-slate-900 text-base">No courses found</h3>
-              <p className="text-sm text-slate-500 mt-1">
-                {searchQuery ? `No courses matching "${searchQuery}"` : "No courses in this category."}
+              <h3 className="font-bold text-slate-900 text-base">
+                {searchQuery ? 'No courses found' : 'No Courses Assigned Yet'}
+              </h3>
+              <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+                {searchQuery
+                  ? `No courses matching "${searchQuery}"`
+                  : `Your affiliated institution (${instructor?.organizationName || 'your university'}) has not assigned any active course tracks to your profile yet.`}
               </p>
               {searchQuery && (
                 <Button variant="outline" size="sm" onClick={() => setSearchQuery("")} className="mt-4">

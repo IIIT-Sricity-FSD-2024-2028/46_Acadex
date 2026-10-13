@@ -208,9 +208,18 @@ export const api = {
     get: (id) => request(`/instructors/${id}`),
     create: (data) => request('/instructors', { method: 'POST', body: data }),
     update: (id, data) => request(`/instructors/${id}`, { method: 'PATCH', body: data }),
-    getRequests: () => request('/instructor-requests'),
+    connectUniversity: (id, organizationId, organizationName) =>
+      request(`/instructors/${id}/connect-university`, {
+        method: 'POST',
+        body: { organizationId, organizationName },
+      }),
+    getCourses: (id) => request(`/instructors/${id}/courses`),
+    getRequests: (params) => {
+      const query = params ? new URLSearchParams(params).toString() : '';
+      return request(`/instructor-requests${query ? `?${query}` : ''}`);
+    },
     respondRequest: (id, action, notes) =>
-      request(`/instructor-requests/${id}/respond`, { method: 'POST', body: { action, notes } }),
+      request(`/instructor-requests/${id}/respond`, { method: 'PATCH', body: { decision: action, notes } }),
   },
 
   // 8b. Instructor Requests
