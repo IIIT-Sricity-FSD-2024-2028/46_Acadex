@@ -83,13 +83,13 @@ function AddItemDropdown({ onAdd, position = "bottom" }) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-xs font-semibold text-navy-600 hover:text-primary-700 transition-colors group"
+        className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-primary-700 transition-colors group"
       >
         <div className={cn(
           "w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200",
           open
             ? "bg-primary-600 text-white rotate-45 scale-110"
-            : "bg-navy-800 text-white group-hover:bg-primary-600 group-hover:scale-110"
+            : "bg-slate-800 text-white group-hover:bg-primary-600 group-hover:scale-110"
         )}>
           <Plus className="w-3 h-3" strokeWidth={3} />
         </div>
@@ -98,24 +98,24 @@ function AddItemDropdown({ onAdd, position = "bottom" }) {
 
       {open && (
         <div className={cn(
-          "absolute left-0 z-50 w-72 bg-white rounded-xl border border-navy-200/60 shadow-elevated p-1.5 animate-in fade-in slide-in-from-top-2 duration-200",
+          "absolute left-0 z-50 w-72 bg-white rounded-xl border border-slate-200/60 shadow-elevated p-1.5 animate-in fade-in slide-in-from-top-2 duration-200",
           position === "top" ? "bottom-full mb-2" : "top-full mt-2"
         )}>
-          <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-navy-400">
+          <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             Add new item
           </div>
           {items.map((item) => (
             <button
               key={item.type}
               onClick={() => { onAdd(item.type); setOpen(false); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-50 transition-colors text-left group/item"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors text-left group/item"
             >
               <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover/item:scale-110", typeConfig[item.type].bg, typeConfig[item.type].color)}>
                 <item.icon className="w-4.5 h-4.5" strokeWidth={1.8} />
               </div>
               <div>
-                <div className="text-sm font-medium text-navy-900">{item.type}</div>
-                <div className="text-xs text-navy-500">{item.desc}</div>
+                <div className="text-sm font-medium text-slate-900">{item.type}</div>
+                <div className="text-xs text-slate-500">{item.desc}</div>
               </div>
             </button>
           ))}
@@ -175,7 +175,7 @@ function InlineEdit({ value, onChange, className, placeholder, multiline = false
       className={cn("cursor-text hover:bg-primary-50/50 rounded-md px-1.5 py-0.5 -mx-1.5 transition-colors border border-transparent hover:border-primary-200/50 inline-block", className)}
       title="Click to edit"
     >
-      {value || <span className="text-navy-400 italic">{placeholder}</span>}
+      {value || <span className="text-slate-400 italic">{placeholder}</span>}
     </span>
   );
 }
@@ -245,10 +245,10 @@ function FileUploadModal({ item, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl border border-navy-100 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-navy-100 flex items-center justify-between bg-navy-50/50">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center",
@@ -257,15 +257,15 @@ function FileUploadModal({ item, onClose, onSave }) {
               {isVideo ? <PlayCircle className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-base font-bold text-navy-900">
+              <h3 className="text-base font-bold text-slate-900">
                 {isVideo ? "Upload Video Content" : "Upload Reading Material"}
               </h3>
-              <p className="text-xs text-navy-500">Attach file input for this lesson (processed by backend)</p>
+              <p className="text-xs text-slate-500">Attach file input for this lesson (processed by backend)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-navy-400 hover:text-navy-700 hover:bg-navy-100 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -275,7 +275,7 @@ function FileUploadModal({ item, onClose, onSave }) {
         <div className="p-6 space-y-5">
           {/* Lesson Title */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-navy-600 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
               Lesson Title
             </label>
             <Input
@@ -288,7 +288,7 @@ function FileUploadModal({ item, onClose, onSave }) {
 
           {/* File Upload Zone */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-navy-600 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
               {isVideo ? "Video File" : "Document / Reading File"}
             </label>
             <input
@@ -310,7 +310,7 @@ function FileUploadModal({ item, onClose, onSave }) {
                   ? "border-primary-500 bg-primary-50/50"
                   : fileName
                   ? "border-emerald-300 bg-emerald-50/20 hover:bg-emerald-50/40"
-                  : "border-navy-200 hover:border-primary-400 hover:bg-primary-50/20"
+                  : "border-slate-200 hover:border-primary-400 hover:bg-primary-50/20"
               )}
             >
               {fileName ? (
@@ -318,19 +318,19 @@ function FileUploadModal({ item, onClose, onSave }) {
                   <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2">
                     <FileText className="w-6 h-6" />
                   </div>
-                  <p className="text-sm font-bold text-navy-900 break-all">{fileName}</p>
-                  {fileSize && <p className="text-xs text-navy-500 mt-0.5">{fileSize}</p>}
+                  <p className="text-sm font-bold text-slate-900 break-all">{fileName}</p>
+                  {fileSize && <p className="text-xs text-slate-500 mt-0.5">{fileSize}</p>}
                   <p className="text-xs text-primary-600 font-medium mt-2 hover:underline">Click or drop to replace file</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-navy-100 text-navy-500 flex items-center justify-center mb-2">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mb-2">
                     <Upload className="w-5 h-5" />
                   </div>
-                  <p className="text-sm font-semibold text-navy-800">
+                  <p className="text-sm font-semibold text-slate-800">
                     Click to browse or drag and drop file here
                   </p>
-                  <p className="text-xs text-navy-400 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     {isVideo
                       ? "Supports MP4, MOV, WebM (up to 2GB)"
                       : "Supports PDF, DOCX, TXT, EPUB (up to 50MB)"}
@@ -343,7 +343,7 @@ function FileUploadModal({ item, onClose, onSave }) {
           {/* Duration & Optional Link */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-navy-600 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Estimated Duration (min)
               </label>
               <Input
@@ -357,7 +357,7 @@ function FileUploadModal({ item, onClose, onSave }) {
             </div>
             {isVideo && (
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-navy-600 mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                   Or Video URL (optional)
                 </label>
                 <Input
@@ -372,7 +372,7 @@ function FileUploadModal({ item, onClose, onSave }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-navy-50/50 border-t border-navy-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>
@@ -403,7 +403,7 @@ function CurriculumItem({ item, index, totalItems, courseId, moduleId, onUpdate,
   const isUploadable = item.type === "Video" || item.type === "Reading";
 
   return (
-    <div className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-navy-50/50 group transition-colors">
+    <div className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/50 group transition-colors">
       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
         <div
           onClick={() => isUploadable && onOpenUpload(item)}
@@ -424,7 +424,7 @@ function CurriculumItem({ item, index, totalItems, courseId, moduleId, onUpdate,
             <InlineEdit
               value={item.title}
               onChange={(val) => onUpdate({ ...item, title: val })}
-              className="font-medium text-navy-900 truncate"
+              className="font-medium text-slate-900 truncate"
               placeholder="Untitled item"
             />
             {item.fileName && (
@@ -438,7 +438,7 @@ function CurriculumItem({ item, index, totalItems, courseId, moduleId, onUpdate,
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-1 text-xs text-navy-500">
+          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
             <span className="flex items-center">
               <Clock className="w-3 h-3 mr-1" />
               <InlineEdit
@@ -477,12 +477,12 @@ function CurriculumItem({ item, index, totalItems, courseId, moduleId, onUpdate,
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="p-1.5 text-navy-400 hover:text-navy-700 hover:bg-navy-100 rounded-md transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-xl border border-navy-200/60 shadow-elevated p-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-xl border border-slate-200/60 shadow-elevated p-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
               <button
                 onClick={() => { onDelete(); setMenuOpen(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
@@ -517,36 +517,36 @@ function LearningObjectives({ objectives, onChange }) {
   };
 
   return (
-    <div className="border border-navy-200/60 rounded-xl overflow-hidden bg-white transition-all">
+    <div className="border border-slate-200/60 rounded-xl overflow-hidden bg-white transition-all">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-navy-50/50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
             <Target className="w-4 h-4" />
           </div>
-          <span className="font-semibold text-navy-900 text-sm">
+          <span className="font-semibold text-slate-900 text-sm">
             Learning Objectives ({objectives.length})
           </span>
         </div>
-        {expanded ? <ChevronDown className="w-4 h-4 text-navy-400" /> : <ChevronRight className="w-4 h-4 text-navy-400" />}
+        {expanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-2 border-t border-navy-100 pt-3">
+        <div className="px-4 pb-4 space-y-2 border-t border-slate-100 pt-3">
           {objectives.map((obj, idx) => (
             <div key={idx} className="flex items-center gap-2 group">
-              <span className="text-xs font-semibold text-navy-400 w-5 shrink-0">{idx + 1}.</span>
+              <span className="text-xs font-semibold text-slate-400 w-5 shrink-0">{idx + 1}.</span>
               <Input
                 value={obj}
                 onChange={(e) => updateObjective(idx, e.target.value)}
                 placeholder="e.g. Understand the fundamentals of..."
-                className="flex-1 h-9 text-sm bg-navy-50/50 border-transparent focus:bg-white"
+                className="flex-1 h-9 text-sm bg-slate-50/50 border-transparent focus:bg-white"
               />
               <button
                 onClick={() => removeObjective(idx)}
-                className="p-1 text-navy-300 hover:text-rose-500 rounded opacity-0 group-hover:opacity-100 transition-all"
+                className="p-1 text-slate-300 hover:text-rose-500 rounded opacity-0 group-hover:opacity-100 transition-all"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -599,7 +599,7 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
   return (
     <div className={cn(
       "bg-white border rounded-xl shadow-sm transition-all duration-200",
-      expanded ? "border-primary-200/60 shadow-card" : "border-navy-200/60 hover:border-navy-300/80"
+      expanded ? "border-primary-200/60 shadow-card" : "border-slate-200/60 hover:border-slate-300/80"
     )}>
       {/* Module Header */}
       <div className="flex items-center justify-between p-4 sm:p-5">
@@ -608,7 +608,7 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
             onClick={onToggle}
             className={cn(
               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200",
-              expanded ? "bg-primary-50 text-primary-600" : "bg-navy-50 text-navy-500 hover:text-navy-700"
+              expanded ? "bg-primary-50 text-primary-600" : "bg-slate-50 text-slate-500 hover:text-slate-700"
             )}
           >
             {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -618,12 +618,12 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
               <InlineEdit
                 value={module.title}
                 onChange={(val) => onUpdate({ ...module, title: val })}
-                className="font-bold text-navy-900 truncate"
+                className="font-bold text-slate-900 truncate"
                 placeholder="Module title"
                 inputClassName="font-bold"
               />
             </div>
-            <div className="flex items-center gap-3 mt-1 text-xs text-navy-500">
+            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
               <span className="flex items-center"><Layers className="w-3 h-3 mr-1" /> {items.length} items</span>
               <span className="flex items-center"><Clock className="w-3 h-3 mr-1" /> {formatDuration(moduleDuration)}</span>
             </div>
@@ -633,7 +633,7 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
         <div className="flex items-center gap-1 shrink-0 ml-3">
           <button
             onClick={onDelete}
-            className="p-1.5 text-navy-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
             title="Delete module"
           >
             <Trash2 className="w-4 h-4" />
@@ -643,15 +643,15 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
 
       {/* Module Body */}
       {expanded && (
-        <div className="border-t border-navy-100">
+        <div className="border-t border-slate-100">
           <div className="px-5 sm:px-8 py-5 space-y-5">
             {/* Description */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-navy-400 mb-2 block">Description</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 block">Description</label>
               <InlineEdit
                 value={module.description || ""}
                 onChange={(val) => onUpdate({ ...module, description: val })}
-                className="text-sm text-navy-700 leading-relaxed block w-full"
+                className="text-sm text-slate-700 leading-relaxed block w-full"
                 placeholder="Click to add a module description..."
                 multiline
               />
@@ -665,7 +665,7 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
 
             {/* Items List */}
             {items.length > 0 && (
-              <div className="border border-navy-200/60 rounded-xl divide-y divide-navy-100/80 overflow-hidden">
+              <div className="border border-slate-200/60 rounded-xl divide-y divide-slate-100/80 overflow-hidden">
                 {items.map((item, idx) => (
                   <CurriculumItem
                     key={item.id}
@@ -684,20 +684,20 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
 
             {/* Empty State */}
             {items.length === 0 && (
-              <div className="border-2 border-dashed border-navy-200 rounded-xl p-8 text-center bg-navy-50/30">
-                <div className="w-12 h-12 rounded-full bg-navy-100 flex items-center justify-center mx-auto mb-3">
-                  <Layers className="w-5 h-5 text-navy-400" />
+              <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center bg-slate-50/30">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                  <Layers className="w-5 h-5 text-slate-400" />
                 </div>
-                <p className="text-sm font-medium text-navy-600 mb-1">No content yet</p>
-                <p className="text-xs text-navy-400 mb-4">Add videos, readings or quizzes</p>
+                <p className="text-sm font-medium text-slate-600 mb-1">No content yet</p>
+                <p className="text-xs text-slate-400 mb-4">Add videos, readings or quizzes</p>
               </div>
             )}
 
             {/* Add Item */}
             <div className="flex items-center gap-4">
-              <div className="h-px bg-navy-200/50 flex-1" />
+              <div className="h-px bg-slate-200/50 flex-1" />
               <AddItemDropdown onAdd={addItem} />
-              <div className="h-px bg-navy-200/50 flex-1" />
+              <div className="h-px bg-slate-200/50 flex-1" />
             </div>
           </div>
         </div>
@@ -834,7 +834,7 @@ export function CourseContent() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-navy-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {course?.title ? `${course.title} - Curriculum` : 'Course Curriculum'}
           </h1>
         </div>
@@ -848,35 +848,35 @@ export function CourseContent() {
       </div>
 
       {/* Stats Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white border border-navy-200/60 rounded-xl px-5 py-3.5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white border border-slate-200/60 rounded-xl px-5 py-3.5 shadow-sm">
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
               <Layers className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-navy-500 text-xs font-medium block">Modules</span>
-              <span className="font-bold text-navy-900">{modules.length}</span>
+              <span className="text-slate-500 text-xs font-medium block">Modules</span>
+              <span className="font-bold text-slate-900">{modules.length}</span>
             </div>
           </div>
-          <div className="w-px h-8 bg-navy-200/50" />
+          <div className="w-px h-8 bg-slate-200/50" />
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
               <PlayCircle className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-navy-500 text-xs font-medium block">Items</span>
-              <span className="font-bold text-navy-900">{totalItems}</span>
+              <span className="text-slate-500 text-xs font-medium block">Items</span>
+              <span className="font-bold text-slate-900">{totalItems}</span>
             </div>
           </div>
-          <div className="w-px h-8 bg-navy-200/50" />
+          <div className="w-px h-8 bg-slate-200/50" />
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
               <Clock className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-navy-500 text-xs font-medium block">Total Duration</span>
-              <span className="font-bold text-navy-900">{formatDuration(totalDuration)}</span>
+              <span className="text-slate-500 text-xs font-medium block">Total Duration</span>
+              <span className="font-bold text-slate-900">{formatDuration(totalDuration)}</span>
             </div>
           </div>
         </div>
@@ -891,8 +891,8 @@ export function CourseContent() {
                   <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-3">
                     <Trash2 className="w-5 h-5 text-rose-600" />
                   </div>
-                  <h3 className="font-bold text-navy-900 mb-1">Delete Module?</h3>
-                  <p className="text-sm text-navy-500 mb-4 max-w-xs">
+                  <h3 className="font-bold text-slate-900 mb-1">Delete Module?</h3>
+                  <p className="text-sm text-slate-500 mb-4 max-w-xs">
                     This will permanently delete "{mod.title}" and all {Array.isArray(mod.items) ? mod.items.length : 0} items inside it.
                   </p>
                   <div className="flex items-center justify-center gap-3">
@@ -921,9 +921,9 @@ export function CourseContent() {
       <div className="mt-6">
         <button
           onClick={addModule}
-          className="w-full border-2 border-dashed border-navy-200 rounded-xl py-6 flex items-center justify-center gap-3 text-sm font-semibold text-navy-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
+          className="w-full border-2 border-dashed border-slate-200 rounded-xl py-6 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
         >
-          <div className="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center text-navy-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors group-hover:scale-110">
+          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors group-hover:scale-110">
             <Plus className="w-4 h-4" strokeWidth={2.5} />
           </div>
           Add new module
@@ -931,14 +931,14 @@ export function CourseContent() {
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 lg:left-72 right-0 bg-white/95 backdrop-blur-md border-t border-navy-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 left-0  right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-navy-500">Status:</span>
+          <span className="text-sm font-medium text-slate-500">Status:</span>
           <Badge variant={course?.status === "Published" ? "success" : "default"} className="font-semibold">
             {course?.status || "Draft"}
           </Badge>
-          <span className="hidden sm:inline text-sm text-navy-400">·</span>
-          <span className="hidden sm:inline text-sm text-navy-500">{modules.length} modules · {totalItems} items · {formatDuration(totalDuration)}</span>
+          <span className="hidden sm:inline text-sm text-slate-400">·</span>
+          <span className="hidden sm:inline text-sm text-slate-500">{modules.length} modules · {totalItems} items · {formatDuration(totalDuration)}</span>
         </div>
         <div className="flex items-center gap-3">
           {savedSuccess && (

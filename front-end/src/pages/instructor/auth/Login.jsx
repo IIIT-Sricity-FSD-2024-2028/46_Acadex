@@ -14,17 +14,17 @@ export function Login() {
             <span className="text-2xl font-bold">EduLMS</span>
           </div>
           
-          <h2 className="text-3xl font-bold tracking-tight text-navy-900">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">
             Welcome back
           </h2>
-          <p className="mt-2 text-sm text-navy-500">
+          <p className="mt-2 text-sm text-slate-500">
             Please enter your details to access your instructor dashboard.
           </p>
 
           <div className="mt-8">
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
               <div>
-                <label className="block text-sm font-medium text-navy-700">
+                <label className="block text-sm font-medium text-slate-700">
                   Email address
                 </label>
                 <div className="mt-2">
@@ -37,7 +37,7 @@ export function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-navy-700">
+                <label className="block text-sm font-medium text-slate-700">
                   Password
                 </label>
                 <div className="mt-2">
@@ -55,9 +55,9 @@ export function Login() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 rounded border-navy-300 text-primary-600 focus:ring-primary-600"
+                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-navy-900">
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-900">
                     Remember me
                   </label>
                 </div>
@@ -99,7 +99,7 @@ export function Login() {
               </div>
             </form>
             
-            <p className="mt-8 text-center text-sm text-navy-500">
+            <p className="mt-8 text-center text-sm text-slate-500">
               Don't have an account?{" "}
               <Link to="/instructor/register" className="font-semibold text-primary-600 hover:text-primary-500">
                 Register
@@ -110,8 +110,8 @@ export function Login() {
       </div>
 
       {/* Right Image Side */}
-      <div className="relative hidden w-0 flex-1 lg:block bg-navy-900">
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center bg-gradient-to-br from-primary-900 to-navy-900">
+      <div className="relative hidden w-0 flex-1 lg:block bg-[#002554]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center bg-gradient-to-br from-primary-900 to-[#002554]">
           <div className="max-w-md">
             <h3 className="text-3xl font-bold mb-4">Empower Learners Worldwide</h3>
             <p className="text-primary-100 text-lg mb-8">

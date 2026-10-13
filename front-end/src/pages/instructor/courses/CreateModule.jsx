@@ -42,14 +42,14 @@ export function CreateModule() {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-navy-900">Create New Module</h1>
-        <p className="text-navy-500">A module groups related lessons and quizzes together.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Create New Module</h1>
+        <p className="text-slate-500">A module groups related lessons and quizzes together.</p>
       </div>
 
       <Card>
         <CardContent className="p-8 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">Module Title</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Module Title</label>
             <Input 
               value={title} 
               onChange={e => setTitle(e.target.value)} 
@@ -57,25 +57,25 @@ export function CreateModule() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">Description (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Description (Optional)</label>
             <textarea 
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="w-full rounded-md border border-navy-300 bg-white px-3 py-2 text-sm placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-primary-700 min-h-[100px]"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-700 min-h-[100px]"
               placeholder="What will students learn in this module?"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">Learning Objectives</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Learning Objectives</label>
             <textarea 
               value={objectives}
               onChange={e => setObjectives(e.target.value)}
-              className="w-full rounded-md border border-navy-300 bg-white px-3 py-2 text-sm placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-primary-700 min-h-[100px]"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-700 min-h-[100px]"
               placeholder="After completing this module, students will be able to... (one per line)"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-navy-100">
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
             <Link to="/instructor/courses/1/content">
               <Button variant="outline">Cancel</Button>
             </Link>

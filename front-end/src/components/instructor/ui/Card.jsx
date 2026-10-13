@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { cn } from "../../../utils/cn";
 
 export const Card = forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-xl border border-navy-200/60 bg-white text-navy-900 shadow-card transition-shadow duration-200 hover:shadow-elevated", className)} {...props} />
+  <div ref={ref} className={cn("rounded-2xl border border-slate-200/80 bg-white text-slate-900 shadow-xs transition-shadow duration-200 hover:shadow-md", className)} {...props} />
 ));
 Card.displayName = "Card";
 
@@ -12,12 +12,12 @@ export const CardHeader = forwardRef(({ className, ...props }, ref) => (
 CardHeader.displayName = "CardHeader";
 
 export const CardTitle = forwardRef(({ className, ...props }, ref) => (
-  <h3 ref={ref} className={cn("text-lg font-semibold leading-none tracking-tight", className)} {...props} />
+  <h3 ref={ref} className={cn("text-lg font-bold text-slate-900 leading-snug tracking-tight", className)} {...props} />
 ));
 CardTitle.displayName = "CardTitle";
 
 export const CardDescription = forwardRef(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn("text-sm text-navy-500", className)} {...props} />
+  <p ref={ref} className={cn("text-sm text-slate-500 font-normal leading-relaxed", className)} {...props} />
 ));
 CardDescription.displayName = "CardDescription";
 

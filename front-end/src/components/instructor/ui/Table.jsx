@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { cn } from "../../../utils/cn";
 
 export const Table = forwardRef(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto rounded-lg border border-navy-200">
+  <div className="relative w-full overflow-auto rounded-2xl border border-slate-200 bg-white shadow-2xs">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
@@ -13,7 +13,7 @@ export const Table = forwardRef(({ className, ...props }, ref) => (
 Table.displayName = "Table";
 
 export const TableHeader = forwardRef(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b bg-navy-50/80 backdrop-blur-sm", className)} {...props} />
+  <thead ref={ref} className={cn("[&_tr]:border-b bg-slate-50/80 backdrop-blur-sm", className)} {...props} />
 ));
 TableHeader.displayName = "TableHeader";
 
@@ -30,7 +30,7 @@ export const TableRow = forwardRef(({ className, ...props }, ref) => (
   <tr
     ref={ref}
     className={cn(
-      "border-b border-navy-100 transition-colors hover:bg-navy-50/50 data-[state=selected]:bg-primary-50",
+      "border-b border-slate-100 transition-colors hover:bg-slate-50/60 data-[state=selected]:bg-blue-50/60",
       className
     )}
     {...props}
@@ -42,7 +42,7 @@ export const TableHead = forwardRef(({ className, ...props }, ref) => (
   <th
     ref={ref}
     className={cn(
-      "h-11 px-4 text-left align-middle font-medium text-navy-500 [&:has([role=checkbox])]:pr-0",
+      "h-11 px-4 text-left align-middle font-semibold text-slate-600 text-xs uppercase tracking-wider [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}
@@ -53,7 +53,7 @@ TableHead.displayName = "TableHead";
 export const TableCell = forwardRef(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0 text-navy-700", className)}
+    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0 text-slate-700", className)}
     {...props}
   />
 ));

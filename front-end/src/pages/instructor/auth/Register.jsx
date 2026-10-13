@@ -5,16 +5,16 @@ import { BookOpen } from "lucide-react";
 
 export function Register() {
   return (
-    <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8 bg-navy-50">
+    <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-50">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center items-center gap-2 text-primary-700 mb-6">
           <BookOpen className="w-10 h-10" />
           <span className="text-3xl font-bold">EduLMS</span>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-navy-900">
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
           Create your instructor account
         </h2>
-        <p className="mt-2 text-center text-sm text-navy-500">
+        <p className="mt-2 text-center text-sm text-slate-500">
           Already have an account?{" "}
           <Link to="/instructor/login" className="font-semibold text-primary-600 hover:text-primary-500">
             Log in
@@ -23,10 +23,10 @@ export function Register() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[480px]">
-        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 border border-navy-200">
+        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 border border-slate-200">
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div>
-              <label className="block text-sm font-medium text-navy-700">
+              <label className="block text-sm font-medium text-slate-700">
                 Full Name
               </label>
               <div className="mt-2">
@@ -35,7 +35,7 @@ export function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-navy-700">
+              <label className="block text-sm font-medium text-slate-700">
                 Email address
               </label>
               <div className="mt-2">
@@ -45,7 +45,7 @@ export function Register() {
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-navy-700">
+                <label className="block text-sm font-medium text-slate-700">
                   Password
                 </label>
                 <div className="mt-2">
@@ -53,7 +53,7 @@ export function Register() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-navy-700">
+                <label className="block text-sm font-medium text-slate-700">
                   Confirm Password
                 </label>
                 <div className="mt-2">
@@ -63,7 +63,7 @@ export function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-navy-700">
+              <label className="block text-sm font-medium text-slate-700">
                 Organization (Optional)
               </label>
               <div className="mt-2">
@@ -77,9 +77,9 @@ export function Register() {
                 name="terms"
                 type="checkbox"
                 required
-                className="h-4 w-4 rounded border-navy-300 text-primary-600 focus:ring-primary-600"
+                className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600"
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-navy-900">
+              <label htmlFor="terms" className="ml-2 block text-sm text-slate-900">
                 I agree to the{" "}
                 <a href="#" className="text-primary-600 hover:text-primary-500">
                   Terms and Conditions
@@ -97,10 +97,10 @@ export function Register() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-navy-200" />
+                <div className="w-full border-t border-slate-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-navy-500">Or continue with</span>
+                <span className="bg-white px-2 text-slate-500">Or continue with</span>
               </div>
             </div>
 

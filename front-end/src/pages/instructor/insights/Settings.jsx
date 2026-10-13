@@ -14,7 +14,7 @@ const Toggle = ({ checked, onChange }) => (
       checked={checked}
       onChange={(e) => onChange && onChange(e.target.checked)}
     />
-    <div className="w-11 h-6 bg-navy-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0056D2]"></div>
   </label>
 );
 
@@ -69,16 +69,16 @@ export function Settings() {
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-5xl mx-auto pb-12">
       <div className="w-full md:w-64 shrink-0 space-y-1">
-        <div className="font-bold text-navy-900 px-3 mb-4 text-xl">Settings</div>
+        <div className="font-extrabold text-slate-900 px-3 mb-4 text-xl tracking-tight">Studio Settings</div>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
+              "w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold rounded-xl transition-colors",
               activeTab === tab.id 
-                ? "bg-primary-50 text-primary-700" 
-                : "text-navy-700 hover:bg-navy-50"
+                ? "bg-blue-50 text-[#0056D2] shadow-2xs border border-blue-200/60" 
+                : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
             )}
           >
             <tab.icon className="w-4 h-4" />
@@ -89,7 +89,7 @@ export function Settings() {
 
       <div className="flex-1 space-y-6">
         {savedSuccess && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+          <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-semibold flex items-center gap-2">
             <Check className="w-4 h-4" /> Settings updated successfully!
           </div>
         )}
@@ -97,12 +97,12 @@ export function Settings() {
         {activeTab === 'account' && (
           <Card>
             <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-              <CardDescription>Manage your account email and phone number.</CardDescription>
+              <CardTitle>Account Details</CardTitle>
+              <CardDescription>Manage your primary instructor contact email and phone number.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-navy-700 mb-1">Email Address</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Official University Email Address</label>
                 <div className="flex gap-3">
                   <Input 
                     value={settings.email} 
@@ -112,7 +112,7 @@ export function Settings() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-navy-700 mb-1">Phone Number</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone Number</label>
                 <div className="flex gap-3">
                   <Input 
                     type="tel" 
@@ -123,7 +123,7 @@ export function Settings() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t border-navy-100 mt-6 pt-6">
+            <CardFooter className="border-t border-slate-100 mt-6 pt-6">
               <Button onClick={handleSave}>Save Changes</Button>
             </CardFooter>
           </Card>
@@ -134,18 +134,19 @@ export function Settings() {
             <Card>
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
+                <CardDescription>Update your instructor portal credentials.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 max-w-md">
                 <div>
-                  <label className="block text-sm font-medium text-navy-700 mb-1">Current Password</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Current Password</label>
                   <Input type="password" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-navy-700 mb-1">New Password</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">New Password</label>
                   <Input type="password" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-navy-700 mb-1">Confirm New Password</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Confirm New Password</label>
                   <Input type="password" />
                 </div>
                 <Button onClick={handleSave} className="mt-2">Update Password</Button>
@@ -155,20 +156,20 @@ export function Settings() {
             <Card>
               <CardHeader>
                 <CardTitle>Two-Factor Authentication</CardTitle>
-                <CardDescription>Add an extra layer of security to your account.</CardDescription>
+                <CardDescription>Add an extra layer of security to your academic account.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between p-4 border border-navy-200 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600">
+                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
                       <Smartphone className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-navy-900">Authenticator App</h4>
-                      <p className="text-sm text-navy-500">Not configured</p>
+                      <h4 className="font-bold text-slate-900 text-sm">Authenticator App</h4>
+                      <p className="text-xs text-slate-500">Not configured</p>
                     </div>
                   </div>
-                  <Button variant="outline">Set Up</Button>
+                  <Button variant="outline" size="sm">Set Up</Button>
                 </div>
               </CardContent>
             </Card>
@@ -179,15 +180,15 @@ export function Settings() {
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Control when and how you receive notifications.</CardDescription>
+              <CardDescription>Control when and how you receive alerts and student submissions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h4 className="font-semibold text-navy-900 border-b border-navy-100 pb-2">Email Notifications</h4>
+                <h4 className="font-bold text-slate-900 border-b border-slate-100 pb-2 text-sm">Email Notifications</h4>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h5 className="font-medium text-navy-900 text-sm">Course Activity</h5>
-                    <p className="text-xs text-navy-500">When someone reviews your course or a course is approved.</p>
+                    <h5 className="font-bold text-slate-900 text-xs">Course Activity</h5>
+                    <p className="text-xs text-slate-500">When someone reviews your course or a course is approved.</p>
                   </div>
                   <Toggle 
                     checked={settings.courseActivityNotifs} 
@@ -196,8 +197,8 @@ export function Settings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h5 className="font-medium text-navy-900 text-sm">Student Activity</h5>
-                    <p className="text-xs text-navy-500">When a student enrolls or completes a course.</p>
+                    <h5 className="font-bold text-slate-900 text-xs">Student Activity</h5>
+                    <p className="text-xs text-slate-500">When a student enrolls or completes a course.</p>
                   </div>
                   <Toggle 
                     checked={settings.studentActivityNotifs} 
@@ -206,8 +207,8 @@ export function Settings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h5 className="font-medium text-navy-900 text-sm">Marketing & Updates</h5>
-                    <p className="text-xs text-navy-500">Receive platform updates and instructor tips.</p>
+                    <h5 className="font-bold text-slate-900 text-xs">Platform Updates & Announcements</h5>
+                    <p className="text-xs text-slate-500">Receive platform updates and instructor studio tips.</p>
                   </div>
                   <Toggle 
                     checked={settings.marketingUpdates} 
@@ -223,14 +224,15 @@ export function Settings() {
           <Card>
             <CardHeader>
               <CardTitle>Platform Preferences</CardTitle>
+              <CardDescription>Select language and time zone.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-w-md">
               <div>
-                <label className="block text-sm font-medium text-navy-700 mb-1">Language</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Language</label>
                 <select 
                   value={settings.language}
                   onChange={e => setSettings({ ...settings, language: e.target.value })}
-                  className="w-full h-10 rounded-md border border-navy-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]"
                 >
                   <option>English (US)</option>
                   <option>Spanish</option>
@@ -238,11 +240,11 @@ export function Settings() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-navy-700 mb-1">Time Zone</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Time Zone</label>
                 <select 
                   value={settings.timeZone}
                   onChange={e => setSettings({ ...settings, timeZone: e.target.value })}
-                  className="w-full h-10 rounded-md border border-navy-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]"
                 >
                   <option>Pacific Time (PT)</option>
                   <option>Eastern Time (ET)</option>
@@ -262,18 +264,18 @@ export function Settings() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h5 className="font-medium text-navy-900 text-sm">Public Profile Visibility</h5>
-                  <p className="text-xs text-navy-500">Allow students to see your instructor profile.</p>
+                  <h5 className="font-bold text-slate-900 text-xs">Public Faculty Profile Visibility</h5>
+                  <p className="text-xs text-slate-500">Allow students and organizations to view your verified educator credentials.</p>
                 </div>
                 <Toggle 
                   checked={settings.profileVisibility} 
                   onChange={v => setSettings({ ...settings, profileVisibility: v })} 
                 />
               </div>
-              <div className="pt-6 border-t border-navy-100">
-                <h5 className="font-medium text-red-600 mb-2">Danger Zone</h5>
-                <p className="text-sm text-navy-500 mb-4">Deleting your account is permanent and cannot be undone.</p>
-                <Button variant="danger">Delete Account</Button>
+              <div className="pt-6 border-t border-slate-100">
+                <h5 className="font-bold text-rose-600 mb-1 text-xs">Danger Zone</h5>
+                <p className="text-xs text-slate-500 mb-4">Deleting your account is permanent and deletes all track curriculums.</p>
+                <Button variant="danger" size="sm">Delete Account</Button>
               </div>
             </CardContent>
           </Card>

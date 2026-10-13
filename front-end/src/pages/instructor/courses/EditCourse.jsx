@@ -114,8 +114,8 @@ export function EditCourse() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900">Edit Course Details</h1>
-          <p className="text-navy-500 text-sm">
+          <h1 className="text-2xl font-bold text-slate-900">Edit Course Details</h1>
+          <p className="text-slate-500 text-sm">
             Update your course title, description, and settings.
           </p>
         </div>
@@ -131,7 +131,7 @@ export function EditCourse() {
       <Card>
         <CardContent className="p-6 sm:p-8 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Course Title
             </label>
             <Input
@@ -142,7 +142,7 @@ export function EditCourse() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Subtitle
             </label>
             <Input
@@ -153,21 +153,21 @@ export function EditCourse() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full rounded-md border border-navy-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
               placeholder="Describe what students will learn in this course..."
             />
           </div>
 
           {/* Thumbnail Uploader */}
           <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Course Thumbnail
             </label>
             <input
@@ -179,16 +179,16 @@ export function EditCourse() {
             />
 
             {thumbnail ? (
-              <div className="relative group rounded-xl overflow-hidden border border-navy-200 bg-navy-50 max-w-md">
+              <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-50 max-w-md">
                 <img
                   src={thumbnail}
                   alt="Course Thumbnail Preview"
                   className="w-full h-48 object-cover"
                 />
-                <div className="p-3 bg-white border-t border-navy-100 flex items-center justify-between">
+                <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-2 truncate">
-                    <ImageIcon className="w-4 h-4 text-navy-500 shrink-0" />
-                    <span className="text-xs text-navy-700 font-medium truncate">
+                    <ImageIcon className="w-4 h-4 text-slate-500 shrink-0" />
+                    <span className="text-xs text-slate-700 font-medium truncate">
                       {thumbnailName || "thumbnail.jpg"}
                     </span>
                   </div>
@@ -227,29 +227,29 @@ export function EditCourse() {
                 className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all max-w-md ${
                   dragActive
                     ? "border-primary-500 bg-primary-50/50"
-                    : "border-navy-200 hover:border-navy-400 bg-navy-50/30"
+                    : "border-slate-200 hover:border-slate-400 bg-slate-50/30"
                 }`}
               >
-                <div className="w-10 h-10 rounded-full bg-navy-100 text-navy-500 flex items-center justify-center mx-auto mb-2">
+                <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-2">
                   <Upload className="w-5 h-5" />
                 </div>
-                <p className="text-sm font-semibold text-navy-900">
+                <p className="text-sm font-semibold text-slate-900">
                   Click to upload thumbnail
                 </p>
-                <p className="text-xs text-navy-500 mt-1">PNG, JPG up to 5MB (16:9 ratio recommended)</p>
+                <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB (16:9 ratio recommended)</p>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-navy-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
             <div>
-              <label className="block text-sm font-medium text-navy-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full h-10 rounded-md border border-navy-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
+                className="w-full h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
               >
                 <option>Computer Science</option>
                 <option>Business</option>
@@ -259,13 +259,13 @@ export function EditCourse() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-navy-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Level
               </label>
               <select
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full h-10 rounded-md border border-navy-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
+                className="w-full h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
               >
                 <option>Beginner</option>
                 <option>Intermediate</option>
@@ -277,9 +277,9 @@ export function EditCourse() {
       </Card>
 
       {/* Sticky Actions */}
-      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t border-navy-200 p-4 px-8 z-10 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0  right-0 bg-white border-t border-slate-200 p-4 px-8 z-10 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-navy-500">Status:</span>
+          <span className="text-sm font-medium text-slate-500">Status:</span>
           <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded">
             {course?.status || "Published"}
           </span>

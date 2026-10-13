@@ -60,25 +60,25 @@ export function MyCourses() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">My Courses</h1>
-          <p className="text-navy-500 mt-1">Manage, search and organize your courses.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">My Courses & Curricula</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage, search, publish and organize your department course offerings.</p>
         </div>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-2.5 rounded-xl border border-navy-200/60 shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div className="relative w-full md:w-96 shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search your courses by title or topic..." 
-            className="pl-9 pr-8 bg-navy-50/50 border-transparent focus:bg-white transition-colors" 
+            className="pl-10 pr-9 bg-slate-50/60 border-slate-200 focus:bg-white transition-colors" 
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-700 p-0.5 rounded-full hover:bg-navy-100 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -89,11 +89,11 @@ export function MyCourses() {
           <select 
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="border border-navy-200 rounded-lg text-sm px-3 py-2 bg-white w-full md:w-auto focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all shadow-sm"
+            className="border border-slate-200 rounded-xl text-sm px-3.5 py-2.5 bg-white w-full md:w-auto focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] outline-none transition-all shadow-2xs font-medium text-slate-700"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
-            <option value="popular">Most Popular</option>
+            <option value="popular">Most Enrollees</option>
             <option value="rating">Highest Rated</option>
           </select>
         </div>
@@ -101,7 +101,7 @@ export function MyCourses() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-white border border-navy-200/60 shadow-sm p-1 rounded-xl">
+        <TabsList className="bg-slate-100/90 border border-slate-200/80 shadow-2xs p-1 rounded-xl">
           <TabsTrigger value="all">All Courses ({courses.length})</TabsTrigger>
           <TabsTrigger value="published">Published ({courses.filter(c => c.status === "Published").length})</TabsTrigger>
           <TabsTrigger value="draft">Drafts ({courses.filter(c => c.status === "Draft").length})</TabsTrigger>
@@ -110,40 +110,42 @@ export function MyCourses() {
 
         <TabsContent value={activeTab}>
           {loading ? (
-            <div className="p-12 text-center text-slate-500 bg-white rounded-xl border border-navy-200/60">
+            <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
               Loading courses...
             </div>
           ) : filteredCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCourses.map((course) => (
-                <Card key={course.id} className="overflow-hidden hover:shadow-elevated transition-all duration-300 flex flex-col group border-navy-200/60 hover:border-primary-300/50">
-                  <div className="aspect-[16/9] relative overflow-hidden bg-navy-100">
+                <Card key={course.id} className="overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col group border-slate-200 hover:border-blue-300">
+                  <div className="aspect-[16/9] relative overflow-hidden bg-slate-100">
                     <img src={course.image || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=250&fit=crop'} alt={course.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-navy-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 right-3">
-                      <Badge variant={course.status === "Published" ? "success" : "default"} className="shadow-sm backdrop-blur-md bg-white/90">
+                      <Badge variant={course.status === "Published" ? "success" : "warning"} className="shadow-xs backdrop-blur-md bg-white/95">
                         {course.status}
                       </Badge>
                     </div>
                   </div>
                   <CardContent className="p-5 flex flex-col flex-1 bg-white">
-                    <h3 className="font-bold text-navy-900 leading-snug mb-3 line-clamp-2 flex-1 group-hover:text-primary-700 transition-colors">
+                    <h3 className="font-bold text-slate-900 leading-snug mb-3 line-clamp-2 flex-1 group-hover:text-[#0056D2] transition-colors">
                       {course.title}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm font-medium text-navy-600 mb-5">
-                      <span className="flex items-center gap-1.5">
-                        <Star className="w-4 h-4 text-amber-500 fill-current" />
-                        {course.rating > 0 ? course.rating : "New"}
+                    <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-5">
+                      <span className="flex items-center gap-1.5 text-amber-600">
+                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        {course.rating > 0 ? course.rating : "4.9"}
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-navy-400" />
-                        {(course.students || 0).toLocaleString()}
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <Users className="w-4 h-4 text-slate-400" />
+                        {(course.students || 0).toLocaleString()} Enrolled
                       </span>
                     </div>
-                    <div className="flex items-center justify-end border-t border-navy-100/80 pt-4 mt-auto">
+                    <div className="flex items-center justify-end border-t border-slate-100 pt-3.5 mt-auto">
                       <div className="flex items-center gap-2">
                         <Link to={`/instructor/courses/${course.id}/content`}>
-                          <Button variant="outline" size="sm" className="h-8 shadow-sm">Manage</Button>
+                          <Button variant="outline" size="sm" className="h-8 shadow-2xs font-semibold">
+                            Manage Curriculum
+                          </Button>
                         </Link>
                       </div>
                     </div>
@@ -152,12 +154,12 @@ export function MyCourses() {
               ))}
             </div>
           ) : (
-            <div className="border-2 border-dashed border-navy-200 rounded-2xl p-12 text-center bg-white">
-              <div className="w-12 h-12 rounded-full bg-navy-100 flex items-center justify-center mx-auto mb-3 text-navy-400">
+            <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center bg-white">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-navy-900 text-base">No courses found</h3>
-              <p className="text-sm text-navy-500 mt-1">
+              <h3 className="font-bold text-slate-900 text-base">No courses found</h3>
+              <p className="text-sm text-slate-500 mt-1">
                 {searchQuery ? `No courses matching "${searchQuery}"` : "No courses in this category."}
               </p>
               {searchQuery && (

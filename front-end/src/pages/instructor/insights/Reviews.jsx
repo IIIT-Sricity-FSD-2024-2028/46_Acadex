@@ -134,10 +134,11 @@ export function Reviews() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900">Student Reviews</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Student Ratings & Feedback</h1>
+          <p className="text-slate-500 text-sm mt-1">Review student impressions, ratings breakdown, and reply to course feedback.</p>
         </div>
       </div>
 
@@ -146,23 +147,23 @@ export function Reviews() {
           <Card>
             <CardContent className="p-6">
               <div className="text-center mb-6">
-                <div className="text-5xl font-bold text-navy-900 mb-2">{reviewsData.averageRating}</div>
-                <div className="flex justify-center gap-1 mb-2 text-yellow-500">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-5 h-5 fill-current" />)}
+                <div className="text-5xl font-extrabold text-slate-900 mb-2">{reviewsData.averageRating}</div>
+                <div className="flex justify-center gap-1 mb-2 text-amber-400">
+                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-5 h-5 fill-amber-400" />)}
                 </div>
-                <p className="text-sm text-navy-500">Course Rating ({reviewsData.totalReviews} reviews)</p>
+                <p className="text-xs text-slate-500 font-semibold">Course Rating ({reviewsData.totalReviews} reviews)</p>
               </div>
               
               <div className="space-y-3">
                 {ratings.map(item => (
-                  <div key={item.stars} className="flex items-center gap-3 text-sm">
-                    <span className="w-12 font-medium text-navy-700 flex items-center gap-1">
-                      {item.stars} <Star className="w-3.5 h-3.5 fill-current text-yellow-500" />
+                  <div key={item.stars} className="flex items-center gap-3 text-xs">
+                    <span className="w-12 font-bold text-slate-700 flex items-center gap-1">
+                      {item.stars} <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     </span>
-                    <div className="flex-1 h-2 bg-navy-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${item.percent}%` }} />
+                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-400 rounded-full" style={{ width: `${item.percent}%` }} />
                     </div>
-                    <span className="w-10 text-right text-navy-500 text-xs">{item.percent}%</span>
+                    <span className="w-10 text-right text-slate-400 font-medium">{item.percent}%</span>
                   </div>
                 ))}
               </div>
@@ -171,17 +172,17 @@ export function Reviews() {
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white p-3 rounded-xl border border-navy-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search reviews..."
-                className="pl-9 pr-8 h-9 text-sm bg-navy-50/50"
+                className="pl-10 pr-8 h-9 text-xs bg-slate-50/60"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-navy-400">
+                <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -191,7 +192,7 @@ export function Reviews() {
                 <select
                   value={selectedCourse}
                   onChange={e => setSelectedCourse(e.target.value)}
-                  className="border border-navy-200 rounded-lg text-xs px-2.5 py-1.5 bg-white outline-none max-w-[140px] truncate"
+                  className="border border-slate-200 rounded-xl text-xs font-semibold px-2.5 py-1.5 bg-white outline-none max-w-[140px] truncate text-slate-700 shadow-2xs"
                 >
                   <option value="All Courses">All Courses</option>
                   {uniqueCourses.map(c => (
@@ -202,7 +203,7 @@ export function Reviews() {
               <select
                 value={selectedRating}
                 onChange={e => setSelectedRating(e.target.value)}
-                className="border border-navy-200 rounded-lg text-xs px-2.5 py-1.5 bg-white outline-none"
+                className="border border-slate-200 rounded-xl text-xs font-semibold px-2.5 py-1.5 bg-white outline-none text-slate-700 shadow-2xs"
               >
                 <option value="All Ratings">All Ratings</option>
                 <option value="5 Stars">5 Stars</option>
@@ -213,7 +214,7 @@ export function Reviews() {
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="border border-navy-200 rounded-lg text-xs px-2.5 py-1.5 bg-white outline-none"
+                className="border border-slate-200 rounded-xl text-xs font-semibold px-2.5 py-1.5 bg-white outline-none text-slate-700 shadow-2xs"
               >
                 <option value="Newest First">Newest First</option>
                 <option value="Oldest First">Oldest First</option>
@@ -222,7 +223,7 @@ export function Reviews() {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-slate-500 bg-white rounded-xl border border-navy-200">
+            <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
               Loading reviews...
             </div>
           ) : filteredReviews.length > 0 ? (
@@ -231,31 +232,31 @@ export function Reviews() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h4 className="font-bold text-navy-900 text-sm">{review.name}</h4>
-                      <p className="text-xs text-navy-500">{review.course} · {review.date}</p>
+                      <h4 className="font-bold text-slate-900 text-sm">{review.name}</h4>
+                      <p className="text-xs text-slate-500">{review.course} · {review.date}</p>
                     </div>
-                    <div className="flex items-center gap-0.5 text-yellow-500">
+                    <div className="flex items-center gap-0.5 text-amber-400">
                       {[...Array(review.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-current" />
+                        <Star key={i} className="w-4 h-4 fill-amber-400" />
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm text-navy-700 leading-relaxed mb-4">{review.content}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed mb-4 font-normal">{review.content}</p>
 
                   {review.response && replyingId !== review.id && (
-                    <div className="bg-navy-50 p-3.5 rounded-lg border-l-4 border-l-primary-600 mb-3">
+                    <div className="bg-blue-50/60 p-3.5 rounded-xl border-l-4 border-l-[#0056D2] mb-3">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-bold text-navy-800">Your Response</span>
+                        <span className="text-xs font-bold text-slate-900">Your Official Faculty Response</span>
                         <div className="flex gap-2">
-                          <button onClick={() => handleStartReply(review.id, review.response)} className="text-xs text-primary-600 hover:text-primary-800">
+                          <button onClick={() => handleStartReply(review.id, review.response)} className="text-xs font-semibold text-[#0056D2] hover:underline">
                             Edit
                           </button>
-                          <button onClick={() => handleDeleteReply(review.id)} className="text-xs text-rose-600 hover:text-rose-800">
+                          <button onClick={() => handleDeleteReply(review.id)} className="text-xs font-semibold text-rose-600 hover:underline">
                             Delete
                           </button>
                         </div>
                       </div>
-                      <p className="text-xs text-navy-600">{review.response}</p>
+                      <p className="text-xs text-slate-600">{review.response}</p>
                     </div>
                   )}
 
@@ -266,28 +267,28 @@ export function Reviews() {
                         onChange={e => setReplyText(e.target.value)}
                         placeholder="Write your response to the student..."
                         rows={2}
-                        className="w-full text-xs p-2.5 rounded-lg border border-navy-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2]"
                       />
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleCancelReply} className="h-7 text-xs">
+                        <Button variant="ghost" size="sm" onClick={handleCancelReply} className="h-7 text-xs font-semibold">
                           Cancel
                         </Button>
-                        <Button size="sm" onClick={() => handleSubmitReply(review.id)} className="h-7 text-xs">
+                        <Button size="sm" onClick={() => handleSubmitReply(review.id)} className="h-7 text-xs font-semibold">
                           <Send className="w-3 h-3 mr-1" /> Send Reply
                         </Button>
                       </div>
                     </div>
                   ) : !review.response && (
-                    <Button variant="outline" size="sm" onClick={() => handleStartReply(review.id)} className="h-7 text-xs">
-                      <MessageSquare className="w-3.5 h-3.5 mr-1" /> Reply to Review
+                    <Button variant="outline" size="sm" onClick={() => handleStartReply(review.id)} className="h-8 text-xs font-semibold">
+                      <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Reply to Review
                     </Button>
                   )}
                 </CardContent>
               </Card>
             ))
           ) : (
-            <div className="p-12 text-center bg-white rounded-xl border border-navy-200">
-              <p className="text-sm text-navy-500">No reviews found matching your search criteria.</p>
+            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
+              <p className="text-sm text-slate-500">No reviews found matching your search criteria.</p>
             </div>
           )}
         </div>

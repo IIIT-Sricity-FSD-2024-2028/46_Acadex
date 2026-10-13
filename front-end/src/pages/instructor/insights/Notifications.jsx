@@ -38,15 +38,18 @@ export function Notifications() {
       case 'student':
         return { icon: UserPlus, color: "text-blue-600", bg: "bg-blue-100" };
       default:
-        return { icon: Info, color: "text-navy-600", bg: "bg-navy-100" };
+        return { icon: Info, color: "text-slate-600", bg: "bg-slate-100" };
     }
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-navy-900">Notifications</h1>
-        <Button variant="ghost" onClick={markAllRead} className="text-primary-600">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Studio Notifications</h1>
+          <p className="text-slate-500 text-sm mt-0.5">Stay updated with course approvals, student enrollments, and reviews.</p>
+        </div>
+        <Button variant="ghost" onClick={markAllRead} className="text-[#0056D2] hover:bg-blue-50 font-semibold text-xs">
           Mark all as read
         </Button>
       </div>
@@ -61,7 +64,7 @@ export function Notifications() {
 
         <TabsContent value="all">
           {loading ? (
-            <div className="p-12 text-center text-slate-500 bg-white rounded-xl border border-navy-200">
+            <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
               Loading notifications...
             </div>
           ) : notifications.length > 0 ? (
@@ -70,24 +73,24 @@ export function Notifications() {
                 const { icon: Icon, color, bg } = getIconConfig(notif.type);
                 const isUnread = notif.unread ?? !notif.read;
                 return (
-                  <Card key={notif.id} className={cn("transition-colors hover:bg-navy-50", isUnread ? "bg-primary-50/30" : "bg-white")}>
+                  <Card key={notif.id} className={cn("transition-colors hover:bg-slate-50/70", isUnread ? "bg-blue-50/30 border-blue-200/80" : "bg-white")}>
                     <CardContent className="p-4 flex gap-4">
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", bg, color)}>
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/50", bg, color)}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className={cn("font-medium text-sm", isUnread ? "text-navy-900 font-bold" : "text-navy-700")}>
+                          <h4 className={cn("text-sm", isUnread ? "text-slate-900 font-bold" : "text-slate-700 font-semibold")}>
                             {notif.title}
                           </h4>
-                          <span className="text-xs text-navy-500 whitespace-nowrap ml-4">
+                          <span className="text-[11px] text-slate-400 whitespace-nowrap ml-4">
                             {notif.date ? new Date(notif.date).toLocaleDateString() : 'Recent'}
                           </span>
                         </div>
-                        <p className="text-sm text-navy-600">{notif.message || notif.desc}</p>
+                        <p className="text-xs text-slate-600 leading-relaxed">{notif.message || notif.desc}</p>
                       </div>
                       {isUnread && (
-                        <div className="w-2 h-2 bg-primary-600 rounded-full mt-2 shrink-0"></div>
+                        <div className="w-2 h-2 bg-[#0056D2] rounded-full mt-2 shrink-0"></div>
                       )}
                     </CardContent>
                   </Card>
@@ -95,11 +98,11 @@ export function Notifications() {
               })}
             </div>
           ) : (
-            <div className="p-12 text-center bg-white rounded-xl border border-navy-200">
-              <div className="w-12 h-12 rounded-full bg-navy-50 text-navy-400 flex items-center justify-center mx-auto mb-2">
+            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
+              <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
                 <Bell className="w-6 h-6" />
               </div>
-              <p className="text-sm text-navy-500">No notifications available.</p>
+              <p className="text-sm text-slate-500">No notifications available.</p>
             </div>
           )}
         </TabsContent>

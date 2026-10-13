@@ -79,8 +79,8 @@ function CorrectAnswerRadio({ isCorrect, isLocked, onClick, disabled }) {
         isCorrect
           ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 focus:ring-emerald-400 scale-110"
           : isLocked
-          ? "bg-navy-100 text-navy-300 cursor-not-allowed focus:ring-navy-200"
-          : "bg-white border-2 border-navy-300 text-navy-400 hover:border-emerald-400 hover:text-emerald-500 hover:bg-emerald-50 focus:ring-emerald-300"
+          ? "bg-slate-100 text-slate-300 cursor-not-allowed focus:ring-slate-200"
+          : "bg-white border-2 border-slate-300 text-slate-400 hover:border-emerald-400 hover:text-emerald-500 hover:bg-emerald-50 focus:ring-emerald-300"
       )}
       title={
         isCorrect
@@ -95,7 +95,7 @@ function CorrectAnswerRadio({ isCorrect, isLocked, onClick, disabled }) {
       ) : isLocked ? (
         <Lock className="w-3 h-3" />
       ) : (
-        <div className="w-2.5 h-2.5 rounded-full bg-navy-200 group-hover:bg-emerald-300 transition-colors" />
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-200 group-hover:bg-emerald-300 transition-colors" />
       )}
     </button>
   );
@@ -125,8 +125,8 @@ function OptionRow({
             : option.isCorrect
             ? "border-emerald-300 bg-gradient-to-r from-emerald-50/80 to-emerald-50/30 shadow-sm shadow-emerald-100"
             : isLocked
-            ? "border-navy-100 bg-navy-50/30 opacity-60"
-            : "border-navy-200 bg-white hover:border-navy-300 hover:shadow-sm"
+            ? "border-slate-100 bg-slate-50/30 opacity-60"
+            : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
         )}
       >
         {/* Correct Answer Toggle */}
@@ -144,8 +144,8 @@ function OptionRow({
             option.isCorrect
               ? "text-emerald-700"
               : isLocked
-              ? "text-navy-300"
-              : "text-navy-500"
+              ? "text-slate-300"
+              : "text-slate-500"
           )}
         >
           {letter}.
@@ -158,12 +158,12 @@ function OptionRow({
           onChange={(e) => onUpdateText(option.id, e.target.value)}
           placeholder={`Option ${letter}`}
           className={cn(
-            "flex-1 bg-transparent border-none outline-none text-sm font-medium placeholder:text-navy-300 transition-colors",
+            "flex-1 bg-transparent border-none outline-none text-sm font-medium placeholder:text-slate-300 transition-colors",
             option.isCorrect
               ? "text-emerald-900 placeholder:text-emerald-300"
               : isLocked
-              ? "text-navy-400"
-              : "text-navy-800"
+              ? "text-slate-400"
+              : "text-slate-800"
           )}
         />
 
@@ -176,14 +176,14 @@ function OptionRow({
             </span>
           )}
           {isLocked && (
-            <span className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-navy-400">
+            <span className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-slate-400">
               <Lock className="w-3 h-3" />
             </span>
           )}
           {totalOptions > 2 && (
             <button
               onClick={() => onDelete(option.id)}
-              className="p-1 text-navy-300 hover:text-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200"
+              className="p-1 text-slate-300 hover:text-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200"
               title="Remove option"
             >
               <X className="w-3.5 h-3.5" />
@@ -276,15 +276,15 @@ function QuestionCard({
       className={cn(
         "bg-white border-2 rounded-2xl transition-all duration-300 overflow-hidden",
         collapsed
-          ? "border-navy-200/60 hover:border-navy-300"
-          : "border-navy-200/60 shadow-card hover:shadow-elevated"
+          ? "border-slate-200/60 hover:border-slate-300"
+          : "border-slate-200/60 shadow-card hover:shadow-elevated"
       )}
     >
       {/* Question Header */}
       <div
         className={cn(
           "flex items-center justify-between px-4 sm:px-6",
-          collapsed ? "py-4" : "py-5 border-b border-navy-100"
+          collapsed ? "py-4" : "py-5 border-b border-slate-100"
         )}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -293,7 +293,7 @@ function QuestionCard({
             className={cn(
               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200",
               collapsed
-                ? "bg-navy-50 text-navy-500 hover:text-navy-700"
+                ? "bg-slate-50 text-slate-500 hover:text-slate-700"
                 : "bg-primary-50 text-primary-600"
             )}
           >
@@ -316,16 +316,16 @@ function QuestionCard({
               </div>
 
               {collapsed && (
-                <span className="text-sm font-medium text-navy-700 truncate">
+                <span className="text-sm font-medium text-slate-700 truncate">
                   {question.text || (
-                    <span className="text-navy-400 italic">Untitled question</span>
+                    <span className="text-slate-400 italic">Untitled question</span>
                   )}
                 </span>
               )}
             </div>
 
             {collapsed && (
-              <div className="flex items-center gap-3 mt-1.5 text-xs text-navy-500">
+              <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
                 <span className="flex items-center gap-1">
                   <Layers className="w-3 h-3" />
                   {question.options.length} options
@@ -355,7 +355,7 @@ function QuestionCard({
           <button
             onClick={() => onMoveUp()}
             disabled={index === 0}
-            className="p-1.5 text-navy-400 hover:text-navy-700 hover:bg-navy-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Move up"
           >
             <ArrowUp className="w-4 h-4" />
@@ -363,14 +363,14 @@ function QuestionCard({
           <button
             onClick={() => onMoveDown()}
             disabled={index === totalQuestions - 1}
-            className="p-1.5 text-navy-400 hover:text-navy-700 hover:bg-navy-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Move down"
           >
             <ArrowDown className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete()}
-            className="p-1.5 text-navy-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
             title="Delete question"
           >
             <Trash2 className="w-4 h-4" />
@@ -383,7 +383,7 @@ function QuestionCard({
         <div className="px-4 sm:px-6 py-5 space-y-5">
           {/* Question Text */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-navy-600 mb-2 block">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 block">
               Question Text <span className="text-rose-500">*</span>
             </label>
             <textarea
@@ -392,10 +392,10 @@ function QuestionCard({
               onChange={(e) => updateQuestionText(e.target.value)}
               placeholder="Type your question here..."
               className={cn(
-                "w-full rounded-xl border-2 px-4 py-3 text-sm font-medium placeholder:text-navy-300 focus:outline-none resize-none min-h-[80px] transition-all duration-200",
+                "w-full rounded-xl border-2 px-4 py-3 text-sm font-medium placeholder:text-slate-300 focus:outline-none resize-none min-h-[80px] transition-all duration-200",
                 !question.text.trim()
-                  ? "border-rose-300 bg-rose-50/20 text-navy-900 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20"
-                  : "border-navy-200 bg-navy-50/30 text-navy-900 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-white"
+                  ? "border-rose-300 bg-rose-50/20 text-slate-900 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20"
+                  : "border-slate-200 bg-slate-50/30 text-slate-900 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-white"
               )}
               rows={2}
             />
@@ -409,7 +409,7 @@ function QuestionCard({
           {/* Options */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-semibold uppercase tracking-wider text-navy-600 flex items-center gap-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-2">
                 Answer Options <span className="text-rose-500">*</span>
                 {hasCorrectAnswer && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full normal-case tracking-normal">
@@ -457,7 +457,7 @@ function QuestionCard({
                   <Plus className="w-3 h-3" strokeWidth={3} />
                 </div>
                 Add option
-                <span className="text-navy-300 font-normal">
+                <span className="text-slate-300 font-normal">
                   ({question.options.length}/8)
                 </span>
               </button>
@@ -465,9 +465,9 @@ function QuestionCard({
           </div>
 
           {/* Points & Explanation */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-navy-100">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
             <div className="w-full sm:w-36">
-              <label className="block text-xs font-semibold text-navy-500 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 mb-1.5">
                 <Target className="w-3 h-3 inline mr-1" />
                 Points <span className="text-rose-500">*</span>
               </label>
@@ -489,17 +489,17 @@ function QuestionCard({
               )}
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-navy-500 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 mb-1.5">
                 <Sparkles className="w-3 h-3 inline mr-1" />
                 Explanation{" "}
-                <span className="text-navy-300 font-normal">(shown after submission)</span>
+                <span className="text-slate-300 font-normal">(shown after submission)</span>
               </label>
               <input
                 type="text"
                 value={question.explanation}
                 onChange={(e) => updateExplanation(e.target.value)}
                 placeholder="Why is the correct answer right?"
-                className="w-full h-9 rounded-lg border border-navy-200 bg-white px-3 text-sm placeholder:text-navy-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
+                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
               />
             </div>
           </div>
@@ -683,49 +683,49 @@ export function CreateQuiz() {
       <div className="flex-1 space-y-5">
         {/* Header */}
         <div className="mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-navy-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Quiz Builder
           </h1>
         </div>
 
         {/* Stats Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-navy-200/60 rounded-xl px-5 py-3.5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200/60 rounded-xl px-5 py-3.5 shadow-sm">
           <div className="flex items-center gap-5 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
                 <HelpCircle className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-navy-500 text-xs font-medium block">
+                <span className="text-slate-500 text-xs font-medium block">
                   Questions
                 </span>
-                <span className="font-bold text-navy-900">
+                <span className="font-bold text-slate-900">
                   {questions.length}
                 </span>
               </div>
             </div>
-            <div className="w-px h-8 bg-navy-200/50" />
+            <div className="w-px h-8 bg-slate-200/50" />
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
                 <Target className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-navy-500 text-xs font-medium block">
+                <span className="text-slate-500 text-xs font-medium block">
                   Total Points
                 </span>
-                <span className="font-bold text-navy-900">{totalPoints}</span>
+                <span className="font-bold text-slate-900">{totalPoints}</span>
               </div>
             </div>
-            <div className="w-px h-8 bg-navy-200/50" />
+            <div className="w-px h-8 bg-slate-200/50" />
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                 <CheckCircle className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-navy-500 text-xs font-medium block">
+                <span className="text-slate-500 text-xs font-medium block">
                   Answers Set
                 </span>
-                <span className="font-bold text-navy-900">
+                <span className="font-bold text-slate-900">
                   {questionsWithAnswer}/{questions.length}
                 </span>
               </div>
@@ -759,9 +759,9 @@ export function CreateQuiz() {
         {/* Add Question Button */}
         <button
           onClick={addQuestion}
-          className="w-full border-2 border-dashed border-navy-200 rounded-xl py-8 flex items-center justify-center gap-3 text-sm font-semibold text-navy-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
+          className="w-full border-2 border-dashed border-slate-200 rounded-xl py-8 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
         >
-          <div className="w-10 h-10 rounded-full bg-navy-100 flex items-center justify-center text-navy-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-all group-hover:scale-110">
+          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-all group-hover:scale-110">
             <Plus className="w-5 h-5" strokeWidth={2.5} />
           </div>
           <div className="text-left">
@@ -775,12 +775,12 @@ export function CreateQuiz() {
         {/* Quiz Settings */}
         <Card>
           <CardContent className="p-5 space-y-4">
-            <h3 className="font-bold text-navy-900 border-b border-navy-100 pb-2.5 flex items-center gap-2">
+            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
               <Settings className="w-4 h-4 text-primary-600" /> Quiz Settings
             </h3>
 
             <div>
-              <label className="block text-xs font-semibold text-navy-600 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">
                 Quiz Title <span className="text-rose-500">*</span>
               </label>
               <Input
@@ -799,16 +799,16 @@ export function CreateQuiz() {
               )}
             </div>
 
-            <div className="border-t border-navy-100 pt-3 space-y-3">
+            <div className="border-t border-slate-100 pt-3 space-y-3">
               <label className="flex items-center justify-between cursor-pointer group">
-                <span className="text-sm font-medium text-navy-700">
+                <span className="text-sm font-medium text-slate-700">
                   Show Explanations
                 </span>
                 <button
                   onClick={() => setShowExplanations(!showExplanations)}
                   className={cn(
                     "w-10 h-5.5 rounded-full transition-all duration-200 relative",
-                    showExplanations ? "bg-primary-600" : "bg-navy-200"
+                    showExplanations ? "bg-primary-600" : "bg-slate-200"
                   )}
                 >
                   <div
@@ -826,23 +826,23 @@ export function CreateQuiz() {
         {/* Quick Actions */}
         <Card>
           <CardContent className="p-5 space-y-3">
-            <h3 className="font-bold text-navy-900 border-b border-navy-100 pb-2.5 flex items-center gap-2">
+            <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-500" /> Quick Actions
             </h3>
 
 
             <button
               onClick={addQuestion}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-navy-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all text-left group"
+              className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all text-left group"
             >
               <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
                 <Plus className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-navy-900">
+                <div className="text-sm font-semibold text-slate-900">
                   Add Question
                 </div>
-                <div className="text-xs text-navy-500">
+                <div className="text-xs text-slate-500">
                   Add a new MCQ
                 </div>
               </div>
@@ -854,7 +854,7 @@ export function CreateQuiz() {
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 lg:left-72 right-0 bg-white/95 backdrop-blur-md border-t border-navy-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 left-0  right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
         <Link to={`/instructor/courses/${courseId}/content`}>
           <Button variant="ghost">Cancel</Button>
         </Link>

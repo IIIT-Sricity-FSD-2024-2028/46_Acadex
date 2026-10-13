@@ -7,7 +7,7 @@ export const Input = forwardRef(
       <input
         type={type}
         className={cn(
-          "flex h-10 w-full rounded-lg border border-navy-200 bg-white px-3 py-2 text-sm placeholder:text-navy-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 hover:border-navy-300 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50 shadow-2xs",
           className
         )}
         ref={ref}
