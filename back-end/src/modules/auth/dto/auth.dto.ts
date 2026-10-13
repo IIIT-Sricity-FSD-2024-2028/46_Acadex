@@ -11,7 +11,7 @@ export class LoginDto {
   @IsNotEmpty()
   password: string;
 
-  @ApiPropertyOptional({ example: 'Instructor', enum: ['Student', 'Instructor', 'Organization', 'Admin'] })
+  @ApiPropertyOptional({ example: 'Instructor', enum: ['Student', 'Instructor', 'Organization', 'Admin', 'SuperAdmin'] })
   @IsOptional()
   @IsString()
   role?: string;
@@ -32,9 +32,9 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
-  @ApiProperty({ example: 'Student', enum: ['Student', 'Instructor', 'Organization', 'Admin'] })
+  @ApiProperty({ example: 'Student', enum: ['Student', 'Instructor', 'Organization', 'Admin', 'SuperAdmin'] })
   @IsString()
-  role: 'Student' | 'Instructor' | 'Organization' | 'Admin';
+  role: 'Student' | 'Instructor' | 'Organization' | 'Admin' | 'SuperAdmin';
 
   @ApiPropertyOptional({ example: 'Stanford University' })
   @IsOptional()

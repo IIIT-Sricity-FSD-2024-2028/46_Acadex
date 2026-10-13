@@ -4,6 +4,7 @@ import {
   GraduationCap,
   Users,
   Building2,
+  Shield,
   ShieldCheck,
   Mail,
   Lock,
@@ -42,6 +43,7 @@ function getDashboardForRole(role) {
     faculty: 'instructor',
     org: 'organization',
     superadmin: 'superadmin',
+    admin: 'admin',
   }[normalizedRole] || normalizedRole;
 
   return DASHBOARD_BY_ROLE[canonicalRole];
@@ -70,12 +72,14 @@ export default function SignIn() {
     const searchParams = new URLSearchParams(location.search);
     const roleParam = searchParams.get('role') || location.state?.role;
     if (roleParam) {
-      const lower = roleParam.toLowerCase();
+      const lower = roleParam.toLowerCase().replace(/[\s_-]+/g, '');
       if (lower.includes('org') || lower.includes('organization')) return 'Organization';
-      if (lower.includes('instructor') || lower.includes('educator')) return 'Instructor';
-      if (lower.includes('admin') || lower.includes('super')) return 'Admin';
+      if (lower.includes('instructor') || lower.includes('educator') || lower.includes('faculty')) return 'Instructor';
+      if (lower.includes('superadmin') || lower.includes('super')) return 'SuperAdmin';
+      if (lower.includes('admin')) return 'Admin';
       return 'Student';
     }
+    if (location.pathname.includes('/super-admin/')) return 'SuperAdmin';
     if (location.pathname.includes('/org/')) return 'Organization';
     if (location.pathname.includes('/instructor/')) return 'Instructor';
     if (location.pathname.includes('/admin/')) return 'Admin';
@@ -118,7 +122,7 @@ export default function SignIn() {
       subtitle: 'Faculty Professor • 1,240 Enrolled Students',
       redirect: '/instructor/dashboard',
       badge: 'Instructor / Faculty',
-      title: 'Instructor / Educator',
+      title: 'Instructor / Faculty',
       buttonLabel: 'Instructor'
     },
     Organization: {
@@ -132,11 +136,21 @@ export default function SignIn() {
       buttonLabel: 'Organization Admin'
     },
     Admin: {
+      email: 'admin@nexuspay-platform.io',
+      password: 'Password123!',
+      name: 'Operational Platform Admin',
+      subtitle: 'Platform Operations & Course Approvals',
+      redirect: '/admin/dashboard',
+      badge: 'Platform Admin',
+      title: 'Platform Admin',
+      buttonLabel: 'Platform Admin'
+    },
+    SuperAdmin: {
       email: 'superadmin@nexuspay-platform.io',
       password: 'Password123!',
       name: 'Platform Super Admin',
       subtitle: 'Global Operations & System Approvals',
-      redirect: '/admin/dashboard',
+      redirect: '/super-admin/dashboard',
       badge: 'Super Admin',
       title: 'Super Admin',
       buttonLabel: 'Super Admin'
@@ -168,6 +182,22 @@ export default function SignIn() {
       role: 'Organization',
       badge: 'Organization Admin',
       redirect: '/org/dashboard'
+    },
+    {
+      name: 'Operational Platform Admin',
+      email: 'admin.operations@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+      role: 'Admin',
+      badge: 'Platform Admin',
+      redirect: '/admin/dashboard'
+    },
+    {
+      name: 'Platform Super Admin',
+      email: 'superadmin.ops@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+      role: 'SuperAdmin',
+      badge: 'Super Admin',
+      redirect: '/super-admin/dashboard'
     }
   ];
 
@@ -200,10 +230,18 @@ export default function SignIn() {
     {
       university: 'Harvard University',
       protocol: 'HarvardKey Federated Login',
-      sampleEmail: 'superadmin@harvard.edu',
+      sampleEmail: 'admin@harvard.edu',
       role: 'Admin',
       logo: '📚',
       redirect: '/admin/dashboard'
+    },
+    {
+      university: 'Global Platform Governance',
+      protocol: 'Enterprise Root SAML SSO',
+      sampleEmail: 'superadmin@global-platform.io',
+      role: 'SuperAdmin',
+      logo: '🌐',
+      redirect: '/super-admin/dashboard'
     }
   ];
 
@@ -211,16 +249,20 @@ export default function SignIn() {
   useEffect(() => {
     const role = resolveRole();
     setSelectedRole(role);
-    setEmail(demoAccounts[role].email);
-    setPassword(demoAccounts[role].password);
+    if (demoAccounts[role]) {
+      setEmail(demoAccounts[role].email);
+      setPassword(demoAccounts[role].password);
+    }
     setError('');
   }, [location.search, location.state]);
 
   const handleRoleChange = (role) => {
     setSelectedRole(role);
     setError('');
-    setEmail(demoAccounts[role].email);
-    setPassword(demoAccounts[role].password);
+    if (demoAccounts[role]) {
+      setEmail(demoAccounts[role].email);
+      setPassword(demoAccounts[role].password);
+    }
   };
 
   const validateEmail = (val) => {
@@ -367,7 +409,8 @@ export default function SignIn() {
     { key: 'Student', label: 'Student / Learner', icon: GraduationCap, color: 'text-emerald-700', border: 'border-emerald-300' },
     { key: 'Instructor', label: 'Instructor / Faculty', icon: Users, color: 'text-indigo-700', border: 'border-indigo-300' },
     { key: 'Organization', label: 'Organization Admin', icon: Building2, color: 'text-blue-700', border: 'border-blue-300' },
-    { key: 'Admin', label: 'Platform Super Admin', icon: ShieldCheck, color: 'text-purple-700', border: 'border-purple-300' }
+    { key: 'Admin', label: 'Platform Admin', icon: Shield, color: 'text-purple-700', border: 'border-purple-300' },
+    { key: 'SuperAdmin', label: 'Platform Super Admin', icon: ShieldCheck, color: 'text-rose-700', border: 'border-rose-300' }
   ];
 
   return (
@@ -418,8 +461,8 @@ export default function SignIn() {
               </p>
             </div>
 
-            {/* Role Radio Cards */}
-            <div className="space-y-2.5 my-6">
+            {/* Role Radio Cards - 5 Actor Portals */}
+            <div className="space-y-2 my-5">
               {roles.map((r) => {
                 const Icon = r.icon;
                 const isSelected = selectedRole === r.key;
@@ -428,22 +471,22 @@ export default function SignIn() {
                     key={r.key}
                     type="button"
                     onClick={() => handleRoleChange(r.key)}
-                    className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                    className={`w-full p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
                       isSelected
                         ? 'bg-blue-50 border-blue-600 shadow-sm text-slate-900'
                         : 'bg-[#FAF7F2] border-[#E0D7CB] text-slate-700 hover:bg-white'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? 'bg-blue-600 text-white shadow-2xs' : 'bg-white border border-[#E0D7CB] ' + r.color}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${isSelected ? 'bg-blue-600 text-white shadow-2xs' : 'bg-white border border-[#E0D7CB] ' + r.color}`}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <div>
-                        <div className="font-bold text-sm text-slate-900">{r.label}</div>
-                        <div className="text-[11px] text-slate-500">{demoAccounts[r.key].subtitle}</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm text-slate-900 truncate">{r.label}</div>
+                        <div className="text-[11px] text-slate-500 truncate">{demoAccounts[r.key]?.subtitle}</div>
                       </div>
                     </div>
-                    {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" />}
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 ml-2" />}
                   </button>
                 );
               })}

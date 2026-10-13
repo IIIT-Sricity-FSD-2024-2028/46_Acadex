@@ -32,16 +32,17 @@ export default function SignUp() {
     const params = new URLSearchParams(location.search);
     const roleParam = params.get('role') || location.state?.role;
     if (roleParam) {
-      const lower = roleParam.toLowerCase();
-      if (lower.includes('admin') || lower.includes('super')) return 'Admin';
-      if (lower.includes('instructor') || lower.includes('educator')) return 'Instructor';
+      const lower = roleParam.toLowerCase().replace(/[\s_-]+/g, '');
+      if (lower.includes('superadmin') || lower.includes('super')) return 'SuperAdmin';
+      if (lower.includes('admin')) return 'Admin';
+      if (lower.includes('instructor') || lower.includes('educator') || lower.includes('faculty')) return 'Instructor';
       if (lower.includes('org') || lower.includes('organization')) return 'Organization';
       return 'Student';
     }
     return 'Student';
   };
 
-  const [role, setRole] = useState(resolveRole()); // 'Student' | 'Instructor' | 'Organization' | 'Admin'
+  const [role, setRole] = useState(resolveRole()); // 'Student' | 'Instructor' | 'Organization' | 'Admin' | 'SuperAdmin'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -181,7 +182,8 @@ export default function SignUp() {
     { id: 'Student', label: 'Student / Learner', icon: GraduationCap },
     { id: 'Instructor', label: 'Instructor / Faculty', icon: Users },
     { id: 'Organization', label: 'Organization Admin', icon: Building2 },
-    { id: 'Admin', label: 'Platform Super Admin', icon: ShieldCheck }
+    { id: 'Admin', label: 'Platform Admin', icon: Shield },
+    { id: 'SuperAdmin', label: 'Platform Super Admin', icon: ShieldCheck }
   ];
 
   return (
@@ -203,11 +205,11 @@ export default function SignUp() {
           <div className="flex items-center gap-3 text-xs sm:text-sm">
             <span className="text-slate-600 font-medium">Already have an account?</span>
             <Link
-              to={`/signin?role=${role === 'Admin' ? 'Admin' : role}`}
+              to={`/signin?role=${role}`}
               state={{ role }}
               className="px-4 py-2 rounded-xl bg-white hover:bg-[#F2ECE4] text-blue-700 font-bold transition-all border border-[#E0D7CB] shadow-2xs text-xs sm:text-sm"
             >
-              Sign In as {role === 'Admin' ? 'Super Admin' : role}
+              Sign In as {role === 'SuperAdmin' ? 'Super Admin' : role}
             </Link>
           </div>
         </div>
@@ -226,20 +228,23 @@ export default function SignUp() {
                   {role === 'Student' && 'Learner Workspace'}
                   {role === 'Instructor' && 'Educator Studio'}
                   {role === 'Organization' && 'Enterprise Academy'}
-                  {role === 'Admin' && 'Super Governance'}
+                  {role === 'Admin' && 'Platform Governance'}
+                  {role === 'SuperAdmin' && 'Root Super Governance'}
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
                 {role === 'Student' && 'Join 120,000+ ambitious learners & scholars'}
                 {role === 'Instructor' && 'Publish courses & mentor global students'}
                 {role === 'Organization' && 'Upskill and govern your enterprise workforce'}
-                {role === 'Admin' && 'Global Operations & System Approvals'}
+                {role === 'Admin' && 'Operations Moderation & Course Approvals'}
+                {role === 'SuperAdmin' && 'Global Operations & System Approvals'}
               </h2>
               <p className="text-sm text-slate-600 mt-3 leading-relaxed">
                 {role === 'Student' && 'Gain verified certificates, learn from top university faculty, and accelerate your career.'}
                 {role === 'Instructor' && 'Earn revenue, build interactive syllabi, assess quizzes, and issue accredited certificates.'}
                 {role === 'Organization' && 'Assign seat licenses, monitor completion telemetry, and orchestrate custom academies.'}
-                {role === 'Admin' && 'Platform super administrator privileges are managed under restricted institutional governance.'}
+                {role === 'Admin' && 'Platform administrator privileges are managed under operations governance.'}
+                {role === 'SuperAdmin' && 'Platform super administrator privileges are managed under restricted institutional governance.'}
               </p>
             </div>
 
@@ -273,17 +278,19 @@ export default function SignUp() {
             
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-                {role === 'Admin' ? 'Super Admin Account Creation' : `Create your ${role} Account`}
+                {role === 'Admin' ? 'Platform Admin Account Creation' : role === 'SuperAdmin' ? 'Super Admin Account Creation' : `Create your ${role} Account`}
               </h1>
               <p className="text-sm text-slate-600 mt-1">
                 {role === 'Admin'
-                  ? 'Super Admin accounts are created by an authorized administrator.'
+                  ? 'Platform Admin accounts are provisioned by platform operations leads.'
+                  : role === 'SuperAdmin'
+                  ? 'Super Admin accounts are provisioned under root governance.'
                   : `Select your platform role and enter your ${role} credentials below.`}
               </p>
             </div>
 
-            {/* Role Selection Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-[#FAF7F2] border border-[#E0D7CB] rounded-2xl mb-6">
+            {/* Role Selection Tabs - 5 Actors */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 p-1.5 bg-[#FAF7F2] border border-[#E0D7CB] rounded-2xl mb-6">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = role === tab.id;
@@ -321,31 +328,31 @@ export default function SignUp() {
             )}
 
             {/* ────────────────────────────────────────────────────────────── */}
-            {/* 1. RESTRICTED PLATFORM SUPER ADMIN VIEW */}
+            {/* 1. RESTRICTED PLATFORM ADMIN & SUPER ADMIN VIEW */}
             {/* ────────────────────────────────────────────────────────────── */}
-            {role === 'Admin' ? (
+            {role === 'Admin' || role === 'SuperAdmin' ? (
               <div className="space-y-6 animate-fadeIn">
                 <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-3">
                   <div className="flex items-center gap-2.5 text-amber-800 font-bold text-sm">
                     <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
-                    <span>Restricted Platform Governance</span>
+                    <span>{role === 'SuperAdmin' ? 'Restricted Platform Governance' : 'Restricted Platform Operations'}</span>
                   </div>
                   <p className="text-xs leading-relaxed text-amber-800">
-                    <strong>Super Admin accounts are created by an authorized administrator.</strong> Public registration is restricted to protect root system configurations, financial payouts, and platform moderation rules.
+                    <strong>{role === 'SuperAdmin' ? 'Super Admin' : 'Platform Admin'} accounts are created by an authorized administrator.</strong> Public registration is restricted to protect root configurations, course validations, and operational compliance.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E0D7CB] space-y-3">
                   <span className="text-xs font-bold text-slate-800 block">Already have authorized credentials?</span>
                   <p className="text-xs text-slate-600">
-                    Sign in with pre-authorized Platform Super Admin credentials (e.g. <code className="text-blue-700 font-bold">superadmin@coursera-platform.io</code>).
+                    Sign in with verified credentials (e.g. <code className="text-blue-700 font-bold">{role === 'SuperAdmin' ? 'superadmin@nexuspay-platform.io' : 'admin@nexuspay-platform.io'}</code>).
                   </p>
                   <Link
-                    to="/signin?role=Admin"
-                    state={{ role: 'Admin' }}
+                    to={`/signin?role=${role}`}
+                    state={{ role }}
                     className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all"
                   >
-                    <span>Sign In as Platform Super Admin</span>
+                    <span>Sign In as {role === 'SuperAdmin' ? 'Platform Super Admin' : 'Platform Admin'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>

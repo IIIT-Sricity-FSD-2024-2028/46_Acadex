@@ -11,7 +11,7 @@ export interface UserEntity {
   name: string;
   email: string; // UNIQUE
   password?: string;
-  role: 'Student' | 'Learner' | 'Instructor' | 'Educator' | 'Organization' | 'Admin';
+  role: 'Student' | 'Learner' | 'Instructor' | 'Educator' | 'Organization' | 'Admin' | 'SuperAdmin' | 'Super Admin';
   status: 'Active' | 'Inactive' | 'Suspended' | 'Pending';
   avatar?: string;
   verificationStatus?: 'Verified' | 'Pending' | 'Rejected';

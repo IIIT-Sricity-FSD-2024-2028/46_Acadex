@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { SearchBar } from '../../components/admin/SearchBar';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { Pagination } from '../../components/admin/Pagination';
 import { StatusBadge } from '../../components/admin/StatusBadge';
+import { ConfirmModal } from '../../components/admin/Modals';
 import HumanAvatar from '../../components/common/HumanAvatar';
 import { api } from '../../utils/api';
 
@@ -15,12 +17,25 @@ export const Learners = () => {
   const [page, setPage] = useState(1);
   const [learners, setLearners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [learnerToDelete, setLearnerToDelete] = useState(null);
 
   useEffect(() => {
     api.get('/learners', 'admin')
       .then(data => { setLearners(Array.isArray(data) ? data : (data?.items || [])); setLoading(false); })
       .catch(err => { console.error('Error fetching learners:', err); setLearners([]); setLoading(false); });
   }, []);
+
+  const handleDeleteLearner = async () => {
+    if (!learnerToDelete) return;
+    try {
+      await api.delete(`/learners/${learnerToDelete.id}`, 'admin');
+      setLearners(prev => prev.filter(l => l.id !== learnerToDelete.id));
+    } catch (err) {
+      console.error('Error removing learner:', err);
+    } finally {
+      setLearnerToDelete(null);
+    }
+  };
 
   const columns = [
     { 
@@ -39,15 +54,28 @@ export const Learners = () => {
     { 
       header: 'Actions', 
       cell: (row) => (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/admin/learners/${row.id}`);
-          }}
-          className="text-primary hover:text-primary-dark font-medium"
-        >
-          View
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/learners/${row.id}`);
+            }}
+            className="text-primary hover:text-primary-dark font-medium text-xs"
+          >
+            View
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setLearnerToDelete(row);
+            }}
+            className="text-rose-600 hover:text-rose-700 font-medium text-xs flex items-center gap-1"
+            title="Remove learner"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Remove</span>
+          </button>
+        </div>
       )
     },
   ];
@@ -82,6 +110,16 @@ export const Learners = () => {
         
         <Pagination currentPage={page} totalPages={1} onPageChange={setPage} />
       </div>
+
+      <ConfirmModal
+        isOpen={!!learnerToDelete}
+        onClose={() => setLearnerToDelete(null)}
+        onConfirm={handleDeleteLearner}
+        title="Remove Learner"
+        message={`Are you sure you want to remove learner "${learnerToDelete?.name}"? This will deactivate their academic profile and enrollments.`}
+        confirmText="Remove Learner"
+        variant="danger"
+      />
     </div>
   );
 };

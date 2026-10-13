@@ -11,8 +11,9 @@ export function SuperAdminGuard({ children }) {
 
   const token = localStorage.getItem('nexuspay_auth_token') || localStorage.getItem('auth_token');
   const role  = localStorage.getItem('nexuspay_active_role') || localStorage.getItem('user_role');
+  const normalizedRole = String(role || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
 
-  const isAuthenticated = !!token && role === 'SuperAdmin';
+  const isAuthenticated = !!token && normalizedRole === 'superadmin';
 
   if (!isAuthenticated) {
     // Redirect to the super-admin login, preserving where they wanted to go

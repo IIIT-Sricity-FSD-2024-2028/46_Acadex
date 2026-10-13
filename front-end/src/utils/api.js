@@ -1,3 +1,5 @@
+import { jsonDataClient } from '../services/jsonDataClient';
+
 const API_BASE_URL = 'http://localhost:3000/api';
 
 async function request(endpoint, options = {}) {
@@ -37,7 +39,25 @@ async function request(endpoint, options = {}) {
     const result = await response.json();
     return result && typeof result === 'object' && 'data' in result ? result.data : result;
   } catch (error) {
-    console.warn(`API request error [${options.method || 'GET'} ${cleanEndpoint}]:`, error.message);
+    console.warn(`API request notice [${options.method || 'GET'} ${cleanEndpoint}]:`, error.message);
+
+    // Graceful offline mock fallbacks
+    const method = (options.method || 'GET').toUpperCase();
+    if (method === 'DELETE') {
+      const segments = cleanEndpoint.split('/').filter(Boolean);
+      const resource = segments[0];
+      const targetId = segments[1];
+      if (resource === 'learners' && targetId) {
+        return jsonDataClient.deleteLearner(targetId);
+      }
+      if (resource === 'organizations' && targetId) {
+        return jsonDataClient.deleteOrganization(targetId);
+      }
+      if (resource === 'users' && targetId) {
+        return jsonDataClient.deleteAdmin(targetId);
+      }
+    }
+
     throw error;
   }
 }

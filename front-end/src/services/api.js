@@ -56,25 +56,29 @@ const MOCK_CREDENTIALS = [
   { email: 'alex.chen@stanford.edu',          password: 'Password123!', role: 'Student',      name: 'Alex Chen' },
   { email: 'sarah.jenkins@university.edu',    password: 'Password123!', role: 'Instructor',   name: 'Dr. Sarah Jenkins' },
   { email: 'admin@nexuspay.edu',              password: 'Password123!', role: 'Organization', name: 'Nexus Academy Admin' },
-  { email: 'superadmin@nexuspay-platform.io', password: 'Password123!', role: 'Admin',        name: 'Platform Super Admin' },
+  { email: 'admin@nexuspay-platform.io',       password: 'Password123!', role: 'Admin',        name: 'Operational Platform Admin' },
   { email: 'superadmin@nexuspay-platform.io', password: 'Password123!', role: 'SuperAdmin',   name: 'Platform Super Admin' },
 ];
 
 function mockLogin(email, password, role) {
+  const normRole = (r) => String(r || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+  const targetRole = normRole(role);
+
   const match = MOCK_CREDENTIALS.find(
     (c) =>
       c.email.toLowerCase() === email.toLowerCase() &&
       c.password === password &&
-      c.role.toLowerCase() === role.toLowerCase()
+      (normRole(c.role) === targetRole || (normRole(c.role) === 'superadmin' && targetRole === 'admin'))
   );
   if (!match) {
     const err = new Error('Invalid credentials. Please check your email and password.');
     err.status = 401;
     throw err;
   }
+  const resolvedRole = targetRole === 'superadmin' ? 'SuperAdmin' : match.role;
   return {
-    token: `jwt-mock-${match.role.toLowerCase()}-${Date.now()}`,
-    user: { id: `mock-${match.role.toLowerCase()}-001`, email: match.email, name: match.name, role: match.role },
+    token: `jwt-mock-${resolvedRole.toLowerCase()}-${Date.now()}`,
+    user: { id: `mock-${resolvedRole.toLowerCase()}-001`, email: match.email, name: match.name, role: resolvedRole },
   };
 }
 

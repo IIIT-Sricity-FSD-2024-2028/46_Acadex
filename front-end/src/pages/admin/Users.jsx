@@ -6,7 +6,8 @@ import {
   BookOpen, 
   Building2, 
   RotateCcw,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { SearchBar } from '../../components/admin/SearchBar';
@@ -14,6 +15,7 @@ import { FilterBar } from '../../components/admin/FilterBar';
 import { Pagination } from '../../components/admin/Pagination';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { UserAvatar } from '../../components/admin/UserAvatar';
+import { ConfirmModal } from '../../components/admin/Modals';
 import { api } from '../../utils/api';
 
 export const Users = () => {
@@ -25,6 +27,7 @@ export const Users = () => {
   const [page, setPage] = useState(1);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
     api.get('/users', 'admin')
@@ -152,6 +155,18 @@ export const Users = () => {
     return <span className="text-xs text-slate-500 font-medium">-</span>;
   };
 
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await api.delete(`/users/${userToDelete.id}`, 'admin');
+      setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
+    } catch (err) {
+      console.error('Error removing user:', err);
+    } finally {
+      setUserToDelete(null);
+    }
+  };
+
   const columns = [
     { 
       header: 'User', 
@@ -199,18 +214,35 @@ export const Users = () => {
     },
     { 
       header: 'Actions', 
-      cell: (row) => (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/admin/users/${row.id}`);
-          }}
-          className="inline-flex items-center gap-1 text-primary hover:text-primary-dark font-medium text-sm hover:underline"
-        >
-          <span>View</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </button>
-      )
+      cell: (row) => {
+        const isProtectedAdmin = row.role === 'Admin' || row.role === 'SuperAdmin' || row.role === 'Super Admin';
+        return (
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/users/${row.id}`);
+              }}
+              className="inline-flex items-center gap-1 text-primary hover:text-primary-dark font-medium text-sm hover:underline"
+            >
+              <span>View</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+            {!isProtectedAdmin && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUserToDelete(row);
+                }}
+                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                title="Remove user"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        );
+      }
     },
   ];
 
@@ -340,6 +372,17 @@ export const Users = () => {
           <Pagination currentPage={page} totalPages={1} onPageChange={setPage} />
         </div>
       </div>
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        title="Remove User"
+        message={`Are you sure you want to remove user "${userToDelete?.name}" (${userToDelete?.role})? This action cannot be undone.`}
+        confirmText="Remove User"
+        variant="danger"
+      />
     </div>
   );
 };

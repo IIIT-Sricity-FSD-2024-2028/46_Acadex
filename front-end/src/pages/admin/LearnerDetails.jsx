@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, GraduationCap, Building2 } from 'lucide-react';
+import { ArrowLeft, Mail, GraduationCap, Building2, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { UserAvatar } from '../../components/admin/UserAvatar';
+import { ConfirmModal } from '../../components/admin/Modals';
 import { api } from '../../utils/api';
 
 export const LearnerDetails = () => {
@@ -10,6 +11,7 @@ export const LearnerDetails = () => {
   const navigate = useNavigate();
   const [learner, setLearner] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     api.get(`/learners/${learnerId}`)
@@ -23,6 +25,15 @@ export const LearnerDetails = () => {
       });
   }, [learnerId]);
 
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/learners/${learnerId}`, 'admin');
+      navigate('/admin/learners');
+    } catch (err) {
+      console.error('Error deleting learner:', err);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading learner details...</div>;
   }
@@ -33,17 +44,27 @@ export const LearnerDetails = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={() => navigate('/admin/learners')}
-          className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">{learner.name}</h1>
-          <p className="text-sm text-slate-500">Learner ID: #{learner.id}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/learners')}
+            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">{learner.name}</h1>
+            <p className="text-sm text-slate-500">Learner ID: #{learner.id}</p>
+          </div>
         </div>
+
+        <button
+          onClick={() => setIsDeleteModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs rounded-xl shadow-xs transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Remove Learner</span>
+        </button>
       </div>
       
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
@@ -87,6 +108,16 @@ export const LearnerDetails = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Remove Learner"
+        message={`Are you sure you want to remove learner "${learner.name}"? This action will deactivate their records.`}
+        confirmText="Remove Learner"
+        variant="danger"
+      />
     </div>
   );
 };

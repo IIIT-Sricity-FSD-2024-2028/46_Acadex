@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { SearchBar } from '../../components/admin/SearchBar';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { Pagination } from '../../components/admin/Pagination';
 import { StatusBadge } from '../../components/admin/StatusBadge';
+import { ConfirmModal } from '../../components/admin/Modals';
 import { api } from '../../utils/api';
 
 export const Organizations = () => {
@@ -14,12 +16,25 @@ export const Organizations = () => {
   const [page, setPage] = useState(1);
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [orgToDelete, setOrgToDelete] = useState(null);
 
   useEffect(() => {
     api.get('/organizations', 'admin')
       .then(data => { setOrganizations(Array.isArray(data) ? data : (data?.items || [])); setLoading(false); })
       .catch(err => { console.error('Error fetching organizations:', err); setOrganizations([]); setLoading(false); });
   }, []);
+
+  const handleDeleteOrg = async () => {
+    if (!orgToDelete) return;
+    try {
+      await api.delete(`/organizations/${orgToDelete.id}`, 'admin');
+      setOrganizations(prev => prev.filter(o => o.id !== orgToDelete.id));
+    } catch (err) {
+      console.error('Error removing organization:', err);
+    } finally {
+      setOrgToDelete(null);
+    }
+  };
 
   const columns = [
     { header: 'Organization', accessor: 'name' },
@@ -30,15 +45,28 @@ export const Organizations = () => {
     { 
       header: 'Actions', 
       cell: (row) => (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/admin/organizations/${row.id}`);
-          }}
-          className="text-primary hover:text-primary-dark font-medium"
-        >
-          View
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/organizations/${row.id}`);
+            }}
+            className="text-primary hover:text-primary-dark font-medium text-xs"
+          >
+            View
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setOrgToDelete(row);
+            }}
+            className="text-rose-600 hover:text-rose-700 font-medium text-xs flex items-center gap-1"
+            title="Remove organization"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Remove</span>
+          </button>
+        </div>
       )
     },
   ];
@@ -73,6 +101,16 @@ export const Organizations = () => {
         
         <Pagination currentPage={page} totalPages={1} onPageChange={setPage} />
       </div>
+
+      <ConfirmModal
+        isOpen={!!orgToDelete}
+        onClose={() => setOrgToDelete(null)}
+        onConfirm={handleDeleteOrg}
+        title="Remove Organization"
+        message={`Are you sure you want to remove institution "${orgToDelete?.name}"? All associated seats, faculty rosters, and verifications will be decommissioned.`}
+        confirmText="Remove Organization"
+        variant="danger"
+      />
     </div>
   );
 };

@@ -51,9 +51,11 @@ export class AuthService {
     const account = this.normalizeRole(accountRole);
     const requested = this.normalizeRole(requestedRole);
 
-    // The unified sign-in page exposes the platform-super-admin account under
-    // its Admin portal; the dedicated super-admin login still uses SuperAdmin.
-    return account === requested || (account === 'superadmin' && requested === 'admin');
+    if (account === requested) return true;
+    // SuperAdmin has top-level permissions to also sign into Admin portal if desired
+    if (account === 'superadmin' && requested === 'admin') return true;
+
+    return false;
   }
 
   async login(dto: LoginDto) {
@@ -89,13 +91,21 @@ export class AuthService {
     // Update lastLogin
     await this.usersRepo.update(user.id, { lastLogin: new Date().toISOString() });
 
+    const normalizedAccount = this.normalizeRole(user.role as string);
+    const normalizedRequested = this.normalizeRole(dto.role);
+
+    let resolvedRole = user.role;
+    if (normalizedAccount === 'superadmin') {
+      resolvedRole = normalizedRequested === 'admin' ? 'Admin' : 'SuperAdmin';
+    }
+
     return {
       token: `jwt-token-${user.id}-${Date.now()}`,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: (user.role as string) === 'Super Admin' ? 'Admin' : user.role,
+        role: resolvedRole,
         avatar: user.avatar,
         verificationStatus: user.verificationStatus,
       },

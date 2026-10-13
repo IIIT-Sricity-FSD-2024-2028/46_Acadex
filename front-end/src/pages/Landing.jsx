@@ -1201,6 +1201,7 @@ export default function Landing() {
                 <li><Link to="/instructor" className="hover:text-blue-600 transition-colors uppercase text-[11px]">EDUCATOR STUDIO</Link></li>
                 <li><Link to="/organization/landing" className="hover:text-blue-600 transition-colors uppercase text-[11px]">ORGANIZATION PORTAL</Link></li>
                 <li><Link to="/admin" className="hover:text-blue-600 transition-colors uppercase text-[11px]">ADMIN CENTER</Link></li>
+                <li><Link to="/super-admin/dashboard" className="hover:text-blue-600 transition-colors uppercase text-[11px]">SUPER ADMIN PORTAL</Link></li>
                 <li><Link to="/signin" className="hover:text-blue-600 transition-colors">Sign In Portal</Link></li>
                 <li><Link to="/signup" className="hover:text-blue-600 transition-colors">Create Free Account</Link></li>
               </ul>

@@ -25,6 +25,7 @@ export const UserDetails = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,15 @@ export const UserDetails = () => {
         setLoading(false);
       });
   }, [userId]);
+
+  const handleDeleteUser = async () => {
+    try {
+      await api.delete(`/users/${user.id}`, 'admin');
+      navigate('/admin/users');
+    } catch (err) {
+      console.error('Error deleting user:', err);
+    }
+  };
 
   const tabs = useMemo(() => {
     if (!user) return [];
@@ -127,13 +137,26 @@ export const UserDetails = () => {
             </button>
             <button 
               onClick={() => setIsSuspendModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 border border-amber-200 bg-amber-50 rounded-lg text-amber-700 hover:bg-amber-100 font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-amber-200 bg-amber-50 rounded-lg text-amber-700 hover:bg-amber-100 font-medium transition-colors text-xs"
             >
               <Ban className="w-4 h-4" /> Suspend
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 border border-rose-200 bg-rose-50 rounded-lg text-rose-700 hover:bg-rose-100 font-medium transition-colors">
-              <Trash2 className="w-4 h-4" /> Delete
-            </button>
+            {user.role === 'Admin' || user.role === 'SuperAdmin' || user.role === 'Super Admin' ? (
+              <button
+                disabled
+                className="flex items-center gap-2 px-4 py-2 border border-slate-200 bg-slate-50 rounded-lg text-slate-400 font-medium cursor-not-allowed text-xs"
+                title="Only Super Admin can remove Platform Admins"
+              >
+                <Trash2 className="w-4 h-4" /> Admin Protected
+              </button>
+            ) : (
+              <button 
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-rose-200 bg-rose-50 rounded-lg text-rose-700 hover:bg-rose-100 font-medium transition-colors text-xs"
+              >
+                <Trash2 className="w-4 h-4" /> Delete User
+              </button>
+            )}
           </div>
         </div>
 
@@ -516,6 +539,16 @@ export const UserDetails = () => {
         title="Suspend User"
         message={`Are you sure you want to suspend ${user.name}? They will lose access to the platform.`}
         confirmText="Suspend User"
+        variant="danger"
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        message={`Are you sure you want to permanently delete user "${user.name}" (${user.role})? This will deactivate their account and purge their associated records.`}
+        confirmText="Delete User"
         variant="danger"
       />
     </div>

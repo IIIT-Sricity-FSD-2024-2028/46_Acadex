@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Globe, Users, BookOpen } from 'lucide-react';
+import { ArrowLeft, Building2, Globe, Users, BookOpen, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../../components/admin/StatusBadge';
+import { ConfirmModal } from '../../components/admin/Modals';
 import { api } from '../../utils/api';
 
 export const OrganizationDetails = () => {
@@ -9,6 +10,7 @@ export const OrganizationDetails = () => {
   const navigate = useNavigate();
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     api.get(`/organizations/${organizationId}`)
@@ -22,6 +24,15 @@ export const OrganizationDetails = () => {
       });
   }, [organizationId]);
 
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/organizations/${organizationId}`, 'admin');
+      navigate('/admin/organizations');
+    } catch (err) {
+      console.error('Error deleting organization:', err);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading organization details...</div>;
   }
@@ -32,17 +43,27 @@ export const OrganizationDetails = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={() => navigate('/admin/organizations')}
-          className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">{org.name}</h1>
-          <p className="text-sm text-slate-500">Organization ID: #{org.id}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/organizations')}
+            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">{org.name}</h1>
+            <p className="text-sm text-slate-500">Organization ID: #{org.id}</p>
+          </div>
         </div>
+
+        <button
+          onClick={() => setIsDeleteModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs rounded-xl shadow-xs transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Remove Organization</span>
+        </button>
       </div>
       
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
@@ -84,6 +105,16 @@ export const OrganizationDetails = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Remove Organization"
+        message={`Are you sure you want to remove institution "${org.name}"? All associated seats, faculty rosters, and verifications will be decommissioned.`}
+        confirmText="Remove Organization"
+        variant="danger"
+      />
     </div>
   );
 };
