@@ -79,7 +79,7 @@ export function InstructorLayout() {
                 </span>
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Verified Faculty • Stanford University</span>
+                  <span>Stanford University</span>
                 </span>
               </div>
             </div>
@@ -181,45 +181,7 @@ export function InstructorLayout() {
           <Outlet />
         </main>
 
-        {/* ───────────────────────────────────────────────────────────── */}
-        {/* ACADEMIC FOOTER (Identical to Student & Admin Design System)   */}
-        {/* ───────────────────────────────────────────────────────────── */}
-        <footer className="bg-white border-t border-slate-200 mt-auto w-full">
-          <div className="w-full max-w-[1560px] mx-auto flex flex-col md:flex-row justify-between items-center py-6 px-4 md:px-8 lg:px-10 gap-4">
-            <div className="flex flex-col md:flex-row items-center gap-3 text-center md:text-left">
-              <Link to="/instructor/dashboard" className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-[#0056D2] flex items-center justify-center text-white shadow-xs">
-                  <BookOpen className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-bold text-sm text-slate-900">
-                  NexusEdu Studio
-                </span>
-              </Link>
-              <span className="hidden md:inline text-slate-300 text-xs">•</span>
-              <p className="text-xs text-slate-500 font-medium">
-                © 2026 NexusEdu Platform. Academic Instructor Studio & Course Governance.
-              </p>
-            </div>
-
-            <nav className="flex flex-wrap justify-center gap-4 md:gap-6 text-xs font-bold text-slate-600">
-              <Link to="/instructor/dashboard" className="hover:text-[#0056D2] transition-colors">
-                Studio
-              </Link>
-              <Link to="/instructor/courses" className="hover:text-[#0056D2] transition-colors">
-                Courses
-              </Link>
-              <Link to="/instructor/students" className="hover:text-[#0056D2] transition-colors">
-                Enrolled Learners
-              </Link>
-              <Link to="/instructor/analytics" className="hover:text-[#0056D2] transition-colors">
-                Analytics
-              </Link>
-              <Link to="/instructor/profile" className="hover:text-[#0056D2] transition-colors">
-                Faculty Profile
-              </Link>
-            </nav>
-          </div>
-        </footer>
+                  
       </div>
     </div>
   );

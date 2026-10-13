@@ -11,7 +11,6 @@ import {
   Settings,
   LogOut,
   ExternalLink,
-  PlusCircle,
   ShieldCheck,
   GraduationCap,
   Sparkles,
@@ -94,22 +93,8 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
           )}
         </div>
 
-        {/* Quick Action: Create Course */}
-        <div className="p-3">
-          <Link
-            to="/instructor/courses"
-            onClick={() => {
-              if (isOpen && toggleSidebar) toggleSidebar();
-            }}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold shadow-xs transition-all hover:scale-[1.01]"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Create New Course</span>
-          </Link>
-        </div>
-
         {/* Navigation Groups */}
-        <nav className="px-3 pb-3 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin">
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
           {instructorNavGroups.map((group, idx) => (
             <div key={idx} className="space-y-1">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">
