@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
-import { CircularProgress } from '../common/ProgressBar';
+import { CircularProgress } from '../../common/ProgressBar';
 
 /**
  * QuizResultSummary Component (Lab 2 React Component)

@@ -1,27 +1,45 @@
 import React from 'react';
+import { cn } from '../../utils/cn';
 
-export default function Badge({ children, variant = "primary", size = "md", className = "" }) {
+export function Badge({
+  children,
+  variant = 'default',
+  size = 'md',
+  className = '',
+  ...props
+}) {
   const variantStyles = {
-    primary: "bg-primary-fixed text-primary font-semibold border-primary/20",
-    secondary: "bg-secondary-fixed/50 text-on-secondary-container font-semibold border-secondary/20",
-    tertiary: "bg-tertiary-fixed text-on-tertiary-fixed font-semibold border-tertiary/20",
-    surface: "bg-surface-container-high text-on-surface-variant font-medium border-outline-variant",
-    accent: "bg-amber-100 text-amber-900 font-semibold border-amber-300",
-    outline: "bg-transparent text-on-surface-variant border-outline-variant font-medium",
-    success: "bg-emerald-50 text-emerald-800 border-emerald-200 font-semibold"
+    default: 'bg-slate-100 text-slate-700 border-slate-200/80',
+    primary: 'bg-blue-50 text-[#0056D2] border-blue-200 font-semibold',
+    secondary: 'bg-emerald-50 text-emerald-800 border-emerald-200 font-semibold',
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200 font-semibold',
+    danger: 'bg-rose-50 text-rose-700 border-rose-200 font-semibold',
+    tertiary: 'bg-purple-50 text-purple-700 border-purple-200 font-semibold',
+    surface: 'bg-slate-50 text-slate-600 border-slate-200 font-medium',
+    accent: 'bg-amber-100 text-amber-900 border-amber-300 font-semibold',
+    outline: 'bg-transparent text-slate-700 border-slate-300 font-medium',
   };
 
   const sizeStyles = {
-    sm: "px-2 py-0.5 text-[11px]",
-    md: "px-2.5 py-1 text-xs",
-    lg: "px-3 py-1.5 text-sm"
+    sm: 'px-2 py-0.5 text-[11px]',
+    md: 'px-2.5 py-0.5 text-xs',
+    lg: 'px-3 py-1 text-sm',
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border ${variantStyles[variant] || variantStyles.primary} ${sizeStyles[size] || sizeStyles.md} ${className}`}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border transition-colors',
+        variantStyles[variant] || variantStyles.default,
+        sizeStyles[size] || sizeStyles.md,
+        className
+      )}
+      {...props}
     >
       {children}
     </span>
   );
 }
+
+export default Badge;

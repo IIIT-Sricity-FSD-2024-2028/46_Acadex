@@ -141,6 +141,16 @@ export default function CertificateModal({ certificate: propCert, cert, onClose 
               {copied ? <Check className="w-4 h-4 text-secondary" /> : <Copy className="w-4 h-4" />}
               <span>{copied ? "Link Copied!" : "Copy Verification URL"}</span>
             </button>
+            <button
+              onClick={() => {
+                addToast('Certificate credential ready for LinkedIn sharing', 'success');
+                window.open('https://www.linkedin.com/sharing/share-offsite/', '_blank');
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0A66C2] text-white text-xs font-bold hover:bg-[#004182] shadow-sm transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share to LinkedIn</span>
+            </button>
           </div>
 
           <button

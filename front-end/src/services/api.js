@@ -429,7 +429,23 @@ export const api = {
       return Promise.resolve(jsonDataClient.recordAdminResolution(data));
     },
   },
+
+  // 15. Generic HTTP Methods (Backward-compatible with src/utils/api.js)
+  get: (endpoint, role) => request(endpoint, { method: 'GET', ...(role ? { role } : {}) }),
+  post: (endpoint, body, role) =>
+    request(endpoint, { method: 'POST', body, ...(role ? { role } : {}) }),
+  patch: (endpoint, body, role) =>
+    request(endpoint, { method: 'PATCH', body, ...(role ? { role } : {}) }),
+  delete: (endpoint, role) =>
+    request(endpoint, { method: 'DELETE', ...(role ? { role } : {}) }),
+  getItems: (result) => {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.items)) return result.items;
+    return [];
+  },
 };
 
+export const getItems = api.getItems;
 export default api;
 

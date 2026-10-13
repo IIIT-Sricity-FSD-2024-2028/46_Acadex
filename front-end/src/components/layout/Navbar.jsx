@@ -27,6 +27,7 @@ import {
 import api from '../../services/api';
 import { useToast } from '../common/Toast';
 import HumanAvatar from '../common/HumanAvatar';
+import { useStudent } from '../../context/StudentContext';
 
 const defaultUser = {
   name: "Vujja Punith Sai",
@@ -111,6 +112,16 @@ export default function Navbar() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  let studentCtx = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    studentCtx = useStudent();
+  } catch (e) {
+    // Standalone / public fallback
+  }
+  const student = studentCtx?.student;
+
   const [userData, setUserData] = useState(() => {
     const storedName = localStorage.getItem('user_name');
     const storedEmail = localStorage.getItem('user_email');
@@ -120,6 +131,18 @@ export default function Navbar() {
       email: storedEmail || defaultUser.email,
     };
   });
+
+  useEffect(() => {
+    if (student) {
+      setUserData((prev) => ({
+        ...prev,
+        name: student.name || prev.name,
+        email: student.email || prev.email,
+        streakDays: student.streakDays || prev.streakDays,
+        university: student.institution || prev.university,
+      }));
+    }
+  }, [student]);
   const [coursesData, setCoursesData] = useState(FALLBACK_NAVBAR_COURSES);
   const [orgsList, setOrgsList] = useState([]);
   const [showOrgModal, setShowOrgModal] = useState(false);

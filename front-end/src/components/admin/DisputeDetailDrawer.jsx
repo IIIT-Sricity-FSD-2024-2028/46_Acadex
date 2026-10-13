@@ -16,7 +16,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
-import { api } from '../../../utils/api';
+import { api } from '../../utils/api';
 
 const timelineIconMap = {
   created: { icon: FileText, color: 'bg-blue-100 text-blue-600' },

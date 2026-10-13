@@ -31,8 +31,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import PageLayout from '../../components/student/layout/PageLayout';
-import { useToast } from '../../components/student/common/Toast';
+import PageLayout from '../../components/layout/PageLayout';
+import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
 
 // Dedicated Subcomponents (components/student/quiz/)

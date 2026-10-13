@@ -291,18 +291,42 @@ export default function Landing() {
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <Link
               to="/student"
-              className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-900 border-2 border-emerald-500 uppercase text-[10px] sm:text-[11px] font-black tracking-wider shadow-xs flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-400 hover:bg-emerald-100 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider shadow-2xs transition-all flex items-center gap-1.5"
             >
               <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
-              <span>STUDENT / LEARNER</span>
+              <span>STUDENT</span>
             </Link>
 
             <Link
-              to="/organization/landing"
-              className="px-3 py-1.5 rounded-lg bg-white hover:bg-blue-50 text-blue-800 border border-blue-300/80 uppercase text-[10px] sm:text-[11px] font-extrabold tracking-wider shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5"
+              to="/instructor"
+              className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-400 hover:bg-blue-100 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider shadow-2xs transition-all flex items-center gap-1.5"
             >
-              <Building2 className="w-3.5 h-3.5 text-blue-600" />
-              <span>ORGANIZATION ADMIN</span>
+              <Users className="w-3.5 h-3.5 text-blue-700" />
+              <span>INSTRUCTOR</span>
+            </Link>
+
+            <Link
+              to="/org/dashboard"
+              className="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-900 border border-purple-400 hover:bg-purple-100 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider shadow-2xs transition-all flex items-center gap-1.5"
+            >
+              <Building2 className="w-3.5 h-3.5 text-purple-700" />
+              <span>ORGANISATION</span>
+            </Link>
+
+            <Link
+              to="/admin"
+              className="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-400 hover:bg-indigo-100 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider shadow-2xs transition-all flex items-center gap-1.5"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-700" />
+              <span>ADMIN</span>
+            </Link>
+
+            <Link
+              to="/super-admin/dashboard"
+              className="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-400 hover:bg-amber-100 uppercase text-[10px] sm:text-[11px] font-bold tracking-wider shadow-2xs transition-all flex items-center gap-1.5"
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-700" />
+              <span>SUPER ADMIN</span>
             </Link>
           </div>
         </div>
