@@ -5,6 +5,7 @@ import {
   Users,
   Building2,
   ShieldCheck,
+  Shield,
   ArrowRight,
   BookOpen,
   CheckCircle2,
