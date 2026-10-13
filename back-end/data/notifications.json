@@ -1,36 +1,69 @@
 [
   {
+    "title": "Teaching Invitation Dispatched: David Kalu",
+    "desc": "Formal course teaching request sent to David Kalu for \"Distributed Systems\".",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "blue",
+    "id": "not-57c99255",
+    "createdAt": "2026-10-12T16:48:50.124Z",
+    "updatedAt": "2026-10-12T16:48:50.124Z"
+  },
+  {
+    "title": "Teaching Invitation Dispatched: Test Instructor-1",
+    "desc": "Formal course teaching request sent to Test Instructor-1 for \"Distributed Systems\".",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "blue",
+    "id": "not-38d77e72",
+    "createdAt": "2026-10-12T16:48:50.120Z",
+    "updatedAt": "2026-10-12T16:48:50.120Z"
+  },
+  {
+    "title": "Teaching Invitation Dispatched: Test Instructor-1",
+    "desc": "Formal course teaching request sent to Test Instructor-1 for \"Backend Development - 2345\".",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "blue",
+    "id": "not-cd9fb9b8",
+    "createdAt": "2026-10-12T10:34:44.508Z",
+    "updatedAt": "2026-10-12T10:34:44.508Z"
+  },
+  {
     "title": "Dispute Resolved: DSP-2026-599",
     "desc": "Ticket \"techincal & lab system anomaly\" has been marked as Resolved by administration.",
     "time": "Just now",
     "category": "Dispute",
-    "read": false,
+    "read": true,
     "color": "green",
     "id": "not-0daae7e5",
     "createdAt": "2026-09-03T06:42:00.430Z",
-    "updatedAt": "2026-09-03T06:42:00.430Z"
+    "updatedAt": "2026-10-12T07:16:06.960Z"
   },
   {
     "title": "New Dispute Ticket Raised: DSP-2026-599",
     "desc": "Dispute regarding \"techincal & lab system anomaly\" was logged by NexusPay Enterprise Academy.",
     "time": "Just now",
     "category": "Dispute",
-    "read": false,
+    "read": true,
     "color": "purple",
     "id": "not-6b0a3197",
     "createdAt": "2026-09-03T06:41:44.416Z",
-    "updatedAt": "2026-09-03T06:41:44.416Z"
+    "updatedAt": "2026-10-12T07:16:08.891Z"
   },
   {
     "title": "Teaching Invitation Dispatched: David Kalu",
     "desc": "Formal course teaching request sent to David Kalu for \"Automated Kubernetes & GitOps CI/CD Pipelines\".",
     "time": "Just now",
     "category": "Instructor",
-    "read": false,
+    "read": true,
     "color": "blue",
     "id": "not-da855638",
     "createdAt": "2026-09-03T06:40:47.150Z",
-    "updatedAt": "2026-09-03T06:40:47.150Z"
+    "updatedAt": "2026-10-12T07:16:10.150Z"
   },
   {
     "title": "New Dispute Ticket Raised: DSP-2026-161",

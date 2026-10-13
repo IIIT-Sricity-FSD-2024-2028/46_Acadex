@@ -237,13 +237,13 @@ export default function Disputes() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="text-outline uppercase text-[10px] tracking-wider border-b border-outline-variant">
-                  <th className="pb-3 font-bold">Dispute ID</th>
-                  <th className="pb-3 font-bold">Dispute Type & Subject</th>
-                  <th className="pb-3 font-bold">Raised By</th>
-                  <th className="pb-3 font-bold">Associated Course</th>
-                  <th className="pb-3 font-bold">Priority</th>
-                  <th className="pb-3 font-bold">Status</th>
-                  <th className="pb-3 font-bold text-right">Actions</th>
+                  <th className="pb-3 pr-4 font-bold">Dispute ID</th>
+                  <th className="pb-3 px-4 font-bold">Dispute Type & Subject</th>
+                  <th className="pb-3 px-4 font-bold">Raised By</th>
+                  <th className="pb-3 px-4 font-bold">Associated Course</th>
+                  <th className="pb-3 px-4 font-bold">Priority</th>
+                  <th className="pb-3 px-4 font-bold">Status</th>
+                  <th className="pb-3 pl-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/40">
@@ -262,10 +262,10 @@ export default function Disputes() {
 
                     return (
                       <tr key={d.id} className="hover:bg-surface-container-low/50 transition-colors">
-                        <td className="py-4 font-mono font-bold text-primary whitespace-nowrap">
+                        <td className="py-4 pr-4 font-mono font-bold text-primary whitespace-nowrap">
                           {d.id}
                         </td>
-                        <td className="py-4 max-w-sm">
+                        <td className="py-4 px-4 max-w-sm">
                           <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
                               {d.disputeType}
@@ -274,7 +274,7 @@ export default function Disputes() {
                             <p className="text-[11px] text-on-surface-variant line-clamp-1 mt-0.5">{d.description}</p>
                           </div>
                         </td>
-                        <td className="py-4 whitespace-nowrap">
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <span className="w-6 h-6 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center text-[10px]">
                               {d.raisedBy?.charAt(0) || 'U'}
@@ -285,10 +285,10 @@ export default function Disputes() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 max-w-[200px] truncate text-on-surface font-medium">
+                        <td className="py-4 px-4 max-w-[200px] truncate text-on-surface font-medium">
                           {d.courseTitle || 'General Platform'}
                         </td>
-                        <td className="py-4 whitespace-nowrap">
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                             d.priority === 'Urgent' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
                             d.priority === 'High' ? 'bg-amber-100 text-amber-900 border border-amber-200' :
@@ -297,7 +297,7 @@ export default function Disputes() {
                             {d.priority}
                           </span>
                         </td>
-                        <td className="py-4 whitespace-nowrap">
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                             isOpen ? 'bg-rose-100 text-rose-800' :
                             isReview ? 'bg-amber-100 text-amber-900' :
@@ -307,7 +307,7 @@ export default function Disputes() {
                             {d.status}
                           </span>
                         </td>
-                        <td className="py-4 text-right whitespace-nowrap">
+                        <td className="py-4 pl-4 text-right whitespace-nowrap">
                           <button
                             onClick={() => setSelectedDispute(d)}
                             className="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs inline-flex items-center gap-1 transition-colors border border-outline-variant"

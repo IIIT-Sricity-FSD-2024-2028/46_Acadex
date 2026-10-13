@@ -7,7 +7,8 @@ import {
   ShieldCheck,
   Building2,
   Check,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../common/Toast';
@@ -18,6 +19,15 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
   const { notifications, markNotificationRead, markAllNotificationsRead, stats, info } = useOrg();
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const handleLogout = () => {
+    // Clear all session keys
+    [
+      'auth_token', 'nexuspay_auth_token', 'user_id',
+      'nexuspay_active_role', 'user_role', 'user_name', 'user_email'
+    ].forEach(key => localStorage.removeItem(key));
+    navigate('/signin', { replace: true });
+  };
 
   const unreadList = notifications.filter(n => !n.read);
 
@@ -134,6 +144,16 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Active Institution</span>
         </div>
+
+        {/* Log Out Button */}
+        <button
+          onClick={handleLogout}
+          title="Log out"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Log Out</span>
+        </button>
 
       </div>
 
