@@ -32,12 +32,12 @@ export const Settings = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Settings</h1>
           <p className="text-slate-500">Configure global platform settings and policies.</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row min-h-[500px]">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row min-h-[500px]">
         {/* Sidebar for settings */}
         <div className="w-full md:w-64 border-r border-slate-200 bg-slate-50 p-4 hidden md:block">
           <nav className="space-y-1">
@@ -81,7 +81,7 @@ export const Settings = () => {
 
         {/* Content Area */}
         <div className="flex-1 p-6 md:p-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-6">
             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Settings
           </h3>
           {saved && (

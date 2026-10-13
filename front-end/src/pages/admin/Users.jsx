@@ -223,7 +223,7 @@ export const Users = () => {
                 e.stopPropagation();
                 navigate(`/admin/users/${row.id}`);
               }}
-              className="inline-flex items-center gap-1 text-primary hover:text-primary-dark font-medium text-sm hover:underline"
+              className="inline-flex items-center gap-1 text-[#0056D2] hover:text-[#00419E] font-semibold text-xs text-sm hover:underline"
             >
               <span>View</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -252,7 +252,7 @@ export const Users = () => {
     <div className="space-y-6">
       {/* Page Header without Add User button */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">User Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
         <p className="text-slate-500 text-sm mt-0.5">
           Manage all learners, instructors, and partner organizations.
         </p>
@@ -267,7 +267,7 @@ export const Users = () => {
               <UsersIcon className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-800">{stats.total}</div>
+          <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{stats.total}</div>
           <p className="text-xs text-slate-500 mt-1">Platform-wide accounts</p>
         </div>
 
@@ -278,7 +278,7 @@ export const Users = () => {
               <GraduationCap className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-800">{stats.learners}</div>
+          <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{stats.learners}</div>
           <p className="text-xs text-slate-500 mt-1">Students & Enrollees</p>
         </div>
 
@@ -289,7 +289,7 @@ export const Users = () => {
               <BookOpen className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-800">{stats.instructors}</div>
+          <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{stats.instructors}</div>
           <p className="text-xs text-slate-500 mt-1">Educators & Mentors</p>
         </div>
 
@@ -300,16 +300,16 @@ export const Users = () => {
               <Building2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-800">{stats.organizations}</div>
+          <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{stats.organizations}</div>
           <p className="text-xs text-slate-500 mt-1">Partners & Universities</p>
         </div>
       </div>
 
       {/* Main Table Container */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         
         {/* Filter Toolbar */}
-        <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50/50">
+        <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50/80">
           <div className="flex-1 max-w-md">
             <SearchBar 
               placeholder="Search by name, email, institution, org, or expertise..." 

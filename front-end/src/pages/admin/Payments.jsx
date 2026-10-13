@@ -127,7 +127,7 @@ export const Payments = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Payments & Transactions</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Payments & Transactions</h1>
           <p className="text-slate-500">Live telemetry of tuition collections, disbursements, and gateway settlements.</p>
         </div>
       </div>
@@ -163,8 +163,8 @@ export const Payments = () => {
       </div>
 
       {/* Payment Table with Filter & Search */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/80">
           <SearchBar 
             placeholder="Search by ID, payer, course, or method..." 
             value={searchTerm} 

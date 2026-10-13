@@ -194,7 +194,7 @@ export const Disputes = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             <ShieldAlert className="w-7 h-7 text-indigo-500" />
             Dispute Resolution
           </h1>
@@ -254,7 +254,7 @@ export const Disputes = () => {
       {/* Table Card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Toolbar */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/50">
+        <div className="p-4 border-b border-slate-200 bg-slate-50/80">
           <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center">
             {/* Search */}
             <div className="relative flex-1 min-w-0">

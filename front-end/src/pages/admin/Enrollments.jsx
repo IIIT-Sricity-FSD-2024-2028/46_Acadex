@@ -124,7 +124,7 @@ export const Enrollments = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Enrollment Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Enrollment Management</h1>
           <p className="text-slate-500">Live roster of student course enrollments, track completions, and progress telemetry.</p>
         </div>
       </div>
@@ -137,8 +137,8 @@ export const Enrollments = () => {
         <StatCard title="Average Progress" value={`${avgProgress}%`} icon={TrendingUp} color="warning" />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/80">
           <SearchBar placeholder="Search by learner, course, or ID..." value={searchTerm} onChange={setSearchTerm} />
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <FilterBar 

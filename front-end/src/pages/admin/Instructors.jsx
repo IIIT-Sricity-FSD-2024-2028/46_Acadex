@@ -59,7 +59,7 @@ export const Instructors = () => {
             e.stopPropagation();
             navigate(`/admin/instructors/${row.id}`);
           }}
-          className="text-primary hover:text-primary-dark font-medium"
+          className="text-[#0056D2] hover:text-[#00419E] font-semibold text-xs"
         >
           View
         </button>
@@ -71,13 +71,13 @@ export const Instructors = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Instructors</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Instructors</h1>
           <p className="text-slate-500">Manage instructors and their verifications.</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/80">
           <SearchBar placeholder="Search instructors..." value={searchTerm} onChange={setSearchTerm} />
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <FilterBar 

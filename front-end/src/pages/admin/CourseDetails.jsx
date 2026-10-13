@@ -40,14 +40,14 @@ export const CourseDetails = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">{course.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{course.title}</h1>
           <p className="text-sm text-slate-500">Course ID: #{course.id}</p>
         </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-xs font-semibold px-2.5 py-1 rounded bg-blue-100 text-blue-700">
@@ -83,7 +83,7 @@ export const CourseDetails = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
             <h3 className="font-bold text-slate-800 border-b border-slate-100 pb-3">Course Overview</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">

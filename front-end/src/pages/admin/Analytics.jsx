@@ -90,7 +90,7 @@ export const Analytics = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Platform Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Platform Analytics</h1>
           <p className="text-slate-500">Deep dive into platform metrics, user engagement, and revenue analytics.</p>
         </div>
       </div>
@@ -187,8 +187,8 @@ export const Analytics = () => {
           </div>
 
           {/* Top Faculty / Instructors by Revenue */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/80 flex justify-between items-center">
               <div>
                 <h3 className="text-base font-bold text-slate-800">Top Performing Educators by Revenue</h3>
                 <p className="text-xs text-slate-500">Highest grossing instructor tracks and learner satisfaction.</p>

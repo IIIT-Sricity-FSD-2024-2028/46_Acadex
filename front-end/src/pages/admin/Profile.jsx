@@ -41,17 +41,17 @@ export const Profile = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Admin Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Admin Profile</h1>
           <p className="text-slate-500">Manage your personal information and preferences.</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="p-8 border-b border-slate-200">
           <div className="flex items-center gap-6">
             <UserAvatar name={profile.name} size="xl" />
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">{profile.name}</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{profile.name}</h2>
               <div className="mt-2 flex flex-col gap-2 text-sm text-slate-500">
                 <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {profile.email}</span>
                 <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> {profile.role}</span>
@@ -62,7 +62,7 @@ export const Profile = () => {
         </div>
         
         <div className="p-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">Edit Profile</h3>
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-4">Edit Profile</h3>
           {saved && (
             <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
               <Check className="w-4 h-4" /> Profile updated successfully!

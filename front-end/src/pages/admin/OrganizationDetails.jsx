@@ -52,7 +52,7 @@ export const OrganizationDetails = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">{org.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{org.name}</h1>
             <p className="text-sm text-slate-500">Organization ID: #{org.id}</p>
           </div>
         </div>
@@ -66,14 +66,14 @@ export const OrganizationDetails = () => {
         </button>
       </div>
       
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 md:p-8 space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
           <div className="w-16 h-16 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-2xl">
             <Building2 className="w-8 h-8" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-slate-800">{org.name}</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{org.name}</h2>
               <StatusBadge status={org.status} />
               <StatusBadge status={org.verificationStatus} />
             </div>

@@ -110,17 +110,17 @@ export const UserDetails = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">User Details</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">User Details</h1>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         {/* Profile Card */}
         <div className="p-6 md:p-8 flex flex-col md:flex-row gap-6 md:items-center justify-between border-b border-slate-200">
           <div className="flex items-center gap-6">
             <UserAvatar name={user.name} size="xl" />
             <div>
-              <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                 {user.name}
                 <StatusBadge status={user.status} />
               </h2>
@@ -166,12 +166,12 @@ export const UserDetails = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 md:p-8 bg-slate-50/50 min-h-[400px]">
+        <div className="p-6 md:p-8 bg-slate-50/80 min-h-[400px]">
           
           {/* 1. OVERVIEW TAB */}
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                 <h3 className="font-bold text-slate-800 text-lg">Account Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -206,7 +206,7 @@ export const UserDetails = () => {
               </div>
 
               {/* Role-Specific Overview Card */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                 <h3 className="font-bold text-slate-800 text-lg">{user.role} Details</h3>
                 
                 {user.role === 'Learner' && (
@@ -277,7 +277,7 @@ export const UserDetails = () => {
 
           {/* 2. ENROLLMENTS TAB (Learner) */}
           {activeTab === 'enrollments' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200">
                 <h3 className="font-bold text-slate-800">Enrolled Courses</h3>
                 <p className="text-xs text-slate-500">Track learning progress, completion, and grades</p>
@@ -335,7 +335,7 @@ export const UserDetails = () => {
 
           {/* 3. COURSES TAB (Instructor / Organization) */}
           {activeTab === 'courses' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200">
                 <h3 className="font-bold text-slate-800">Authored / Managed Courses</h3>
                 <p className="text-xs text-slate-500">Overview of courses published on the platform</p>
@@ -380,7 +380,7 @@ export const UserDetails = () => {
 
           {/* 4. INSTRUCTORS TAB (Organization) */}
           {activeTab === 'instructors' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200">
                 <h3 className="font-bold text-slate-800">Affiliated Faculty & Instructors</h3>
                 <p className="text-xs text-slate-500">Teachers registered under this organization</p>
@@ -417,7 +417,7 @@ export const UserDetails = () => {
 
           {/* 5. LEARNERS TAB (Organization) */}
           {activeTab === 'learners' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200">
                 <h3 className="font-bold text-slate-800">Enrolled Students & Learners</h3>
                 <p className="text-xs text-slate-500">Students participating through this organization's sponsorship</p>
@@ -458,7 +458,7 @@ export const UserDetails = () => {
 
           {/* 6. TRANSACTIONS TAB */}
           {activeTab === 'transactions' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200">
                 <h3 className="font-bold text-slate-800">Financial Transactions</h3>
                 <p className="text-xs text-slate-500">Payment history, fees, and invoice records</p>
@@ -496,7 +496,7 @@ export const UserDetails = () => {
 
           {/* 7. ACTIVITY TAB */}
           {activeTab === 'activity' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
               <div className="mb-6">
                 <h3 className="font-bold text-slate-800">Recent User Activity</h3>
                 <p className="text-xs text-slate-500">Audit log and system interactions</p>
