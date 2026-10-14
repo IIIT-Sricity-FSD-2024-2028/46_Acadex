@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/instructor/ui/Card";
-import { Badge } from "../../../components/instructor/ui/Badge";
-import { Button } from "../../../components/instructor/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Badge, Button } from "../../../components/common";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/instructor/ui/Table";
 import { 
   BookOpen, 
@@ -10,13 +8,9 @@ import {
   CheckCircle, 
   FileText, 
   User, 
-  Sparkles, 
   ShieldCheck, 
   ArrowRight,
-  TrendingUp,
-  Award,
-  Layers,
-  GraduationCap
+  TrendingUp
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from "react-router-dom";
@@ -24,7 +18,7 @@ import { api } from "../../../utils/api";
 import { useInstructor } from "../../../context/InstructorContext";
 
 export function Dashboard() {
-  const { instructor, assignedCourses } = useInstructor();
+  const { instructor } = useInstructor();
   const [analytics, setAnalytics] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,21 +30,35 @@ export function Dashboard() {
     ])
       .then(([a, c]) => {
         setAnalytics(a);
-        setCourses(Array.isArray(c) ? c : (c?.items || []));
+        const allCourses = Array.isArray(c) ? c : (c?.items || []);
+        if (instructor?.id) {
+          const myCourses = allCourses.filter(course => {
+            const isDirect = course.instructorId === instructor.id;
+            const isInTeam = (course.instructors || []).some(
+              inst => inst.id === instructor.id ||
+                      (instructor.email && inst.email?.toLowerCase() === instructor.email.toLowerCase()) ||
+                      (instructor.name && inst.name?.toLowerCase() === instructor.name.toLowerCase())
+            );
+            return isDirect || isInTeam;
+          });
+          setCourses(myCourses);
+        } else {
+          setCourses(allCourses);
+        }
         setLoading(false);
       })
       .catch((err) => {
         console.error('Error fetching instructor dashboard:', err);
         setLoading(false);
       });
-  }, []);
+  }, [instructor]);
 
   const stats = {
     totalCourses:    analytics?.stats?.totalCourses   ?? courses.length,
-    totalStudents:   analytics?.stats?.totalStudents  ?? (courses.reduce((acc, c) => acc + (c.enrolledCount || 0), 0) || 7),
-    averageRating:   analytics?.stats?.averageRating  ?? 4.8,
-    completionRate:  analytics?.stats?.completionRate ?? '78%',
-    totalEarnings:   analytics?.stats?.totalEarnings  ?? '₹28,400.00',
+    totalStudents:   analytics?.stats?.totalStudents  ?? courses.reduce((acc, c) => acc + (c.enrolledCount || 0), 0),
+    averageRating:   analytics?.stats?.averageRating  ?? null,
+    completionRate:  analytics?.stats?.completionRate ?? null,
+    totalEarnings:   analytics?.stats?.totalEarnings  ?? null,
   };
 
   const chartData = (analytics?.dashboardEnrollments || []).map((item) => ({
@@ -138,7 +146,7 @@ export function Dashboard() {
               <Star className="w-5 h-5 text-amber-300 fill-amber-300" />
             </div>
             <div className="min-w-0">
-              <p className="text-base font-bold leading-tight">{stats.averageRating} / 5.0</p>
+              <p className="text-base font-bold leading-tight">{stats.averageRating ? `${stats.averageRating} / 5.0` : '—'}</p>
               <p className="text-[11px] text-blue-200 truncate font-medium">Educator Rating</p>
             </div>
           </div>
@@ -148,7 +156,7 @@ export function Dashboard() {
               <CheckCircle className="w-5 h-5 text-emerald-300" />
             </div>
             <div className="min-w-0">
-              <p className="text-base font-bold leading-tight">{stats.completionRate}</p>
+              <p className="text-base font-bold leading-tight">{stats.completionRate ?? '—'}</p>
               <p className="text-[11px] text-blue-200 truncate font-medium">Completion Rate</p>
             </div>
           </div>
@@ -227,23 +235,23 @@ export function Dashboard() {
                     <TableRow key={course.id}>
                       <TableCell className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200/80">
-                          <img src={course.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=100&h=100&fit=crop'} alt="Course thumbnail" className="w-full h-full object-cover" />
+                          <img src={course.thumbnail || course.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=100&h=100&fit=crop'} alt="Course thumbnail" className="w-full h-full object-cover" />
                         </div>
                         <div className="font-semibold text-slate-900 line-clamp-1">{course.title}</div>
                       </TableCell>
-                      <TableCell className="text-slate-600 font-medium">{(course.students || 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-slate-600 font-medium">{(course.enrolledCount ?? course.students ?? 0).toLocaleString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#0056D2] w-3/4 rounded-full"></div>
+                            <div className="h-full bg-[#0056D2] rounded-full" style={{ width: `${course.completionRate || 0}%` }}></div>
                           </div>
-                          <span className="text-xs font-semibold text-slate-600">75%</span>
+                          <span className="text-xs font-semibold text-slate-600">{course.completionRate != null ? `${course.completionRate}%` : '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5 text-amber-500">
                           <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                          <span className="text-sm font-semibold text-slate-800">{course.rating || 4.8}</span>
+                          <span className="text-sm font-semibold text-slate-800">{course.rating != null ? course.rating : '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell>

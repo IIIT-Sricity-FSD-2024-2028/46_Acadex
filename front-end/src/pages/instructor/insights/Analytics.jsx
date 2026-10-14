@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button } from "../../../components/common";
 import { Download, CheckCircle, TrendingUp, Star } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from "../../../utils/api";
@@ -22,10 +21,10 @@ export function Analytics() {
   }, []);
 
   const stats = analytics?.stats || {
-    totalEnrollments: '4,892',
-    activeLearners: '1,245',
-    completionRate: '68%',
-    averageRating: 4.8,
+    totalEnrollments: '—',
+    activeLearners: '—',
+    completionRate: '—',
+    averageRating: '—',
   };
 
   const enrollmentData = analytics?.enrollmentTrend || [];
@@ -60,10 +59,14 @@ export function Analytics() {
           </div>
           <CardContent className="p-6 relative z-10">
             <p className="text-xs font-semibold text-slate-500 mb-1">Total Track Enrollments</p>
-            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.totalEnrollments}</h3>
-            <div className="flex items-center text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full w-fit">
-              <TrendingUp className="w-3.5 h-3.5 mr-1" /> +12.5% this quarter
-            </div>
+            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.totalEnrollments ?? '—'}</h3>
+            {stats.enrollmentGrowth ? (
+              <div className="flex items-center text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full w-fit">
+                <TrendingUp className="w-3.5 h-3.5 mr-1" /> {stats.enrollmentGrowth}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400 font-medium">All student registrations</div>
+            )}
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow relative overflow-hidden">
@@ -72,10 +75,14 @@ export function Analytics() {
           </div>
           <CardContent className="p-6 relative z-10">
             <p className="text-xs font-semibold text-slate-500 mb-1">Active Learners</p>
-            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.activeLearners}</h3>
-            <div className="flex items-center text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full w-fit">
-              <TrendingUp className="w-3.5 h-3.5 mr-1" /> +5.2% active rate
-            </div>
+            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.activeLearners ?? '—'}</h3>
+            {stats.activeRate ? (
+              <div className="flex items-center text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full w-fit">
+                <TrendingUp className="w-3.5 h-3.5 mr-1" /> {stats.activeRate}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400 font-medium">Currently progressing in tracks</div>
+            )}
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow relative overflow-hidden">
@@ -84,10 +91,8 @@ export function Analytics() {
           </div>
           <CardContent className="p-6 relative z-10">
             <p className="text-xs font-semibold text-slate-500 mb-1">Average Completion Rate</p>
-            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.completionRate}</h3>
-            <div className="flex items-center text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full w-fit">
-              <CheckCircle className="w-3.5 h-3.5 mr-1" /> Top quartile
-            </div>
+            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.completionRate ?? '—'}</h3>
+            <div className="text-xs text-slate-400 font-medium">Completed module curriculum</div>
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow relative overflow-hidden">
@@ -96,9 +101,9 @@ export function Analytics() {
           </div>
           <CardContent className="p-6 relative z-10">
             <p className="text-xs font-semibold text-slate-500 mb-1">Educator Rating</p>
-            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.averageRating}</h3>
-            <div className="flex items-center text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full w-fit">
-              <Star className="w-3.5 h-3.5 mr-1 fill-amber-400 text-amber-400" /> 1,245 reviews
+            <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.averageRating ? `${stats.averageRating} / 5.0` : '—'}</h3>
+            <div className="text-xs text-slate-400 font-medium">
+              {analytics?.stats?.totalReviews ? `${analytics.stats.totalReviews} verified reviews` : 'Verified student ratings'}
             </div>
           </CardContent>
         </Card>

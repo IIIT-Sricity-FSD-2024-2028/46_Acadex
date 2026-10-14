@@ -1,10 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button, Input } from "../../../components/common";
 import { User, Shield, Bell, Settings as SettingsIcon, EyeOff, Smartphone, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../context/InstructorContext";
 
 const Toggle = ({ checked, onChange }) => (
   <label className="relative inline-flex items-center cursor-pointer">
@@ -19,10 +18,12 @@ const Toggle = ({ checked, onChange }) => (
 );
 
 export function Settings() {
+  const { instructor } = useInstructor();
+  const instructorId = instructor?.id || localStorage.getItem('nexuspay_instructor_id') || 'inst-1';
   const [activeTab, setActiveTab] = useState('account');
   const [settings, setSettings] = useState({
-    email: "sarah.jenkins@university.edu",
-    phone: "+1 (555) 123-4567",
+    email: instructor?.email || "",
+    phone: instructor?.phone || "",
     courseActivityNotifs: true,
     studentActivityNotifs: true,
     marketingUpdates: false,
@@ -31,9 +32,12 @@ export function Settings() {
     profileVisibility: true,
   });
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordStatus, setPasswordStatus] = useState({ success: '', error: '', loading: false });
 
   useEffect(() => {
-    api.get("/instructors/1", "instructor")
+    if (!instructorId) return;
+    api.get(`/instructors/${instructorId}`, "instructor")
       .then((data) => {
         if (data) {
           setSettings(prev => ({
@@ -44,10 +48,11 @@ export function Settings() {
         }
       })
       .catch((err) => console.error("Error fetching settings:", err));
-  }, []);
+  }, [instructorId]);
 
   const handleSave = () => {
-    api.patch("/instructors/1", {
+    if (!instructorId) return;
+    api.patch(`/instructors/${instructorId}`, {
       email: settings.email,
       phone: settings.phone,
     }, "instructor")
@@ -56,6 +61,32 @@ export function Settings() {
         setTimeout(() => setSavedSuccess(false), 3000);
       })
       .catch((err) => console.error("Error updating settings:", err));
+  };
+
+  const handleChangePassword = async (e) => {
+    e?.preventDefault();
+    setPasswordStatus({ success: '', error: '', loading: true });
+
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      setPasswordStatus({ success: '', error: 'Please enter both current and new password.', loading: false });
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordStatus({ success: '', error: 'New password and confirm password do not match.', loading: false });
+      return;
+    }
+
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      }, 'instructor');
+      setPasswordStatus({ success: 'Password changed successfully!', error: '', loading: false });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => setPasswordStatus({ success: '', error: '', loading: false }), 4000);
+    } catch (err) {
+      setPasswordStatus({ success: '', error: err.message || 'Failed to update password. Please check your current password.', loading: false });
+    }
   };
 
   const tabs = [
@@ -137,19 +168,50 @@ export function Settings() {
                 <CardDescription>Update your instructor portal credentials.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 max-w-md">
+                {passwordStatus.success && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-semibold flex items-center gap-2">
+                    <Check className="w-4 h-4 shrink-0 text-emerald-600" /> {passwordStatus.success}
+                  </div>
+                )}
+                {passwordStatus.error && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">
+                    {passwordStatus.error}
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Current Password</label>
-                  <Input type="password" />
+                  <Input 
+                    type="password" 
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    placeholder="Enter current password"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">New Password</label>
-                  <Input type="password" />
+                  <Input 
+                    type="password" 
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    placeholder="Enter new password (min. 8 characters)"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Confirm New Password</label>
-                  <Input type="password" />
+                  <Input 
+                    type="password" 
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    placeholder="Confirm new password"
+                  />
                 </div>
-                <Button onClick={handleSave} className="mt-2">Update Password</Button>
+                <Button 
+                  onClick={handleChangePassword} 
+                  disabled={passwordStatus.loading}
+                  className="mt-2"
+                >
+                  {passwordStatus.loading ? 'Updating Password...' : 'Update Password'}
+                </Button>
               </CardContent>
             </Card>
 

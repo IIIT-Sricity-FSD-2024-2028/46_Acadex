@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Card, CardContent, Button, Input } from "../../../components/common";
 import {
   Upload,
   Image as ImageIcon,
@@ -92,6 +90,7 @@ export function EditCourse() {
       description,
       category,
       level,
+      thumbnail,
       image: thumbnail,
     }, "instructor")
       .then(() => {

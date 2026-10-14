@@ -1,9 +1,5 @@
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Badge } from "../../../components/instructor/ui/Badge";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Card, CardContent, Badge, Button, Input, Avatar } from "../../../components/common";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/instructor/ui/Table";
-import { Avatar } from "../../../components/instructor/ui/Avatar";
 import { Search, Users, Activity, CheckCircle, TrendingUp, MessageSquare, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
@@ -26,14 +22,14 @@ export function Students() {
         const learnersArray = Array.isArray(l) ? l : (l?.items || []);
         const enrollmentsArray = Array.isArray(e) ? e : (e?.items || []);
         const studentList = learnersArray.map((learner) => {
-          const enrollment = enrollmentsArray.find((en) => en.learnerId === learner.id || en.learner === learner.name);
+          const enrollment = enrollmentsArray.find((en) => en.learnerId === learner.id || en.learner === learner.name || en.learnerName === learner.name);
           return {
             id: learner.id,
             name: learner.name,
             email: learner.email,
-            course: enrollment?.course || "Advanced React Patterns",
-            progress: learner.progress ?? enrollment?.progress ?? 75,
-            lastActive: learner.lastActive || "2 hours ago",
+            course: enrollment?.course || enrollment?.courseTitle || '—',
+            progress: learner.progress ?? enrollment?.progress ?? 0,
+            lastActive: learner.lastActive || "Recently",
             status: learner.status || "Active",
           };
         });

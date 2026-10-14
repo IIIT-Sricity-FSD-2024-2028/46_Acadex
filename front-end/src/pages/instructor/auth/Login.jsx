@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Button, Input } from "../../../components/common";
 import { BookOpen } from "lucide-react";
 
 export function Login() {

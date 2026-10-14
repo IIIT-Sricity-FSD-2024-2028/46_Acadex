@@ -4,10 +4,6 @@ import {
   GraduationCap,
   CheckCircle2,
   Clock,
-  ArrowRight,
-  BookOpen,
-  Mail,
-  ShieldCheck,
   Check,
   X,
   AlertCircle,
@@ -15,11 +11,7 @@ import {
   Loader2,
   RefreshCw,
   Inbox,
-  UserCheck,
   FileText,
-  BadgeAlert,
-  Calendar,
-  DollarSign,
 } from 'lucide-react';
 import { useInstructor } from '../../../context/InstructorContext';
 import { useNavigate } from 'react-router-dom';

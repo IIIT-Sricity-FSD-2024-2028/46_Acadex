@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Card, CardContent, Button, Input } from "../../../components/common";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../../../utils/api";
 

@@ -1,7 +1,4 @@
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Badge } from "../../../components/instructor/ui/Badge";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Card, CardContent, Badge, Button, Input } from "../../../components/common";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../components/instructor/ui/Tabs";
 import { Search, Star, Users, X, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -33,7 +30,7 @@ export function MyCourses() {
           });
           setCourses(myCourses);
         } else {
-          setCourses(list);
+          setCourses([]);
         }
         setLoading(false);
       })
@@ -49,8 +46,6 @@ export function MyCourses() {
       .filter((course) => {
         if (activeTab === "published" && course.status !== "Published") return false;
         if (activeTab === "draft" && course.status !== "Draft") return false;
-        if (activeTab === "archived" && course.status !== "Archived") return false;
-
         if (searchQuery.trim() !== "") {
           const q = searchQuery.toLowerCase();
           const matchTitle = course.title?.toLowerCase().includes(q);
@@ -64,7 +59,7 @@ export function MyCourses() {
       .sort((a, b) => {
         if (sortBy === "newest") return (b.timestamp || 0) - (a.timestamp || 0);
         if (sortBy === "oldest") return (a.timestamp || 0) - (b.timestamp || 0);
-        if (sortBy === "popular") return (b.students || 0) - (a.students || 0);
+        if (sortBy === "popular") return (b.enrolledCount ?? b.students ?? 0) - (a.enrolledCount ?? a.students ?? 0);
         if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
         return 0;
       });
@@ -120,7 +115,6 @@ export function MyCourses() {
           <TabsTrigger value="all">All Courses ({courses.length})</TabsTrigger>
           <TabsTrigger value="published">Published ({courses.filter(c => c.status === "Published").length})</TabsTrigger>
           <TabsTrigger value="draft">Drafts ({courses.filter(c => c.status === "Draft").length})</TabsTrigger>
-          <TabsTrigger value="archived">Archived (0)</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab}>
@@ -133,7 +127,7 @@ export function MyCourses() {
               {filteredCourses.map((course) => (
                 <Card key={course.id} className="overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col group border-slate-200 hover:border-blue-300">
                   <div className="aspect-[16/9] relative overflow-hidden bg-slate-100">
-                    <img src={course.image || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=250&fit=crop'} alt={course.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={course.thumbnail || course.image || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=250&fit=crop'} alt={course.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 right-3">
                       <Badge variant={course.status === "Published" ? "success" : "warning"} className="shadow-xs backdrop-blur-md bg-white/95">
@@ -148,11 +142,11 @@ export function MyCourses() {
                     <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-5">
                       <span className="flex items-center gap-1.5 text-amber-600">
                         <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                        {course.rating > 0 ? course.rating : "4.9"}
+                        {course.rating != null ? course.rating : "—"}
                       </span>
                       <span className="flex items-center gap-1.5 text-slate-600">
                         <Users className="w-4 h-4 text-slate-400" />
-                        {(course.students || 0).toLocaleString()} Enrolled
+                        {(course.enrolledCount ?? course.students ?? 0).toLocaleString()} Enrolled
                       </span>
                     </div>
                     <div className="flex items-center justify-end border-t border-slate-100 pt-3.5 mt-auto">

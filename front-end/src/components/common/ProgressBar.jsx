@@ -58,3 +58,7 @@ export function CircularProgress({ progress = 0, size = 64, strokeWidth = 6, col
     </div>
   );
 }
+
+export { CircularProgress as CircularProgressBar };
+export default LinearProgressBar;
+

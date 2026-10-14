@@ -1,6 +1,4 @@
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
+import { Card, CardContent, Button, Input } from "../../../components/common";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PlayCircle, FileText, UploadCloud, Paperclip } from "lucide-react";
 import { useState, useRef } from "react";
@@ -39,12 +37,15 @@ export function CreateLesson() {
   const handleSave = () => {
     if (!title.trim()) return;
     setSaving(true);
+    const targetModuleId = searchParams.get('moduleId');
 
     api.get(`/courses/${courseId}`, "instructor")
       .then((course) => {
         const currentModules = course.modules || [];
         if (currentModules.length > 0) {
-          const firstMod = currentModules[0];
+          const targetMod = targetModuleId
+            ? currentModules.find(m => String(m.id) === String(targetModuleId)) || currentModules[0]
+            : currentModules[0];
           const newItem = {
             id: Date.now(),
             type: lessonType === 'video' ? 'Video' : 'Reading',
@@ -54,7 +55,7 @@ export function CreateLesson() {
             fileSize: uploadedFile ? formatBytes(uploadedFile.size) : '',
             url: '',
           };
-          firstMod.items = [...(firstMod.items || []), newItem];
+          targetMod.items = [...(targetMod.items || []), newItem];
         }
         return api.patch(`/courses/${courseId}`, {
           modules: currentModules,
@@ -73,7 +74,7 @@ export function CreateLesson() {
     <div className="max-w-4xl mx-auto pb-24">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Create Lesson</h1>
-        <p className="text-slate-500">Add content to Module 1 — Introduction to React Patterns</p>
+        <p className="text-slate-500">Add instructional content, videos, or readings to your curriculum module.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

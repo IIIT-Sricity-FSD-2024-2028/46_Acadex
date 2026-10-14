@@ -1,7 +1,5 @@
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
-import { Star, MessageSquare, Search, X, Send, Edit2, Trash2 } from "lucide-react";
+import { Card, CardContent, Button, Input } from "../../../components/common";
+import { Star, MessageSquare, Search, X, Send } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
@@ -14,8 +12,8 @@ export function Reviews() {
 
   const [reviewsData, setReviewsData] = useState({
     reviews: [],
-    averageRating: 4.8,
-    totalReviews: 1245,
+    averageRating: 0,
+    totalReviews: 0,
     ratingBreakdown: [],
   });
   const [loading, setLoading] = useState(true);
@@ -42,19 +40,19 @@ export function Reviews() {
         }));
 
         const total = normalized.length;
-        const avg = total > 0 ? (normalized.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1) : 4.8;
+        const avg = total > 0 ? (normalized.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1) : 0;
         
         // Compute dynamic breakdown
         const breakdown = [5, 4, 3, 2, 1].map(stars => {
           const count = normalized.filter(r => Math.round(r.rating) === stars).length;
-          const percent = total > 0 ? Math.round((count / total) * 100) : (stars === 5 ? 85 : stars === 4 ? 15 : 0);
+          const percent = total > 0 ? Math.round((count / total) * 100) : 0;
           return { stars, count, percent };
         });
 
         setReviewsData({
           reviews: normalized,
           averageRating: avg,
-          totalReviews: total || 1245,
+          totalReviews: total,
           ratingBreakdown: breakdown,
         });
         setLoading(false);
@@ -147,7 +145,9 @@ export function Reviews() {
           <Card>
             <CardContent className="p-6">
               <div className="text-center mb-6">
-                <div className="text-5xl font-extrabold text-slate-900 mb-2">{reviewsData.averageRating}</div>
+                <div className="text-5xl font-extrabold text-slate-900 mb-2">
+                  {reviewsData.totalReviews > 0 ? reviewsData.averageRating : '—'}
+                </div>
                 <div className="flex justify-center gap-1 mb-2 text-amber-400">
                   {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-5 h-5 fill-amber-400" />)}
                 </div>

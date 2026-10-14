@@ -19,7 +19,7 @@ import {
   Clock,
   Building2,
 } from 'lucide-react';
-import { Avatar } from '../ui/Avatar';
+import { Avatar } from '../../common';
 import { cn } from '../../../utils/cn';
 import { useInstructor } from '../../../context/InstructorContext';
 

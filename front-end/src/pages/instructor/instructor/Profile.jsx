@@ -1,14 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
-import { Avatar } from "../../../components/instructor/ui/Avatar";
-import { Badge } from "../../../components/instructor/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button, Input, Avatar, Badge } from "../../../components/common";
 import { Camera, Building2, CheckCircle2, LogOut, AlertTriangle, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../context/InstructorContext";
 
 export function Profile() {
-  const instructorId = localStorage.getItem('nexuspay_instructor_id') || 'inst-1';
+  const { instructor, refreshInstructor } = useInstructor();
+  const instructorId = instructor?.id || localStorage.getItem('nexuspay_instructor_id') || 'inst-1';
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [orgStatusMessage, setOrgStatusMessage] = useState("");
@@ -35,6 +34,7 @@ export function Profile() {
   });
 
   useEffect(() => {
+    if (!instructorId) return;
     api.get(`/instructors/${instructorId}`, "instructor")
       .then((data) => {
         if (data) {
@@ -84,6 +84,7 @@ export function Profile() {
     }, "instructor")
       .then(() => {
         setSavedSuccess(true);
+        if (refreshInstructor) refreshInstructor();
         setTimeout(() => setSavedSuccess(false), 4000);
       })
       .catch((err) => console.error("Error updating profile:", err));
@@ -91,6 +92,16 @@ export function Profile() {
 
   const handleLeaveOrganization = () => {
     setIsAffiliated(false);
+    api.patch(`/instructors/${instructorId}`, {
+      organization: null,
+      organizationId: null,
+      status: 'Pending Affiliation',
+    }, "instructor")
+      .then(() => {
+        if (refreshInstructor) refreshInstructor();
+      })
+      .catch((err) => console.error("Error leaving organization on server:", err));
+
     setFormData((prev) => ({
       ...prev,
       orgName: "",
@@ -103,21 +114,6 @@ export function Profile() {
     setShowLeaveModal(false);
     setOrgStatusMessage("You have successfully left the organization.");
     setTimeout(() => setOrgStatusMessage(""), 5000);
-  };
-
-  const handleRejoinOrg = () => {
-    setIsAffiliated(true);
-    setFormData((prev) => ({
-      ...prev,
-      orgName: "University of Tech",
-      orgDepartment: "Department of Computer Science & Engineering",
-      orgRole: "Admin & Lead Faculty",
-      orgWorkEmail: "s.jenkins@univ.edu",
-      orgWebsite: "https://univ.edu",
-      orgJoined: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    }));
-    setOrgStatusMessage("Re-affiliated with organization.");
-    setTimeout(() => setOrgStatusMessage(""), 4000);
   };
 
   return (
@@ -205,15 +201,16 @@ export function Profile() {
                   Leave Organization
                 </Button>
               ) : (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleRejoinOrg}
-                >
-                  <Building2 className="w-4 h-4 mr-1.5" />
-                  Join Organization
-                </Button>
+                <Link to="/instructor/connect">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    <Building2 className="w-4 h-4 mr-1.5" />
+                    View Incoming Requests
+                  </Button>
+                </Link>
               )}
             </div>
           </div>

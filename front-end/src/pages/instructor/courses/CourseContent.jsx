@@ -1,9 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
-import { Badge } from "../../../components/instructor/ui/Badge";
+import { Card, CardContent, Button, Input, Badge } from "../../../components/common";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
 import {

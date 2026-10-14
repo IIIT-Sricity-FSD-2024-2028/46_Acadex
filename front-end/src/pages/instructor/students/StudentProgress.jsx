@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Badge } from "../../../components/instructor/ui/Badge";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Avatar } from "../../../components/instructor/ui/Avatar";
-import { MessageSquare, Mail, Calendar, BookOpen, Clock, Award, CheckCircle, ChevronLeft } from "lucide-react";
+import { Card, CardContent, Badge, Button, Avatar } from "../../../components/common";
+import { MessageSquare, Mail, Calendar, ChevronLeft, BookOpen } from "lucide-react";
 import { api } from "../../../utils/api";
 
 export function StudentProgress() {
@@ -21,18 +18,9 @@ export function StudentProgress() {
       .then(([l, e]) => {
         setStudent(l);
         const learnerEnrollments = (e || []).filter(
-          (en) => en.learnerId === Number(id || 1) || en.learner === l?.name
+          (en) => en.learnerId === id || en.learnerId === Number(id) || en.learner === l?.name || en.learnerName === l?.name
         );
-        setEnrollments(learnerEnrollments.length > 0 ? learnerEnrollments : [
-          {
-            id: 1,
-            course: "Advanced React Patterns & Architecture",
-            enrolledDate: "Oct 12, 2023",
-            progress: l?.progress || 85,
-            grade: "A",
-            status: "Active",
-          }
-        ]);
+        setEnrollments(learnerEnrollments);
         setLoading(false);
       })
       .catch((err) => {
@@ -68,33 +56,38 @@ export function StudentProgress() {
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm" className="font-semibold"><MessageSquare className="w-4 h-4 mr-2" /> Direct Message</Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-extrabold text-[#0056D2] mb-1">{student.enrolledCoursesCount || enrollments.length || 2}</div>
+            <div className="text-3xl font-extrabold text-[#0056D2] mb-1">
+              {student.enrolledCoursesCount ?? student.enrolledCourses ?? enrollments.length}
+            </div>
             <p className="text-xs text-slate-500 font-semibold">Tracks Enrolled</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-extrabold text-emerald-600 mb-1">{student.completedCoursesCount || 1}</div>
+            <div className="text-3xl font-extrabold text-emerald-600 mb-1">
+              {student.completedCoursesCount ?? student.completedCourses ?? enrollments.filter(e => e.progress === 100).length}
+            </div>
             <p className="text-xs text-slate-500 font-semibold">Tracks Completed</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-extrabold text-purple-600 mb-1">{student.avgScore || 92}%</div>
+            <div className="text-3xl font-extrabold text-purple-600 mb-1">
+              {student.avgScore != null ? (typeof student.avgScore === 'string' && student.avgScore.includes('%') ? student.avgScore : `${student.avgScore}%`) : '—'}
+            </div>
             <p className="text-xs text-slate-500 font-semibold">Avg Quiz Score</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-extrabold text-amber-600 mb-1">{student.learningHours || 34}h</div>
+            <div className="text-3xl font-extrabold text-amber-600 mb-1">
+              {student.learningHours != null ? `${student.learningHours}h` : '—'}
+            </div>
             <p className="text-xs text-slate-500 font-semibold">Learning Time</p>
           </CardContent>
         </Card>
@@ -102,37 +95,45 @@ export function StudentProgress() {
 
       <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4">Course Progress & Modules</h3>
 
-      <div className="space-y-4">
-        {enrollments.map((en, idx) => (
-          <Card key={en.id || idx} className="border-l-4 border-l-[#0056D2]">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-base font-bold text-slate-900">{en.course}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">Enrolled on {en.enrolledDate || en.enrollmentDate || 'Recent'}</p>
+      {enrollments.length > 0 ? (
+        <div className="space-y-4">
+          {enrollments.map((en, idx) => (
+            <Card key={en.id || idx} className="border-l-4 border-l-[#0056D2]">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-base font-bold text-slate-900">{en.course || en.courseTitle || 'Course Track'}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">Enrolled on {en.enrolledDate || en.enrollmentDate || 'Recent'}</p>
+                      </div>
+                      <Badge variant={en.progress === 100 ? "success" : "primary"}>
+                        {en.status || (en.progress === 100 ? 'Completed' : 'In Progress')}
+                      </Badge>
                     </div>
-                    <Badge variant={en.progress === 100 ? "success" : "primary"}>
-                      {en.status || (en.progress === 100 ? 'Completed' : 'In Progress')}
-                    </Badge>
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between text-xs font-semibold mb-1.5">
-                      <span className="text-slate-600">Track Progress</span>
-                      <span className="text-[#0056D2] font-bold">{en.progress}%</span>
-                    </div>
-                    <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#0056D2] rounded-full transition-all duration-500" style={{ width: `${en.progress}%` }}></div>
+                    <div>
+                      <div className="flex justify-between text-xs font-semibold mb-1.5">
+                        <span className="text-slate-600">Track Progress</span>
+                        <span className="text-[#0056D2] font-bold">{en.progress ?? 0}%</span>
+                      </div>
+                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#0056D2] rounded-full transition-all duration-500" style={{ width: `${en.progress ?? 0}%` }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="p-10 text-center bg-white rounded-2xl border border-slate-200 text-slate-500">
+          <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+          <p className="text-sm font-semibold text-slate-700">No active course enrollments</p>
+          <p className="text-xs text-slate-400 mt-1">This student has not yet enrolled in any tracked curriculum modules.</p>
+        </div>
+      )}
     </div>
   );
 }

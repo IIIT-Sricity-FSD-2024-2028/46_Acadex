@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Card, CardContent } from "../../../components/instructor/ui/Card";
-import { Button } from "../../../components/instructor/ui/Button";
-import { Input } from "../../../components/instructor/ui/Input";
-import { Badge } from "../../../components/instructor/ui/Badge";
+import { Card, CardContent, Button, Input, Badge } from "../../../components/common";
 import { api } from "../../../utils/api";
 import {
   Plus,

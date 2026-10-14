@@ -16,7 +16,7 @@ import {
   Loader2,
   Building2,
 } from "lucide-react";
-import { Avatar } from "../ui/Avatar";
+import { Avatar } from "../../common";
 import { InstructorSidebar } from "./InstructorSidebar";
 import { InstructorProvider, useInstructor } from "../../../context/InstructorContext";
 import { ConnectUniversity } from "../../../pages/instructor/onboarding/ConnectUniversity";
@@ -87,15 +87,10 @@ export function InstructorLayout() {
                   <span>Instructor Studio</span>
                 </span>
 
-                {isAffiliated ? (
+                {!isAffiliated && (
                   <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Verified Faculty • {displayOrg}</span>
-                  </span>
-                ) : (
-                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold">
-                    <Clock className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Awaiting University Affiliation</span>
+                    <span>Awaiting university Affiliation</span>
                   </span>
                 )}
               </div>
@@ -164,14 +159,6 @@ export function InstructorLayout() {
                       >
                         <Settings className="w-4 h-4 text-slate-400" />
                         Studio Settings
-                      </Link>
-                      <Link
-                        to="/student/dashboard"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50"
-                      >
-                        <ExternalLink className="w-4 h-4 text-blue-500" />
-                        Switch to Student View
                       </Link>
                     </div>
 
