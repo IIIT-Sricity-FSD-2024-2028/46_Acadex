@@ -5,7 +5,6 @@ import {
   BookOpen,
   Users,
   Award,
-  DollarSign,
   ArrowUpRight,
   Sparkles,
   PieChart,
@@ -162,7 +161,7 @@ export default function Analytics() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Institutional Revenue</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-2xl font-black text-emerald-700">${currentData.revenue.toLocaleString()}</span>
+              <span className="text-2xl font-black text-emerald-700">₹{currentData.revenue.toLocaleString()}</span>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                 {currentData.revenueGrowth}
               </span>
@@ -283,7 +282,7 @@ export default function Analytics() {
                 </svg>
                 <div className="absolute text-center">
                   <span className="text-[10px] text-outline uppercase font-bold block">Period</span>
-                  <span className="text-sm font-black text-on-surface">${Math.round(currentData.revenue / 1000)}k</span>
+                  <span className="text-sm font-black text-on-surface">₹{Math.round(currentData.revenue / 1000)}k</span>
                 </div>
               </div>
             </div>
@@ -332,7 +331,7 @@ export default function Analytics() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-emerald-700">${(c.revenue || (c.price * (c.enrolledCount || 0))).toLocaleString()}</span>
+                    <span className="text-xs font-bold text-emerald-700">₹{(c.revenue || (c.price * (c.enrolledCount || 0))).toLocaleString()}</span>
                     <span className="text-[10px] text-outline block">{c.enrolledCount || 0} learners</span>
                   </div>
                 </div>
@@ -359,7 +358,7 @@ export default function Analytics() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-emerald-700">${inst.revenueGenerated.toLocaleString()}</span>
+                    <span className="text-xs font-bold text-emerald-700">₹{inst.revenueGenerated.toLocaleString()}</span>
                     <span className="text-[10px] text-outline block">{inst.enrolledStudents} students</span>
                   </div>
                 </div>

@@ -9,8 +9,7 @@ import {
   BookOpen,
   Send,
   Calendar,
-  Mail,
-  DollarSign
+  Mail
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
@@ -22,15 +21,19 @@ export default function AssignCourses() {
   const { addToast } = useToast();
   const { instructors, courses, sendCourseTeachingRequest, organization } = useOrg();
 
-  // Read preselected instructor or course from URL if provided
+  // Only use an explicit URL selection; otherwise start with no selections.
   const queryParams = new URLSearchParams(location.search);
-  const preselectedInstId = queryParams.get('instructorId') || instructors[0]?.id || 'inst-1';
-  const preselectedCourseId = queryParams.get('courseId') || courses[0]?.id || 'crs-1';
+  const preselectedInstId = queryParams.get('instructorId');
+  const preselectedCourseId = queryParams.get('courseId');
 
-  const [selectedInstructorIds, setSelectedInstructorIds] = useState([preselectedInstId]);
-  const [selectedCourseIds, setSelectedCourseIds] = useState([preselectedCourseId]);
+  const [selectedInstructorIds, setSelectedInstructorIds] = useState(
+    preselectedInstId ? [preselectedInstId] : []
+  );
+  const [selectedCourseIds, setSelectedCourseIds] = useState(
+    preselectedCourseId ? [preselectedCourseId] : []
+  );
   const [semester, setSemester] = useState('Fall 2026');
-  const [creditHours, setCreditHours] = useState('4 Academic Credits / 45 Lecture Hours');
+  const [creditHours, setCreditHours] = useState('');
   const [proposedTerms, setProposedTerms] = useState('Departmental faculty honorarium + 70/30 course royalties');
   const [customMessage, setCustomMessage] = useState(
     'The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.'
@@ -44,7 +47,7 @@ export default function AssignCourses() {
   const toggleCourse = (id) => {
     setSelectedCourseIds(prev =>
       prev.includes(id)
-        ? prev.length > 1 ? prev.filter(cId => cId !== id) : prev // keep at least 1
+        ? prev.filter(cId => cId !== id)
         : [...prev, id]
     );
   };
@@ -131,10 +134,10 @@ export default function AssignCourses() {
         </div>
 
         <form onSubmit={handleAssignSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             
             {/* Step 1: Select Faculty Instructor (5 cols) */}
-            <div className="lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
+            <div className="lg:col-span-5 h-full bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">1</span>
@@ -189,7 +192,7 @@ export default function AssignCourses() {
             </div>
 
             {/* Step 2: Select Target Course(s) (7 cols) */}
-            <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
+            <div className="lg:col-span-7 h-full bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">2</span>
@@ -234,7 +237,7 @@ export default function AssignCourses() {
                           <p className="text-[10px] text-outline">{c.category} • {c.totalHours} • Currently: {c.instructorName}</p>
                         </div>
                       </div>
-                      <span className="font-bold text-xs text-emerald-700">${c.price}</span>
+                      <span className="font-bold text-xs text-emerald-700">₹{c.price}</span>
                     </div>
                   );
                 })}
@@ -244,7 +247,7 @@ export default function AssignCourses() {
           </div>
 
           {/* Step 3: Semester & Compensation Terms */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 space-y-4">
+          {/* <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 space-y-4">
             <h2 className="text-sm font-bold text-on-surface pb-3 border-b border-outline-variant flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">3</span>
               <span>Teaching Assignment Terms & Scheduling</span>
@@ -291,7 +294,7 @@ export default function AssignCourses() {
                 When confirmed, the outreach system sends a teaching request to every selected instructor. Once accepted, each instructor is added to that course’s teaching team.
               </span>
             </div>
-          </div>
+          </div> */}
 
           {/* Submission Bar */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 flex flex-col sm:flex-row items-center justify-between gap-4">

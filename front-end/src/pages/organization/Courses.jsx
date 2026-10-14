@@ -179,7 +179,7 @@ export default function Courses() {
                             <span>{c.enrolledCount || 0}</span>
                           </span>
                         </td>
-                        <td className="py-4 font-bold text-emerald-700">${c.price}</td>
+                        <td className="py-4 font-bold text-emerald-700">₹{c.price}</td>
                         <td className="py-4">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                             c.status === 'Published' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'

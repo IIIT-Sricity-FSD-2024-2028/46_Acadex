@@ -645,7 +645,7 @@ export const initialCertificatesData = [
 // ==========================================
 export const initialTransactionsData = [
   {
-    id: "TXN-2026-0912",
+    id: "TXN-202612",
     learnerId: "lrn-1",
     payer: "Alex Johnson",
     payerEmail: "alex.johnson@stanford.edu",
@@ -655,7 +655,7 @@ export const initialTransactionsData = [
     amount: 189.00,
     method: "Credit Card (Stripe)",
     paymentMethod: "Credit Card (Stripe)",
-    transactionId: "TXN-2026-0912",
+    transactionId: "TXN-202612",
     date: "2026-08-28",
     paymentDate: "2026-08-28",
     status: "Completed",
@@ -665,7 +665,7 @@ export const initialTransactionsData = [
     createdAt: "2026-08-28T09:12:00.000Z"
   },
   {
-    id: "TXN-2026-0911",
+    id: "TXN-202611",
     learnerId: "lrn-2",
     payer: "Sarah Connor",
     payerEmail: "sarah.connor@caltech.edu",
@@ -675,7 +675,7 @@ export const initialTransactionsData = [
     amount: 249.00,
     method: "PayPal",
     paymentMethod: "PayPal",
-    transactionId: "TXN-2026-0911",
+    transactionId: "TXN-202611",
     date: "2026-08-27",
     paymentDate: "2026-08-27",
     status: "Completed",
@@ -689,7 +689,7 @@ export const initialTransactionsData = [
 export const initialRefundsData = [
   {
     id: "ref-1",
-    transactionId: "TXN-2026-0800",
+    transactionId: "TXN-202600",
     learnerName: "David Wilson",
     courseTitle: "Full-Stack Enterprise React & Next.js 14",
     amount: 99.00,

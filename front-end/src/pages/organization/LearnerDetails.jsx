@@ -57,7 +57,7 @@ export default function LearnerDetails() {
           </div>
           <div className="text-center md:text-right">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Total Spent</span>
-            <p className="text-2xl font-black text-primary">${learner.totalSpent.toFixed(2)}</p>
+            <p className="text-2xl font-black text-primary">₹{learner.totalSpent.toFixed(2)}</p>
           </div>
         </div>
 
@@ -169,7 +169,7 @@ export default function LearnerDetails() {
                     <td className="py-3 text-on-surface-variant font-medium">{tx.course}</td>
                     <td className="py-3 text-outline">{tx.method}</td>
                     <td className="py-3 text-outline">{tx.date}</td>
-                    <td className="py-3 font-bold text-emerald-700">${tx.amount.toFixed(2)}</td>
+                    <td className="py-3 font-bold text-emerald-700">₹{tx.amount.toFixed(2)}</td>
                     <td className="py-3 text-right">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
                         {tx.status}

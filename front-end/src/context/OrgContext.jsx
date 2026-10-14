@@ -16,6 +16,44 @@ const defaultOrgInfo = {
   logo: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80",
 };
 
+const normalizeTransactionId = (id) => {
+  const digits = String(id || '')
+    .trim()
+    .replace(/\D/g, '');
+  const suffix = digits.slice(-6).padStart(6, '0');
+
+  return `TXN-${suffix}`;
+};
+
+const normalizeTransaction = (transaction) => {
+  const status = String(transaction?.status || '').toLowerCase();
+  const normalizedStatus = {
+    paid: 'Completed',
+    complete: 'Completed',
+    completed: 'Completed',
+    pending: 'Pending',
+    failed: 'Failed',
+    refunded: 'Refunded',
+  }[status] || transaction?.status || 'Completed';
+
+  return {
+    ...transaction,
+    id: normalizeTransactionId(transaction?.id),
+    type: transaction?.type || 'Payment',
+    payer: transaction?.payer || transaction?.payerName || transaction?.learnerName || 'Unknown payer',
+    payerId: transaction?.payerId || transaction?.learnerId,
+    course: transaction?.course || transaction?.courseTitle || 'Course unavailable',
+    amount: Number(transaction?.amount) || 0,
+    method: transaction?.method || transaction?.paymentMethod || transaction?.paymentGateway || 'Not specified',
+    date: transaction?.date || transaction?.paymentDate || transaction?.timestamp || transaction?.createdAt || 'Date unavailable',
+    status: normalizedStatus,
+    createdAt: transaction?.createdAt || transaction?.timestamp,
+    updatedAt: transaction?.updatedAt || transaction?.createdAt || transaction?.timestamp,
+  };
+};
+
+const normalizeTransactions = (transactions) => transactions.map(normalizeTransaction);
+
 export function OrgProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -89,7 +127,7 @@ export function OrgProvider({ children }) {
         learners: learnersRes.status === 'fulfilled' ? getItems(learnersRes.value) : prev.learners,
         courses: coursesRes.status === 'fulfilled' ? getItems(coursesRes.value) : prev.courses,
         enrollments: enrollmentsRes.status === 'fulfilled' ? getItems(enrollmentsRes.value) : prev.enrollments,
-        transactions: transactionsRes.status === 'fulfilled' ? getItems(transactionsRes.value) : prev.transactions,
+        transactions: transactionsRes.status === 'fulfilled' ? normalizeTransactions(getItems(transactionsRes.value)) : prev.transactions,
         reports: reportsRes.status === 'fulfilled' ? getItems(reportsRes.value) : prev.reports,
         disputes: disputesRes.status === 'fulfilled' ? getItems(disputesRes.value) : prev.disputes,
         notifications: notificationsRes.status === 'fulfilled' ? getItems(notificationsRes.value) : prev.notifications,
@@ -331,7 +369,7 @@ export function OrgProvider({ children }) {
         enrollments: getItems(enrollmentsRes),
         courses: getItems(coursesRes),
         learners: getItems(learnersRes),
-        transactions: getItems(transactionsRes),
+        transactions: normalizeTransactions(getItems(transactionsRes)),
         notifications: getItems(notifsRes),
       }));
 

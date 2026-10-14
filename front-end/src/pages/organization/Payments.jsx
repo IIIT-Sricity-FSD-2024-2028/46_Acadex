@@ -4,7 +4,6 @@ import {
   Download,
   TrendingUp,
   Receipt,
-  DollarSign,
   ArrowUpRight
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
@@ -17,7 +16,7 @@ export default function Payments() {
   const { addToast } = useToast();
 
   const handleDownloadStatement = () => {
-    const headers = ['Record ID', 'Payer', 'Description', 'Gross Amount ($)', 'Method', 'Date', 'Status'];
+    const headers = ['Record ID', 'Payer', 'Description', 'Gross Amount (₹)', 'Method', 'Date', 'Status'];
     const rows = transactions.map(t => [
       t.id,
       t.payer,
@@ -106,7 +105,7 @@ export default function Payments() {
                     <td className="py-4 text-outline">{t.method}</td>
                     <td className="py-4 text-outline">{t.date}</td>
                     <td className="py-4 text-right">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      <span className = {t.status?.toLowerCase() === "pending" ? "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800" : "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" }>
                         {t.status}
                       </span>
                     </td>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search,
   Bell,
   ChevronRight,
   ShieldCheck,
@@ -17,7 +16,6 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const { notifications, markNotificationRead, markAllNotificationsRead, stats, info } = useOrg();
-  const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = () => {
@@ -30,13 +28,6 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
   };
 
   const unreadList = notifications.filter(n => !n.read);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/org/courses?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
 
   return (
     <header className="bg-surface/95 backdrop-blur-md border-b border-outline-variant/60 sticky top-0 z-20 px-6 py-3.5 flex items-center justify-between shadow-ambient">
@@ -60,18 +51,6 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
           </React.Fragment>
         ))}
       </div>
-
-      {/* Center Search Input */}
-      <form onSubmit={handleSearch} className="hidden md:flex items-center relative max-w-md w-full mx-6">
-        <Search className="w-4 h-4 text-outline absolute left-3.5 pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Search courses, instructors, learners..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-xs bg-surface-container-low border border-outline-variant/80 rounded-full focus:outline-none focus:border-primary focus:bg-white text-on-surface font-medium transition-all shadow-xs"
-        />
-      </form>
 
       {/* Right: Actions & Notifications */}
       <div className="flex items-center gap-3">

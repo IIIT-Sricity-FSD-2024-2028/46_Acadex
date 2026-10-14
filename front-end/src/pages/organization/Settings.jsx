@@ -3,8 +3,7 @@ import {
   Settings as SettingsIcon,
   ShieldCheck,
   Save,
-  Bell,
-  DollarSign
+  Bell
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
@@ -93,7 +92,6 @@ export default function Settings() {
                   className="w-full px-3 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium"
                 >
                   <option value="INR">INR (₹) - Indian Rupee</option>
-                  <option value="USD">USD ($) - US Dollar</option>
                   <option value="EUR">EUR (€) - Euro</option>
                   <option value="GBP">GBP (£) - British Pound</option>
                 </select>

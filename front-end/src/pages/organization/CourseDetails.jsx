@@ -6,7 +6,6 @@ import {
   Star,
   Users,
   BookOpen,
-  DollarSign,
   GraduationCap,
   Mail
 } from 'lucide-react';
@@ -105,7 +104,7 @@ export default function CourseDetails() {
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Gross Revenue</span>
-            <p className="text-xl font-bold text-on-surface mt-1">${(course.revenue || (course.price * (course.enrolledCount || 0))).toLocaleString()}</p>
+            <p className="text-xl font-bold text-on-surface mt-1">₹{(course.revenue || (course.price * (course.enrolledCount || 0))).toLocaleString()}</p>
           </div>
         </div>
 

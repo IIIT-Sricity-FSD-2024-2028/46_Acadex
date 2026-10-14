@@ -5,8 +5,7 @@ import {
   Mail,
   Star,
   BookOpen,
-  Users,
-  DollarSign
+  Users
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
@@ -80,7 +79,7 @@ export default function InstructorDetails() {
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Gross Royalty</span>
-            <p className="text-xl font-bold text-emerald-700 mt-1">${instructor.revenueGenerated.toLocaleString()}</p>
+            <p className="text-xl font-bold text-emerald-700 mt-1">₹{instructor.revenueGenerated.toLocaleString()}</p>
           </div>
         </div>
 
@@ -115,7 +114,7 @@ export default function InstructorDetails() {
                     </td>
                     <td className="py-4 font-semibold text-primary">{c.category}</td>
                     <td className="py-4 font-bold text-on-surface">{c.enrolledCount} learners</td>
-                    <td className="py-4 font-bold text-emerald-700">${c.price}</td>
+                    <td className="py-4 font-bold text-emerald-700">₹{c.price}</td>
                     <td className="py-4 text-right">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
                         {c.status}

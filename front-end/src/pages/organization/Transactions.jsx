@@ -25,7 +25,7 @@ export default function Transactions() {
   });
 
   const handleExportCSV = () => {
-    const headers = ['Transaction ID', 'Payer / Student', 'Course Track', 'Amount ($)', 'Type', 'Payment Method', 'Date', 'Status'];
+    const headers = ['Transaction ID', 'Payer / Student', 'Course Track', 'Amount (₹)', 'Type', 'Payment Method', 'Date', 'Status'];
     const rows = filteredTransactions.map(t => [
       t.id,
       t.payer,
@@ -119,7 +119,7 @@ export default function Transactions() {
                     <td className="py-4 font-mono font-bold text-primary">{t.id}</td>
                     <td className="py-4 font-bold text-on-surface">{t.payer}</td>
                     <td className="py-4 text-on-surface-variant font-medium max-w-[200px] truncate">{t.course}</td>
-                    <td className="py-4 font-bold text-emerald-700">${t.amount}</td>
+                    <td className="py-4 font-bold text-emerald-700">₹{t.amount}</td>
                     <td className="py-4 text-outline">{t.method}</td>
                     <td className="py-4 text-outline whitespace-nowrap">{t.date}</td>
                     <td className="py-4 text-right">

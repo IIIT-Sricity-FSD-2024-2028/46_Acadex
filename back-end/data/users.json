@@ -118,8 +118,8 @@
   },
   {
     "id": "usr-7",
-    "name": "NexusPay Organization Admin",
-    "email": "admin@nexuspay.edu",
+    "name": "Stanford University",
+    "email": "stanford@edu",
     "password": "Password123!",
     "role": "Organization",
     "status": "Active",

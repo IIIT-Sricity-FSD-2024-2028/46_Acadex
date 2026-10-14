@@ -4,7 +4,6 @@ import {
   GraduationCap,
   Users,
   BookOpen,
-  DollarSign,
   TrendingUp,
   ArrowRight,
   Check,
@@ -198,7 +197,7 @@ export default function OrgDashboard() {
               <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
                 <div>
                   <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Monthly Net Inflow</span>
-                  <p className="text-2xl font-black text-on-surface">${stats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-on-surface">₹{stats.monthlyRevenue.toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] font-semibold text-outline">
                   <span className="flex items-center gap-1.5">
@@ -281,7 +280,7 @@ export default function OrgDashboard() {
             <div className="pt-4 border-t border-outline-variant/60 mt-4 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Total Net Settlement YTD</span>
-                <p className="text-xl font-black text-primary">${stats.annualRevenue.toLocaleString()}</p>
+                <p className="text-xl font-black text-primary">₹{stats.annualRevenue.toLocaleString()}</p>
               </div>
               <Link
                 to="/org/payments"

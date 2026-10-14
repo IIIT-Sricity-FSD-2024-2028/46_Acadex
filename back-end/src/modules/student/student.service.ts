@@ -239,17 +239,19 @@ export class StudentService {
     const learner = await this.getProfile(userId);
     const course = await this.coursesRepo.findById(dto.courseId);
 
+    const now = new Date().toISOString();
     const transaction = await this.transactionsRepo.create({
-      id: `tx-${Date.now()}`,
+      id: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+      type: 'Payment',
       payerId: learner.id,
-      payerName: learner.name,
-      payerEmail: learner.email,
-      courseId: dto.courseId,
-      courseTitle: dto.courseTitle || course?.title || 'Masterclass Track',
+      payer: learner.name,
+      course: course?.title || 'Masterclass Track',
       amount: dto.amount || course?.price || 4999,
-      paymentMethod: dto.paymentMethod || 'Credit Card',
-      status: 'Paid',
-      timestamp: new Date().toISOString(),
+      method: dto.paymentMethod || 'Credit Card',
+      date: now,
+      status: 'Completed',
+      createdAt: now,
+      updatedAt: now,
     });
 
     await this.enrollCourse(userId, dto.courseId, {

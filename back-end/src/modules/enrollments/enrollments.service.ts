@@ -117,6 +117,7 @@ export class EnrollmentsService {
             const transaction = await this.transactionsRepo.create({
               id: txnId,
               payer: learner.name,
+              payerId: learner.id,
               course: course.title,
               amount: course.price,
               type: 'Payment',
@@ -124,6 +125,7 @@ export class EnrollmentsService {
               date: `${dateStr} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
               status: 'Completed',
               createdAt: nowIso,
+              updatedAt: nowIso,
             });
             createdTransactions.push(transaction);
           }
