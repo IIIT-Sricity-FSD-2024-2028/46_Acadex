@@ -20,7 +20,9 @@ export class AnalyticsService {
     @Inject(REPOSITORY_TOKENS.ORGANIZATION)
     private readonly orgRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.DISPUTES)
-    private readonly disputesRepo: JsonRepository<any>
+    private readonly disputesRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.REVIEWS)
+    private readonly reviewsRepo: JsonRepository<any>
   ) {}
 
   async getOverview() {
@@ -188,58 +190,131 @@ export class AnalyticsService {
   }
 
   async getInstructorAnalytics() {
-    const courses = await this.coursesRepo.find();
-    const enrollments = await this.enrollmentsRepo.find();
+    const [courses, enrollments, reviews, transactions] = await Promise.all([
+      this.coursesRepo.find(),
+      this.enrollmentsRepo.find(),
+      this.reviewsRepo.find(),
+      this.transactionsRepo.find(),
+    ]);
 
-    const totalStudents = enrollments.length || 342;
-    const activeLearners = enrollments.filter((e) => e.status === 'Active').length || Math.round(totalStudents * 0.7);
+    const totalStudents = enrollments.length;
+    const activeLearners = enrollments.filter((e) => e.status === 'Active').length;
+
+    // Real average rating computed from reviews
+    const validReviews = reviews.filter((r) => r.rating != null && !isNaN(Number(r.rating)));
+    const avgRating = validReviews.length > 0
+      ? parseFloat((validReviews.reduce((sum, r) => sum + Number(r.rating), 0) / validReviews.length).toFixed(1))
+      : null;
+
+    // Real completion rate computed from enrollments
+    const completed = enrollments.filter((e) => e.status === 'Completed' || e.progress === 100).length;
+    const completionRate = enrollments.length > 0
+      ? `${Math.round((completed / enrollments.length) * 100)}%`
+      : '0%';
+
+    // Real total earnings from transactions
+    const totalEarningsNum = transactions
+      .filter((t) => (t.status === 'Paid' || t.status === 'Completed' || t.type === 'enrollment') && Number(t.amount) > 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const totalEarnings = totalEarningsNum > 0
+      ? `₹${totalEarningsNum.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+      : null;
+
+    // Real daily distribution (Mon - Sun) from enrollments
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayMap: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    enrollments.forEach((e) => {
+      const d = e.enrolledAt || e.createdAt;
+      if (d) {
+        const dayName = dayNames[new Date(d).getDay()];
+        if (dayMap[dayName] !== undefined) {
+          dayMap[dayName] += 1;
+        }
+      }
+    });
+    const dashboardEnrollments = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => ({
+      name: day,
+      count: dayMap[day],
+      enrollments: dayMap[day],
+      active: Math.round(dayMap[day] * 0.75),
+    }));
+
+    // Real enrollment monthly trend
+    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthMap: Record<string, { enrollments: number; completions: number }> = {};
+    monthOrder.forEach((m) => {
+      monthMap[m] = { enrollments: 0, completions: 0 };
+    });
+    enrollments.forEach((e) => {
+      const dateStr = e.enrolledAt || e.createdAt;
+      if (dateStr) {
+        const m = new Date(dateStr).toLocaleString('en', { month: 'short' });
+        if (monthMap[m]) {
+          monthMap[m].enrollments += 1;
+          if (e.status === 'Completed' || e.progress === 100) {
+            monthMap[m].completions += 1;
+          }
+        }
+      }
+    });
+    const currentMonthIdx = new Date().getMonth();
+    const last6Months: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const idx = (currentMonthIdx - i + 12) % 12;
+      last6Months.push(monthOrder[idx]);
+    }
+    const enrollmentTrend = last6Months.map((m) => ({
+      month: m,
+      value: monthMap[m].enrollments,
+      enrollments: monthMap[m].enrollments,
+      completions: monthMap[m].completions,
+    }));
+
+    // Real course performance
+    const coursePerformance = courses.slice(0, 5).map((c) => ({
+      name: c.title?.length > 20 ? c.title.substring(0, 20) + '...' : c.title,
+      students: c.enrolledCount || 0,
+      rating: c.rating != null ? c.rating : null,
+      completionRate: c.completionRate || 0,
+    }));
+
+    // Real recent activities from enrollments & reviews
+    const activities: Array<{ title: string; timestamp: string; ts: number }> = [];
+    enrollments.forEach((e) => {
+      const dt = e.enrolledAt || e.createdAt;
+      activities.push({
+        title: `${e.learnerName || 'Student'} enrolled in '${e.courseTitle || 'Course'}'`,
+        timestamp: dt ? new Date(dt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently',
+        ts: dt ? new Date(dt).getTime() : 0,
+      });
+    });
+    reviews.forEach((r) => {
+      const dt = r.createdAt;
+      activities.push({
+        title: `Review received for '${r.courseTitle || 'Course'}': ${r.rating}★`,
+        timestamp: dt ? new Date(dt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently',
+        ts: dt ? new Date(dt).getTime() : 0,
+      });
+    });
+    activities.sort((a, b) => b.ts - a.ts);
+    const recentActivity = activities.slice(0, 6).map(({ title, timestamp }) => ({ title, timestamp }));
 
     return {
       stats: {
         totalCourses: courses.length,
-        totalStudents: totalStudents,
+        totalStudents,
         totalEnrollments: totalStudents.toString(),
         activeLearners: activeLearners.toString(),
-        averageRating: 4.8,
-        completionRate: '78%',
-        totalEarnings: '₹28,400.00',
+        averageRating: avgRating,
+        completionRate,
+        totalEarnings,
+        totalReviews: reviews.length,
       },
-      dashboardEnrollments: [
-        { name: 'Mon', count: 12, enrollments: 12, active: 9 },
-        { name: 'Tue', count: 19, enrollments: 19, active: 14 },
-        { name: 'Wed', count: 15, enrollments: 15, active: 11 },
-        { name: 'Thu', count: 22, enrollments: 22, active: 16 },
-        { name: 'Fri', count: 28, enrollments: 28, active: 21 },
-        { name: 'Sat', count: 18, enrollments: 18, active: 13 },
-        { name: 'Sun', count: 24, enrollments: 24, active: 18 },
-      ],
-      enrollmentTrend: [
-        { month: 'Jan', enrollments: 450, completions: 320 },
-        { month: 'Feb', enrollments: 520, completions: 390 },
-        { month: 'Mar', enrollments: 610, completions: 480 },
-        { month: 'Apr', enrollments: 580, completions: 430 },
-        { month: 'May', enrollments: 720, completions: 560 },
-        { month: 'Jun', enrollments: 840, completions: 670 },
-      ],
-      coursePerformance: courses.slice(0, 5).map((c) => ({
-        name: c.title?.length > 20 ? c.title.substring(0, 20) + '...' : c.title,
-        students: c.enrolledCount || 85,
-        rating: c.rating || 4.8,
-      })),
-      engagementData: [
-        { day: 'Mon', hours: 42 },
-        { day: 'Tue', hours: 58 },
-        { day: 'Wed', hours: 65 },
-        { day: 'Thu', hours: 71 },
-        { day: 'Fri', hours: 80 },
-        { day: 'Sat', hours: 55 },
-        { day: 'Sun', hours: 48 },
-      ],
-      recentActivity: [
-        { title: "New student enrolled in 'Theory of Computation'", timestamp: "1 hour ago" },
-        { title: "Course 'Advanced Enterprise Architecture' received 5-star review", timestamp: "3 hours ago" },
-        { title: "Quiz submission graded for Alex Chen (95%)", timestamp: "1 day ago" },
-      ],
+      dashboardEnrollments,
+      enrollmentTrend,
+      coursePerformance,
+      engagementData: [],
+      recentActivity,
     };
   }
 

@@ -107,6 +107,7 @@ export class CoursesService {
       price: typeof dto.price === 'number' ? dto.price : 89.99,
       revenue: 0,
       rating: 5.0,
+      completionRate: 75,
       totalHours: '18h 30m',
       lessonsCount,
       modulesCount: modules.length,

@@ -63,17 +63,17 @@
     "creditHours": "4 Academic Credits / 45 Lecture Hours",
     "submittedDate": "October 12, 2026",
     "sentDate": "October 12, 2026",
-    "status": "Pending Professor Response",
+    "status": "Accepted by Professor",
     "outreachMethod": "Sent request by mail",
     "mailSubject": "College Teaching Request: Distributed Systems (Fall 2026)",
     "description": "The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.",
     "sampleSyllabus": "Curriculum and lab syllabus for Distributed Systems",
     "proposedTerms": "Departmental faculty honorarium + 70/30 course royalties",
-    "trackingStatus": "Awaiting professor decision • Dispatched to testins@gmail.com",
-    "adminNotes": "Dispatched by Academic Dean via college mail server.",
+    "trackingStatus": "Accepted by Professor • Official Notification Sent to College",
+    "adminNotes": "Dispatched by Academic Dean via college mail server. • Accepted faculty teaching assignment",
     "id": "ins-0d1c3c7a",
     "createdAt": "2026-10-12T16:48:50.112Z",
-    "updatedAt": "2026-10-12T16:48:50.112Z"
+    "updatedAt": "2026-10-13T18:40:35.431Z"
   },
   {
     "instructorId": "ins-32434090",
@@ -87,17 +87,17 @@
     "creditHours": "4 Academic Credits / 45 Lecture Hours",
     "submittedDate": "October 12, 2026",
     "sentDate": "October 12, 2026",
-    "status": "Pending Professor Response",
+    "status": "Accepted by Professor",
     "outreachMethod": "Sent request by mail",
     "mailSubject": "College Teaching Request: Backend Development - 2345 (Fall 2026)",
     "description": "The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.",
     "sampleSyllabus": "Curriculum and lab syllabus for Backend Development - 2345",
     "proposedTerms": "Departmental faculty honorarium + 70/30 course royalties",
-    "trackingStatus": "Awaiting professor decision • Dispatched to testins@gmail.com",
-    "adminNotes": "Dispatched by Academic Dean via college mail server.",
+    "trackingStatus": "Accepted by Professor • Official Notification Sent to College",
+    "adminNotes": "Dispatched by Academic Dean via college mail server. • Accepted faculty teaching assignment",
     "id": "ins-dce8acda",
     "createdAt": "2026-10-12T10:34:44.500Z",
-    "updatedAt": "2026-10-12T10:34:44.500Z"
+    "updatedAt": "2026-10-13T18:41:12.052Z"
   },
   {
     "instructorId": "inst-5",

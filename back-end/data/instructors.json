@@ -58,8 +58,8 @@
     "name": "Test Instructor-1",
     "email": "testins@gmail.com",
     "specialization": "Computer Science",
-    "status": "Pending Affiliation",
-    "coursesCount": 0,
+    "status": "Active",
+    "coursesCount": 2,
     "enrolledStudents": 0,
     "avgRating": 5,
     "revenueGenerated": 0,
@@ -67,10 +67,10 @@
     "joinedDate": "October 2026",
     "id": "ins-32434090",
     "userId": "usr-testins",
-    "organizationId": null,
-    "organizationName": null,
+    "organizationId": "org-101",
+    "organizationName": "NexusPay Enterprise Academy",
     "createdAt": "2026-10-01T06:18:05.310Z",
-    "updatedAt": "2026-10-01T06:18:05.310Z"
+    "updatedAt": "2026-10-13T18:41:12.105Z"
   },
   {
     "id": "inst-1",

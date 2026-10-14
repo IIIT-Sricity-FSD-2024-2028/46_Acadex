@@ -18,7 +18,16 @@ export class NotificationsService {
     const where: QueryFilter<any> = {};
 
     if (unreadOnly) where.read = false;
-    if (category && category !== 'All') where.category = category;
+    if (category && category !== 'All') {
+      const cat = category.trim();
+      const singular = cat.endsWith('s') ? cat.slice(0, -1) : cat;
+      const plural = singular + 's';
+      where.$or = [
+        { category: cat },
+        { category: singular },
+        { category: plural },
+      ];
+    }
 
     if (search) {
       where.$or = [

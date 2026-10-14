@@ -9,7 +9,9 @@
     "rating": 5,
     "comment": "The Transit Gateway and EKS cluster setups are directly applicable to enterprise production. Top notch instruction!",
     "response": "Thank you Alex! Glad the high-availability AWS architecture modules were valuable for your enterprise workflows.",
-    "createdAt": "2026-08-25T11:00:00.000Z"
+    "createdAt": "2026-08-25T11:00:00.000Z",
+    "repliedAt": "2026-10-14T14:13:26.838Z",
+    "updatedAt": "2026-10-14T14:13:26.841Z"
   },
   {
     "id": "rev-2",

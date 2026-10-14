@@ -1,5 +1,27 @@
 [
   {
+    "title": "Professor Test Instructor-1 Accepted Course Assignment",
+    "desc": "Great news! Test Instructor-1 has accepted the college request from the university to teach \"Backend Development - 2345\" for Fall 2026.",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "green",
+    "id": "not-60b627ef",
+    "createdAt": "2026-10-13T18:41:12.070Z",
+    "updatedAt": "2026-10-13T18:41:12.070Z"
+  },
+  {
+    "title": "Professor Test Instructor-1 Accepted Course Assignment",
+    "desc": "Great news! Test Instructor-1 has accepted the college request from the university to teach \"Distributed Systems\" for Fall 2026.",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "green",
+    "id": "not-e170873e",
+    "createdAt": "2026-10-13T18:40:35.443Z",
+    "updatedAt": "2026-10-13T18:40:35.443Z"
+  },
+  {
     "title": "Professor Prof. Alan Turing Accepted Course Assignment",
     "desc": "Great news! Prof. Alan Turing has accepted the college request from Stanford University School of Engineering to teach \"Distributed Systems Architecture\" for Fall 2026.",
     "time": "Just now",

@@ -4,7 +4,7 @@
     "category": "Cloud Architecture",
     "level": "Intermediate",
     "instructorId": "inst-6",
-    "instructorName": "Amara Patel, David Kalu",
+    "instructorName": "Amara Patel, David Kalu, Test Instructor-1",
     "leadInstructorName": "Amara Patel",
     "instructors": [
       {
@@ -20,6 +20,13 @@
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
         "specialization": "Blockchain & Smart Contracts"
+      },
+      {
+        "id": "ins-32434090",
+        "name": "Test Instructor-1",
+        "role": "Co-Instructor",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
+        "specialization": "Computer Science"
       }
     ],
     "enrolledCount": 1,
@@ -48,7 +55,8 @@
     ],
     "id": "cou-5b1a4031",
     "createdAt": "2026-10-10T18:36:42.392Z",
-    "updatedAt": "2026-10-10T18:45:30.895Z"
+    "updatedAt": "2026-10-13T18:41:12.092Z",
+    "completionRate": 85
   },
   {
     "title": "Reinforcement Learning ",
@@ -78,8 +86,8 @@
     "revenue": 4499,
     "rating": 5,
     "totalHours": "18h 30m",
-    "lessonsCount": 7,
-    "modulesCount": 2,
+    "lessonsCount": 10,
+    "modulesCount": 3,
     "status": "Published",
     "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop&q=80",
     "description": "this course teaches the concepts of Reinforcement Learning, calculus and probability are the prerequisited for this course",
@@ -95,18 +103,23 @@
         "title": "Module 2: Markov Decision Process",
         "lessons": 4,
         "duration": "3h 30m"
+      },
+      {
+        "id": "100",
+        "title": "Module 3: New Module"
       }
     ],
     "id": "cou-2238c587",
     "createdAt": "2026-09-03T06:25:51.044Z",
-    "updatedAt": "2026-09-03T07:29:17.194Z"
+    "updatedAt": "2026-10-14T14:58:08.222Z",
+    "completionRate": 78
   },
   {
     "title": "Distributed Systems",
     "category": "Cloud Architecture",
     "level": "Beginner",
     "instructorId": "inst-6",
-    "instructorName": "Amara Patel, Elena Rostova",
+    "instructorName": "Amara Patel, Elena Rostova, Test Instructor-1",
     "leadInstructorName": "Amara Patel",
     "instructors": [
       {
@@ -122,6 +135,13 @@
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
         "specialization": "DevOps & CI/CD Pipelines"
+      },
+      {
+        "id": "ins-32434090",
+        "name": "Test Instructor-1",
+        "role": "Co-Instructor",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
+        "specialization": "Computer Science"
       }
     ],
     "enrolledCount": 1,
@@ -150,7 +170,8 @@
     ],
     "id": "cou-b00839da",
     "createdAt": "2026-09-03T06:10:44.700Z",
-    "updatedAt": "2026-09-03T07:25:12.459Z"
+    "updatedAt": "2026-10-13T18:40:35.457Z",
+    "completionRate": 82
   },
   {
     "title": "Theory of Computation",
@@ -201,7 +222,8 @@
     ],
     "id": "cou-55f52a5b",
     "createdAt": "2026-08-31T07:39:58.234Z",
-    "updatedAt": "2026-08-31T07:39:58.234Z"
+    "updatedAt": "2026-08-31T07:39:58.234Z",
+    "completionRate": 70
   },
   {
     "id": "crs-1",
@@ -270,7 +292,8 @@
       }
     ],
     "createdAt": "2026-01-10T10:00:00.000Z",
-    "updatedAt": "2026-09-03T10:43:26.392Z"
+    "updatedAt": "2026-09-03T10:43:26.392Z",
+    "completionRate": 88
   },
   {
     "id": "crs-2",
@@ -333,7 +356,8 @@
       }
     ],
     "createdAt": "2026-02-15T10:00:00.000Z",
-    "updatedAt": "2026-10-10T18:40:11.300Z"
+    "updatedAt": "2026-10-10T18:40:11.300Z",
+    "completionRate": 92
   },
   {
     "id": "crs-3",
@@ -396,7 +420,8 @@
       }
     ],
     "createdAt": "2026-03-01T10:00:00.000Z",
-    "updatedAt": "2026-08-20T10:00:00.000Z"
+    "updatedAt": "2026-08-20T10:00:00.000Z",
+    "completionRate": 80
   },
   {
     "id": "crs-4",
@@ -452,7 +477,8 @@
       }
     ],
     "createdAt": "2026-04-10T10:00:00.000Z",
-    "updatedAt": "2026-08-15T10:00:00.000Z"
+    "updatedAt": "2026-08-15T10:00:00.000Z",
+    "completionRate": 86
   },
   {
     "id": "crs-5",
@@ -515,6 +541,7 @@
       }
     ],
     "createdAt": "2026-05-01T10:00:00.000Z",
-    "updatedAt": "2026-08-20T10:00:00.000Z"
+    "updatedAt": "2026-08-20T10:00:00.000Z",
+    "completionRate": 74
   }
 ]
