@@ -12,7 +12,7 @@ export class JsonRepository<T extends BaseEntity> implements IJsonRepository<T> 
   constructor(
     private readonly collectionName: string,
     private readonly dbService: JsonDatabaseService
-  ) {}
+  ) { }
 
   public getCollectionName(): string {
     return this.collectionName;

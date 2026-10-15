@@ -7,6 +7,9 @@ export default defineConfig({
     host: true,
     port: 5173,
     open: true,
+    watch: {
+      ignored: ['**/back-end/**'],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

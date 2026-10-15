@@ -20,7 +20,7 @@ export class OrganizationService {
     private readonly requestsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
     private readonly notifsRepo: JsonRepository<any>
-  ) {}
+  ) { }
 
   private async resolveOrg(userId?: string, userEmail?: string) {
     const orgs = await this.orgRepo.find();
@@ -99,11 +99,21 @@ export class OrganizationService {
           sum + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
         0,
       ));
+      const monthlyRevenue = Math.round(totalRevenue * 0.3);
+      if (
+        org.coursesCount === coursesCount &&
+        org.learnersCount === learnerIds.size &&
+        org.totalRevenue === totalRevenue &&
+        org.monthlyRevenue === monthlyRevenue
+      ) {
+        return org;
+      }
+
       return this.orgRepo.update(org.id, {
         coursesCount,
         learnersCount: learnerIds.size,
         totalRevenue,
-        monthlyRevenue: Math.round(totalRevenue * 0.3),
+        monthlyRevenue,
         updatedAt: new Date().toISOString(),
       });
     }));

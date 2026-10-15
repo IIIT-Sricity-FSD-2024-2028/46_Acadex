@@ -3,7 +3,7 @@ import { User, Shield, Bell, Settings as SettingsIcon, EyeOff, Smartphone, Check
 import { useState, useEffect } from "react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
-import { useInstructor } from "../../../context/InstructorContext";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 const Toggle = ({ checked, onChange }) => (
   <label className="relative inline-flex items-center cursor-pointer">
@@ -34,6 +34,16 @@ export function Settings() {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordStatus, setPasswordStatus] = useState({ success: '', error: '', loading: false });
+
+  useEffect(() => {
+    if (instructor) {
+      setSettings((prev) => ({
+        ...prev,
+        email: instructor.email || prev.email,
+        phone: instructor.phone || prev.phone,
+      }));
+    }
+  }, [instructor]);
 
   useEffect(() => {
     if (!instructorId) return;

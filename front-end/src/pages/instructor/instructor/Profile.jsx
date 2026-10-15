@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Input, Avatar, Badge } from '../../../components/common';
-import { Building2, CheckCircle2, LogOut, AlertTriangle, X, AlertCircle } from 'lucide-react';
+import { Building2, CheckCircle2, LogOut, AlertTriangle, X, AlertCircle, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '../../../services/api';
-import { useInstructor } from '../../../context/InstructorContext';
+import { useInstructor } from '../../../hooks/useInstructor';
 import { ConnectUniversity } from '../onboarding/ConnectUniversity';
 
 const toForm = (d = {}) => ({
@@ -85,7 +85,14 @@ export function Profile() {
     }
   };
 
-  if (!instructor) return null;
+  if (!instructor) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[350px] gap-3 text-slate-400">
+        <Loader2 className="w-7 h-7 animate-spin text-[#0056D2]" />
+        <p className="text-xs font-medium">Loading instructor profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10">

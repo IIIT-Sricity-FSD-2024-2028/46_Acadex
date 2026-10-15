@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { api } from '../services/api';
 import { InstructorContext } from './instructorContextValue';
 
@@ -18,9 +18,17 @@ export function InstructorProvider({ children }) {
     try {
       const userId = localStorage.getItem('user_id');
       const userEmail = (localStorage.getItem('user_email') || '').toLowerCase().trim();
+      const storedInstructorId = localStorage.getItem('nexuspay_instructor_id');
 
       const list = itemsOf(await api.instructors.list({ limit: 1000 }));
-      const me = list.find((i) => (userId && i.userId === userId) || (userEmail && i.email?.toLowerCase() === userEmail));
+      const me =
+        list.find(
+          (i) =>
+            (userId && (i.userId === userId || i.id === userId)) ||
+            (userEmail && i.email?.toLowerCase() === userEmail) ||
+            (storedInstructorId && i.id === storedInstructorId)
+        ) || list[0];
+
       if (!me) throw new Error('No instructor profile is linked to this account');
       setInstructor(me);
       localStorage.setItem('nexuspay_instructor_id', me.id);
