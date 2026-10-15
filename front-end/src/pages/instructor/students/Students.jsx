@@ -5,8 +5,10 @@ import { Link } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 export function Students() {
+  const { instructor } = useInstructor();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,20 +19,35 @@ export function Students() {
     Promise.all([
       api.get('/learners', 'instructor'),
       api.get('/enrollments', 'instructor'),
+      api.get('/courses', 'instructor'),
     ])
-      .then(([l, e]) => {
+      .then(([l, e, c]) => {
         const learnersArray = Array.isArray(l) ? l : (l?.items || []);
         const enrollmentsArray = Array.isArray(e) ? e : (e?.items || []);
-        const studentList = learnersArray.map((learner) => {
-          const enrollment = enrollmentsArray.find((en) => en.learnerId === learner.id || en.learner === learner.name || en.learnerName === learner.name);
+        const allCourses = Array.isArray(c) ? c : (c?.items || []);
+
+        const instructorCourseIds = instructor?.id
+          ? allCourses
+              .filter(course => {
+                const isDirect = course.instructorId === instructor.id;
+                const isInTeam = (course.instructors || []).some(inst => inst.id === instructor.id);
+                return isDirect || isInTeam;
+              })
+              .map(course => course.id)
+          : allCourses.map(course => course.id);
+
+        const instructorEnrollments = enrollmentsArray.filter(en => instructorCourseIds.includes(en.courseId));
+
+        const studentList = instructorEnrollments.map(en => {
+          const learner = learnersArray.find(lrn => lrn.id === en.learnerId) || {};
           return {
-            id: learner.id,
-            name: learner.name,
-            email: learner.email,
-            course: enrollment?.course || enrollment?.courseTitle || '—',
-            progress: learner.progress ?? enrollment?.progress ?? 0,
-            lastActive: learner.lastActive || "Recently",
-            status: learner.status || "Active",
+            id: en.learnerId || en.id,
+            name: en.learnerName || learner.name || 'Student',
+            email: en.learnerEmail || learner.email || 'student@domain.edu',
+            course: en.courseTitle || en.course || '—',
+            progress: en.progress ?? 0,
+            lastActive: en.lastAccessed || en.lastAccessedLesson || 'Recently',
+            status: en.status || 'Active',
           };
         });
         setStudents(studentList);
@@ -41,7 +58,7 @@ export function Students() {
         setStudents([]);
         setLoading(false);
       });
-  }, []);
+  }, [instructor?.id]);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {

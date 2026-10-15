@@ -66,10 +66,22 @@ export function InstructorProvider({ children }) {
   const isAffiliated = Boolean(instructor?.organizationId) && instructor?.status === 'Active';
   const pendingJoinRequest = joinRequests.find((r) => /pending/i.test(r.status)) || null;
 
+  const isPendingStatus = (s) => /pending|sent/i.test(s || '');
+  const pendingCourseRequests = invitations.filter(
+    (i) => isPendingStatus(i.status) && (i.courseId || (i.courseTitle && i.courseTitle !== 'General Course Assignment'))
+  );
+  const pendingOrgInvitations = invitations.filter(
+    (i) => isPendingStatus(i.status) && (!i.courseTitle || i.courseTitle === 'General Course Assignment' || !i.courseId)
+  );
+  const pendingCount = invitations.filter((i) => isPendingStatus(i.status)).length;
+
   const value = {
     instructor,
     isAffiliated,
     invitations,
+    pendingCourseRequests,
+    pendingOrgInvitations,
+    pendingCount,
     joinRequests,
     pendingJoinRequest,
     assignedCourses,
@@ -79,6 +91,8 @@ export function InstructorProvider({ children }) {
     refreshInstructor: fetchInstructorData,
     acceptInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Accepted', notes)),
     declineInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Declined', notes)),
+    acceptCourseRequest: (id, notes) => run(() => api.instructorRequests.respond(id, 'Accepted', notes)),
+    declineCourseRequest: (id, notes) => run(() => api.instructorRequests.respond(id, 'Declined', notes)),
     requestToJoin: (organizationId, message) => run(() => api.instructorRequests.requestToJoin(organizationId, message)),
     cancelJoinRequest: (id) => run(() => api.instructorRequests.cancelJoinRequest(id)),
     leaveOrganization: () => run(() => api.instructors.leaveOrganization(instructor.id)),

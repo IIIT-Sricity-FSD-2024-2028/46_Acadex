@@ -10,7 +10,10 @@ import {
   User, 
   ShieldCheck, 
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Clock,
+  Check,
+  Loader2
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from "react-router-dom";
@@ -18,14 +21,41 @@ import { api } from "../../../utils/api";
 import { useInstructor } from "../../../hooks/useInstructor";
 
 export function Dashboard() {
-  const { instructor } = useInstructor();
+  const { instructor, pendingCourseRequests = [], acceptCourseRequest } = useInstructor();
   const [analytics, setAnalytics] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [acceptingId, setAcceptingId] = useState(null);
+
+  const handleQuickAccept = async (requestId) => {
+    try {
+      setAcceptingId(requestId);
+      await acceptCourseRequest(requestId);
+      const c = await api.get('/courses', 'instructor');
+      const allCourses = Array.isArray(c) ? c : (c?.items || []);
+      if (instructor?.id) {
+        const myCourses = allCourses.filter(course => {
+          const isDirect = course.instructorId === instructor.id;
+          const isInTeam = (course.instructors || []).some(
+            inst => inst.id === instructor.id ||
+                    (instructor.email && inst.email?.toLowerCase() === instructor.email.toLowerCase()) ||
+                    (instructor.name && inst.name?.toLowerCase() === instructor.name.toLowerCase())
+          );
+          return isDirect || isInTeam;
+        });
+        setCourses(myCourses);
+      }
+    } catch (err) {
+      console.error('Failed to accept course request:', err);
+    } finally {
+      setAcceptingId(null);
+    }
+  };
 
   useEffect(() => {
+    const q = instructor?.id ? `?instructorId=${instructor.id}` : '';
     Promise.all([
-      api.get('/analytics/instructor', 'instructor'),
+      api.get(`/analytics/instructor${q}`, 'instructor'),
       api.get('/courses', 'instructor'),
     ])
       .then(([a, c]) => {
@@ -53,12 +83,18 @@ export function Dashboard() {
       });
   }, [instructor]);
 
+  // Calculate dynamic Average Course Rating across assigned courses
+  const ratedCourses = courses.filter(c => c.rating != null && !isNaN(Number(c.rating)) && Number(c.rating) > 0);
+  const calculatedAvgRating = ratedCourses.length > 0
+    ? (ratedCourses.reduce((sum, c) => sum + Number(c.rating), 0) / ratedCourses.length).toFixed(1)
+    : (analytics?.stats?.averageRating ? Number(analytics.stats.averageRating).toFixed(1) : null);
+
   const stats = {
-    totalCourses:    analytics?.stats?.totalCourses   ?? courses.length,
-    totalStudents:   analytics?.stats?.totalStudents  ?? courses.reduce((acc, c) => acc + (c.enrolledCount || 0), 0),
-    averageRating:   analytics?.stats?.averageRating  ?? null,
-    completionRate:  analytics?.stats?.completionRate ?? null,
-    totalEarnings:   analytics?.stats?.totalEarnings  ?? null,
+    totalCourses:        analytics?.stats?.totalCourses   ?? courses.length,
+    totalStudents:       analytics?.stats?.totalStudents  ?? courses.reduce((acc, c) => acc + (c.enrolledCount || 0), 0),
+    averageCourseRating: calculatedAvgRating,
+    completionRate:      analytics?.stats?.completionRate ?? null,
+    totalEarnings:       analytics?.stats?.totalEarnings  ?? null,
   };
 
   const chartData = (analytics?.dashboardEnrollments || []).map((item) => ({
@@ -146,8 +182,8 @@ export function Dashboard() {
               <Star className="w-5 h-5 text-amber-300 fill-amber-300" />
             </div>
             <div className="min-w-0">
-              <p className="text-base font-bold leading-tight">{stats.averageRating ? `${stats.averageRating} / 5.0` : '—'}</p>
-              <p className="text-[11px] text-blue-200 truncate font-medium">Educator Rating</p>
+              <p className="text-base font-bold leading-tight">{stats.averageCourseRating ? `${stats.averageCourseRating} / 5.0` : '—'}</p>
+              <p className="text-[11px] text-blue-200 truncate font-medium">Average Course Rating</p>
             </div>
           </div>
 
@@ -162,6 +198,91 @@ export function Dashboard() {
           </div>
         </div>
       </section>
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* PENDING COURSE ASSIGNMENTS CALLOUT (When Org assigns courses) */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {pendingCourseRequests?.length > 0 && (
+        <section className="bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-indigo-50/50 border border-blue-200/90 rounded-2xl p-5 md:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#0056D2] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900">
+                    Course Assignment{pendingCourseRequests.length > 1 ? 's' : ''} Pending Your Acceptance ({pendingCourseRequests.length})
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    Action Required
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Your university administrator assigned you to lead the following academic tracks.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/instructor/courses"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0056D2] hover:text-[#00419E] hover:underline"
+            >
+              <span>Manage in My Courses</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+            {pendingCourseRequests.slice(0, 3).map((req) => (
+              <div
+                key={req.id}
+                className="bg-white border border-slate-200/90 hover:border-blue-300 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between gap-3 transition-colors"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold text-[#0056D2] uppercase tracking-wider">
+                      {req.organizationName || 'University Faculty'}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      Pending
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1">
+                    {req.courseTitle || req.terms?.courseTitle || 'New Course Assignment'}
+                  </h3>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                  <Link
+                    to="/instructor/courses"
+                    className="text-xs font-semibold text-slate-500 hover:text-slate-800"
+                  >
+                    Details
+                  </Link>
+                  <Button
+                    size="sm"
+                    disabled={acceptingId === req.id}
+                    onClick={() => handleQuickAccept(req.id)}
+                    className="h-8 inline-flex items-center gap-1.5 text-xs font-bold bg-[#0056D2] hover:bg-[#00419E] text-white shadow-2xs px-3"
+                  >
+                    {acceptingId === req.id ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Accepting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Accept</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* MAIN CONTENT: CHARTS, COURSE PERFORMANCE, AND ACTIVITIES     */}
@@ -255,8 +376,8 @@ export function Dashboard() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={course.status === 'Published' ? 'success' : 'warning'}>
-                          {course.status}
+                        <Badge variant="success">
+                          {course.status || 'Published'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

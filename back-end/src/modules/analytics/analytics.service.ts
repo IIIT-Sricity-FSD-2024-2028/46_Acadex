@@ -189,13 +189,35 @@ export class AnalyticsService {
     };
   }
 
-  async getInstructorAnalytics() {
-    const [courses, enrollments, reviews, transactions] = await Promise.all([
+  async getInstructorAnalytics(instructorId?: string) {
+    const [allCourses, allEnrollments, allReviews, allTransactions] = await Promise.all([
       this.coursesRepo.find(),
       this.enrollmentsRepo.find(),
       this.reviewsRepo.find(),
       this.transactionsRepo.find(),
     ]);
+
+    const courses = instructorId
+      ? allCourses.filter((c) => {
+          const isDirect = c.instructorId === instructorId;
+          const isInTeam = (c.instructors || []).some((inst: any) => inst.id === instructorId);
+          return isDirect || isInTeam;
+        })
+      : allCourses;
+
+    const courseIds = courses.map((c) => c.id);
+
+    const enrollments = instructorId
+      ? allEnrollments.filter((e) => courseIds.includes(e.courseId))
+      : allEnrollments;
+
+    const reviews = instructorId
+      ? allReviews.filter((r) => courseIds.includes(r.courseId))
+      : allReviews;
+
+    const transactions = instructorId
+      ? allTransactions.filter((t) => courseIds.includes(t.courseId) || t.instructorId === instructorId)
+      : allTransactions;
 
     const totalStudents = enrollments.length;
     const activeLearners = enrollments.filter((e) => e.status === 'Active').length;

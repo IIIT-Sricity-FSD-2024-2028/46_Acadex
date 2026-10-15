@@ -228,17 +228,39 @@ export class InstructorRequestsService {
       const org = await this.orgsRepo.findById(request.organizationId);
       if (org) await this.affiliate(instructor, org);
 
-      const course = request.courseId ? await this.coursesRepo.findById(request.courseId) : null;
+      let course = request.courseId ? await this.coursesRepo.findById(request.courseId) : null;
+      if (!course && request.courseTitle) {
+        const allCourses = await this.coursesRepo.find();
+        course = allCourses.find((c: any) =>
+          (c.title?.toLowerCase() === request.courseTitle?.toLowerCase() || c.id === request.courseId) &&
+          (!request.organizationId || c.organizationId === request.organizationId)
+        ) || null;
+      }
+
       if (course) {
-        const team = course.instructors || [];
+        const team = Array.isArray(course.instructors) ? [...course.instructors] : [];
         if (!team.some((m: any) => m.id === instructor.id)) {
           const role = team.length === 0 ? 'Lead Instructor' : 'Co-Instructor';
-          await this.coursesRepo.update(course.id, {
-            instructors: [...team, { id: instructor.id, name: instructor.name, role, avatar: instructor.avatar, specialization: instructor.specialization }],
-            ...(team.length === 0
-              ? { instructorId: instructor.id, instructorName: instructor.name, leadInstructorName: instructor.name }
-              : {}),
+          team.push({
+            id: instructor.id,
+            name: instructor.name,
+            role,
+            avatar: instructor.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+            specialization: instructor.specialization || 'Faculty Instructor',
           });
+
+          const updatePayload: any = {
+            instructors: team,
+            coInstructorIds: team.map((i: any) => i.id).filter((id: string) => id !== (course.instructorId || instructor.id)),
+          };
+
+          if (!course.instructorId || team.length === 1) {
+            updatePayload.instructorId = instructor.id;
+            updatePayload.instructorName = instructor.name;
+            updatePayload.leadInstructorName = instructor.name;
+          }
+
+          await this.coursesRepo.update(course.id, updatePayload);
           await this.instructorsRepo.update(instructor.id, { coursesCount: (instructor.coursesCount || 0) + 1 });
         }
       }

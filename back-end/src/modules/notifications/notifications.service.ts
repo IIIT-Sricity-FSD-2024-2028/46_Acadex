@@ -12,29 +12,63 @@ export class NotificationsService {
   ) {}
 
   async findAll(query: NotificationQueryDto) {
-    const { page = 1, limit = 20, search, unreadOnly, category, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const { page = 1, limit = 20, search, unreadOnly, category, recipientId, role, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
     const skip = (page - 1) * limit;
 
     const where: QueryFilter<any> = {};
 
     if (unreadOnly) where.read = false;
+
+    if (recipientId) {
+      where.$or = [
+        { recipientId },
+        { recipientRole: role || 'instructor' },
+        { recipientRole: 'all' },
+      ];
+    } else if (role) {
+      where.$or = [
+        { recipientRole: role },
+        { recipientRole: 'all' },
+      ];
+    }
+
     if (category && category !== 'All') {
       const cat = category.trim();
       const singular = cat.endsWith('s') ? cat.slice(0, -1) : cat;
       const plural = singular + 's';
-      where.$or = [
+      const catFilters = [
         { category: cat },
         { category: singular },
         { category: plural },
       ];
+      if (where.$or) {
+        where.$and = [
+          { $or: where.$or },
+          { $or: catFilters },
+        ];
+        delete where.$or;
+      } else {
+        where.$or = catFilters;
+      }
     }
 
     if (search) {
-      where.$or = [
+      const searchFilters = [
         { title: { $contains: search } },
         { desc: { $contains: search } },
         { category: { $contains: search } },
       ];
+      if (where.$and) {
+        where.$and.push({ $or: searchFilters });
+      } else if (where.$or) {
+        where.$and = [
+          { $or: where.$or },
+          { $or: searchFilters },
+        ];
+        delete where.$or;
+      } else {
+        where.$or = searchFilters;
+      }
     }
 
     return this.notifsRepo.findAndCount({
@@ -45,8 +79,21 @@ export class NotificationsService {
     });
   }
 
-  async getUnreadCount() {
-    const count = await this.notifsRepo.count({ read: false });
+  async getUnreadCount(recipientId?: string, role?: string) {
+    const where: QueryFilter<any> = { read: false };
+    if (recipientId) {
+      where.$or = [
+        { recipientId },
+        { recipientRole: role || 'instructor' },
+        { recipientRole: 'all' },
+      ];
+    } else if (role) {
+      where.$or = [
+        { recipientRole: role },
+        { recipientRole: 'all' },
+      ];
+    }
+    const count = await this.notifsRepo.count(where);
     return { unreadCount: count };
   }
 
@@ -73,6 +120,10 @@ export class NotificationsService {
       time: 'Just now',
       read: false,
       color: dto.color || 'blue',
+      recipientId: dto.recipientId,
+      recipientRole: dto.recipientRole,
+      courseId: dto.courseId,
+      actionUrl: dto.actionUrl,
       createdAt: nowIso,
     });
   }

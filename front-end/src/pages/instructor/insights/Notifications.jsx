@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, Button } from "../../../components/common";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../components/instructor/ui/Tabs";
-import { UserPlus, Star, Building2, CheckCircle, Info, Bell } from "lucide-react";
+import { UserPlus, Star, Building2, CheckCircle, Info, Bell, ArrowRight } from "lucide-react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 const TABS = [
   { value: 'all', label: 'All', category: null },
@@ -13,18 +15,27 @@ const TABS = [
 ];
 
 export function Notifications() {
+  const navigate = useNavigate();
+  const { instructor } = useInstructor();
   const [activeTab, setActiveTab] = useState('all');
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchNotifications = () => {
     setLoading(true);
     const cat = TABS.find((t) => t.value === activeTab)?.category;
-    const query = cat ? `?category=${cat}` : '';
+    const params = new URLSearchParams();
+    if (cat) params.append('category', cat);
+    if (instructor?.id) {
+      params.append('recipientId', instructor.id);
+    } else {
+      params.append('role', 'instructor');
+    }
 
-    api.get(`/notifications${query}`, 'instructor')
+    api.get(`/notifications?${params.toString()}`, 'instructor')
       .then(data => {
-        setNotifications(Array.isArray(data) ? data : (data?.items || []));
+        const items = Array.isArray(data) ? data : (data?.items || data?.data?.items || data?.data || []);
+        setNotifications(items);
         setLoading(false);
       })
       .catch(err => {
@@ -32,7 +43,11 @@ export function Notifications() {
         setNotifications([]);
         setLoading(false);
       });
-  }, [activeTab]);
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [activeTab, instructor?.id]);
 
   const markAllRead = () => {
     api.patch('/notifications/mark-all-read', {}, 'instructor')
@@ -40,21 +55,35 @@ export function Notifications() {
     setNotifications(prev => prev.map(n => ({ ...n, unread: false, read: true })));
   };
 
+  const handleNotificationClick = (notif) => {
+    // If unread, mark read on backend
+    if (!notif.read) {
+      api.patch(`/notifications/${notif.id}/read`, {}, 'instructor')
+        .catch(err => console.error('Failed to mark notification read:', err));
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true, unread: false } : n));
+    }
+
+    // Deep link navigation
+    if (notif.actionUrl) {
+      navigate(notif.actionUrl);
+    }
+  };
+
   const getIconConfig = (category, type) => {
     const c = (category || type || '').toLowerCase();
     if (c.includes('course') || c.includes('approval')) {
-      return { icon: CheckCircle, color: "text-green-600", bg: "bg-green-100" };
+      return { icon: CheckCircle, color: "text-blue-600", bg: "bg-blue-50" };
     }
     if (c.includes('review')) {
-      return { icon: Star, color: "text-yellow-600", bg: "bg-yellow-100" };
+      return { icon: Star, color: "text-amber-600", bg: "bg-amber-50" };
     }
     if (c.includes('org') || c.includes('instructor')) {
-      return { icon: Building2, color: "text-purple-600", bg: "bg-purple-100" };
+      return { icon: Building2, color: "text-purple-600", bg: "bg-purple-50" };
     }
-    if (c.includes('student') || c.includes('learner')) {
-      return { icon: UserPlus, color: "text-blue-600", bg: "bg-blue-100" };
+    if (c.includes('student') || c.includes('learner') || c.includes('enrollment')) {
+      return { icon: UserPlus, color: "text-emerald-600", bg: "bg-emerald-50" };
     }
-    return { icon: Info, color: "text-slate-600", bg: "bg-slate-100" };
+    return { icon: Info, color: "text-slate-600", bg: "bg-slate-50" };
   };
 
   return (
@@ -89,8 +118,17 @@ export function Notifications() {
                 const { icon: Icon, color, bg } = getIconConfig(notif.category, notif.type);
                 const isUnread = notif.unread ?? !notif.read;
                 return (
-                  <Card key={notif.id} className={cn("transition-colors hover:bg-slate-50/70", isUnread ? "bg-blue-50/30 border-blue-200/80" : "bg-white")}>
-                    <CardContent className="p-4 flex gap-4">
+                  <Card 
+                    key={notif.id} 
+                    onClick={() => handleNotificationClick(notif)}
+                    className={cn(
+                      "transition-all cursor-pointer hover:shadow-xs group border",
+                      isUnread 
+                        ? "bg-blue-50/40 border-blue-200 hover:bg-blue-50/60" 
+                        : "bg-white border-slate-200/80 hover:bg-slate-50/70"
+                    )}
+                  >
+                    <CardContent className="p-4 flex gap-4 items-center">
                       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/50", bg, color)}>
                         <Icon className="w-5 h-5" />
                       </div>
@@ -105,9 +143,16 @@ export function Notifications() {
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">{notif.desc || notif.message}</p>
                       </div>
-                      {isUnread && (
-                        <div className="w-2 h-2 bg-[#0056D2] rounded-full mt-2 shrink-0"></div>
-                      )}
+                      
+                      {/* Unread indicator or arrow */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isUnread && (
+                          <div className="w-2.5 h-2.5 bg-[#0056D2] rounded-full"></div>
+                        )}
+                        {notif.actionUrl && (
+                          <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0056D2] transition-colors" />
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 );

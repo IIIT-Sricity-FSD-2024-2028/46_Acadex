@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 
@@ -8,9 +8,9 @@ export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all reviews across courses' })
-  findAll() {
-    return this.reviewsService.findAll();
+  @ApiOperation({ summary: 'Get all reviews across courses (optionally filtered by instructorId)' })
+  findAll(@Query('instructorId') instructorId?: string) {
+    return this.reviewsService.findAll(instructorId);
   }
 
   @Get('course/:courseId')

@@ -18,8 +18,11 @@ export class NotificationsController {
   @Get('unread-count')
   @ApiOperation({ summary: 'Get total unread notification badge count' })
   @ApiResponse({ status: 200, description: 'Returns unread count' })
-  async getUnreadCount() {
-    return this.notificationsService.getUnreadCount();
+  async getUnreadCount(
+    @Query('recipientId') recipientId?: string,
+    @Query('role') role?: string,
+  ) {
+    return this.notificationsService.getUnreadCount(recipientId, role);
   }
 
   @Patch(':id/read')

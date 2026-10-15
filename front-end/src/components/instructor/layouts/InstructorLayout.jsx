@@ -20,14 +20,31 @@ import { Avatar } from "../../common";
 import { InstructorSidebar } from "./InstructorSidebar";
 import { useInstructor } from "../../../hooks/useInstructor";
 import { ConnectUniversity } from "../../../pages/instructor/onboarding/ConnectUniversity";
+import { api } from "../../../utils/api";
 
 export function InstructorLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);
   const dropdownRef = useRef(null);
 
   const { instructor, isAffiliated, loading, error, pendingJoinRequest } = useInstructor();
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchUnread = () => {
+      const q = instructor?.id ? `?recipientId=${instructor.id}` : '?role=instructor';
+      api.get(`/notifications/unread-count${q}`, 'instructor')
+        .then((res) => {
+          const count = typeof res?.unreadCount === 'number' ? res.unreadCount : (res?.data?.unreadCount ?? 0);
+          setUnreadNotifsCount(count);
+        })
+        .catch(() => {});
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [instructor?.id, location.pathname]);
   const openWhileUnaffiliated = ['/instructor/profile', '/instructor/settings', '/instructor/notifications'].some((p) =>
     location.pathname.startsWith(p)
   );
@@ -67,7 +84,7 @@ export function InstructorLayout() {
       {/* ───────────────────────────────────────────────────────────── */}
       {/* 1. LEFT SIDEBAR                                               */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <InstructorSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <InstructorSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} unreadNotifsCount={unreadNotifsCount} />
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* 2. MAIN COLUMN                                                */}
@@ -114,6 +131,11 @@ export function InstructorLayout() {
                 title="Notifications"
               >
                 <Bell className="w-4 h-4" />
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-[#0056D2] text-[10px] font-bold text-white ring-2 ring-white animate-in zoom-in-50">
+                    {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
+                  </span>
+                )}
               </Link>
 
               {/* Settings Shortcut */}

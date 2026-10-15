@@ -13,6 +13,8 @@ export class ReviewsService {
     private readonly learnersRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.ENROLLMENTS)
     private readonly enrollmentsRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
+    private readonly notifsRepo: JsonRepository<any>,
   ) {}
 
   private async learnerIdFor(userId?: string) {
@@ -22,8 +24,21 @@ export class ReviewsService {
     return learner?.id || userId;
   }
 
-  async findAll() {
-    return this.reviewsRepo.find();
+  async findAll(instructorId?: string) {
+    if (!instructorId) {
+      return this.reviewsRepo.find();
+    }
+    const allCourses = await this.coursesRepo.find();
+    const instructorCourseIds = allCourses
+      .filter((c) => {
+        const isDirect = c.instructorId === instructorId;
+        const isInTeam = (c.instructors || []).some((inst: any) => inst.id === instructorId);
+        return isDirect || isInTeam;
+      })
+      .map((c) => c.id);
+
+    const allReviews = await this.reviewsRepo.find();
+    return allReviews.filter((r) => instructorCourseIds.includes(r.courseId));
   }
 
   async findByCourse(courseId: string) {
@@ -65,6 +80,25 @@ export class ReviewsService {
     });
 
     await this.updateCourseRating(courseId);
+
+    // Automatically notify the course instructor
+    if (course?.instructorId) {
+      const snippet = comment.length > 70 ? `${comment.slice(0, 70)}...` : comment;
+      await this.notifsRepo.create({
+        id: `notif-${Date.now()}`,
+        title: `New ${rating}★ Rating on ${course.title || 'Course'}`,
+        desc: `${review.learnerName} rated this track ${rating}★: "${snippet}"`,
+        category: 'Review',
+        recipientId: course.instructorId,
+        recipientRole: 'instructor',
+        courseId,
+        actionUrl: '/instructor/reviews',
+        read: false,
+        color: 'amber',
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     return review;
   }
 

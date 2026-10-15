@@ -49,11 +49,12 @@ const instructorNavGroups = [
   },
 ];
 
-export function InstructorSidebar({ isOpen, toggleSidebar }) {
+export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0 }) {
   const location = useLocation();
-  const { instructor, isAffiliated, invitations, pendingJoinRequest } = useInstructor();
+  const { instructor, isAffiliated, invitations, pendingJoinRequest, pendingCourseRequests = [] } = useInstructor();
 
   const pendingCount = (invitations || []).filter((i) => i.status?.includes('Pending')).length;
+  const pendingCourseCount = pendingCourseRequests?.length || 0;
 
   const handleSignOut = () => {
     localStorage.removeItem('nexuspay_auth_token');
@@ -170,14 +171,26 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
                       if (isOpen && toggleSidebar) toggleSidebar();
                     }}
                     className={cn(
-                      'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all',
+                      'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all',
                       isActive
                         ? 'bg-blue-50 text-[#0056D2] font-bold shadow-2xs border border-blue-200/60'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                     )}
                   >
-                    <Icon className={cn('w-4 h-4 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
-                    <span>{item.name}</span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={cn('w-4 h-4 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
+                      <span className="truncate">{item.name}</span>
+                    </div>
+                    {item.name === 'My Courses' && pendingCourseCount > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#0056D2] text-white shrink-0">
+                        {pendingCourseCount}
+                      </span>
+                    )}
+                    {item.name === 'Notifications' && unreadNotifsCount > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#0056D2] text-white shrink-0">
+                        {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
+                      </span>
+                    )}
                   </NavLink>
                 );
               })}

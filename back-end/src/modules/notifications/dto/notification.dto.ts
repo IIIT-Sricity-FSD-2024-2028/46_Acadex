@@ -22,6 +22,26 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsString()
   color?: string;
+
+  @ApiPropertyOptional({ example: 'inst-1791912292835' })
+  @IsOptional()
+  @IsString()
+  recipientId?: string;
+
+  @ApiPropertyOptional({ example: 'instructor' })
+  @IsOptional()
+  @IsString()
+  recipientRole?: string;
+
+  @ApiPropertyOptional({ example: 'cou-fb5ac543' })
+  @IsOptional()
+  @IsString()
+  courseId?: string;
+
+  @ApiPropertyOptional({ example: '/instructor/reviews' })
+  @IsOptional()
+  @IsString()
+  actionUrl?: string;
 }
 
 export class NotificationQueryDto extends PaginationQueryDto {
@@ -30,8 +50,18 @@ export class NotificationQueryDto extends PaginationQueryDto {
   @IsBoolean()
   unreadOnly?: boolean;
 
-  @ApiPropertyOptional({ description: 'Filter by category (e.g. Instructor, Course, Financial, Dispute)' })
+  @ApiPropertyOptional({ description: 'Filter by category (e.g. Instructor, Course, Financial, Dispute, Review)' })
   @IsOptional()
   @IsString()
   category?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by recipient ID' })
+  @IsOptional()
+  @IsString()
+  recipientId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by recipient role (e.g. instructor, student, org, admin)' })
+  @IsOptional()
+  @IsString()
+  role?: string;
 }

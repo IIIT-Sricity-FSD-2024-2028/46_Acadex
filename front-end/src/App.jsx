@@ -38,8 +38,12 @@ import { Register as InstructorRegister } from './pages/instructor/auth/Register
 import { Dashboard as InstructorDashboard } from './pages/instructor/instructor/Dashboard';
 import { Profile as InstructorProfile } from './pages/instructor/instructor/Profile';
 import { MyCourses } from './pages/instructor/courses/MyCourses';
-import { EditCourse as InstructorEditCourse } from './pages/instructor/courses/EditCourse';
 import { CourseContent as InstructorCourseContent } from './pages/instructor/courses/CourseContent';
+
+function InstructorEditCourseRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/instructor/courses/${id}/content`} replace />;
+}
 import { CreateModule } from './pages/instructor/courses/CreateModule';
 import { CreateLesson } from './pages/instructor/courses/CreateLesson';
 import { CreateQuiz as InstructorCreateQuiz } from './pages/instructor/courses/CreateQuiz';
@@ -203,7 +207,7 @@ export default function App() {
 
         {/* Courses */}
         <Route path="courses" element={<MyCourses />} />
-        <Route path="courses/:id/edit" element={<InstructorEditCourse />} />
+        <Route path="courses/:id/edit" element={<InstructorEditCourseRedirect />} />
         <Route path="courses/:id/content" element={<InstructorCourseContent />} />
         <Route path="courses/module/create" element={<CreateModule />} />
         <Route path="courses/module/:id/edit" element={<CreateModule />} />

@@ -3,8 +3,10 @@ import { Star, MessageSquare, Search, X, Send } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 export function Reviews() {
+  const { instructor } = useInstructor();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("All Courses");
   const [selectedRating, setSelectedRating] = useState("All Ratings");
@@ -23,7 +25,8 @@ export function Reviews() {
   const [replyText, setReplyText] = useState("");
 
   const loadReviews = () => {
-    api.get('/reviews', 'instructor')
+    const q = instructor?.id ? `?instructorId=${instructor.id}` : '';
+    api.get(`/reviews${q}`, 'instructor')
       .then(data => {
         const rawList = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : (Array.isArray(data?.data) ? data.data : []));
         const normalized = rawList.map(r => ({
@@ -65,7 +68,7 @@ export function Reviews() {
 
   useEffect(() => {
     loadReviews();
-  }, []);
+  }, [instructor?.id]);
 
   const reviews = reviewsData.reviews || [];
   const ratings = reviewsData.ratingBreakdown || [];

@@ -3,13 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button } fro
 import { Download, CheckCircle, TrendingUp, Star } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from "../../../utils/api";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 export function Analytics() {
+  const { instructor } = useInstructor();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/analytics/instructor', 'instructor')
+    const q = instructor?.id ? `?instructorId=${instructor.id}` : '';
+    api.get(`/analytics/instructor${q}`, 'instructor')
       .then(data => {
         setAnalytics(data);
         setLoading(false);
@@ -18,7 +21,7 @@ export function Analytics() {
         console.error('Error fetching instructor analytics:', err);
         setLoading(false);
       });
-  }, []);
+  }, [instructor?.id]);
 
   const stats = analytics?.stats || {
     totalEnrollments: '—',
@@ -100,7 +103,7 @@ export function Analytics() {
             <Star className="w-20 h-20 text-amber-600" />
           </div>
           <CardContent className="p-6 relative z-10">
-            <p className="text-xs font-semibold text-slate-500 mb-1">Educator Rating</p>
+            <p className="text-xs font-semibold text-slate-500 mb-1">Average Course Rating</p>
             <h3 className="text-3xl font-extrabold text-slate-900 mb-2">{stats.averageRating ? `${stats.averageRating} / 5.0` : '—'}</h3>
             <div className="text-xs text-slate-400 font-medium">
               {analytics?.stats?.totalReviews ? `${analytics.stats.totalReviews} verified reviews` : 'Verified student ratings'}

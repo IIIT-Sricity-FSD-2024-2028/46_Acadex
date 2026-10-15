@@ -17,7 +17,7 @@ import {
   HelpCircle,
   Eye,
   MoreHorizontal,
-  Settings,
+  ArrowLeft,
   Target,
   Layers,
   Upload,
@@ -836,9 +836,9 @@ export function CourseContent() {
           </h1>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <Link to={`/instructor/courses/${id || 1}/edit`}>
-            <Button variant="outline" size="sm" className="gap-1.5 shadow-sm">
-              <Settings className="w-4 h-4" /> Course Settings
+          <Link to="/instructor/courses">
+            <Button variant="outline" size="sm" className="gap-1.5 shadow-2xs border-slate-200 text-slate-700 hover:text-slate-900 font-semibold">
+              <ArrowLeft className="w-4 h-4" /> Back to Courses
             </Button>
           </Link>
         </div>
@@ -931,8 +931,8 @@ export function CourseContent() {
       <div className="fixed bottom-0 left-0  right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-slate-500">Status:</span>
-          <Badge variant={course?.status === "Published" ? "success" : "default"} className="font-semibold">
-            {course?.status || "Draft"}
+          <Badge variant="success" className="font-semibold">
+            {course?.status || "Published"}
           </Badge>
           <span className="hidden sm:inline text-sm text-slate-400">·</span>
           <span className="hidden sm:inline text-sm text-slate-500">{modules.length} modules · {totalItems} items · {formatDuration(totalDuration)}</span>

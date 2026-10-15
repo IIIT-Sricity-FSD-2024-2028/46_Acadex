@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 
@@ -27,8 +27,8 @@ export class AnalyticsController {
 
   @Get('instructor')
   @ApiOperation({ summary: 'Get Instructor telemetry and course metrics' })
-  async getInstructor() {
-    return this.analyticsService.getInstructorAnalytics();
+  async getInstructor(@Query('instructorId') instructorId?: string) {
+    return this.analyticsService.getInstructorAnalytics(instructorId);
   }
 
   @Get('organization')
