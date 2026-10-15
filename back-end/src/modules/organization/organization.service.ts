@@ -18,84 +18,87 @@ export class OrganizationService {
     private readonly enrollmentsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.INSTRUCTOR_REQUESTS)
     private readonly requestsRepo: JsonRepository<any>,
-    @Inject(REPOSITORY_TOKENS.DISPUTES)
-    private readonly disputesRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
     private readonly notifsRepo: JsonRepository<any>
   ) {}
 
-  async getProfile() {
+  private async resolveOrg(userId?: string, userEmail?: string) {
     const orgs = await this.orgRepo.find();
-    if (orgs.length === 0) {
-      throw new NotFoundException('Organization details not found');
+    if (orgs.length === 0) throw new NotFoundException('Organization details not found');
+    if (userEmail) {
+      const match = orgs.find((o) => o.email?.toLowerCase() === userEmail.toLowerCase());
+      if (match) return match;
+    }
+    if (userId) {
+      const allInstructors = await this.instructorsRepo.find();
+      const inst = allInstructors.find((i) => i.userId === userId);
+      if (inst?.organizationId) {
+        const match = orgs.find((o) => o.id === inst.organizationId);
+        if (match) return match;
+      }
     }
     return orgs[0];
   }
 
-  async updateProfile(dto: UpdateOrganizationDto) {
-    const orgs = await this.orgRepo.find();
-    if (orgs.length === 0) {
-      return this.orgRepo.create(dto as any);
-    }
-    return this.orgRepo.update(orgs[0].id, dto);
+  async getProfile(userId?: string, userEmail?: string) {
+    return this.resolveOrg(userId, userEmail);
   }
 
-  async getStats() {
-    const [
-      totalInstructors,
-      totalLearners,
-      courses,
-      enrollments,
-      pendingRequests,
-      openDisputes,
-      unreadNotifs,
-    ] = await Promise.all([
-      this.instructorsRepo.count(),
-      this.learnersRepo.count(),
+  async updateProfile(dto: UpdateOrganizationDto, userId?: string, userEmail?: string) {
+    const org = await this.resolveOrg(userId, userEmail);
+    return this.orgRepo.update(org.id, dto);
+  }
+
+  async getStats(userId?: string, userEmail?: string) {
+    const org = await this.resolveOrg(userId, userEmail);
+
+    const [allCourses, allEnrollments, pendingRequests, unreadNotifs] = await Promise.all([
       this.coursesRepo.find(),
       this.enrollmentsRepo.find(),
-      this.requestsRepo.count({
-        status: { $regex: /pending|sent/i },
-      }),
-      this.disputesRepo.count({
-        status: { $ne: 'Resolved' },
-      }),
+      this.requestsRepo.count({ status: { $regex: /pending|sent/i } }),
       this.notifsRepo.count({ read: false }),
     ]);
 
+    const courses = allCourses.filter((c) => c.organizationId === org.id);
+    const courseIds = new Set(courses.map((c) => c.id));
+    const enrollments = allEnrollments.filter((e) => courseIds.has(e.courseId));
+
+    const orgInstructors = await this.instructorsRepo.find();
+    const totalInstructors = orgInstructors.filter((i) => i.organizationId === org.id).length;
+
+    const learnersInOrg = await this.learnersRepo.count({ organizationId: org.id });
+
     const activeCourses = courses.filter((c) => c.status === 'Published').length;
-    const annualRevenue = courses.reduce(
-      (sum, c) => sum + (c.revenue || c.price * (c.enrolledCount || 10)),
-      0
-    );
+    const annualRevenue = courses.reduce((sum, c) => sum + (c.revenue || 0), 0);
     const monthlyRevenue = Math.round(annualRevenue * 0.3);
 
     const completedEnrollments = enrollments.filter(
       (e) => e.status === 'Completed' || e.progress === 100
     ).length;
     const activeEnrollments = enrollments.filter(
-      (e) => e.status === 'Active' && e.progress < 100
+      (e) => e.status === 'Active' && (e.progress || 0) < 100
     ).length;
 
     const completionRate =
       enrollments.length > 0
         ? Math.round((completedEnrollments / enrollments.length) * 100)
-        : 72;
+        : null;
 
-    const ratingsSum = courses.reduce((sum, c) => sum + (c.rating || 4.8), 0);
+    const ratedCourses = courses.filter((c) => c.rating);
     const averageRating =
-      courses.length > 0 ? Number((ratingsSum / courses.length).toFixed(1)) : 4.8;
+      ratedCourses.length > 0
+        ? Number((ratedCourses.reduce((s, c) => s + c.rating, 0) / ratedCourses.length).toFixed(1))
+        : null;
 
     return {
       totalInstructors,
-      totalLearners,
+      totalLearners: learnersInOrg,
       activeCourses,
       totalCourses: courses.length,
       totalEnrollments: enrollments.length,
       activeEnrollments,
       completedEnrollments,
       pendingRequests,
-      openDisputes,
       unreadNotifications: unreadNotifs,
       annualRevenue,
       monthlyRevenue,
@@ -189,7 +192,7 @@ export class OrganizationService {
       totalRevenue: Number(dto.totalRevenue) || 50000,
       monthlyRevenue: Math.round((Number(dto.totalRevenue) || 50000) * 0.3),
       currency: dto.currency || 'USD',
-      instructorIds: dto.instructorIds || ['inst-1'],
+      instructorIds: dto.instructorIds || [],
       coursesCount: dto.coursesCount || 2,
       learnersCount: dto.learnersCount || 100,
       logo: dto.logo || 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=200&auto=format&fit=crop&q=80',
@@ -236,7 +239,9 @@ export class OrganizationService {
     const isApprove = action === 'approve';
     const updated = await this.learnersRepo.update(learnerId, {
       orgMembershipStatus: isApprove ? 'Verified Student' : 'Independent Learner',
-      university: isApprove ? (learner.requestedOrgName || 'Stanford University') : 'Independent Learner',
+      university: isApprove ? (learner.requestedOrgName || learner.university || 'Verified Organization') : 'Independent Learner',
+      organizationId: isApprove ? (learner.requestedOrgId || learner.organizationId || null) : null,
+      organizationName: isApprove ? (learner.requestedOrgName || learner.organizationName || null) : null,
       learnerType: isApprove ? 'Student' : 'Learner',
       status: isApprove ? 'Active Student' : 'Active Learner',
       requestedOrgId: null,

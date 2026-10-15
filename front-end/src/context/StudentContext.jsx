@@ -1,104 +1,69 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { api } from '../services/api';
 
-/**
- * StudentContext
- * Central Context API state manager for the Student / Learner Portal.
- * Eliminates prop-drilling and redundant API state synchronization across
- * Dashboard, Explore Catalog, Course Details, Checkout, Quiz, and Profile.
- */
 const StudentContext = createContext(null);
 
-const DEFAULT_STUDENT_PROFILE = {
-  id: 'usr-student-260',
-  name: 'Vujja Punith Sai',
-  rollNumber: 'S20240010260',
-  email: 's20240010260@iiits.in',
-  institution: 'IIIT Sri City',
-  title: 'Enterprise FinTech & Full-Stack Architect',
-  location: 'Sri City, Andhra Pradesh, India',
-  bio: 'Specializing in secure transaction processing, distributed ledger architecture, and reactive cloud engineering.',
-  streakDays: 14,
-  weeklyGoalHours: 15,
-  completedHoursThisWeek: 9.5,
-  skills: ['React 18', 'Distributed Consensus', 'NestJS', 'API Gateway Security', 'AWS Cloud Architecture'],
-  interests: ['Cloud Architecture', 'DevOps', 'Machine Learning', 'FinTech Engineering', 'Cybersecurity']
-};
-
 export function StudentProvider({ children }) {
-  // Initialize student profile from localStorage or defaults
-  const [student, setStudent] = useState(() => {
-    try {
-      const stored = localStorage.getItem('nexuspay_student_profile');
-      if (stored) {
-        return { ...DEFAULT_STUDENT_PROFILE, ...JSON.parse(stored) };
-      }
-      const userName = localStorage.getItem('user_name');
-      const userEmail = localStorage.getItem('user_email');
-      return {
-        ...DEFAULT_STUDENT_PROFILE,
-        name: userName || DEFAULT_STUDENT_PROFILE.name,
-        email: userEmail || DEFAULT_STUDENT_PROFILE.email
-      };
-    } catch {
-      return DEFAULT_STUDENT_PROFILE;
-    }
-  });
+  const [student, setStudent] = useState(null);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [completedCertificates, setCompletedCertificates] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Persistent bookmarks set
+  // Bookmarks are a local UI preference — no backend entity for them
   const [bookmarks, setBookmarks] = useState(() => {
     try {
       const saved = localStorage.getItem('nexuspay_student_bookmarks');
-      return saved ? JSON.parse(saved) : ['crs-1', 'advanced-api-integrations'];
-    } catch {
-      return ['crs-1'];
-    }
-  });
-
-  // Enrolled courses state
-  const [enrolledCourses, setEnrolledCourses] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexuspay_enrolled_courses');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'crs-1',
-          courseId: 'crs-1',
-          title: 'Advanced Enterprise Architecture & Payment Systems',
-          courseTitle: 'Advanced Enterprise Architecture & Payment Systems',
-          institution: 'Stanford University',
-          thumbnail: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
-          progress: 0,
-          status: 'Active',
-          currentModule: 'Module 1: Orientation & Foundations',
-          enrolledAt: '2026-10-12',
-          enrolledDate: 'Oct 12, 2026'
-        }
-      ];
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Persistent certificates records
-  const [completedCertificates, setCompletedCertificates] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexuspay_student_certificates');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'cert-101',
-          courseId: 'crs-1',
-          courseTitle: 'Advanced Enterprise Architecture & Payment Systems',
-          issuedDate: 'October 10, 2026',
-          credentialId: 'NP-STAN-2026-8849',
-          grade: 92
-        }
-      ];
-    } catch {
-      return [];
-    }
-  });
+  const userId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id');
 
-  // Sync bookmarks to localStorage
+  const refreshData = useCallback(async () => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [profileRes, enrollmentsRes, certsRes] = await Promise.allSettled([
+        api.student.getProfile(userId),
+        api.student.getEnrollments(userId),
+        api.student.getCertificates(userId),
+      ]);
+
+      if (profileRes.status === 'fulfilled' && profileRes.value) {
+        setStudent(profileRes.value);
+      }
+      if (enrollmentsRes.status === 'fulfilled') {
+        const items = Array.isArray(enrollmentsRes.value)
+          ? enrollmentsRes.value
+          : enrollmentsRes.value?.items || [];
+        setEnrolledCourses(items);
+      }
+      if (certsRes.status === 'fulfilled') {
+        const items = Array.isArray(certsRes.value)
+          ? certsRes.value
+          : certsRes.value?.items || [];
+        setCompletedCertificates(items);
+      }
+    } catch (err) {
+      console.error('Failed to load student data from backend:', err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  // Persist bookmarks as a local preference
   useEffect(() => {
     try {
       localStorage.setItem('nexuspay_student_bookmarks', JSON.stringify(bookmarks));
@@ -106,28 +71,6 @@ export function StudentProvider({ children }) {
       console.warn('Could not persist bookmarks:', e);
     }
   }, [bookmarks]);
-
-  // Sync enrolled courses to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('nexuspay_enrolled_courses', JSON.stringify(enrolledCourses));
-    } catch (e) {
-      console.warn('Could not persist enrolled courses:', e);
-    }
-  }, [enrolledCourses]);
-
-  // Sync profile to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('nexuspay_student_profile', JSON.stringify(student));
-      localStorage.setItem('user_name', student.name);
-      localStorage.setItem('user_email', student.email);
-    } catch (e) {
-      console.warn('Could not persist student profile:', e);
-    }
-  }, [student]);
-
-  // ── ACTIONS & HANDLERS ────────────────────────────────────────────────
 
   const isBookmarked = useCallback(
     (courseId) => bookmarks.includes(courseId),
@@ -151,12 +94,11 @@ export function StudentProvider({ children }) {
         courseId: course.id,
         title: course.title,
         courseTitle: course.title,
-        institution: course.institution || 'Stanford University',
-        thumbnail: course.thumbnail,
-        thumbnailUrl: course.thumbnail,
+        institution: course.organizationName || course.institution || '',
+        thumbnail: course.thumbnail || course.thumbnailUrl || '',
+        thumbnailUrl: course.thumbnail || course.thumbnailUrl || '',
         progress: 0,
         status: 'Active',
-        currentModule: 'Module 1: Orientation & Architecture Foundations',
         enrolledAt: new Date().toISOString(),
         enrolledDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       };
@@ -172,21 +114,23 @@ export function StudentProvider({ children }) {
   const updateCourseProgress = useCallback((courseId, newProgress) => {
     setEnrolledCourses((prev) =>
       prev.map((c) => {
-        if (c.id === courseId) {
-          const clamped = Math.min(100, Math.max(0, newProgress));
-          return { ...c, progress: clamped };
+        if (c.id === courseId || c.courseId === courseId) {
+          return { ...c, progress: Math.min(100, Math.max(0, newProgress)) };
         }
         return c;
       })
     );
   }, []);
 
-  const updateProfile = useCallback((updates) => {
-    setStudent((prev) => ({
-      ...prev,
-      ...updates
-    }));
-  }, []);
+  const updateProfile = useCallback(async (updates) => {
+    setStudent((prev) => prev ? { ...prev, ...updates } : updates);
+    try {
+      const updated = await api.student.updateProfile(updates, userId);
+      if (updated) setStudent(updated);
+    } catch (err) {
+      console.error('Failed to update profile on backend:', err);
+    }
+  }, [userId]);
 
   const addCertificate = useCallback((cert) => {
     setCompletedCertificates((prev) => {
@@ -196,31 +140,36 @@ export function StudentProvider({ children }) {
     });
   }, []);
 
-  // Memoized context value to prevent unneeded re-renders
   const contextValue = useMemo(
     () => ({
       student,
       bookmarks,
       enrolledCourses,
       completedCertificates,
+      isLoading,
+      error,
       isBookmarked,
       toggleBookmark,
       enrollInCourse,
       updateCourseProgress,
       updateProfile,
-      addCertificate
+      addCertificate,
+      refreshData,
     }),
     [
       student,
       bookmarks,
       enrolledCourses,
       completedCertificates,
+      isLoading,
+      error,
       isBookmarked,
       toggleBookmark,
       enrollInCourse,
       updateCourseProgress,
       updateProfile,
-      addCertificate
+      addCertificate,
+      refreshData,
     ]
   );
 
@@ -231,10 +180,6 @@ export function StudentProvider({ children }) {
   );
 }
 
-/**
- * useStudent Custom Hook
- * Custom hook providing ergonomic access to StudentContext with guard validation.
- */
 export function useStudent() {
   const context = useContext(StudentContext);
   if (!context) {

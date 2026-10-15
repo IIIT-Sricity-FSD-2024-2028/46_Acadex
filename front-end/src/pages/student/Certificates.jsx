@@ -45,50 +45,7 @@ import api from '../../services/api';
 
 const CATEGORIES = ['All', 'Course Certificates', 'Specializations', 'Professional Certificates'];
 
-const FALLBACK_CERTIFICATES = [
-  {
-    id: 'crt-101',
-    learnerId: 'lrn-1',
-    courseTitle: 'Advanced Payment Systems Architecture',
-    institution: 'Stanford University & NexusTech',
-    category: 'Course Certificates',
-    issueDate: 'October 15, 2024',
-    credentialId: 'NX-CERT-884920',
-    status: 'Verified',
-    grade: '98.4% (Honors Distinction)',
-    skills: ['Payment Gateways', 'Distributed Systems', 'Idempotency', 'Kafka'],
-    instructor: 'Dr. Marcus Vance',
-    verifiedUrl: 'https://nexuspay.enterprise.io/verify/NX-CERT-884920'
-  },
-  {
-    id: 'crt-102',
-    learnerId: 'lrn-1',
-    courseTitle: 'Fraud Prevention Strategies in FinTech',
-    institution: 'MIT FinTech Lab & Global Security',
-    category: 'Professional Certificates',
-    issueDate: 'September 02, 2024',
-    credentialId: 'NX-CERT-773821',
-    status: 'Verified',
-    grade: '95.0% (First Class)',
-    skills: ['SOC 2', 'PCI-DSS v4.0', 'Zero Trust', 'Cloud Vaults'],
-    instructor: 'Prof. Elena Rostova',
-    verifiedUrl: 'https://nexuspay.enterprise.io/verify/NX-CERT-773821'
-  },
-  {
-    id: 'crt-103',
-    learnerId: 'lrn-1',
-    courseTitle: 'Machine Learning for Real-Time Risk Scoring',
-    institution: 'Carnegie Mellon University',
-    category: 'Specializations',
-    issueDate: 'June 20, 2024',
-    credentialId: 'NX-CERT-552190',
-    status: 'Verified',
-    grade: '99.1% (Summa Cum Laude)',
-    skills: ['Machine Learning', 'Risk Models', 'PyTorch', 'Anomaly Detection'],
-    instructor: 'Dr. Sarah Mitchell',
-    verifiedUrl: 'https://nexuspay.enterprise.io/verify/NX-CERT-552190'
-  }
-];
+const FALLBACK_CERTIFICATES = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. STATS BANNER SUB-COMPONENT (Stitch Achievement Stats Banner)
@@ -245,7 +202,7 @@ function CertificateCard({ certificate, isBookmarked, onBookmarkToggle, onView }
             🏛️
           </div>
           <span className="text-xs font-semibold text-slate-600">
-            {certificate.institution || 'Stanford University'}
+            {certificate.institution || 'NexusPay Academy'}
           </span>
         </div>
 
@@ -336,17 +293,17 @@ export default function Certificates() {
   useEffect(() => {
     let isMounted = true;
 
-    api.student.getCertificates('lrn-1')
+    const learnerId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '';
+    api.student.getCertificates(learnerId)
       .then((res) => {
         if (!isMounted) return;
-        const data = Array.isArray(res) && res.length > 0 ? res : FALLBACK_CERTIFICATES;
-        setCertificates(data);
+        setCertificates(Array.isArray(res) ? res : []);
         setLoading(false);
       })
       .catch((err) => {
         if (!isMounted) return;
-        console.warn('Backend API unreachable, using resilient fallback credentials:', err.message);
-        setCertificates(FALLBACK_CERTIFICATES);
+        console.warn('Failed to load certificates:', err.message);
+        setCertificates([]);
         setLoading(false);
       });
 
@@ -415,10 +372,10 @@ export default function Certificates() {
           </div>
 
           {/* Achievement Stats Banner (Stitch Spec: 12 Total Earned / 140+ Hours / 24 Skills) */}
-          <StatBanner 
-            totalCount={certificates.length || 12}
-            hoursLearned="140+"
-            skillsCount={24}
+          <StatBanner
+            totalCount={certificates.length}
+            hoursLearned={certificates.length > 0 ? `${certificates.length * 10}+` : '0'}
+            skillsCount={certificates.length * 3}
           />
 
           {/* Filter Tabs (Stitch Spec: All / Course Certificates / Specializations / Professional Certificates) */}

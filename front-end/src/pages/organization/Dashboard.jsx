@@ -101,7 +101,7 @@ export default function OrgDashboard() {
               <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Active Learners</span>
               <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.totalLearners}</p>
               <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> +12% this month
+                <TrendingUp className="w-3 h-3" /> Enrolled learners
               </span>
             </Link>
 
@@ -117,7 +117,7 @@ export default function OrgDashboard() {
               <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Gross Revenue YTD</span>
               <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">₹{stats.annualRevenue.toLocaleString()}</p>
               <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> +18.4% monthly
+                <TrendingUp className="w-3 h-3" /> Gross YTD
               </span>
             </Link>
           </div>
@@ -184,9 +184,6 @@ export default function OrgDashboard() {
                   <p className="text-xs text-on-surface-variant">Monthly settlement progression</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    +18.4%
-                  </span>
                   <div className="flex items-center p-0.5 rounded-lg bg-surface-container-low border border-outline-variant text-[10px] font-bold">
                     <span className="px-2 py-0.5 rounded-md bg-primary text-white">6M</span>
                     <span className="px-2 py-0.5 text-outline hover:text-on-surface cursor-pointer">1Y</span>
@@ -202,11 +199,7 @@ export default function OrgDashboard() {
                 <div className="flex items-center gap-3 text-[11px] font-semibold text-outline">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-primary"></span>
-                    <span className="text-on-surface font-medium">Direct Sales (66%)</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-                    <span className="text-on-surface font-medium">Enterprise (26%)</span>
+                    <span className="text-on-surface font-medium">Revenue Trend</span>
                   </span>
                 </div>
               </div>
@@ -247,22 +240,15 @@ export default function OrgDashboard() {
                       strokeLinecap="round"
                     />
 
-                    {[
-                      { cx: 15, cy: 108, val: "₹18.2k" },
-                      { cx: 102, cy: 92, val: "₹23.5k" },
-                      { cx: 189, cy: 74, val: "₹28.9k" },
-                      { cx: 276, cy: 50, val: "₹34.1k" },
-                      { cx: 363, cy: 30, val: "₹38.4k" },
-                      { cx: 450, cy: 10, val: `₹${Math.round(stats.monthlyRevenue / 1000)}k` }
-                    ].map((pt, i) => (
-                      <g key={i} className="group cursor-pointer">
-                        <circle cx={pt.cx} cy={pt.cy} r="4.5" fill="#FFFFFF" stroke="#4F46E5" strokeWidth="3" className="transition-transform group-hover:scale-150" />
-                        <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                          <rect x={pt.cx - 24} y={pt.cy - 28} width="48" height="18" rx="4" fill="#0F172A" />
-                          <text x={pt.cx} y={pt.cy - 16} fill="#FFFFFF" fontSize="9" fontWeight="700" textAnchor="middle">{pt.val}</text>
-                        </g>
+                    <g className="group cursor-pointer">
+                      <circle cx={450} cy={10} r="4.5" fill="#FFFFFF" stroke="#4F46E5" strokeWidth="3" />
+                      <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <rect x={426} y={-18} width="48" height="18" rx="4" fill="#0F172A" />
+                        <text x={450} y={-6} fill="#FFFFFF" fontSize="9" fontWeight="700" textAnchor="middle">
+                          ₹{Math.round(stats.monthlyRevenue / 1000)}k
+                        </text>
                       </g>
-                    ))}
+                    </g>
                   </svg>
 
                   <div className="flex justify-between text-[10px] font-bold text-outline uppercase tracking-wider pt-1 px-1">

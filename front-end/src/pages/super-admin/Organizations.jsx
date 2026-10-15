@@ -25,7 +25,7 @@ export default function SuperAdminOrganizations() {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [expandedOrgId, setExpandedOrgId] = useState('org-101');
+  const [expandedOrgId, setExpandedOrgId] = useState(null);
 
   // Org Modals & State
   const [showEditOrgModal, setShowEditOrgModal] = useState(false);
@@ -471,7 +471,7 @@ export default function SuperAdminOrganizations() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                           {instructorsList.map((inst) => {
                             const teachingCourses = inst.teachingCourses || [];
-                            const totalEnrolled = inst.totalEnrolledStudents || inst.enrolledStudents || 120;
+                            const totalEnrolled = inst.totalEnrolledStudents || inst.enrolledStudents || 0;
 
                             return (
                               <div
@@ -490,7 +490,7 @@ export default function SuperAdminOrganizations() {
                                     </div>
                                     <div className="text-right shrink-0">
                                       <span className="text-amber-600 font-bold text-xs flex items-center gap-0.5 justify-end">
-                                        ★ {inst.avgRating || inst.rating || 4.8}
+                                        {inst.avgRating || inst.rating ? `★ ${inst.avgRating || inst.rating}` : '—'}
                                       </span>
                                       <span className="text-[9px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 block mt-1">
                                         {totalEnrolled} Enrolled
@@ -850,7 +850,7 @@ export default function SuperAdminOrganizations() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Rating:</span>
-                <span className="font-bold text-amber-600">★ {selectedInstructorDetail.avgRating || selectedInstructorDetail.rating || 4.9}</span>
+                <span className="font-bold text-amber-600">{(selectedInstructorDetail.avgRating || selectedInstructorDetail.rating) ? `★ ${selectedInstructorDetail.avgRating || selectedInstructorDetail.rating}` : '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Status:</span>

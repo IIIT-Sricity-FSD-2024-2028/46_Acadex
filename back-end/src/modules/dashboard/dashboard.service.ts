@@ -48,17 +48,10 @@ export class DashboardService {
     ]);
 
     const activeCourses = courses.filter((c) => c.status === 'Published').length;
-    const annualRevenue = courses.reduce(
-      (sum, c) => sum + (c.revenue || c.price * (c.enrolledCount || 10)),
-      0
-    );
+    const annualRevenue = courses.reduce((sum, c) => sum + (c.revenue || 0), 0);
     const monthlyRevenue = Math.round(annualRevenue * 0.3);
 
-    const organizationInfo = org[0] || {
-      name: 'NexusPay Enterprise Academy',
-      tagline: 'Empowering Financial Engineering Leaders',
-      email: 'admin@nexuspay.edu',
-    };
+    const organizationInfo = org[0] || {};
 
     return {
       organization: organizationInfo,
@@ -70,8 +63,8 @@ export class DashboardService {
         annualRevenue,
         monthlyRevenue,
         pendingRequestsCount: pendingRequests.length,
-        averageRating: 4.8,
-        completionRate: 72,
+        averageRating: null,
+        completionRate: null,
       },
       recentEnrollments: enrollments,
       recentTransactions: transactions,
@@ -82,8 +75,8 @@ export class DashboardService {
         title: c.title,
         category: c.category,
         enrolledCount: c.enrolledCount || 0,
-        rating: c.rating || 4.8,
-        revenue: c.revenue || c.price * (c.enrolledCount || 0),
+        rating: c.rating || 0,
+        revenue: c.revenue || 0,
         status: c.status,
       })),
     };

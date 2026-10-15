@@ -52,7 +52,7 @@ export function StudentProgress() {
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{student.name}</h1>
             <div className="flex items-center gap-3 mt-1.5 text-xs font-semibold text-slate-500">
               <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400" /> {student.email}</span>
-              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {student.institution || 'Caltech'}</span>
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {student.institution || 'Independent Learner'}</span>
             </div>
           </div>
         </div>

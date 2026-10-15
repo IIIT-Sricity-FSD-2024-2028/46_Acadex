@@ -90,20 +90,7 @@ export const jsonDataClient = {
         if (org.instructorIds && Array.isArray(org.instructorIds) && org.instructorIds.includes(inst.id)) {
           return true;
         }
-        if (org.id === 'org-101' && (inst.email?.includes('nexuspay.edu') || ['inst-1', 'inst-3', 'inst-4', 'inst-5', 'inst-6'].includes(inst.id))) {
-          return true;
-        }
-        if (org.id === 'org-102' && (inst.email?.includes('stanford.edu') || inst.id === 'inst-2')) {
-          return true;
-        }
-        if (org.id === 'org-103' && (inst.email?.includes('mit.edu') || inst.bio?.includes('MIT') || ['inst-1', 'inst-2'].includes(inst.id))) {
-          return true;
-        }
-        if (org.id === 'org-104' && inst.id === 'inst-4') {
-          return true;
-        }
         if (inst.organizationId && inst.organizationId === org.id) return true;
-        if (org.name && inst.bio && inst.bio.toLowerCase().includes(org.name.toLowerCase())) return true;
         return false;
       });
 
@@ -140,10 +127,11 @@ export const jsonDataClient = {
 
       // Find enrolled learners in this organization
       const orgLearners = learners.filter((l) => {
+        if (l.organizationId && l.organizationId === org.id) return true;
         if (!l.university) return false;
         const u = l.university.toLowerCase();
         const o = org.name.toLowerCase();
-        return u.includes(o) || o.includes(u) || (org.id === 'org-101' && u.includes('corporate'));
+        return u.includes(o) || o.includes(u);
       });
 
       const grossRevenue = Number(org.totalRevenue) || 100000;
@@ -186,7 +174,7 @@ export const jsonDataClient = {
       totalRevenue: Number(orgData.totalRevenue) || 75000,
       monthlyRevenue: Math.round((Number(orgData.totalRevenue) || 75000) * 0.3),
       currency: 'USD',
-      instructorIds: orgData.instructorIds || ['inst-1'],
+      instructorIds: orgData.instructorIds || [],
       coursesCount: orgData.coursesCount || 3,
       learnersCount: orgData.learnersCount || 150,
       logo: orgData.logo || 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=200&auto=format&fit=crop&q=80',
@@ -280,8 +268,8 @@ export const jsonDataClient = {
           learner.university.toLowerCase().includes(o.name.toLowerCase())
         );
       }) || {
-        id: 'org-101',
-        name: learner.university || 'NexusPay Partner University',
+        id: null,
+        name: learner.university || 'Platform Learning',
       };
 
       // Build structured course records: "took from this org this course paid this much"
@@ -294,17 +282,7 @@ export const jsonDataClient = {
         const matchedCourse = courses.find((c) => c.title?.toLowerCase() === title.toLowerCase() || c.id === tx.courseId);
         
         // Find which org this course belongs to
-        let orgName = matchedOrg.name;
-        if (matchedCourse) {
-          const courseLead = matchedCourse.leadInstructorName || matchedCourse.instructorName;
-          if (courseLead && courseLead.includes('Mitchell')) {
-            orgName = 'Stanford University School of Engineering';
-          } else if (courseLead && (courseLead.includes('Vance') || courseLead.includes('Wilson'))) {
-            orgName = 'NexusPay Enterprise Academy';
-          } else if (courseLead && courseLead.includes('Rostova')) {
-            orgName = 'California Institute of Technology (Caltech)';
-          }
-        }
+        let orgName = matchedCourse?.organizationName || matchedOrg.name;
 
         const orgShare85 = Math.round(amt * 0.85 * 100) / 100;
         const superAdminShare15 = Math.round(amt * 0.15 * 100) / 100;
@@ -618,7 +596,7 @@ export const jsonDataClient = {
         ticketId: 'DSP-2026-599',
         adminId: 'usr-9',
         adminName: 'Operational Platform Admin',
-        adminEmail: 'admin@nexuspay-platform.io',
+        adminEmail: 'admin@platform.io',
         adminAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
         category: 'Technical & Lab Anomaly',
         title: 'Resolved Container Execution Timeout on Theory of Computation Lab',
@@ -636,7 +614,7 @@ export const jsonDataClient = {
         ticketId: 'REF-2026-080',
         adminId: 'usr-9',
         adminName: 'Operational Platform Admin',
-        adminEmail: 'admin@nexuspay-platform.io',
+        adminEmail: 'admin@platform.io',
         adminAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
         category: 'Financial Settlement & Refunds',
         title: 'Authorized ₹4,200 Student Refund for Accidental Double Checkout',
@@ -654,7 +632,7 @@ export const jsonDataClient = {
         ticketId: 'APR-2026-044',
         adminId: 'usr-9',
         adminName: 'Operational Platform Admin',
-        adminEmail: 'admin@nexuspay-platform.io',
+        adminEmail: 'admin@platform.io',
         adminAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
         category: 'Curriculum & Quality Assurance',
         title: 'Verified and Approved Distributed Systems Curriculum v2',
@@ -672,7 +650,7 @@ export const jsonDataClient = {
         ticketId: 'VER-2026-018',
         adminId: 'usr-9',
         adminName: 'Operational Platform Admin',
-        adminEmail: 'admin@nexuspay-platform.io',
+        adminEmail: 'admin@platform.io',
         adminAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
         category: 'Institutional Accreditation',
         title: 'Accredited IIT Bombay Academic Department & Verified Faculty',
@@ -690,7 +668,7 @@ export const jsonDataClient = {
         ticketId: 'DSP-2026-161',
         adminId: 'usr-8',
         adminName: 'Platform Super Admin',
-        adminEmail: 'superadmin@nexuspay-platform.io',
+        adminEmail: 'superadmin@platform.io',
         adminAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80',
         category: 'Copyright & IP Infringement',
         title: 'Investigated Course Material Plagiarism Claim for Theory of Computation',
@@ -708,7 +686,7 @@ export const jsonDataClient = {
         ticketId: 'SEC-2026-009',
         adminId: 'usr-9',
         adminName: 'Operational Platform Admin',
-        adminEmail: 'admin@nexuspay-platform.io',
+        adminEmail: 'admin@platform.io',
         adminAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
         category: 'Security & Access',
         title: 'Mitigated Credential Stuffing & Revoked Compromised API Session',

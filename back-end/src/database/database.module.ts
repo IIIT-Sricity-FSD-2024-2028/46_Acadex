@@ -29,6 +29,7 @@ export const REPOSITORY_TOKENS = {
   REPORTS: 'REPORTS_REPOSITORY',
   NOTIFICATIONS: 'NOTIFICATIONS_REPOSITORY',
   SETTINGS: 'SETTINGS_REPOSITORY',
+  BOOKMARKS: 'BOOKMARKS_REPOSITORY',
 };
 
 const repositoryProviders = [
@@ -150,6 +151,11 @@ const repositoryProviders = [
   {
     provide: REPOSITORY_TOKENS.SETTINGS,
     useFactory: (db: JsonDatabaseService) => new JsonRepository('settings', db),
+    inject: [JsonDatabaseService],
+  },
+  {
+    provide: REPOSITORY_TOKENS.BOOKMARKS,
+    useFactory: (db: JsonDatabaseService) => new JsonRepository('bookmarks', db),
     inject: [JsonDatabaseService],
   },
 ];

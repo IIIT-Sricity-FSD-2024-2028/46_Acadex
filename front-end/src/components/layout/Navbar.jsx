@@ -22,7 +22,8 @@ import {
   PlusCircle,
   CheckCircle2,
   Layers,
-  GraduationCap
+  GraduationCap,
+  Bookmark
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../common/Toast';
@@ -30,12 +31,12 @@ import HumanAvatar from '../common/HumanAvatar';
 import { useStudent } from '../../context/StudentContext';
 
 const defaultUser = {
-  name: "Vujja Punith Sai",
-  email: "s20240010260@iiits.in",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-  streakDays: 14,
-  orgMembershipStatus: "Verified Student",
-  university: "IIIT Sri City",
+  name: localStorage.getItem('user_name') || 'Learner',
+  email: localStorage.getItem('user_email') || '',
+  avatar: null,
+  streakDays: 0,
+  orgMembershipStatus: '',
+  university: '',
 };
 
 const FALLBACK_NAVBAR_COURSES = [
@@ -143,21 +144,20 @@ export default function Navbar() {
       }));
     }
   }, [student]);
-  const [coursesData, setCoursesData] = useState(FALLBACK_NAVBAR_COURSES);
+  const [coursesData, setCoursesData] = useState([]);
   const [orgsList, setOrgsList] = useState([]);
   const [showOrgModal, setShowOrgModal] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [submittingOrg, setSubmittingOrg] = useState(false);
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Module 2 Quiz is ready to take!', desc: 'State Management in NexusPay', time: '10m ago', read: false },
-    { id: 2, title: 'Certificate Issued: Advanced Payment Systems', desc: 'Verified on Aug 2026', time: '2h ago', read: false },
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   const searchRef = useRef(null);
 
   const fetchUserData = () => {
-    api.student.getProfile('lrn-1')
+    const userId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '';
+    if (!userId) return;
+    api.student.getProfile(userId)
       .then((p) => { if (p) setUserData({ ...defaultUser, ...p }); })
       .catch(() => {});
   };
@@ -247,7 +247,7 @@ export default function Navbar() {
     if (!selectedOrg) return;
     try {
       setSubmittingOrg(true);
-      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, 'lrn-1');
+      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '');
       addToast(`Join request submitted to ${selectedOrg.name}!`, 'success');
       setShowOrgModal(false);
       fetchUserData();
@@ -276,6 +276,7 @@ export default function Navbar() {
     { name: 'Dashboard', path: '/student', icon: LayoutDashboard },
     { name: 'Explore Course Catalog', path: '/student/explore', icon: Search },
     { name: 'My Courses & Enrolled Tracks', path: '/student/my-learning', icon: BookOpen },
+    { name: 'Saved / Wishlist', path: '/student/bookmarks', icon: Bookmark },
     { name: 'Certificates', path: '/student/certificates', icon: Award },
   ];
 

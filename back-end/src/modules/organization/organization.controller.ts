@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OrganizationService } from './organization.service';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -11,22 +11,32 @@ export class OrganizationController {
   @Get()
   @ApiOperation({ summary: 'Get organization profile details' })
   @ApiResponse({ status: 200, description: 'Returns organization details' })
-  async getProfile() {
-    return this.organizationService.getProfile();
+  async getProfile(
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-user-email') userEmail?: string,
+  ) {
+    return this.organizationService.getProfile(userId, userEmail);
   }
 
   @Patch()
   @ApiOperation({ summary: 'Update organization profile details' })
   @ApiResponse({ status: 200, description: 'Organization profile updated successfully' })
-  async updateProfile(@Body() dto: UpdateOrganizationDto) {
-    return this.organizationService.updateProfile(dto);
+  async updateProfile(
+    @Body() dto: UpdateOrganizationDto,
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-user-email') userEmail?: string,
+  ) {
+    return this.organizationService.updateProfile(dto, userId, userEmail);
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get dynamic organization telemetry & statistics' })
   @ApiResponse({ status: 200, description: 'Returns aggregated institutional stats' })
-  async getStats() {
-    return this.organizationService.getStats();
+  async getStats(
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-user-email') userEmail?: string,
+  ) {
+    return this.organizationService.getStats(userId, userEmail);
   }
 
   @Get('student-requests')

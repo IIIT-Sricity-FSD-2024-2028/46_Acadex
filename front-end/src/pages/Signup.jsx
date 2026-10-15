@@ -352,7 +352,7 @@ export default function SignUp() {
                 <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E0D7CB] space-y-3">
                   <span className="text-xs font-bold text-slate-800 block">Already have authorized credentials?</span>
                   <p className="text-xs text-slate-600">
-                    Sign in with verified credentials (e.g. <code className="text-blue-700 font-bold">{role === 'SuperAdmin' ? 'superadmin@nexuspay-platform.io' : 'admin@nexuspay-platform.io'}</code>).
+                    Sign in with verified credentials (e.g. <code className="text-blue-700 font-bold">{role === 'SuperAdmin' ? 'superadmin@platform.io' : 'admin@platform.io'}</code>).
                   </p>
                   <Link
                     to={`/signin?role=${role}`}

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 // ── Demo credential (matches api.js MOCK_CREDENTIALS) ──────────────────────
-const SUPER_ADMIN_EMAIL    = 'superadmin@nexuspay-platform.io';
+const SUPER_ADMIN_EMAIL    = 'superadmin@platform.io';
 const SUPER_ADMIN_PASSWORD = 'Password123!';
 
 export default function SuperAdminLogin() {
@@ -214,7 +214,7 @@ export default function SuperAdminLogin() {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(''); }}
                   required
-                  placeholder="superadmin@nexuspay-platform.io"
+                  placeholder="superadmin@platform.io"
                   className="w-full pl-10 pr-4 py-3 bg-slate-800/70 border border-slate-700/60 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#0056D2] focus:bg-slate-800 focus:ring-2 focus:ring-[#0056D2]/20 transition-all"
                 />
               </div>

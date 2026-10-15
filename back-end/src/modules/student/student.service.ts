@@ -21,23 +21,13 @@ export class StudentService {
   ) {}
 
   async getProfile(userId: string) {
-    const learner = (await this.learnersRepo.findById(userId)) || (await this.learnersRepo.find())[0];
+    let learner = await this.learnersRepo.findById(userId);
     if (!learner) {
-      return {
-        id: 'lrn-1',
-        name: 'Alex Chen',
-        email: 'alex.chen@stanford.edu',
-        learnerType: 'Learner',
-        orgMembershipStatus: 'Independent Learner',
-        university: 'Independent Learner',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-        enrolledCourses: 5,
-        completedCourses: 2,
-        certificatesCount: 2,
-        streakDays: 14,
-        weeklyGoalHours: 10,
-        completedHoursThisWeek: 8.5,
-      };
+      const all = await this.learnersRepo.find();
+      learner = all.find((l) => l.userId === userId || l.email === userId) || null;
+    }
+    if (!learner) {
+      throw new NotFoundException(`Learner '${userId}' not found`);
     }
 
     if (!learner.orgMembershipStatus) {
@@ -67,15 +57,7 @@ export class StudentService {
   }
 
   async getOrganizationsList() {
-    const orgs = await this.orgsRepo.find();
-    if (orgs.length === 0) {
-      return [
-        { id: 'org-101', name: 'Stanford University', domain: 'stanford.edu', location: 'Palo Alto, CA', verificationStatus: 'Verified Institution' },
-        { id: 'org-102', name: 'MIT - Massachusetts Institute of Technology', domain: 'mit.edu', location: 'Cambridge, MA', verificationStatus: 'Verified Institution' },
-        { id: 'org-103', name: 'NexusPay Enterprise Academy', domain: 'nexuspay.edu', location: 'San Francisco, CA', verificationStatus: 'Verified Institution' },
-      ];
-    }
-    return orgs;
+    return this.orgsRepo.find();
   }
 
   async getEnrollments(userId: string) {
@@ -202,28 +184,6 @@ export class StudentService {
     const certificates = await this.certificatesRepo.find({
       where: { learnerId: learner.id },
     });
-    if (certificates.length === 0) {
-      return [
-        {
-          id: 'crt-101',
-          learnerId: learner.id,
-          courseTitle: 'Advanced Enterprise Architecture & Payment Systems',
-          category: 'Professional Certificates',
-          issueDate: 'August 2026',
-          credentialId: 'NX-CERT-884920',
-          verifiedUrl: 'https://nexuspay-verify.org/cert/NX-CERT-884920',
-        },
-        {
-          id: 'crt-102',
-          learnerId: learner.id,
-          courseTitle: 'Cloud Security, SOC2 & FinTech Compliance',
-          category: 'Course Certificates',
-          issueDate: 'July 2026',
-          credentialId: 'NX-CERT-773821',
-          verifiedUrl: 'https://nexuspay-verify.org/cert/NX-CERT-773821',
-        },
-      ];
-    }
     return certificates;
   }
 

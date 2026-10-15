@@ -86,7 +86,7 @@ export default function SuperAdminDashboard() {
 
   const calculatedGross = organizations.length > 0
     ? organizations.reduce((sum, o) => sum + (Number(o.totalRevenue) || 0), 0)
-    : (data?.revenueSplit?.totalGrossRevenue || 429480);
+    : (data?.revenueSplit?.totalGrossRevenue || 0);
   const calculatedOrg85 = Math.round(calculatedGross * 0.85);
   const calculatedSuperAdmin15 = Math.round(calculatedGross * 0.15);
 
@@ -102,20 +102,15 @@ export default function SuperAdminDashboard() {
   };
 
   const rolesBreakdown = data?.rolesBreakdown || {
-    superAdmins: 1,
-    admins: 2,
-    organizations: 4,
-    instructors: 6,
-    students: 6,
+    superAdmins: 0,
+    admins: 0,
+    organizations: organizations.length,
+    instructors: 0,
+    students: 0,
   };
 
-  const escalationsSummary = data?.escalationsSummary || { total: 2, urgentCount: 1, items: [] };
-  const monthlyTrend = data?.monthlyTrend || [
-    { name: 'May', gross: 65000, orgShare: 55250, superAdminFee: 9750, learners: 340 },
-    { name: 'Jun', gross: 82000, orgShare: 69700, superAdminFee: 12300, learners: 410 },
-    { name: 'Jul', gross: 110000, orgShare: 93500, superAdminFee: 16500, learners: 520 },
-    { name: 'Aug', gross: 172480, orgShare: 146608, superAdminFee: 25872, learners: 680 },
-  ];
+  const escalationsSummary = data?.escalationsSummary || { total: 0, urgentCount: 0, items: [] };
+  const monthlyTrend = data?.monthlyTrend || [];
 
   const pieSplitData = [
     { name: 'Organizations (85%)', value: revenueSplit.orgShare85, color: '#0056D2' },
@@ -378,7 +373,7 @@ export default function SuperAdminDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {organizations.map((org) => {
-            const orgGross = Number(org.totalRevenue) || 90000;
+            const orgGross = Number(org.totalRevenue) || 0;
             const org85 = Math.round(orgGross * 0.85);
             const fee15 = Math.round(orgGross * 0.15);
             const instructors = org.instructors || [];
@@ -435,7 +430,7 @@ export default function SuperAdminDashboard() {
                                 <HumanAvatar name={inst.name} size="xs" />
                                 <span className="font-bold text-slate-900 text-xs">{inst.name}</span>
                               </div>
-                              <span className="text-amber-600 font-bold text-[11px]">★ {inst.avgRating || 4.8}</span>
+                              {inst.avgRating && <span className="text-amber-600 font-bold text-[11px]">★ {inst.avgRating}</span>}
                             </div>
 
                             {/* Specific courses and enrolled count */}
@@ -450,12 +445,7 @@ export default function SuperAdminDashboard() {
                                   </div>
                                 ))
                               ) : (
-                                <div className="flex items-center justify-between text-[11px] text-slate-500">
-                                  <span>• Core Curriculum Modules</span>
-                                  <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px]">
-                                    {inst.enrolledStudents || 120} enrolled
-                                  </span>
-                                </div>
+                                <div className="text-[11px] text-slate-400 italic">No courses assigned</div>
                               )}
                             </div>
                           </div>

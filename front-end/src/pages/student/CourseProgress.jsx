@@ -39,7 +39,7 @@ export default function CourseProgress() {
     let isMounted = true;
     setLoading(true);
 
-    const userId = localStorage.getItem('user_id') || 'lrn-1';
+    const userId = localStorage.getItem('user_id') || '';
 
     // Fetch Course & Enrollments in parallel with resilient fallbacks
     Promise.all([
@@ -66,17 +66,6 @@ export default function CourseProgress() {
 
         if (matchedEnr) {
           setEnrollment(matchedEnr);
-        } else if (currentCourse) {
-          // Synthesize an active enrollment record so the student page always functions
-          setEnrollment({
-            id: `enr-${currentCourse.id}`,
-            courseId: currentCourse.id,
-            courseTitle: currentCourse.title,
-            progress: 45,
-            enrolledDate: 'Recently Enrolled',
-            status: 'Active',
-            grade: '92.5%',
-          });
         }
 
         // Initialize open modules to first 2 modules
@@ -114,49 +103,33 @@ export default function CourseProgress() {
     );
   }
 
-  const courseTitle = course?.title || enrollment?.courseTitle || 'NexusPay Core Architecture';
-  const progressPercent = enrollment?.progress ?? 50;
+  const courseTitle = course?.title || enrollment?.courseTitle || 'Course';
+  const progressPercent = enrollment?.progress ?? 0;
 
   // Dynamically map course modules from backend / courses.json
   const rawModules = course?.modules && Array.isArray(course.modules) && course.modules.length > 0
     ? course.modules
-    : [
-        {
-          id: 'mod-1',
-          title: 'Foundations of Payment Orchestration & Ledger Architecture',
-          lessons: 3,
-          duration: '2h 15m'
-        },
-        {
-          id: 'mod-2',
-          title: 'Advanced Routing & High Availability Failover',
-          lessons: 4,
-          duration: '3h 30m'
-        },
-        {
-          id: 'mod-3',
-          title: 'PCI-DSS Compliance & Card Vault Security',
-          lessons: 3,
-          duration: '2h 45m'
-        }
-      ];
+    : [];
 
   const modules = rawModules.map((m, idx) => {
     const modId = m.id || idx + 1;
     const modNum = idx + 1;
     const cleanTitle = (m.title || `Module ${modNum}`).replace(/^Module \d+:\s*/i, '');
 
-    // Determine status & progress
+    // Determine status based on overall enrollment progress
     let status = 'locked';
     let progress = 0;
-    if (idx === 0) {
+    const overallProgress = progressPercent;
+    const moduleShare = rawModules.length > 0 ? 100 / rawModules.length : 100;
+    const moduleStartPct = idx * moduleShare;
+    if (overallProgress >= moduleStartPct + moduleShare) {
       status = 'completed';
       progress = 100;
-    } else if (idx === 1) {
+    } else if (overallProgress > moduleStartPct) {
       status = 'in-progress';
-      progress = 45;
-    } else {
-      status = 'locked';
+      progress = Math.round(((overallProgress - moduleStartPct) / moduleShare) * 100);
+    } else if (idx === 0 || overallProgress >= moduleStartPct) {
+      status = 'not-started';
       progress = 0;
     }
 
@@ -168,10 +141,10 @@ export default function CourseProgress() {
         title: it.title || `${modNum}.${itIdx + 1} ${it.name || 'Lecture'}`,
         type: it.type || (itIdx % 2 === 0 ? 'video' : 'reading'),
         duration: it.duration || '15 min',
-        completed: idx === 0,
-        current: idx === 1 && itIdx === 0,
-        locked: idx > 1,
-        grade: it.grade || (it.type === 'quiz' && idx === 0 ? '95%' : undefined),
+        completed: status === 'completed',
+        current: status === 'in-progress' && itIdx === 0,
+        locked: status === 'locked',
+        grade: it.grade,
       }));
     } else {
       const lessonCount = typeof m.lessons === 'number' ? m.lessons : 3;
@@ -181,27 +154,26 @@ export default function CourseProgress() {
           title: `${modNum}.1 ${cleanTitle} — Core Architecture & Theory`,
           type: 'video',
           duration: '16 min',
-          completed: idx === 0,
-          current: idx === 1,
-          locked: idx > 1,
+          completed: status === 'completed',
+          current: status === 'in-progress',
+          locked: status === 'locked',
         },
         {
           id: `${modNum}.2`,
           title: `${modNum}.2 Implementation Specifications & Best Practices`,
           type: 'reading',
           duration: '10 min',
-          completed: idx === 0,
+          completed: status === 'completed',
           current: false,
-          locked: idx > 1,
+          locked: status === 'locked',
         },
         {
           id: `${modNum}.3`,
           title: `${modNum}.3 Graded Assessment: ${cleanTitle}`,
           type: 'quiz',
           duration: '20 min',
-          completed: idx === 0,
-          grade: idx === 0 ? '95%' : undefined,
-          locked: idx > 1,
+          completed: status === 'completed',
+          locked: status === 'locked',
         },
       ];
 
@@ -212,8 +184,8 @@ export default function CourseProgress() {
             title: `${modNum}.${extra} Advanced Production Case Study`,
             type: 'video',
             duration: '14 min',
-            completed: idx === 0,
-            locked: idx > 1,
+            completed: status === 'completed',
+            locked: status === 'locked',
           });
         }
       }

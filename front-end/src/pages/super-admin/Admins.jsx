@@ -971,7 +971,7 @@ export default function SuperAdminAdmins() {
                 <input
                   type="email"
                   required
-                  placeholder="e.g. admin@nexuspay-platform.io"
+                  placeholder="e.g. admin@platform.io"
                   value={adminForm.email}
                   onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:ring-2 focus:ring-indigo-500"

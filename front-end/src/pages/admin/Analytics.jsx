@@ -37,54 +37,26 @@ export const Analytics = () => {
       });
   }, []);
 
-  const defaultWeekly = [
-    { name: 'Mon', active: 340 },
-    { name: 'Tue', active: 460 },
-    { name: 'Wed', active: 580 },
-    { name: 'Thu', active: 620 },
-    { name: 'Fri', active: 750 },
-    { name: 'Sat', active: 430 },
-    { name: 'Sun', active: 390 },
-  ];
-
-  const defaultGrowth = [
-    { name: 'May', learners: 340, revenue: 24800 },
-    { name: 'Jun', learners: 410, revenue: 28900 },
-    { name: 'Jul', learners: 520, revenue: 35400 },
-    { name: 'Aug', learners: 680, revenue: 42580 },
-  ];
-
-  const defaultCategories = [
-    { name: 'Computer Science', value: 4, coursesCount: 4, seatsEnrolled: 820 },
-    { name: 'Cloud Architecture', value: 3, coursesCount: 3, seatsEnrolled: 540 },
-    { name: 'Data Science', value: 2, coursesCount: 2, seatsEnrolled: 410 },
-    { name: 'Finance', value: 2, coursesCount: 2, seatsEnrolled: 310 },
-  ];
-
   const weeklyData = (analytics?.weeklyActiveUsers && analytics.weeklyActiveUsers.length > 0)
     ? analytics.weeklyActiveUsers
-    : defaultWeekly;
+    : [];
 
   const categoryData = (analytics?.categoryData && analytics.categoryData.length > 0)
     ? analytics.categoryData
     : (analytics?.categoryBreakdown && analytics.categoryBreakdown.length > 0)
       ? analytics.categoryBreakdown.map(c => ({ name: c.category || c.name, value: c.coursesCount || c.value || 1 }))
-      : defaultCategories;
+      : [];
 
   const userGrowth = (analytics?.userGrowth && analytics.userGrowth.length > 0)
     ? analytics.userGrowth
-    : defaultGrowth;
+    : [];
 
-  const totalRevenue = analytics?.stats?.totalRevenue || '₹42,580.00';
-  const totalLearners = analytics?.stats?.totalLearners || '680';
-  const completionRate = analytics?.kpis?.completionRate ? `${analytics.kpis.completionRate}%` : '78%';
-  const retentionRate = analytics?.kpis?.retentionRate ? `${analytics.kpis.retentionRate}%` : '94.2%';
+  const totalRevenue = analytics?.stats?.totalRevenue ?? '—';
+  const totalLearners = analytics?.stats?.totalLearners ?? '—';
+  const completionRate = analytics?.kpis?.completionRate != null ? `${analytics.kpis.completionRate}%` : '—';
+  const retentionRate = analytics?.kpis?.retentionRate != null ? `${analytics.kpis.retentionRate}%` : '—';
 
-  const topInstructors = analytics?.topInstructorsByRevenue || [
-    { name: 'Dr. Angela Yu', specialization: 'Computer Science', revenueGenerated: 18400, avgRating: 4.9, enrolledStudents: 1240 },
-    { name: 'Prof. Andrew Ng', specialization: 'Machine Learning', revenueGenerated: 14200, avgRating: 4.9, enrolledStudents: 980 },
-    { name: 'Colt Steele', specialization: 'Web Development', revenueGenerated: 9980, avgRating: 4.8, enrolledStudents: 740 },
-  ];
+  const topInstructors = analytics?.topInstructorsByRevenue || [];
 
   return (
     <div className="space-y-6">
@@ -210,14 +182,16 @@ export const Analytics = () => {
                     <tr key={i} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-6 py-4 font-bold text-slate-800 text-sm">{inst.name}</td>
                       <td className="px-6 py-4 text-slate-600 font-medium">{inst.specialization || 'Enterprise Architecture'}</td>
-                      <td className="px-6 py-4 text-slate-600">{(inst.enrolledStudents || 120).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-slate-600">{(inst.enrolledStudents ?? 0).toLocaleString()}</td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
-                          ★ {inst.avgRating || 4.8}
-                        </span>
+                        {inst.avgRating ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
+                            ★ {inst.avgRating}
+                          </span>
+                        ) : <span className="text-slate-400 text-xs">—</span>}
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-emerald-700 text-sm">
-                        ₹{(inst.revenueGenerated || 15000).toLocaleString()}
+                        ₹{(inst.revenueGenerated ?? 0).toLocaleString()}
                       </td>
                     </tr>
                   ))}

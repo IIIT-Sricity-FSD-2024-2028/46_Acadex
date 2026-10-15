@@ -43,9 +43,11 @@ export default function Dashboard() {
   const [orgSearchQuery, setOrgSearchQuery] = useState('');
   const [submittingOrg, setSubmittingOrg] = useState(false);
 
+  const learnerId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '';
+
   const fetchProfile = async () => {
     try {
-      const p = await api.student.getProfile('lrn-1').catch(() => null);
+      const p = await api.student.getProfile(learnerId).catch(() => null);
       if (p) setProfile(p);
     } catch (e) {}
   };
@@ -53,23 +55,23 @@ export default function Dashboard() {
   // useEffect Side Effect: Concurrent API data fetch on mount with cancellation pattern
   useEffect(() => {
     let isMounted = true;
-    document.title = 'Student Dashboard | NexusPay Learning';
+    document.title = 'Student Dashboard | EduSphere';
 
     Promise.all([
-      api.student.getProfile('lrn-1').catch(() => null),
-      api.student.getEnrollments('lrn-1').catch(() => []),
+      api.student.getProfile(learnerId).catch(() => null),
+      api.student.getEnrollments(learnerId).catch(() => []),
       api.courses.list().catch(() => []),
       api.student.getOrganizations().catch(() => []),
     ])
       .then(([p, e, c, o]) => {
         if (!isMounted) return;
         setProfile(p || {
-          name: student?.name || 'Vujja Punith Sai',
-          streakDays: student?.streakDays || 14,
+          name: student?.name || 'Learner',
+          streakDays: 0,
           weeklyGoalHours: 10,
-          completedHoursThisWeek: 8.5,
-          enrolledCourses: 5,
-          certificatesEarned: 2,
+          completedHoursThisWeek: 0,
+          enrolledCourses: 0,
+          certificatesEarned: 0,
           orgMembershipStatus: 'Independent Learner',
           university: 'Independent Learner',
         });
@@ -93,7 +95,7 @@ export default function Dashboard() {
     if (!selectedOrg) return;
     try {
       setSubmittingOrg(true);
-      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, 'lrn-1');
+      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, learnerId);
       setShowOrgModal(false);
       await fetchProfile();
     } catch (err) {
@@ -139,20 +141,11 @@ export default function Dashboard() {
     title: activeEnrollment?.courseTitle || activeCourseData.title,
     subtitle: activeCourseData.subtitle || activeCourseData.description,
     category: activeCourseData.category || 'Architecture',
-    institution: activeEnrollment?.institution || activeCourseData.institution || 'Stanford University',
+    institution: activeEnrollment?.institution || activeCourseData.institution || '',
     progress: activeProgress,
     currentModule: activeProgress === 0 ? 'Module 1: Getting Started' : (activeEnrollment?.currentModule || 'Module 1: Orientation & Foundations'),
     thumbnail: activeEnrollment?.thumbnail || activeEnrollment?.thumbnailUrl || activeCourseData.thumbnail || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
-  } : {
-    id: 'crs-1',
-    title: 'Advanced Enterprise Architecture & Payment Systems',
-    subtitle: 'Master distributed consensus protocols and cloud banking networks.',
-    category: 'Cloud Architecture',
-    institution: 'Stanford University',
-    progress: 0,
-    currentModule: 'Module 1: Getting Started',
-    thumbnail: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
-  };
+  } : null;
 
   const inProgressCourses = useMemo(() => {
     const list = enrollments
@@ -164,22 +157,22 @@ export default function Dashboard() {
           id: e.courseId || cData?.id || e.id,
           title: e.courseTitle || cData?.title,
           subtitle: cData?.subtitle || cData?.description || 'Accredited university specialization track',
-          institution: e.institution || cData?.institution || cData?.organizationName || 'Stanford University',
+          institution: e.institution || cData?.institution || cData?.organizationName || '',
           progress: prog,
           currentModule: prog === 0 ? 'Module 1: Getting Started' : (e.currentModule || 'In Progress'),
           thumbnail: e.thumbnail || e.thumbnailUrl || cData?.thumbnail || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
           status: e.status || 'Active'
         };
       });
-    return list.length > 0 ? list.slice(0, 4) : allCourses.slice(1, 4);
+    return list.slice(0, 4);
   }, [enrollments, allCourses]);
 
   const recommendedCourses = allCourses.slice(0, 4);
 
-  const studentName = student?.name || profile?.name || 'Vujja Punith Sai';
+  const studentName = student?.name || profile?.name || localStorage.getItem('user_name') || 'Learner';
   const firstName = studentName.split(' ')[0];
   const membershipStatus = profile?.orgMembershipStatus || (profile?.university && profile?.university !== 'Independent Learner' ? 'Verified Student' : 'Independent Learner');
-  const universityName = profile?.requestedOrgName || student?.institution || profile?.university || 'IIIT Sri City';
+  const universityName = profile?.requestedOrgName || student?.institution || profile?.university || '';
 
   return (
     <PageLayout>
@@ -241,7 +234,7 @@ export default function Dashboard() {
                 to="/student/my-learning"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-all backdrop-blur-sm"
               >
-                <span>Enrolled Tracks ({enrollments.length || profile?.enrolledCourses || 5})</span>
+                <span>Enrolled Tracks ({enrollments.length || profile?.enrolledCourses || 0})</span>
               </Link>
               {membershipStatus === 'Independent Learner' && (
                 <button
@@ -262,7 +255,7 @@ export default function Dashboard() {
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
               <div className="min-w-0">
-                <p className="text-base font-bold leading-tight">{enrollments.length || 5} Tracks</p>
+                <p className="text-base font-bold leading-tight">{enrollments.length || profile?.enrolledCourses || 0} Tracks</p>
                 <p className="text-xs text-blue-200 font-medium mt-0.5 truncate">Active Study</p>
               </div>
             </div>
@@ -272,7 +265,7 @@ export default function Dashboard() {
                 <Award className="w-5 h-5 text-amber-300" />
               </div>
               <div className="min-w-0">
-                <p className="text-base font-bold leading-tight">{profile?.certificatesCount || 2} Earned</p>
+                <p className="text-base font-bold leading-tight">{profile?.certificatesEarned ?? 0} Earned</p>
                 <p className="text-xs text-blue-200 font-medium mt-0.5 truncate">Certificates</p>
               </div>
             </div>
@@ -282,9 +275,9 @@ export default function Dashboard() {
                 <Target className="w-5 h-5 text-emerald-300" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-base font-bold leading-tight">{profile?.completedHoursThisWeek || 8.5} / {profile?.weeklyGoalHours || 10}h</p>
+                <p className="text-base font-bold leading-tight">{profile?.completedHoursThisWeek ?? 0} / {profile?.weeklyGoalHours ?? 10}h</p>
                 <div className="w-full bg-white/20 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                  <div className="bg-emerald-400 h-full rounded-full" style={{ width: '85%' }}></div>
+                  <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${profile?.weeklyGoalHours ? Math.round(((profile?.completedHoursThisWeek || 0) / profile.weeklyGoalHours) * 100) : 0}%` }}></div>
                 </div>
               </div>
             </div>
@@ -294,126 +287,102 @@ export default function Dashboard() {
                 <Flame className="w-5 h-5 text-amber-400 fill-amber-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-base font-bold leading-tight">{profile?.streakDays || 14} Days</p>
+                <p className="text-base font-bold leading-tight">{profile?.streakDays ?? 0} Days</p>
                 <p className="text-xs text-blue-200 font-medium mt-0.5 truncate">Learning Streak</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Milestone Reminder Announcement Strip (Enhancement: Academic Deadline Awareness) */}
+        {/* Quick links strip */}
         <div className="bg-blue-50/80 border border-blue-200/80 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
           <div className="flex items-center gap-2.5 text-slate-800">
             <span className="p-1 rounded bg-[#0056D2] text-white font-bold flex-shrink-0">
               <Sparkles className="w-3.5 h-3.5" />
             </span>
             <span className="font-semibold">
-              Upcoming Milestone: <span className="font-normal text-slate-600">Module 2 Architecture Assessment is active for your specialization track.</span>
+              {enrollments.length > 0
+                ? `You have ${enrollments.length} active course${enrollments.length > 1 ? 's' : ''}. Keep going!`
+                : 'Explore the course catalog and enroll to get started.'}
             </span>
           </div>
           <Link
-            to="/student/quiz"
+            to={enrollments.length > 0 ? '/student/my-learning' : '/student/explore'}
             className="inline-flex items-center gap-1 font-bold text-coursera hover:underline whitespace-nowrap self-end sm:self-auto"
           >
-            <span>Take Quiz</span>
+            <span>{enrollments.length > 0 ? 'My Learning' : 'Browse Catalog'}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* Continue Learning Featured Card (Original Layout, Polished Coursera Specification) */}
+        {/* Continue Learning Featured Card */}
         <section className="w-full">
           <div className="flex items-center justify-between mb-3.5">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Continue Learning</h2>
-              <p className="text-xs text-slate-500">Your current active professional specialization track</p>
+              <p className="text-xs text-slate-500">Your current active course</p>
             </div>
-            <Link
-              to="/student/my-learning"
-              className="text-xs font-bold text-coursera hover:underline hidden sm:inline"
-            >
+            <Link to="/student/my-learning" className="text-xs font-bold text-coursera hover:underline hidden sm:inline">
               All Enrolled Courses →
             </Link>
           </div>
 
-          <div className="w-full bg-white border border-slate-200/80 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-md transition-shadow">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-              
-              <div className="w-full lg:w-80 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 relative shadow-xs">
-                <img
-                  src={activeCourse.thumbnail || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80'}
-                  alt={activeCourse.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end justify-between p-3.5">
-                  <span className="px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[11px] font-bold text-white">
-                    {activeCourse.currentModule || (activeCourse.progress === 0 ? 'Module 1: Getting Started' : 'Module 1: Foundations')}
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-black/60 text-[10px] font-medium text-white/90">
-                    {activeCourse.progress === 0 ? 'Ready to Start' : '~45m left'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex-1 w-full flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-coursera border border-blue-100">
-                      {activeCourse.category || 'Architecture'}
+          {!activeCourse ? (
+            <div className="w-full bg-white border border-dashed border-slate-200 rounded-2xl p-8 text-center">
+              <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-700">No courses enrolled yet</p>
+              <p className="text-xs text-slate-400 mt-1 mb-4">Browse the catalog and enroll in a course to get started.</p>
+              <Link to="/student/explore" className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] transition-all">
+                <span>Explore Courses</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="w-full bg-white border border-slate-200/80 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-md transition-shadow">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                <div className="w-full lg:w-80 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 relative shadow-xs">
+                  {activeCourse.thumbnail && (
+                    <img src={activeCourse.thumbnail} alt={activeCourse.title} className="w-full h-full object-cover" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end justify-between p-3.5">
+                    <span className="px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[11px] font-bold text-white">
+                      {activeCourse.currentModule || 'Module 1'}
                     </span>
-                    <span className="text-xs text-slate-500 font-medium">
-                      {activeCourse.institution || 'Stanford University'}
-                    </span>
-                    <span className="text-xs text-slate-400">•</span>
-                    <span className="text-xs text-slate-500 font-medium">
-                      {activeCourse.level || 'Advanced Level'}
+                    <span className="px-2 py-0.5 rounded bg-black/60 text-[10px] font-medium text-white/90">
+                      {activeCourse.progress === 0 ? 'Ready to Start' : 'In Progress'}
                     </span>
                   </div>
-
-                  <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 leading-snug">
-                    {activeCourse.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                    {activeCourse.description || activeCourse.subtitle}
-                  </p>
                 </div>
-
-                <div className="space-y-3.5">
+                <div className="flex-1 w-full flex flex-col justify-between space-y-4">
                   <div>
-                    <div className="flex items-center justify-between text-xs text-slate-600 font-semibold mb-1.5">
-                      <span>Course Progress</span>
-                      <span className="text-coursera font-bold">
-                        {activeCourse.progress === 0 ? '0% (Just Enrolled)' : `${activeCourse.progress}% Completed`}
-                      </span>
+                    <div className="flex items-center gap-2 mb-2">
+                      {activeCourse.category && (
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-coursera border border-blue-100">
+                          {activeCourse.category}
+                        </span>
+                      )}
+                      {activeCourse.institution && (
+                        <span className="text-xs text-slate-500 font-medium">{activeCourse.institution}</span>
+                      )}
                     </div>
-                    <LinearProgressBar 
-                      progress={activeCourse.progress}
-                      showLabel={false}
-                      color="bg-[#0056D2]"
-                      height="h-2"
-                    />
+                    <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 leading-snug">{activeCourse.title}</h3>
+                    {activeCourse.description && (
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{activeCourse.description}</p>
+                    )}
                   </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-slate-100">
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1.5 text-slate-800 font-semibold">
-                        <Clock className="w-3.5 h-3.5 text-coursera" /> 
-                        {activeCourse.progress === 0 
-                          ? 'First Lesson: 1.1 Course Orientation & Overview (15m)' 
-                          : 'Next Up: 2.3 State Management in NexusPay (10m)'}
-                      </span>
+                  <div className="space-y-3.5">
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-slate-600 font-semibold mb-1.5">
+                        <span>Course Progress</span>
+                        <span className="text-coursera font-bold">{activeCourse.progress}% Completed</span>
+                      </div>
+                      <LinearProgressBar progress={activeCourse.progress} showLabel={false} color="bg-[#0056D2]" height="h-2" />
                     </div>
-
-                    <div className="flex items-center gap-2.5">
-                      <Link
-                        to="/student/quiz"
-                        className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors"
-                      >
-                        Take Module Quiz
-                      </Link>
+                    <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-slate-100">
                       <Link
                         to="/student/player"
                         state={{ courseId: activeCourse.id }}
-                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] shadow-xs transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] shadow-xs transition-all"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
                         <span>{activeCourse.progress === 0 ? 'Start Course' : 'Resume Lesson'}</span>
@@ -421,11 +390,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-
               </div>
-
             </div>
-          </div>
+          )}
         </section>
 
         {/* In Progress Grid (Original Layout, Polished Cards) */}

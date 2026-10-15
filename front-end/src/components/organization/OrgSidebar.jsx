@@ -7,16 +7,11 @@ import {
   BookOpen,
   UserPlus,
   CreditCard,
-  FileText,
-  BarChart3,
   Bell,
   Settings,
   Building2,
-  ChevronRight,
   Sparkles,
   Layers,
-  AlertCircle,
-  ShieldAlert
 } from 'lucide-react';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../common/Toast';
@@ -46,17 +41,14 @@ export default function OrgSidebar() {
       ]
     },
     {
-      group: "Financials & Analytics",
+      group: "Financials",
       items: [
         { name: 'Payments & Revenue', path: '/org/payments', icon: CreditCard },
-        { name: 'Reports & Exports', path: '/org/reports', icon: FileText },
-        { name: 'Analytics', path: '/org/analytics', icon: BarChart3 },
       ]
     },
     {
       group: "Governance & System",
       items: [
-        { name: 'Disputes & Governance', path: '/org/disputes', icon: AlertCircle, badge: stats.openDisputes },
         { name: 'Notifications', path: '/org/notifications', icon: Bell, unread: stats.unreadNotifications },
         { name: 'Organization Settings', path: '/org/settings', icon: Settings },
         { name: 'Org Profile', path: '/org/profile', icon: Building2 },
@@ -73,9 +65,6 @@ export default function OrgSidebar() {
     if (path === '/org/enrollments' && (location.pathname === '/enrollments' || location.pathname === '/org/enrollments')) return true;
     if (path === '/org/assign-courses' && (location.pathname === '/assign-courses' || location.pathname === '/org/assign-courses')) return true;
     if (path === '/org/payments' && (location.pathname === '/payments' || location.pathname === '/org/payments' || location.pathname === '/transactions' || location.pathname === '/org/transactions')) return true;
-    if (path === '/org/reports' && (location.pathname === '/reports' || location.pathname === '/org/reports')) return true;
-    if (path === '/org/analytics' && (location.pathname === '/analytics' || location.pathname === '/org/analytics')) return true;
-    if (path === '/org/disputes' && (location.pathname === '/disputes' || location.pathname === '/org/disputes' || location.pathname === '/org/raise-dispute' || location.pathname === '/raise-dispute')) return true;
     if (path === '/org/notifications' && (location.pathname === '/notifications' || location.pathname === '/org/notifications')) return true;
     if (path === '/org/settings' && (location.pathname === '/settings' || location.pathname === '/org/settings')) return true;
     if (path === '/org/profile' && (location.pathname === '/org/profile' || location.pathname === '/profile')) return true;
@@ -94,7 +83,7 @@ export default function OrgSidebar() {
             </div>
             <div>
               <h2 className="font-extrabold text-sm tracking-tight text-white leading-none">
-                {info.name ? info.name.split(' ')[0] : 'NexusPay'} <span className="text-[#C7D2FE] font-semibold text-xs block mt-0.5">Enterprise Admin</span>
+                {info.name ? info.name.split(' ')[0] : 'Loading...'} <span className="text-[#C7D2FE] font-semibold text-xs block mt-0.5">Enterprise Admin</span>
               </h2>
             </div>
           </Link>
@@ -151,11 +140,11 @@ export default function OrgSidebar() {
         <div className="p-2.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
-              NP
+              {info.name ? info.name.charAt(0).toUpperCase() : '?'}
             </div>
             <div className="truncate">
-              <p className="text-xs font-bold text-white truncate leading-none">{info.name || 'NexusPay Academy'}</p>
-              <p className="text-[10px] text-slate-400 truncate mt-0.5">{info.email || 'admin@nexuspay.edu'}</p>
+              <p className="text-xs font-bold text-white truncate leading-none">{info.name || '—'}</p>
+              <p className="text-[10px] text-slate-400 truncate mt-0.5">{info.email || '—'}</p>
             </div>
           </div>
           <button

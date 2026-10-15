@@ -63,7 +63,7 @@ export function ConnectUniversity() {
       await acceptInvitation(req.id, 'Accepted faculty teaching assignment');
       setSuccessNotice(
         `Successfully accepted! You are now affiliated with ${
-          req.organizationName || 'the university'
+          req.organizationName || 'the organization'
         }. The course "${req.courseTitle}" has been added to your teaching studio.`
       );
     } catch (err) {
@@ -104,17 +104,17 @@ export function ConnectUniversity() {
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30 text-xs font-bold backdrop-blur-sm">
             <Clock className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-            <span>Platform Policy • University Affiliation Pending</span>
+            <span>Platform Policy • Organization Affiliation Pending</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
-            Connect to a University to Continue
+            Connect to an Organization to Continue
           </h1>
 
           <p className="text-blue-100 text-sm sm:text-base leading-relaxed font-normal">
             Welcome to the Faculty Studio, <span className="font-semibold text-white">{instructor?.name || 'Instructor'}</span>.
             Under our institutional model, instructors <span className="underline decoration-amber-400 font-semibold text-white">cannot request organizations directly</span>.
-            Only accredited universities and enterprise organizations can send teaching requests to instructors. You can review all incoming offers below to either <span className="font-semibold text-emerald-300">Accept</span> or <span className="font-semibold text-rose-300">Reject</span>.
+            Only accredited organizations can send teaching requests to instructors. You can review all incoming offers below to either <span className="font-semibold text-emerald-300">Accept</span> or <span className="font-semibold text-rose-300">Reject</span>.
           </p>
 
           {isAffiliated ? (
@@ -206,7 +206,7 @@ export function ConnectUniversity() {
             <span className="text-[11px] text-slate-400 block font-medium">Faculty Affiliation Status:</span>
             <span className={`text-xs font-bold inline-flex items-center gap-1.5 mt-0.5 ${isAffiliated ? 'text-emerald-700' : 'text-amber-700'}`}>
               <span className={`w-2 h-2 rounded-full ${isAffiliated ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
-              {isAffiliated ? `Affiliated (${instructor?.organizationName})` : 'Pending University Request'}
+              {isAffiliated ? `Affiliated (${instructor?.organizationName})` : 'Pending Organization Request'}
             </span>
           </div>
           <button
@@ -228,7 +228,7 @@ export function ConnectUniversity() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                Incoming University Requests & Course Assignments
+                Incoming Organization Requests & Course Assignments
               </h2>
               {pendingInvitations.length > 0 ? (
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#0056D2] font-extrabold text-[11px]">
@@ -272,7 +272,7 @@ export function ConnectUniversity() {
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#0056D2] flex items-center gap-1">
                           <Building2 className="w-3 h-3" />
-                          {inv.organizationName || 'NexusPay Enterprise Academy'}
+                          {inv.organizationName || 'Unknown Organization'}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
                           Accredited Organization
@@ -329,7 +329,7 @@ export function ConnectUniversity() {
                     <div>
                       <p className="text-xs font-bold text-rose-950">Are you sure you want to reject this request?</p>
                       <p className="text-[11px] text-rose-800">
-                        Rejecting will notify {inv.organizationName || 'the university'} that you declined to teach this course.
+                        Rejecting will notify {inv.organizationName || 'the organization'} that you declined to teach this course.
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -357,7 +357,7 @@ export function ConnectUniversity() {
                   /* Two Main Actions: Reject or Accept */
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
                     <p className="text-[11px] text-slate-500">
-                      Accepting automatically associates your faculty profile with {inv.organizationName || 'this university'}.
+                      Accepting automatically associates your faculty profile with {inv.organizationName || 'this organization'}.
                     </p>
 
                     <div className="flex items-center gap-2.5 self-end sm:self-auto">
@@ -385,7 +385,7 @@ export function ConnectUniversity() {
                         ) : (
                           <>
                             <Check className="w-4 h-4" />
-                            <span>Accept & Connect to University</span>
+                            <span>Accept & Connect to Organization</span>
                           </>
                         )}
                       </button>
@@ -404,12 +404,12 @@ export function ConnectUniversity() {
 
             <div className="max-w-lg mx-auto space-y-2">
               <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl">
-                Awaiting University Teaching Requests
+                Awaiting Organization Teaching Requests
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                 You do not have any pending teaching requests at this moment. Under the platform affiliation model,
                 <strong className="text-slate-700"> instructors cannot request organizations</strong>.
-                Accredited universities review instructor profiles and dispatch course teaching requests directly to your account.
+                Accredited organizations review instructor profiles and dispatch course teaching requests directly to your account.
               </p>
             </div>
 
@@ -421,7 +421,7 @@ export function ConnectUniversity() {
                 </div>
                 <h4 className="text-xs font-bold text-slate-900">Organization Dispatches</h4>
                 <p className="text-[11px] text-slate-500 leading-normal">
-                  A partner university dean selects your profile and sends a course teaching request.
+                  A partner organization admin selects your profile and sends a course teaching request.
                 </p>
               </div>
 
@@ -482,7 +482,7 @@ export function ConnectUniversity() {
                 >
                   <div className="space-y-1">
                     <p className="font-bold text-slate-900">{inv.courseTitle}</p>
-                    <p className="text-slate-500 text-[11px]">{inv.organizationName || 'University Partner'}</p>
+                    <p className="text-slate-500 text-[11px]">{inv.organizationName || 'Organization Partner'}</p>
                     <p className="text-slate-400 text-[10px]">{inv.semester || 'Fall 2026'}</p>
                   </div>
 

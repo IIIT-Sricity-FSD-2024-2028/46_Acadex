@@ -114,7 +114,7 @@ export class PaymentsService {
       currency: 'USD',
       status: transaction.status,
       paymentMethod: transaction.method,
-      issuer: 'NexusPay Enterprise Academy',
+      issuer: transaction.organizationName || 'Platform Services',
       taxRegistration: 'US-EIN-884920194',
     };
   }

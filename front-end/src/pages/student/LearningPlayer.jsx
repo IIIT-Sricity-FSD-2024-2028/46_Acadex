@@ -92,43 +92,9 @@ export default function LearningPlayer() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const [userNotes, setUserNotes] = useState([
-    { id: 1, timeSec: 135, timeStr: "02:15", text: "Idempotency keys must be stored with a TTL of at least 24 hours in Redis cache." },
-    { id: 2, timeSec: 250, timeStr: "04:10", text: "State transition diagram shows pending -> processing -> settled -> reconciled lifecycle." },
-    { id: 3, timeSec: 420, timeStr: "07:00", text: "Exponential backoff formula: t = min(t_max, t_base * 2^attempt + jitter)." }
-  ]);
+  const [userNotes, setUserNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
-
-  const [discussions, setDiscussions] = useState([
-    {
-      id: 1,
-      author: "Elena Rostova",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80",
-      time: "2 hours ago",
-      text: "How do we handle duplicate webhook callbacks when using high-concurrency message queues in banking integrations?",
-      likes: 14,
-      isLiked: false,
-      replies: [
-        {
-          author: "Dr. Marcus Vance",
-          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-          text: "We use a distributed Redis lock per event_id with an immediate return of HTTP 200 once acknowledged.",
-          time: "1 hour ago",
-          isInstructor: true
-        }
-      ]
-    },
-    {
-      id: 2,
-      author: "Sarah Jenkins",
-      avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80",
-      time: "1 day ago",
-      text: "The explanation of zero-knowledge token vaults at 06:30 is crystal clear. Great breakdown of HSM key rotations!",
-      likes: 8,
-      isLiked: false,
-      replies: []
-    }
-  ]);
+  const [discussions, setDiscussions] = useState([]);
   const [newComment, setNewComment] = useState('');
 
   const transcriptLines = [
@@ -164,8 +130,8 @@ export default function LearningPlayer() {
       setDiscussions([
         {
           id: Date.now(),
-          author: "Alex Chen",
-          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+          author: localStorage.getItem('user_name') || 'You',
+          avatar: null,
           time: "Just now",
           text: newComment,
           likes: 0,
@@ -361,11 +327,10 @@ export default function LearningPlayer() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="primary" size="sm">Module 2 • Lesson 3</Badge>
-                    <span className="text-xs text-outline font-medium">Dr. Marcus Vance • Principal Architect</span>
+                    <Badge variant="primary" size="sm">Lesson</Badge>
                   </div>
                   <h1 className="text-xl font-bold text-on-surface tracking-tight">
-                    2.3 State Management in NexusPay
+                    {location.state?.lessonTitle || 'Learning Content'}
                   </h1>
                 </div>
 

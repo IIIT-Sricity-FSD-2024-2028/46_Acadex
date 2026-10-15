@@ -151,35 +151,15 @@ export const Dashboard = () => {
       analytics?.stats?.organizations ||
       users.filter((u) => u.role === 'Organization').length.toString(),
     courses: analytics?.stats?.courses || courses.length.toString(),
-    enrollments: analytics?.stats?.enrollments || '24',
+    enrollments: analytics?.stats?.enrollments ?? '0',
     pendingApprovals:
       analytics?.stats?.pendingApprovals ||
       courses.filter((c) => c.status === 'Pending Approval' || c.status === 'Draft').length.toString(),
   };
 
-  const userGrowthData = analytics?.userGrowth || [
-    { name: 'May', learners: 340, instructors: 28 },
-    { name: 'Jun', learners: 410, instructors: 35 },
-    { name: 'Jul', learners: 520, instructors: 42 },
-    { name: 'Aug', learners: 680, instructors: 56 },
-    { name: 'Sep', learners: 810, instructors: 68 },
-    { name: 'Oct', learners: 940, instructors: 82 },
-  ];
-
-  const revenueData = analytics?.revenueData || [
-    { name: 'May', revenue: 124000 },
-    { name: 'Jun', revenue: 158000 },
-    { name: 'Jul', revenue: 195000 },
-    { name: 'Aug', revenue: 242000 },
-    { name: 'Sep', revenue: 298000 },
-    { name: 'Oct', revenue: 354000 },
-  ];
-
-  const pendingApprovals = analytics?.pendingApprovals || [
-    { type: 'Course Verification', name: 'Cloud Native Microservices Architecture', date: 'Today' },
-    { type: 'Faculty Verification', name: 'Dr. Sarah Jenkins (Stanford Affiliation)', date: 'Yesterday' },
-    { type: 'Org Accreditation', name: 'Apex Technical Institute (Domain verified)', date: 'Oct 11' },
-  ];
+  const userGrowthData = analytics?.userGrowth || [];
+  const revenueData = analytics?.revenueData || [];
+  const pendingApprovals = analytics?.pendingApprovals || [];
 
   return (
     <div className="space-y-8">
@@ -295,16 +275,12 @@ export const Dashboard = () => {
           title="Active Learners"
           value={stats.totalLearners}
           icon={GraduationCap}
-          trend="up"
-          trendValue="+14% this month"
           color="success"
         />
         <StatCard
           title="Teaching Faculty"
           value={stats.totalInstructors}
           icon={BookOpen}
-          trend="up"
-          trendValue="+8% verified"
           color="primary"
         />
         <StatCard
@@ -317,8 +293,6 @@ export const Dashboard = () => {
           title="Active Enrollments"
           value={stats.enrollments}
           icon={Award}
-          trend="up"
-          trendValue="+21% completions"
           color="warning"
         />
       </div>

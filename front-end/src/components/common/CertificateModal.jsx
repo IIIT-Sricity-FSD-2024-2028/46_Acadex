@@ -70,7 +70,7 @@ export default function CertificateModal({ certificate: propCert, cert, onClose 
             <p className="text-xs text-on-surface-variant italic mb-2">This is proudly conferred upon</p>
 
             <h2 className="text-3xl md:text-4xl font-bold font-serif text-primary tracking-tight my-3 text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#0056D2] to-primary underline decoration-[#D4AF37] decoration-2 underline-offset-8">
-              Alex Chen
+              {certificate.learnerName || certificate.name || 'Learner'}
             </h2>
 
             <p className="text-xs text-on-surface-variant max-w-md mx-auto my-4 leading-relaxed">

@@ -55,6 +55,7 @@ function persistSession({ token, user = {}, fallbackRole, fallbackName, fallback
   localStorage.setItem('auth_token', token);
   localStorage.setItem('nexuspay_auth_token', token);
   localStorage.setItem('user_id', user.id || '');
+  localStorage.setItem('nexuspay_user_id', user.id || '');
   localStorage.setItem('nexuspay_active_role', role);
   localStorage.setItem('user_role', role);
   localStorage.setItem('user_name', user.name || fallbackName || '');
@@ -68,6 +69,11 @@ function persistSession({ token, user = {}, fallbackRole, fallbackName, fallback
     localStorage.setItem('user_organization_name', user.organizationName);
   } else {
     localStorage.removeItem('user_organization_name');
+  }
+  if (user.instructorId) {
+    localStorage.setItem('nexuspay_instructor_id', user.instructorId);
+  } else {
+    localStorage.removeItem('nexuspay_instructor_id');
   }
 
   return getDashboardForRole(role);
@@ -116,39 +122,39 @@ export default function SignIn() {
   // Preset demo accounts for quick testing & live updating titles
   const demoAccounts = {
     Student: {
-      email: 'alex.chen@stanford.edu',
+      email: 'arjun.sharma@email.com',
       password: 'Password123!',
-      name: 'Alex Chen',
-      subtitle: 'Enrolled in 4 AI & CS Specializations',
+      name: 'Arjun Sharma',
+      subtitle: 'Browse and enroll in available courses',
       redirect: '/student/dashboard',
       badge: 'Student / Learner',
       title: 'Student / Learner',
       buttonLabel: 'Student'
     },
     Instructor: {
-      email: 'sarah.jenkins@university.edu',
+      email: 'priya.nair@meridiantech.io',
       password: 'Password123!',
-      name: 'Dr. Sarah Jenkins',
-      subtitle: 'Faculty Professor • 1,240 Enrolled Students',
+      name: 'Priya Nair',
+      subtitle: 'Meridian Tech Institute · Full Stack & Python',
       redirect: '/instructor/dashboard',
       badge: 'Instructor / Faculty',
       title: 'Instructor / Faculty',
       buttonLabel: 'Instructor'
     },
     Organization: {
-      email: 'admin@nexuspay.edu',
+      email: 'admin@meridiantech.io',
       password: 'Password123!',
-      name: 'Nexus Academy Admin',
-      subtitle: 'Enterprise Team & Faculty Governance',
+      name: 'Meridian Tech Institute',
+      subtitle: 'Manage instructors, courses and learners',
       redirect: '/org/dashboard',
       badge: 'Organization Admin',
       title: 'Organization Admin',
       buttonLabel: 'Organization Admin'
     },
     Admin: {
-      email: 'admin@nexuspay-platform.io',
+      email: 'admin@platform.io',
       password: 'Password123!',
-      name: 'Operational Platform Admin',
+      name: 'Platform Admin',
       subtitle: 'Platform Operations & Course Approvals',
       redirect: '/admin/dashboard',
       badge: 'Platform Admin',
@@ -156,10 +162,10 @@ export default function SignIn() {
       buttonLabel: 'Platform Admin'
     },
     SuperAdmin: {
-      email: 'superadmin@nexuspay-platform.io',
+      email: 'superadmin@platform.io',
       password: 'Password123!',
       name: 'Platform Super Admin',
-      subtitle: 'Global Operations & System Approvals',
+      subtitle: 'Global Operations & System Configuration',
       redirect: '/super-admin/dashboard',
       badge: 'Super Admin',
       title: 'Super Admin',
@@ -170,41 +176,41 @@ export default function SignIn() {
   // Google SSO mock accounts
   const googleAccounts = [
     {
-      name: 'Alex Johnson',
-      email: 'alex.johnson.edu@gmail.com',
+      name: 'Arjun Sharma',
+      email: 'arjun.sharma@gmail.com',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
       role: 'Student',
       badge: 'Learner Workspace',
       redirect: '/student/dashboard'
     },
     {
-      name: 'Dr. Sarah Jenkins',
-      email: 'dr.sarah.jenkins.ai@gmail.com',
+      name: 'Priya Nair',
+      email: 'priya.nair@gmail.com',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
       role: 'Instructor',
-      badge: 'Faculty Professor',
+      badge: 'Instructor',
       redirect: '/instructor/dashboard'
     },
     {
-      name: 'Nexus Academy Admin',
-      email: 'enterprise.ops.global@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+      name: 'Meridian Tech Institute',
+      email: 'meridian.admin@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=100&auto=format&fit=crop&q=80',
       role: 'Organization',
       badge: 'Organization Admin',
       redirect: '/org/dashboard'
     },
     {
-      name: 'Operational Platform Admin',
-      email: 'admin.operations@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+      name: 'Platform Admin',
+      email: 'platform.admin@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
       role: 'Admin',
       badge: 'Platform Admin',
       redirect: '/admin/dashboard'
     },
     {
       name: 'Platform Super Admin',
-      email: 'superadmin.ops@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+      email: 'platform.superadmin@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
       role: 'SuperAdmin',
       badge: 'Super Admin',
       redirect: '/super-admin/dashboard'

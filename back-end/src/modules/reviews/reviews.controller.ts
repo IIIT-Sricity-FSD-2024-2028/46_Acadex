@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 
@@ -21,8 +21,24 @@ export class ReviewsController {
 
   @Post()
   @ApiOperation({ summary: 'Submit a student review and rating for a course' })
-  create(@Body() body: any) {
-    return this.reviewsService.create(body);
+  create(@Body() body: any, @Headers('x-user-id') userId: string) {
+    return this.reviewsService.create(body, userId);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Edit an existing review (owner only)' })
+  update(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Headers('x-user-id') userId: string,
+  ) {
+    return this.reviewsService.update(id, body, userId);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a review (owner only)' })
+  delete(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    return this.reviewsService.delete(id, userId);
   }
 
   @Post(':id/reply')
@@ -37,4 +53,3 @@ export class ReviewsController {
     return this.reviewsService.deleteReply(id);
   }
 }
-

@@ -3,18 +3,6 @@ import { api } from '../services/api';
 import OrgContext from './orgContextInstance';
 
 
-const defaultOrgInfo = {
-  id: "org-101",
-  name: "NexusPay Enterprise Academy",
-  legalName: "NexusPay Global EdTech & Financial Settlement Corp",
-  universityAffiliation: "Stanford University School of Engineering",
-  taxId: "EIN-84-9102931",
-  domain: "stanford.edu",
-  adminEmail: "admin@nexuspay.edu",
-  location: "Palo Alto, CA",
-  verificationStatus: "Verified Institution",
-  logo: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80",
-};
 
 const normalizeTransactionId = (id) => {
   const digits = String(id || '')
@@ -59,15 +47,13 @@ export function OrgProvider({ children }) {
   const [error, setError] = useState(null);
 
   const [state, setState] = useState({
-    info: { ...defaultOrgInfo },
+    info: {},
     instructors: [],
     instructorRequests: [],
     learners: [],
     courses: [],
     enrollments: [],
     transactions: [],
-    reports: [],
-    disputes: [],
     notifications: [],
     settings: {
       autoApproveEnrollments: true,
@@ -102,8 +88,6 @@ export function OrgProvider({ children }) {
         coursesRes,
         enrollmentsRes,
         transactionsRes,
-        reportsRes,
-        disputesRes,
         notificationsRes,
         settingsRes,
       ] = await Promise.allSettled([
@@ -114,8 +98,6 @@ export function OrgProvider({ children }) {
         api?.courses?.list ? api.courses.list({ limit: 1000 }) : Promise.resolve([]),
         api?.enrollments?.list ? api.enrollments.list({ limit: 1000 }) : Promise.resolve([]),
         api?.payments?.listTransactions ? api.payments.listTransactions({ limit: 1000 }) : Promise.resolve([]),
-        api?.reports?.list ? api.reports.list({ limit: 1000 }) : Promise.resolve([]),
-        api?.disputes?.list ? api.disputes.list({ limit: 1000 }) : Promise.resolve([]),
         api?.notifications?.list ? api.notifications.list({ limit: 1000 }) : Promise.resolve([]),
         api?.settings?.get ? api.settings.get() : Promise.resolve(null),
       ]);
@@ -128,8 +110,6 @@ export function OrgProvider({ children }) {
         courses: coursesRes.status === 'fulfilled' ? getItems(coursesRes.value) : prev.courses,
         enrollments: enrollmentsRes.status === 'fulfilled' ? getItems(enrollmentsRes.value) : prev.enrollments,
         transactions: transactionsRes.status === 'fulfilled' ? normalizeTransactions(getItems(transactionsRes.value)) : prev.transactions,
-        reports: reportsRes.status === 'fulfilled' ? getItems(reportsRes.value) : prev.reports,
-        disputes: disputesRes.status === 'fulfilled' ? getItems(disputesRes.value) : prev.disputes,
         notifications: notificationsRes.status === 'fulfilled' ? getItems(notificationsRes.value) : prev.notifications,
         settings: settingsRes.status === 'fulfilled' && settingsRes.value ? settingsRes.value : prev.settings,
       }));
@@ -159,10 +139,9 @@ export function OrgProvider({ children }) {
         r.status === 'Pending' ||
         r.status?.toLowerCase().includes('pending')
     ).length,
-    openDisputes: (state.disputes || []).filter((d) => d.status !== 'Resolved').length,
     unreadNotifications: state.notifications.filter((n) => !n.read).length,
-    annualRevenue: state.courses.reduce((sum, c) => sum + (c.revenue || (c.price * (c.enrolledCount || 10))), 0),
-    monthlyRevenue: Math.round(state.courses.reduce((sum, c) => sum + (c.revenue || (c.price * (c.enrolledCount || 10))), 0) * 0.3),
+    annualRevenue: state.courses.reduce((sum, c) => sum + (c.revenue || 0), 0),
+    monthlyRevenue: Math.round(state.courses.reduce((sum, c) => sum + (c.revenue || 0), 0) * 0.3),
   };
 
   // --- ACTIONS (Updating backend JSON files directly) ---
@@ -226,6 +205,8 @@ export function OrgProvider({ children }) {
         instructorId: leadInstructor.id,
         coInstructorIds: courseData.coInstructorIds || [],
         instructors: assignedInstructors,
+        organizationId: state.info.id || courseData.organizationId,
+        organizationName: state.info.name || courseData.organizationName,
         price: parseFloat(courseData.price) || 89.99,
         status: courseData.status || 'Published',
         thumbnail: courseData.thumbnail || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=80',
@@ -300,8 +281,8 @@ export function OrgProvider({ children }) {
         creditHours: creditHours || '4 Academic Credits',
         proposedTerms: proposedTerms || 'Departmental faculty honorarium + course royalties',
         message: message || `College administration sent formal course teaching request for ${courseTitle}.`,
-        organizationId: organizationId || state.organization?.id || 'org-101',
-        organizationName: organizationName || state.organization?.name || 'NexusPay Enterprise Academy',
+        organizationId: organizationId || state.info?.id,
+        organizationName: organizationName || state.info?.name,
       };
 
       const created = await api.instructorRequests.create(payload);
@@ -380,34 +361,7 @@ export function OrgProvider({ children }) {
     }
   };
 
-  // 5. Reports
-  const generateReport = async (reportTitle, reportType) => {
-    try {
-      const created = await api.reports.generate(reportTitle, reportType);
-
-      setState((prev) => ({
-        ...prev,
-        reports: [created, ...prev.reports.filter((r) => r.id !== created.id)],
-      }));
-
-      return created;
-    } catch (err) {
-      console.error('Failed to generate report on backend:', err);
-      // Fallback local creation
-      const localReport = {
-        id: `rep-${Date.now()}`,
-        title: reportTitle,
-        type: reportType || 'Analytics Audit',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        size: '2.4 MB',
-        format: 'CSV',
-      };
-      setState((prev) => ({ ...prev, reports: [localReport, ...prev.reports] }));
-      return localReport;
-    }
-  };
-
-  // 6. Notifications
+  // 5. Notifications
   const markNotificationRead = async (id) => {
     try {
       await api.notifications.markRead(id);
@@ -440,86 +394,8 @@ export function OrgProvider({ children }) {
     }
   };
 
-  // 7. Disputes Management
-  const raiseDispute = async (disputeData) => {
-    try {
-      const payload = {
-        disputeType: disputeData.disputeType || 'General Institutional Dispute',
-        subject: disputeData.subject || 'Administrative Operational Dispute',
-        description: disputeData.description || '',
-        courseTitle: disputeData.courseTitle || '',
-        courseId: disputeData.courseId || '',
-        priority: disputeData.priority || 'Medium',
-        raisedBy: disputeData.raisedBy || state.info.name || 'NexusPay Enterprise Academy',
-        raisedById: disputeData.raisedById || state.info.id || 'org-101',
-        raisedByRole: disputeData.raisedByRole || 'Organization',
-        desiredResolution: disputeData.desiredResolution || 'Prompt review and resolution by administration.',
-      };
 
-      const created = await api.disputes.create(payload);
-
-      // Re-fetch disputes and notifications
-      const [disputesRes, notifsRes] = await Promise.all([
-        api.disputes.list({ limit: 1000 }),
-        api.notifications.list({ limit: 1000 }),
-      ]);
-
-      setState((prev) => ({
-        ...prev,
-        disputes: getItems(disputesRes),
-        notifications: getItems(notifsRes),
-      }));
-
-      return created;
-    } catch (err) {
-      console.error('Failed to raise dispute on backend:', err);
-      throw err;
-    }
-  };
-
-  const updateDisputeStatus = async (disputeId, newStatus, adminNote) => {
-    try {
-      const updated = await api.disputes.updateStatus(disputeId, newStatus, adminNote);
-
-      setState((prev) => ({
-        ...prev,
-        disputes: (prev.disputes || []).map((d) => (d.id === disputeId ? { ...d, ...(updated || {}), status: newStatus } : d)),
-      }));
-
-      return updated;
-    } catch (err) {
-      console.error('Failed to update dispute status on backend:', err);
-      setState((prev) => ({
-        ...prev,
-        disputes: (prev.disputes || []).map((d) => (d.id === disputeId ? { ...d, status: newStatus } : d)),
-      }));
-    }
-  };
-
-  const resolveDispute = async (disputeId, resolutionNote) => {
-    try {
-      const updated = await api.disputes.resolve(disputeId, resolutionNote || 'Resolved by Organization Administration.');
-
-      // Refresh disputes & notifications
-      const [disputesRes, notifsRes] = await Promise.all([
-        api.disputes.list({ limit: 1000 }),
-        api.notifications.list({ limit: 1000 }),
-      ]);
-
-      setState((prev) => ({
-        ...prev,
-        disputes: getItems(disputesRes),
-        notifications: getItems(notifsRes),
-      }));
-
-      return updated;
-    } catch (err) {
-      console.error('Failed to resolve dispute on backend:', err);
-      await updateDisputeStatus(disputeId, 'Resolved', resolutionNote);
-    }
-  };
-
-  // 8. Settings & Database Reset
+  // 6. Settings & Database Reset
   const updateSettings = async (newSettings) => {
     try {
       const updated = await api.settings.update(newSettings);
@@ -559,8 +435,6 @@ export function OrgProvider({ children }) {
         courses: state.courses,
         enrollments: state.enrollments,
         transactions: state.transactions,
-        reports: state.reports,
-        disputes: state.disputes || [],
         notifications: state.notifications,
         settings: state.settings,
         stats,
@@ -575,10 +449,6 @@ export function OrgProvider({ children }) {
         sendCourseTeachingRequest,
         respondToTeachingRequest,
         assignCoursesToLearners,
-        generateReport,
-        raiseDispute,
-        updateDisputeStatus,
-        resolveDispute,
         markNotificationRead,
         markAllNotificationsRead,
         updateSettings,

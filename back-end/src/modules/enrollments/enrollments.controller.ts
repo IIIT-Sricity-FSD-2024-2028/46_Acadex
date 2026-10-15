@@ -27,6 +27,13 @@ export class EnrollmentsController {
     return this.enrollmentsService.findOne(id);
   }
 
+  @Post()
+  @ApiOperation({ summary: 'Enroll a single learner in a course' })
+  @ApiResponse({ status: 201, description: 'Enrollment created' })
+  async create(@Body() body: any) {
+    return this.enrollmentsService.createSingle(body);
+  }
+
   @Post('assign')
   @ApiOperation({ summary: 'Batch assign multiple courses to multiple learners atomically with billing transactions' })
   @ApiResponse({ status: 201, description: 'Enrollments and transactions created atomically' })

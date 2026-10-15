@@ -11,10 +11,15 @@ async function request(endpoint, options = {}) {
   const token = localStorage.getItem('nexuspay_auth_token') || localStorage.getItem('nexuspay_student_token');
   const role = options.role || localStorage.getItem('nexuspay_active_role') || 'Student';
 
+  const userId = localStorage.getItem('user_id') || '';
+  const userEmail = localStorage.getItem('user_email') || '';
+
   const headers = {
     'Content-Type': 'application/json',
     'x-role': role.toLowerCase(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(userId ? { 'x-user-id': userId } : {}),
+    ...(userEmail ? { 'x-user-email': userEmail } : {}),
     ...(options.headers || {}),
   };
 
@@ -51,13 +56,18 @@ async function request(endpoint, options = {}) {
   }
 }
 
-// ── Mock credential store (mirrors Signin.jsx demoAccounts) ──────────────────
+// ── Mock credential store (mirrors users.json) ──────────────────
 const MOCK_CREDENTIALS = [
-  { email: 'alex.chen@stanford.edu',          password: 'Password123!', role: 'Student',      name: 'Alex Chen' },
-  { email: 'sarah.jenkins@university.edu',    password: 'Password123!', role: 'Instructor',   name: 'Dr. Sarah Jenkins' },
-  { email: 'admin@nexuspay.edu',              password: 'Password123!', role: 'Organization', name: 'Nexus Academy Admin' },
-  { email: 'admin@nexuspay-platform.io',       password: 'Password123!', role: 'Admin',        name: 'Operational Platform Admin' },
-  { email: 'superadmin@nexuspay-platform.io', password: 'Password123!', role: 'SuperAdmin',   name: 'Platform Super Admin' },
+  { email: 'arjun.sharma@email.com',       password: 'Password123!', role: 'Student',      name: 'Arjun Sharma',            id: 'usr-5' },
+  { email: 'sofia.reyes@email.com',        password: 'Password123!', role: 'Student',      name: 'Sofia Reyes',             id: 'usr-6' },
+  { email: 'priya.nair@meridiantech.io',   password: 'Password123!', role: 'Instructor',   name: 'Priya Nair',              id: 'usr-1', instructorId: 'inst-1', organizationId: 'org-1', organizationName: 'Meridian Tech Institute' },
+  { email: 'daniel.osei@meridiantech.io',  password: 'Password123!', role: 'Instructor',   name: 'Daniel Osei',             id: 'usr-2', instructorId: 'inst-2', organizationId: 'org-1', organizationName: 'Meridian Tech Institute' },
+  { email: 'elena.vasquez@quantlearn.io',  password: 'Password123!', role: 'Instructor',   name: 'Elena Vasquez',           id: 'usr-3', instructorId: 'inst-3', organizationId: 'org-2', organizationName: 'QuantLearn Academy' },
+  { email: 'james.holloway@quantlearn.io', password: 'Password123!', role: 'Instructor',   name: 'James Holloway',          id: 'usr-4', instructorId: 'inst-4', organizationId: 'org-2', organizationName: 'QuantLearn Academy' },
+  { email: 'admin@meridiantech.io',        password: 'Password123!', role: 'Organization', name: 'Meridian Tech Institute', id: 'usr-7', organizationId: 'org-1', organizationName: 'Meridian Tech Institute' },
+  { email: 'admin@quantlearn.io',          password: 'Password123!', role: 'Organization', name: 'QuantLearn Academy',      id: 'usr-8', organizationId: 'org-2', organizationName: 'QuantLearn Academy' },
+  { email: 'admin@platform.io',            password: 'Password123!', role: 'Admin',        name: 'Platform Admin',          id: 'usr-9' },
+  { email: 'superadmin@platform.io',       password: 'Password123!', role: 'SuperAdmin',   name: 'Platform Super Admin',    id: 'usr-10' },
 ];
 
 function mockLogin(email, password, role) {
@@ -78,7 +88,15 @@ function mockLogin(email, password, role) {
   const resolvedRole = targetRole === 'superadmin' ? 'SuperAdmin' : match.role;
   return {
     token: `jwt-mock-${resolvedRole.toLowerCase()}-${Date.now()}`,
-    user: { id: `mock-${resolvedRole.toLowerCase()}-001`, email: match.email, name: match.name, role: resolvedRole },
+    user: {
+      id: match.id,
+      email: match.email,
+      name: match.name,
+      role: resolvedRole,
+      ...(match.instructorId ? { instructorId: match.instructorId } : {}),
+      ...(match.organizationId ? { organizationId: match.organizationId } : {}),
+      ...(match.organizationName ? { organizationName: match.organizationName } : {}),
+    },
   };
 }
 
@@ -155,6 +173,17 @@ export const api = {
     getReviews: (id) => request(`/reviews/course/${id}`),
     addReview: (courseId, rating, comment, learnerName) =>
       request('/reviews', { method: 'POST', body: { courseId, rating, comment, learnerName } }),
+    updateReview: (reviewId, rating, comment) =>
+      request(`/reviews/${reviewId}`, { method: 'PATCH', body: { rating, comment } }),
+    deleteReview: (reviewId) => request(`/reviews/${reviewId}`, { method: 'DELETE' }),
+  },
+
+  // 3b. Bookmarks
+  bookmarks: {
+    list: () => request('/bookmarks'),
+    toggle: (courseId) => request(`/bookmarks/${courseId}/toggle`, { method: 'POST' }),
+    status: (courseId) => request(`/bookmarks/${courseId}/status`),
+    remove: (courseId) => request(`/bookmarks/${courseId}`, { method: 'DELETE' }),
   },
 
   // 4. Quizzes & Academic Assessments
@@ -166,17 +195,6 @@ export const api = {
     addQuestion: (data) => request('/quizzes/questions', { method: 'POST', body: data }),
     submit: (quizId, answers, userId) =>
       request(`/quizzes/${quizId}/submit`, { method: 'POST', body: { answers }, headers: { 'x-user-id': userId } }),
-  },
-
-  // 5. Practical Assignments & Submissions
-  assignments: {
-    list: () => request('/assignments'),
-    get: (id) => request(`/assignments/${id}`),
-    getByCourse: (courseId) => request(`/assignments/course/${courseId}`),
-    create: (data) => request('/assignments', { method: 'POST', body: data }),
-    submit: (id, data) => request(`/assignments/${id}/submit`, { method: 'POST', body: data }),
-    grade: (submissionId, score, feedback) =>
-      request(`/assignments/submissions/${submissionId}/grade`, { method: 'POST', body: { score, feedback } }),
   },
 
   // 6. Certificates & Credentials
@@ -208,8 +226,8 @@ export const api = {
     get: (id) => request(`/instructors/${id}`),
     create: (data) => request('/instructors', { method: 'POST', body: data }),
     update: (id, data) => request(`/instructors/${id}`, { method: 'PATCH', body: data }),
-    connectUniversity: (id, organizationId, organizationName) =>
-      request(`/instructors/${id}/connect-university`, {
+    connectOrganization: (id, organizationId, organizationName) =>
+      request(`/instructors/${id}/connect-organization`, {
         method: 'POST',
         body: { organizationId, organizationName },
       }),
@@ -271,10 +289,6 @@ export const api = {
 
   // 10. Financial Settlements, Payments & Refunds
   payments: {
-    getTransactions: (params = {}) => {
-      const query = new URLSearchParams(params).toString();
-      return request(`/payments/transactions${query ? `?${query}` : ''}`);
-    },
     listTransactions: (params = {}) => {
       const query = new URLSearchParams(params).toString();
       return request(`/payments/transactions${query ? `?${query}` : ''}`);
@@ -313,11 +327,12 @@ export const api = {
   notifications: {
     list: () => request('/notifications'),
     markRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
-    markAllRead: () => request('/notifications/read-all', { method: 'POST' }),
+    markAllRead: () => request('/notifications/mark-all-read', { method: 'PATCH' }),
   },
   settings: {
     get: () => request('/settings'),
     update: (data) => request('/settings', { method: 'PATCH', body: data }),
+    resetDatabase: () => request('/settings/reset-database', { method: 'POST' }),
   },
 
   // 14. Super Admin Governance (Level 1 Master Control - JSON backed with direct fallback)

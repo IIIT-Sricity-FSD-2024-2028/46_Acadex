@@ -69,7 +69,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
 
   const adminName = localStorage.getItem('user_name') || 'Operational Admin';
-  const adminEmail = localStorage.getItem('user_email') || 'admin@nexuspay-platform.io';
+  const adminEmail = localStorage.getItem('user_email') || 'admin@platform.io';
 
   const handleLogout = () => {
     localStorage.removeItem('nexuspay_auth_token');

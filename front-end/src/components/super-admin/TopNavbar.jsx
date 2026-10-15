@@ -46,7 +46,7 @@ export const SuperAdminTopNavbar = ({ toggleSidebar }) => {
           />
           <div className="hidden sm:block text-left">
             <p className="text-xs font-bold text-slate-900 leading-tight">Super Admin</p>
-            <p className="text-[10px] text-[#0056D2] font-semibold leading-none mt-0.5">superadmin@nexuspay.io</p>
+            <p className="text-[10px] text-[#0056D2] font-semibold leading-none mt-0.5">superadmin@platform.io</p>
           </div>
         </div>
       </div>

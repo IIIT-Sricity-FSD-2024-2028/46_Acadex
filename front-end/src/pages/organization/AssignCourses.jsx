@@ -84,8 +84,8 @@ export default function AssignCourses() {
               creditHours,
               proposedTerms,
               message: customMessage,
-              organizationId: organization?.id || 'org-101',
-              organizationName: organization?.name || 'NexusPay Enterprise Academy',
+              organizationId: organization?.id,
+              organizationName: organization?.name,
             })
           );
         });

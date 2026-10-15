@@ -24,6 +24,7 @@ import StudentLearningPlayer from './pages/student/LearningPlayer';
 import StudentQuiz from './pages/student/Quiz';
 import StudentCertificates from './pages/student/Certificates';
 import StudentProfile from './pages/student/Profile';
+import StudentBookmarks from './pages/student/Bookmarks';
 import StudentGuard from './components/student/layout/StudentGuard';
 import StudentRouteMiddleware from './components/student/layout/StudentRouteMiddleware';
 
@@ -68,9 +69,6 @@ import OrgEditCourse from './pages/organization/EditCourse';
 import OrgEnrollments from './pages/organization/Enrollments';
 import OrgAssignCourses from './pages/organization/AssignCourses';
 import OrgPayments from './pages/organization/Payments';
-import OrgDisputes from './pages/organization/Disputes';
-import OrgReports from './pages/organization/Reports';
-import OrgAnalytics from './pages/organization/Analytics';
 import OrgNotifications from './pages/organization/Notifications';
 import OrgSettings from './pages/organization/Settings';
 
@@ -168,9 +166,11 @@ export default function App() {
         <Route path="/student/quiz" element={<StudentQuiz />} />
         <Route path="/student/certificates" element={<StudentCertificates />} />
         <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/student/bookmarks" element={<StudentBookmarks />} />
 
         {/* Student Direct Fallback Aliases */}
         <Route path="/explore" element={<StudentExplore />} />
+        <Route path="/bookmarks" element={<StudentBookmarks />} />
         <Route path="/my-learning" element={<StudentMyLearning />} />
         <Route path="/player" element={<StudentLearningPlayer />} />
         <Route path="/checkout" element={<StudentCheckout />} />
@@ -267,17 +267,17 @@ export default function App() {
       <Route path="/organization/payments" element={<OrgPayments />} />
       <Route path="/organization/transactions" element={<Navigate to="/org/payments" replace />} />
 
-      <Route path="/org/disputes" element={<OrgDisputes />} />
-      <Route path="/org/raise-dispute" element={<OrgDisputes />} />
-      <Route path="/organization/disputes" element={<OrgDisputes />} />
-      <Route path="/organization/raise-dispute" element={<OrgDisputes />} />
+      <Route path="/org/disputes" element={<Navigate to="/org/dashboard" replace />} />
+      <Route path="/org/raise-dispute" element={<Navigate to="/org/dashboard" replace />} />
+      <Route path="/organization/disputes" element={<Navigate to="/org/dashboard" replace />} />
+      <Route path="/organization/raise-dispute" element={<Navigate to="/org/dashboard" replace />} />
 
-      <Route path="/org/reports" element={<OrgReports />} />
-      <Route path="/org/analytics" element={<OrgAnalytics />} />
+      <Route path="/org/reports" element={<Navigate to="/org/dashboard" replace />} />
+      <Route path="/org/analytics" element={<Navigate to="/org/dashboard" replace />} />
       <Route path="/org/notifications" element={<OrgNotifications />} />
       <Route path="/org/settings" element={<OrgSettings />} />
-      <Route path="/organization/reports" element={<OrgReports />} />
-      <Route path="/organization/analytics" element={<OrgAnalytics />} />
+      <Route path="/organization/reports" element={<Navigate to="/org/dashboard" replace />} />
+      <Route path="/organization/analytics" element={<Navigate to="/org/dashboard" replace />} />
       <Route path="/organization/notifications" element={<OrgNotifications />} />
       <Route path="/organization/settings" element={<OrgSettings />} />
 

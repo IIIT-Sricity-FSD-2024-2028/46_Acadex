@@ -69,6 +69,8 @@ export default function Profile() {
     return errs;
   };
 
+  const userId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '';
+
   const {
     values: profileForm,
     errors: formErrors,
@@ -80,32 +82,32 @@ export default function Profile() {
     isSubmitting: isSavingProfile
   } = useForm(
     {
-      name: student?.name || 'Vujja Punith Sai',
-      email: student?.email || 's20240010260@iiits.in',
-      title: student?.title || 'Enterprise FinTech & Full-Stack Architect',
-      location: student?.location || 'Sri City, Andhra Pradesh',
-      bio: student?.bio || 'Specializing in secure transaction processing, distributed ledger architecture, and high-availability financial gateways.',
-      university: student?.institution || 'IIIT Sri City',
+      name: student?.name || '',
+      email: student?.email || '',
+      title: student?.title || '',
+      location: student?.location || '',
+      bio: student?.bio || '',
+      university: student?.institution || '',
     },
     validateProfile
   );
 
   const loadData = () => {
     Promise.all([
-      api.student.getProfile('lrn-1').catch(() => null),
-      api.student.getPayments('lrn-1').catch(() => []),
+      api.student.getProfile(userId).catch(() => null),
+      api.student.getPayments(userId).catch(() => []),
       api.student.getOrganizations().catch(() => []),
     ])
       .then(([p, pay, o]) => {
         if (p) {
           setProfile(p);
           setProfileFormValues({
-            name: p.name || student?.name || 'Vujja Punith Sai',
-            email: p.email || student?.email || 's20240010260@iiits.in',
-            title: p.learnerType || student?.title || 'Enterprise FinTech & Full-Stack Architect',
-            location: student?.location || 'Sri City, Andhra Pradesh',
-            bio: student?.bio || 'Specializing in secure transaction processing, distributed ledger architecture, and high-availability financial gateways.',
-            university: p.requestedOrgName || p.university || student?.institution || 'IIIT Sri City',
+            name: p.name || student?.name || '',
+            email: p.email || student?.email || '',
+            title: p.learnerType || student?.title || '',
+            location: p.location || student?.location || '',
+            bio: p.bio || student?.bio || '',
+            university: p.requestedOrgName || p.university || student?.institution || '',
           });
         }
         setPayments(Array.isArray(pay) ? pay : []);
@@ -125,7 +127,7 @@ export default function Profile() {
   const onSaveProfile = async (formVals) => {
     try {
       updateStudentContextProfile(formVals);
-      await api.student.updateProfile(formVals, 'lrn-1').catch(() => {});
+      await api.student.updateProfile(formVals, userId).catch(() => {});
       addToast('Profile changes saved successfully!', 'success');
       setIsEditing(false);
     } catch (err) {
@@ -137,7 +139,7 @@ export default function Profile() {
     if (!selectedOrg) return;
     try {
       setSubmittingOrg(true);
-      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, 'lrn-1');
+      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, userId);
       addToast(`Join request submitted to ${selectedOrg.name}!`, 'success');
       setShowOrgModal(false);
       loadData();
@@ -163,7 +165,7 @@ export default function Profile() {
   }
 
   const membershipStatus = profile?.orgMembershipStatus || (profile?.university && profile?.university !== 'Independent Learner' ? 'Verified Student' : 'Independent Learner');
-  const universityName = profile?.requestedOrgName || profile?.university || 'Stanford University';
+  const universityName = profile?.requestedOrgName || profile?.university || '';
 
   return (
     <PageLayout>
@@ -240,23 +242,23 @@ export default function Profile() {
             {/* Right Main Content Area (8 cols on lg) */}
             <main className="lg:col-span-8 space-y-6">
               
-              {/* Stats Bar (Stitch Spec: 12 Courses | 4 Certificates | 28 Skills | 140 Hours) */}
+              {/* Stats Bar */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white border border-slate-200/80 rounded-xl p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                 <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-lg">
-                  <span className="text-2xl font-black text-coursera">12</span>
+                  <span className="text-2xl font-black text-coursera">{profile?.enrolledCourses ?? 0}</span>
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Courses</span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-lg">
-                  <span className="text-2xl font-black text-coursera">4</span>
+                  <span className="text-2xl font-black text-coursera">{profile?.certificatesEarned ?? 0}</span>
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Certificates</span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-lg">
-                  <span className="text-2xl font-black text-coursera">28</span>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Skills</span>
+                  <span className="text-2xl font-black text-coursera">{profile?.completedCourses ?? 0}</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Completed</span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-lg">
-                  <span className="text-2xl font-black text-coursera">140</span>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Hours</span>
+                  <span className="text-2xl font-black text-coursera">{profile?.streakDays ?? 0}</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Day Streak</span>
                 </div>
               </div>
 
@@ -285,7 +287,7 @@ export default function Profile() {
                 <div className="bg-white rounded-xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06)] space-y-4 animate-in fade-in">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 className="text-sm font-bold text-slate-900">Update Profile Information</h3>
-                    <span className="text-[11px] text-slate-400 font-medium">Roll No: {student?.rollNumber || 'S20240010260'}</span>
+                    <span className="text-[11px] text-slate-400 font-medium">{student?.email || profile?.email || ''}</span>
                   </div>
 
                   <form onSubmit={handleFormSubmit(onSaveProfile)} className="space-y-3.5">
@@ -401,17 +403,15 @@ export default function Profile() {
                         <Flame className="w-5 h-5 text-amber-500 fill-amber-500" />
                         <span>Learning Streak</span>
                       </h2>
-                      <span className="text-xs font-bold text-slate-600">14 Days Active</span>
+                      <span className="text-xs font-bold text-slate-600">{profile?.streakDays ?? 0} Days Active</span>
                     </div>
 
                     <div className="grid grid-cols-7 gap-2 mt-3">
-                      <div className="h-8 rounded-md bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-bold">M</div>
-                      <div className="h-8 rounded-md bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-bold">T</div>
-                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">W</div>
-                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">T</div>
-                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">F</div>
-                      <div className="h-8 rounded-md bg-[#0056D2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">S</div>
-                      <div className="h-8 rounded-md border-2 border-[#0056D2] bg-blue-50 text-[#0056D2] flex items-center justify-center text-[10px] font-bold">S</div>
+                      {['M','T','W','T','F','S','S'].map((day, i) => (
+                        <div key={i} className="h-8 rounded-md bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-bold">
+                          {day}
+                        </div>
+                      ))}
                     </div>
                   </section>
 
@@ -425,57 +425,15 @@ export default function Profile() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      
-                      {/* Course Card 1 */}
-                      <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col justify-between hover:shadow-md transition-shadow group">
-                        <div className="h-28 bg-gradient-to-r from-blue-900 to-indigo-900 p-4 flex flex-col justify-between relative">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200">Stanford University</span>
-                          <h3 className="text-sm font-bold text-white group-hover:text-blue-100 transition-colors line-clamp-1">
-                            Advanced Payment Gateway Architecture
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-3">
-                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-[#0056D2] h-full rounded-full" style={{ width: '65%' }}></div>
-                          </div>
-                          <div className="flex justify-between items-center text-xs text-slate-500 font-medium">
-                            <span>65% Complete</span>
-                            <span>2h 15m remaining</span>
-                          </div>
-                          <Link 
-                            to="/student/player"
-                            className="w-full py-2 bg-blue-50 hover:bg-[#0056D2] text-[#0056D2] hover:text-white rounded-lg text-xs font-bold text-center block transition-colors cursor-pointer"
-                          >
-                            Resume Learning
+                      {payments.length === 0 && (
+                        <div className="col-span-2 py-8 text-center bg-slate-50 rounded-xl border border-slate-100">
+                          <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                          <p className="text-xs text-slate-400 font-semibold">No courses enrolled yet.</p>
+                          <Link to="/student/explore" className="mt-3 inline-block text-xs font-bold text-[#0056D2] hover:underline">
+                            Browse Course Catalog
                           </Link>
                         </div>
-                      </div>
-
-                      {/* Course Card 2 */}
-                      <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col justify-between hover:shadow-md transition-shadow group">
-                        <div className="h-28 bg-gradient-to-r from-slate-800 to-slate-900 p-4 flex flex-col justify-between relative">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Carnegie Mellon</span>
-                          <h3 className="text-sm font-bold text-white group-hover:text-slate-100 transition-colors line-clamp-1">
-                            Ledger Reconciliation & State Consensus
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-3">
-                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-[#0056D2] h-full rounded-full" style={{ width: '30%' }}></div>
-                          </div>
-                          <div className="flex justify-between items-center text-xs text-slate-500 font-medium">
-                            <span>30% Complete</span>
-                            <span>5h 45m remaining</span>
-                          </div>
-                          <Link 
-                            to="/student/player"
-                            className="w-full py-2 bg-blue-50 hover:bg-[#0056D2] text-[#0056D2] hover:text-white rounded-lg text-xs font-bold text-center block transition-colors cursor-pointer"
-                          >
-                            Resume Learning
-                          </Link>
-                        </div>
-                      </div>
-
+                      )}
                     </div>
                   </section>
 
@@ -485,27 +443,17 @@ export default function Profile() {
               {/* Tab: Courses */}
               {activeTab === 'Courses' && (
                 <div className="bg-white rounded-xl border border-slate-200/80 p-6 space-y-4">
-                  <h3 className="text-sm font-bold text-slate-900">Enrolled Courses & Progress</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-lg border border-slate-100">
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900">Advanced Enterprise Architecture & Payment Systems</h4>
-                        <p className="text-[11px] text-slate-500">Stanford University • 65% Completed</p>
-                      </div>
-                      <Link to="/student/player" className="px-3 py-1.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded text-xs font-bold cursor-pointer">
-                        Continue
-                      </Link>
-                    </div>
-                    <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-lg border border-slate-100">
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900">Distributed Ledgers and Two-Phase Commits</h4>
-                        <p className="text-[11px] text-slate-500">MIT FinTech Lab • 30% Completed</p>
-                      </div>
-                      <Link to="/student/player" className="px-3 py-1.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded text-xs font-bold cursor-pointer">
-                        Continue
-                      </Link>
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-bold text-slate-900">Enrolled Courses</h3>
+                    <Link to="/student/my-learning" className="text-xs font-bold text-coursera hover:underline">View All</Link>
                   </div>
+                  {(profile?.enrolledCourses ?? 0) === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-400">
+                      No courses enrolled yet. <Link to="/student/explore" className="text-coursera font-bold hover:underline">Browse catalog</Link>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500">Visit <Link to="/student/my-learning" className="text-coursera font-bold hover:underline">My Learning</Link> to see all enrolled courses and progress.</p>
+                  )}
                 </div>
               )}
 
@@ -515,46 +463,32 @@ export default function Profile() {
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-bold text-slate-900">Verified Accomplishments</h3>
                     <Link to="/student/certificates" className="text-xs font-bold text-coursera hover:underline">
-                      View Certificates Ledger
+                      View Certificates
                     </Link>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/50 flex items-start gap-3">
-                      <Award className="w-8 h-8 text-amber-500 shrink-0" />
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900">Advanced Payment Systems</h4>
-                        <p className="text-[11px] text-slate-500">Stanford University • Grade: 98.4%</p>
-                        <span className="text-[10px] text-secondary font-bold inline-block mt-1">Verified Credential</span>
-                      </div>
+                  {(profile?.certificatesEarned ?? 0) === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-400">
+                      Complete a course to earn your first certificate.
                     </div>
-                    <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/50 flex items-start gap-3">
-                      <Award className="w-8 h-8 text-amber-500 shrink-0" />
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900">Fraud Prevention Strategies</h4>
-                        <p className="text-[11px] text-slate-500">MIT FinTech Lab • Grade: 95.0%</p>
-                        <span className="text-[10px] text-secondary font-bold inline-block mt-1">Verified Credential</span>
-                      </div>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-slate-500">You have earned <strong>{profile.certificatesEarned}</strong> certificate(s). <Link to="/student/certificates" className="text-coursera font-bold hover:underline">View them here.</Link></p>
+                  )}
                 </div>
               )}
 
               {/* Tab: Skills */}
               {activeTab === 'Skills' && (
                 <div className="bg-white rounded-xl border border-slate-200/80 p-6 space-y-4">
-                  <h3 className="text-sm font-bold text-slate-900">Skills Acquired (28)</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      'Distributed Systems', 'Payment Gateways', 'Two-Phase Commit', 'Raft Consensus',
-                      'PCI-DSS v4.0', 'Tokenization Engines', 'Cloud Security', 'Zero Trust',
-                      'High Availability', 'Database Sharding', 'Idempotency', 'Kafka Streams',
-                      'Ledger Reconciliation', 'Smart Routing', 'Risk Models', 'Anomaly Detection'
-                    ].map((s, idx) => (
-                      <span key={idx} className="px-3 py-1 rounded-lg bg-blue-50 text-coursera border border-blue-100 text-xs font-medium">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Skills</h3>
+                  {(profile?.skills?.length ?? 0) === 0 ? (
+                    <p className="text-xs text-slate-400 py-4">Enroll in courses to start building skills.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.skills.map((s, idx) => (
+                        <span key={idx} className="px-3 py-1 rounded-lg bg-blue-50 text-coursera border border-blue-100 text-xs font-medium">{s}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

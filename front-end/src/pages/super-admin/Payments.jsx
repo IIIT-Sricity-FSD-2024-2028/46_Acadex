@@ -64,7 +64,7 @@ export default function SuperAdminPayments() {
       const orgShare = Math.round(gross * 0.85 * 100) / 100;
       const superAdminShare = Math.round(gross * 0.15 * 100) / 100;
       const payerName = t.payerName || t.payer || 'Student Learner';
-      const payerEmail = t.payerEmail || t.user || (payerName ? `${payerName.toLowerCase().replace(/\s+/g, '.')}@nexuspay.edu` : 'learner@nexuspay.edu');
+      const payerEmail = t.payerEmail || t.user || (payerName ? `${payerName.toLowerCase().replace(/\s+/g, '.')}@email.com` : 'learner@email.com');
       const courseTitle = t.courseTitle || t.course || 'Advanced Enterprise Architecture & Payment Systems';
       const status = t.status || (t.type === 'Payout' ? 'Pending' : 'Completed');
       const type = t.type || 'Payment';

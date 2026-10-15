@@ -43,83 +43,17 @@ import QuizResultSummary from '../../components/student/quiz/QuizResultSummary';
 import SubmitConfirmationModal from '../../components/student/quiz/SubmitConfirmationModal';
 
 const DEFAULT_COURSERA_QUIZ = {
-  id: "qz-101",
-  courseId: "crs-1",
-  courseTitle: "Advanced Enterprise Architecture & Payment Systems",
-  institution: "Stanford University",
-  moduleTitle: "Module 2: Distributed Consensus & Two-Phase Commit",
-  title: "Graded Assessment: Distributed Consensus & Multi-Region Failover",
-  description: "Demonstrate your understanding of distributed consensus protocols, Two-Phase Commit (2PC), Raft leader election, and high-frequency banking state reconciliation.",
+  id: null,
+  courseId: null,
+  courseTitle: '',
+  institution: '',
+  moduleTitle: '',
+  title: '',
+  description: '',
   durationMinutes: 25,
   passingScore: 80,
-  totalQuestions: 5,
-  questions: [
-    {
-      id: "q1",
-      number: 1,
-      question: "Which AWS database service provides active-active multi-region replication with automated write-conflict resolution?",
-      options: [
-        "Amazon RDS PostgreSQL with cross-region read replicas",
-        "Amazon DynamoDB Global Tables",
-        "Amazon Aurora Serverless v1",
-        "Amazon ElastiCache Redis in Cluster Mode"
-      ],
-      correctAnswer: 1,
-      explanation: "Amazon DynamoDB Global Tables provide fully managed, active-active multi-region replication with automatic last-writer-wins conflict resolution across all regions."
-    },
-    {
-      id: "q2",
-      number: 2,
-      question: "In the Two-Phase Commit (2PC) protocol, what does a participant node guarantee once it votes VOTE_COMMIT during Phase 1?",
-      options: [
-        "It guarantees the transaction is already fully executed and written to public state",
-        "It guarantees that all other nodes have also committed",
-        "It guarantees that it holds necessary locks and can commit even if power fails",
-        "It automatically aborts if the coordinator node experiences transient latency"
-      ],
-      correctAnswer: 2,
-      explanation: "A VOTE_COMMIT vote is a binding contract: the participant must have durable write-ahead logs and locks secured so that it can guarantee commit even if the coordinator recovers hours later."
-    },
-    {
-      id: "q3",
-      number: 3,
-      question: "When designing idempotent payment processing APIs, what standard header mechanism prevents duplicate card debits on network retry?",
-      options: [
-        "Authorization: Bearer <JWT>",
-        "Idempotency-Key: <UUID>",
-        "X-Forwarded-For: <IP>",
-        "Cache-Control: no-cache"
-      ],
-      correctAnswer: 1,
-      explanation: "The Idempotency-Key HTTP header sends a unique client-generated UUID. If network timeouts cause a retry, the banking gateway returns the cached original result rather than re-executing the charge."
-    },
-    {
-      id: "q4",
-      number: 4,
-      question: "Under the CAP Theorem, which distributed system characteristic must an enterprise financial transaction ledger prioritize during a network partition (P)?",
-      options: [
-        "Availability over Consistency (AP)",
-        "Consistency over Availability (CP)",
-        "Latency over Durability",
-        "Partition tolerance can be disabled in cloud VPCs"
-      ],
-      correctAnswer: 1,
-      explanation: "Financial double-spending ledgers must maintain Consistency (CP) rather than Availability. If partitions occur, nodes reject ambiguous writes to prevent financial ledger corruption."
-    },
-    {
-      id: "q5",
-      number: 5,
-      question: "What is the primary role of a Dead Letter Queue (DLQ) in an asynchronous event-driven payment messaging architecture?",
-      options: [
-        "To accelerate message throughput using memory buffers",
-        "To store unprocessable or poisoned messages for isolated inspection without blocking worker queues",
-        "To encrypt credit card numbers in compliance with PCI-DSS 4.0",
-        "To automatically refund the payer when an error code 500 occurs"
-      ],
-      correctAnswer: 1,
-      explanation: "DLQs isolate malformed or unprocessable messages after maximum retry limits are reached, preventing poisonous messages from blocking Kafka or SQS consumers."
-    }
-  ]
+  totalQuestions: 0,
+  questions: []
 };
 
 const formatTimer = (seconds) => {
@@ -179,8 +113,8 @@ export default function Quiz() {
           setQuizData({
             ...DEFAULT_COURSERA_QUIZ,
             ...active,
-            questions: hasQuestions ? active.questions : DEFAULT_COURSERA_QUIZ.questions,
-            totalQuestions: hasQuestions ? active.questions.length : DEFAULT_COURSERA_QUIZ.totalQuestions,
+            questions: hasQuestions ? active.questions : [],
+            totalQuestions: hasQuestions ? active.questions.length : 0,
           });
           if (active.durationMinutes) {
             setTimeLeft(active.durationMinutes * 60);

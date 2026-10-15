@@ -28,11 +28,13 @@ export default function Checkout() {
   const { addToast } = useToast();
   const { student, enrollInCourse } = useStudent();
 
+  const userId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '';
+
   const course = location.state?.course;
   const courseTitle = course?.title || 'Advanced Machine Learning & Distributed Systems Architecture';
   const courseThumbnail = course?.thumbnail || 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&auto=format&fit=crop&q=80';
-  const courseProvider = course?.institution || course?.organizationName || 'Stanford University';
-  const courseInstructor = course?.instructorName || course?.instructors?.[0]?.name || 'Dr. Eleanor Rigby, Stanford University';
+  const courseProvider = course?.institution || course?.organizationName || '';
+  const courseInstructor = course?.instructorName || course?.instructors?.[0]?.name || '';
 
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'paypal'
   const [couponCode, setCouponCode] = useState('');
@@ -146,7 +148,7 @@ export default function Checkout() {
         targetCourseId,
         paymentMethod,
         totalPrice,
-        'lrn-1',
+        userId,
         {
           thumbnail: resolvedThumbnail,
           institution: resolvedInstitution,
@@ -499,7 +501,7 @@ export default function Checkout() {
                         </div>
                         <div className="bg-white p-2.5 rounded-lg border border-slate-200/80 text-xs flex justify-between items-center text-slate-600">
                           <span>Connected Account:</span>
-                          <span className="font-semibold text-slate-900">{student?.email || 's20240010260@iiits.in'}</span>
+                          <span className="font-semibold text-slate-900">{student?.email || localStorage.getItem('user_email') || ''}</span>
                         </div>
                       </div>
 

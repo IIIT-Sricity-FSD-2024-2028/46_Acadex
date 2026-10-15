@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import {
@@ -56,6 +56,10 @@ export class DisputesService {
   }
 
   async create(dto: CreateDisputeDto) {
+    if (dto.raisedByRole && dto.raisedByRole !== DisputeRole.LEARNER) {
+      throw new BadRequestException('Only learners can raise disputes');
+    }
+
     const year = new Date().getFullYear();
     const newId = `DSP-${year}-${Math.floor(100 + Math.random() * 900)}`;
     const nowIso = new Date().toISOString();
@@ -63,8 +67,8 @@ export class DisputesService {
     const dispute = await this.disputesRepo.create({
       id: newId,
       raisedBy: dto.raisedBy,
-      raisedById: dto.raisedById || 'org-101',
-      raisedByRole: dto.raisedByRole || DisputeRole.ORGANIZATION,
+      raisedById: dto.raisedById,
+      raisedByRole: DisputeRole.LEARNER,
       disputeType: dto.disputeType,
       subject: dto.subject,
       description: dto.description,

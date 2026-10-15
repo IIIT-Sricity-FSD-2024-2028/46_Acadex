@@ -94,7 +94,7 @@ export default function Disputes() {
         courseId: newDisputeForm.courseId,
         priority: newDisputeForm.priority,
         raisedBy: info.name || 'NexusPay Enterprise Academy',
-        raisedById: info.id || 'org-101',
+        raisedById: info.id || localStorage.getItem('user_organization_id') || 'org-1',
         raisedByRole: newDisputeForm.raisedByRole,
         desiredResolution: newDisputeForm.desiredResolution
       });

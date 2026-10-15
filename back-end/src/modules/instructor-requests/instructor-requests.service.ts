@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import {
@@ -84,11 +84,17 @@ export class InstructorRequestsService {
       throw new NotFoundException(`Instructor with ID '${dto.instructorId}' not found`);
     }
 
-    const orgId = dto.organizationId || 'org-101';
+    if (!dto.organizationId) {
+      throw new BadRequestException('organizationId is required to send a teaching request');
+    }
+    const orgId = dto.organizationId;
     let orgName = dto.organizationName;
     if (!orgName) {
       const org = await this.orgsRepo.findById(orgId);
-      orgName = org?.name || 'NexusPay Enterprise Academy';
+      if (!org) {
+        throw new NotFoundException(`Organization '${orgId}' not found`);
+      }
+      orgName = org.name;
     }
 
     const courseTitle = dto.courseTitle || 'Advanced Distributed Systems';
@@ -203,11 +209,11 @@ export class InstructorRequestsService {
 
       // Associate instructor with the organization & mark Active
       if (instructor) {
-        const orgId = request.organizationId || 'org-101';
+        const orgId = request.organizationId;
         let orgName = request.organizationName;
-        if (!orgName) {
+        if (orgId && !orgName) {
           const org = await this.orgsRepo.findById(orgId);
-          orgName = org?.name || 'NexusPay Enterprise Academy';
+          orgName = org?.name || orgName;
         }
 
         const newCoursesCount = (instructor.coursesCount || 0) + 1;

@@ -29,7 +29,7 @@ export default function MyLearning() {
     let active = true;
     const loadData = () => {
       Promise.all([
-        api.student.getEnrollments('lrn-1').catch(() => []),
+        api.student.getEnrollments(localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '').catch(() => []),
         api.courses.list().catch(() => [])
       ])
         .then(([enrRes, coursesRes]) => {
@@ -200,7 +200,7 @@ export default function MyLearning() {
               const strokeOffset = circumference - (circumference * progress) / 100;
               const matchedCatalogCourse = coursesMap[item.courseId] || coursesMap[item.courseTitle?.toLowerCase()];
               const resolvedThumbnail = item.thumbnail || item.thumbnailUrl || matchedCatalogCourse?.thumbnail || matchedCatalogCourse?.thumbnailUrl || "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80";
-              const institution = item.institution || matchedCatalogCourse?.institution || matchedCatalogCourse?.organizationName || "Stanford University";
+              const institution = item.institution || matchedCatalogCourse?.institution || matchedCatalogCourse?.organizationName || '';
 
               return (
                 <div 
@@ -236,7 +236,7 @@ export default function MyLearning() {
                       </Link>
 
                       <p className="font-body-md text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-3">
-                        {item.description || matchedCatalogCourse?.description || 'Master distributed consensus protocols, Two-Phase Commit, and cloud banking architectures.'}
+                        {item.description || matchedCatalogCourse?.description || ''}
                       </p>
                     </div>
 
