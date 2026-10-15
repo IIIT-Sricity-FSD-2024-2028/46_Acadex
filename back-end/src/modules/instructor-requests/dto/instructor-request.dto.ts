@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 
 export enum TeachingRequestDecision {
@@ -48,7 +48,7 @@ export class CreateTeachingRequestDto {
   @IsString()
   organizationId?: string;
 
-  @ApiPropertyOptional({ example: 'Stanford University' })
+  @ApiPropertyOptional({ example: 'Meridian Tech Institute' })
   @IsOptional()
   @IsString()
   organizationName?: string;
@@ -88,4 +88,39 @@ export class InstructorRequestQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   email?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by organization ID' })
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @ApiPropertyOptional({ enum: ['invitation', 'join'] })
+  @IsOptional()
+  @IsIn(['invitation', 'join'])
+  type?: 'invitation' | 'join';
+}
+
+export class CreateJoinRequestDto {
+  @ApiProperty({ example: 'org-1' })
+  @IsNotEmpty()
+  @IsString()
+  organizationId: string;
+
+  @ApiPropertyOptional({ example: 'I teach backend engineering and would like to join your faculty.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  message?: string;
+}
+
+export class DecideJoinRequestDto {
+  @ApiProperty({ enum: ['approve', 'reject'] })
+  @IsIn(['approve', 'reject'])
+  action: 'approve' | 'reject';
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  notes?: string;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+
 
 // ──────────────────────────────────────────────────────────────
 // 0. LANDING & GATEWAY
@@ -19,12 +20,11 @@ import StudentCourseDetails from './pages/student/CourseDetails';
 import StudentCheckout from './pages/student/Checkout';
 import StudentPaymentSuccess from './pages/student/PaymentSuccess';
 import StudentMyLearning from './pages/student/MyLearning';
-import StudentCourseProgress from './pages/student/CourseProgress';
 import StudentLearningPlayer from './pages/student/LearningPlayer';
 import StudentQuiz from './pages/student/Quiz';
 import StudentCertificates from './pages/student/Certificates';
 import StudentProfile from './pages/student/Profile';
-import StudentBookmarks from './pages/student/Bookmarks';
+import StudentBilling from './pages/student/Billing';
 import StudentGuard from './components/student/layout/StudentGuard';
 import StudentRouteMiddleware from './components/student/layout/StudentRouteMiddleware';
 
@@ -114,6 +114,16 @@ import SuperAdminOrganizations from './pages/super-admin/Organizations';
 import SuperAdminLearners from './pages/super-admin/Learners';
 import SuperAdminSettings from './pages/super-admin/Settings';
 
+function LegacyLearnRedirect() {
+  const { courseId } = useParams();
+  return <Navigate to={`/student/learn/${courseId}`} replace />;
+}
+
+function LegacyCourseRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/student/course/${id}`} replace />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -152,36 +162,27 @@ export default function App() {
       {/* 1. STUDENT / LEARNER ROUTES (Protected by Route Middleware)     */}
       {/* ────────────────────────────────────────────────────────────── */}
       <Route element={<StudentRouteMiddleware />}>
-        <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/student/explore" element={<StudentExplore />} />
         <Route path="/student/course/:id" element={<StudentCourseDetails />} />
-        <Route path="/student/course-details" element={<StudentCourseDetails />} />
         <Route path="/student/checkout" element={<StudentCheckout />} />
         <Route path="/student/payment-success" element={<StudentPaymentSuccess />} />
         <Route path="/student/my-learning" element={<StudentMyLearning />} />
-        <Route path="/student/course-progress" element={<StudentCourseProgress />} />
-        <Route path="/student/course-progress/:courseId" element={<StudentCourseProgress />} />
-        <Route path="/student/player" element={<StudentLearningPlayer />} />
+        <Route path="/student/learn/:courseId" element={<StudentLearningPlayer />} />
         <Route path="/student/quiz" element={<StudentQuiz />} />
         <Route path="/student/certificates" element={<StudentCertificates />} />
         <Route path="/student/profile" element={<StudentProfile />} />
-        <Route path="/student/bookmarks" element={<StudentBookmarks />} />
+        <Route path="/student/billing" element={<StudentBilling />} />
 
-        {/* Student Direct Fallback Aliases */}
-        <Route path="/explore" element={<StudentExplore />} />
-        <Route path="/bookmarks" element={<StudentBookmarks />} />
-        <Route path="/my-learning" element={<StudentMyLearning />} />
-        <Route path="/player" element={<StudentLearningPlayer />} />
-        <Route path="/checkout" element={<StudentCheckout />} />
-        <Route path="/quiz" element={<StudentQuiz />} />
-        <Route path="/certificates" element={<StudentCertificates />} />
-        <Route path="/profile" element={<StudentProfile />} />
-        <Route path="/course-progress" element={<StudentCourseProgress />} />
-        <Route path="/course-progress/:courseId" element={<StudentCourseProgress />} />
-        <Route path="/course/:id" element={<StudentCourseDetails />} />
-        <Route path="/course-details" element={<StudentCourseDetails />} />
-        <Route path="/payment-success" element={<StudentPaymentSuccess />} />
+        {/* Legacy URLs */}
+        <Route path="/student/course-progress/:courseId" element={<LegacyLearnRedirect />} />
+        <Route path="/student/player" element={<Navigate to="/student/my-learning" replace />} />
+        <Route path="/explore" element={<Navigate to="/student/explore" replace />} />
+        <Route path="/my-learning" element={<Navigate to="/student/my-learning" replace />} />
+        <Route path="/certificates" element={<Navigate to="/student/certificates" replace />} />
+        <Route path="/profile" element={<Navigate to="/student/profile" replace />} />
+        <Route path="/course/:id" element={<LegacyCourseRedirect />} />
 
         {/* Student Catch-All 404 Route Redirect */}
         <Route path="/student/*" element={<Navigate to="/student/dashboard" replace />} />

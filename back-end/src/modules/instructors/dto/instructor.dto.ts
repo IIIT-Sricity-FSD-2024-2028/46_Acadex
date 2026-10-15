@@ -55,6 +55,36 @@ export class CreateInstructorDto {
 }
 
 export class UpdateInstructorDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  website?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  qualification?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  experience?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  department?: string;
+
   @ApiPropertyOptional({ example: 'Prof. James Wilson' })
   @IsOptional()
   @IsString()

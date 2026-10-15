@@ -1,5 +1,37 @@
 [
   {
+    "title": "Cloud computing",
+    "category": "Cloud Architecture",
+    "level": "Advanced",
+    "instructorId": "inst-1",
+    "instructorName": "Priya Nair",
+    "leadInstructorName": "Priya Nair",
+    "instructors": [
+      {
+        "id": "inst-1",
+        "name": "Priya Nair",
+        "role": "Lead Instructor",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+        "specialization": "Full Stack Development & Python"
+      }
+    ],
+    "enrolledCount": 1,
+    "price": 4000,
+    "revenue": 4000,
+    "rating": 5,
+    "completionRate": 75,
+    "totalHours": "18h 30m",
+    "lessonsCount": 0,
+    "modulesCount": 0,
+    "status": "Published",
+    "thumbnail": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=80",
+    "description": "full stack dev ",
+    "modules": [],
+    "id": "cou-e7ae7b46",
+    "createdAt": "2026-10-15T06:39:40.575Z",
+    "updatedAt": "2026-10-15T06:40:50.714Z"
+  },
+  {
     "id": "crs-1",
     "organizationId": "org-1",
     "organizationName": "Meridian Tech Institute",

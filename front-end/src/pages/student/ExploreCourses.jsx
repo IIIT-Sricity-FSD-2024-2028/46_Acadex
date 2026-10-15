@@ -1,262 +1,172 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { 
-  Sparkles,
-  X,
-  SlidersHorizontal,
-  BookOpen
-} from 'lucide-react';
+import { Search, X, BookOpen, Star, Clock, CheckCircle2 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import CourseCard from '../../components/common/CourseCard';
-import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
 import { useStudent } from '../../context/StudentContext';
-import { useDebounce } from '../../hooks/useDebounce';
-
-const categories = [
-  'All Subjects',
-  'Cloud Architecture',
-  'DevOps',
-  'Machine Learning',
-  'Cybersecurity',
-  'FinTech Engineering',
-  'Blockchain'
-];
 
 export default function ExploreCourses() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchFromUrl = searchParams.get('q') || searchParams.get('search') || '';
-  const categoryFromUrl = searchParams.get('category') || 'All Subjects';
-
-  const { addToast } = useToast();
-  const { isBookmarked, toggleBookmark } = useStudent();
-
+  const { enrollments } = useStudent();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(searchFromUrl);
-  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
-  const [sortBy, setSortBy] = useState('popular');
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [sortBy, setSortBy] = useState('newest');
 
-  // Debounced search query for performance optimization
-  const debouncedSearchQuery = useDebounce(searchQuery, 250);
-
-  // useEffect 1: Synchronize with URL search parameters (e.g. from Navbar search)
   useEffect(() => {
-    const q = searchParams.get('q') || searchParams.get('search') || '';
-    const cat = searchParams.get('category') || 'All Subjects';
-    setSearchQuery(q);
-    setSelectedCategory(cat);
-  }, [searchParams]);
-
-  // useEffect 2: Fetch courses catalog from backend API on mount with cancellation pattern
-  useEffect(() => {
-    let isMounted = true;
-    api.courses.list()
-      .then((res) => {
-        if (!isMounted) return;
-        setCourses(Array.isArray(res) ? res : (res?.items || []));
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        console.error('Failed to fetch courses catalog:', err);
-        setLoading(false);
-      });
-    return () => {
-      isMounted = false;
-    };
+    document.title = 'Browse Catalog | NexusEdu';
+    api.student
+      .getCatalog()
+      .then((res) => setCourses(Array.isArray(res) ? res : []))
+      .catch((err) => setError(err.message || 'Could not load the catalog'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleToggleBookmark = (id) => {
-    const currentlyMarked = isBookmarked(id);
-    toggleBookmark(id);
-    if (currentlyMarked) {
-      addToast('Course removed from saved wishlist', 'info');
-    } else {
-      addToast('Course saved to your wishlist!', 'success');
-    }
+  useEffect(() => {
+    setQuery(searchParams.get('q') || '');
+  }, [searchParams]);
+
+  const updateQuery = (value) => {
+    setQuery(value);
+    const params = new URLSearchParams(searchParams);
+    if (value.trim()) params.set('q', value);
+    else params.delete('q');
+    setSearchParams(params, { replace: true });
   };
 
-  const handleCategorySelect = (cat) => {
-    setSelectedCategory(cat);
-    const newParams = new URLSearchParams(searchParams);
-    if (cat === 'All Subjects') {
-      newParams.delete('category');
-    } else {
-      newParams.set('category', cat);
-    }
-    setSearchParams(newParams);
-  };
+  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.courseId)), [enrollments]);
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setSelectedCategory('All Subjects');
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete('q');
-    newParams.delete('search');
-    newParams.delete('category');
-    setSearchParams(newParams);
-  };
-
-  const filteredCourses = useMemo(() => {
-    const seen = new Set();
-    return courses.filter((course) => {
-      const key = (course.id || course.title || '').toLowerCase().trim();
-      if (!key || seen.has(key)) return false;
-
-      if (debouncedSearchQuery) {
-        const query = debouncedSearchQuery.toLowerCase().trim();
-        const matchesTitle = course.title?.toLowerCase().includes(query);
-        const matchesDesc = (course.description || course.subtitle || '')?.toLowerCase().includes(query);
-        const matchesCategory = course.category?.toLowerCase().includes(query);
-        const matchesInstructor = (course.instructorName || course.leadInstructorName || '')?.toLowerCase().includes(query);
-        if (!matchesTitle && !matchesDesc && !matchesCategory && !matchesInstructor) return false;
-      }
-      if (selectedCategory !== 'All Subjects' && course.category !== selectedCategory) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    }).sort((a, b) => {
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = courses.filter(
+      (c) =>
+        !q ||
+        [c.title, c.description, c.category, c.level, c.instructorName, c.leadInstructorName, c.organizationName]
+          .some((v) => v?.toLowerCase().includes(q))
+    );
+    return [...list].sort((a, b) => {
       if (sortBy === 'price-low') return (a.price || 0) - (b.price || 0);
       if (sortBy === 'price-high') return (b.price || 0) - (a.price || 0);
       if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
-      return (b.enrolledCount || 0) - (a.enrolledCount || 0);
+      if (sortBy === 'popular') return (b.enrolledCount || 0) - (a.enrolledCount || 0);
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
     });
-  }, [courses, debouncedSearchQuery, selectedCategory, sortBy]);
+  }, [courses, query, sortBy]);
 
   return (
     <PageLayout>
-      <div className="w-full max-w-[1560px] mx-auto px-4 md:px-8 lg:px-12 py-8 space-y-8 bg-[#F8FAFC] min-h-screen">
-        
-        {/* Header Hero Banner (Original Layout with Polished Coursera Styling) */}
-        <section className="w-full bg-gradient-to-r from-[#002554] via-[#0040A1] to-[#0056D2] text-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-md relative overflow-hidden">
-          <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] font-bold mb-3.5 border border-white/20">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Institutional Course Catalog</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 tracking-tight">
-              Explore Masterclass Tracks
-            </h1>
-            <p className="text-blue-100 text-xs md:text-sm leading-relaxed font-normal max-w-2xl">
-              Discover accredited enterprise architecture, distributed payments, AI, and cybersecurity courses taught by industry principal faculty.
-            </p>
-          </div>
-        </section>
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-6">
+        <header>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Browse catalog</h1>
+          <p className="text-sm text-slate-500 mt-1">Published courses taught by verified instructors.</p>
+        </header>
 
-        {/* Active Search Filter indicator from Navbar Search */}
-        {searchQuery && (
-          <div className="flex items-center gap-2 -mb-4">
-            <span className="text-xs text-slate-500 font-medium">Search result:</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 text-coursera rounded-full text-xs font-bold shadow-xs">
-              "{searchQuery}"
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              autoComplete="off"
+              value={query}
+              onChange={(e) => updateQuery(e.target.value)}
+              placeholder="Search by course title, topic, instructor or organization"
+              className="w-full h-11 pl-10 pr-10 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#0056D2] focus:ring-2 focus:ring-[#0056D2]/20"
+            />
+            {query && (
               <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  const newParams = new URLSearchParams(searchParams);
-                  newParams.delete('q');
-                  newParams.delete('search');
-                  setSearchParams(newParams);
-                }}
-                className="hover:text-red-600 transition-colors ml-0.5 p-0.5"
-                title="Clear search"
+                onClick={() => updateQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                aria-label="Clear search"
               >
-                <X className="w-3 h-3" />
+                <X className="w-4 h-4" />
               </button>
-            </span>
+            )}
           </div>
-        )}
-
-        {/* Filter Categories Bar (Horizontal Pills) - Words Stay Black In All States */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => handleCategorySelect(cat)}
-                className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition-all shadow-xs ${
-                  isActive
-                    ? 'bg-blue-100 text-black border-2 border-blue-600 shadow-sm ring-2 ring-blue-500/20 font-black'
-                    : 'bg-white text-black hover:bg-slate-100 border border-slate-200/90 font-semibold'
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="h-11 bg-white border border-slate-200 rounded-xl px-3 text-sm font-medium text-slate-700 focus:outline-none focus:border-[#0056D2]"
+          >
+            <option value="newest">Newest</option>
+            <option value="popular">Most enrolled</option>
+            <option value="rating">Highest rated</option>
+            <option value="price-low">Price: low to high</option>
+            <option value="price-high">Price: high to low</option>
+          </select>
         </div>
 
-        {/* Results Grid Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              {selectedCategory === 'All Subjects' ? 'Available Masterclasses' : `${selectedCategory} Courses`} ({filteredCourses.length})
-            </h2>
-            <p className="text-xs text-slate-500 font-normal">
-              {searchQuery ? `Showing matching results for "${searchQuery}"` : 'Accredited university programs and technical specializations'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <label htmlFor="course-sort" className="text-xs font-semibold text-slate-500">
-              Sort by:
-            </label>
-            <select
-              id="course-sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-white border border-slate-200/90 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-coursera/20 shadow-xs cursor-pointer"
-            >
-              <option value="popular">Most Popular</option>
-              <option value="rating">Highest Rated</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Courses Display Grid */}
         {loading ? (
           <div className="py-24 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-coursera border-t-transparent mx-auto mb-3"></div>
-            <p className="text-xs text-slate-500 font-medium">Loading course catalog...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#0056D2] border-t-transparent mx-auto" />
           </div>
-        ) : filteredCourses.length === 0 ? (
-          <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-coursera flex items-center justify-center mx-auto mb-3">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <p className="text-sm font-bold text-slate-800 mb-1">No courses found</p>
-            <p className="text-xs text-slate-500 mb-5 max-w-md mx-auto">
-              {searchQuery 
-                ? `No courses matched your query "${searchQuery}" in ${selectedCategory}.` 
-                : `There are currently no courses listed under "${selectedCategory}".`}
+        ) : error ? (
+          <div className="py-12 text-center text-sm text-rose-600 bg-white border border-rose-200 rounded-xl">{error}</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center bg-white rounded-2xl border border-slate-200">
+            <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm font-bold text-slate-800">
+              {query ? `No courses match "${query}"` : 'No courses are available yet'}
             </p>
-            <button
-              onClick={handleClearSearch}
-              className="px-4 py-2 rounded-xl bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E] transition-all shadow-xs cursor-pointer"
-            >
-              Show All Courses
-            </button>
+            {query && (
+              <button onClick={() => updateQuery('')} className="mt-4 text-xs font-bold text-[#0056D2] hover:underline">
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                variant="explore"
-                isBookmarked={isBookmarked(course.id)}
-                onBookmarkToggle={handleToggleBookmark}
-              />
-            ))}
-          </div>
+          <>
+            <p className="text-xs text-slate-500">
+              {filtered.length} course{filtered.length === 1 ? '' : 's'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/student/course/${c.id}`}
+                  className="bg-white border border-slate-200/80 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow group"
+                >
+                  <div className="relative h-40 bg-slate-100 overflow-hidden">
+                    {c.thumbnail && (
+                      <img src={c.thumbnail} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    )}
+                    {enrolledIds.has(c.id) && (
+                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">
+                        <CheckCircle2 className="w-3 h-3" /> Enrolled
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col gap-1.5">
+                    <p className="text-[11px] font-semibold text-[#0056D2]">
+                      {[c.category, c.level].filter(Boolean).join(' • ')}
+                    </p>
+                    <h3 className="text-sm font-bold text-slate-900 line-clamp-2">{c.title}</h3>
+                    <p className="text-xs text-slate-500">
+                      {c.leadInstructorName || c.instructorName}
+                      {c.organizationName ? ` · ${c.organizationName}` : ''}
+                    </p>
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-auto pt-2">
+                      {c.rating > 0 && (
+                        <span className="flex items-center gap-0.5 font-semibold text-slate-700">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {c.rating}
+                          {c.reviewsCount ? <span className="text-slate-400 font-normal">({c.reviewsCount})</span> : null}
+                        </span>
+                      )}
+                      {c.totalHours && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {c.totalHours}
+                        </span>
+                      )}
+                      <span className="ml-auto text-sm font-bold text-slate-900">
+                        {Number(c.price) > 0 ? `₹${Number(c.price).toLocaleString('en-IN')}` : 'Free'}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
-
       </div>
     </PageLayout>
   );

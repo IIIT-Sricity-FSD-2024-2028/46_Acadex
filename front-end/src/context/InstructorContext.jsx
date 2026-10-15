@@ -3,120 +3,38 @@ import { api } from '../services/api';
 
 const InstructorContext = createContext(null);
 
+const itemsOf = (res) => (Array.isArray(res) ? res : res?.items || []);
+
 export function InstructorProvider({ children }) {
   const [instructor, setInstructor] = useState(null);
-  const [isAffiliated, setIsAffiliated] = useState(false);
   const [invitations, setInvitations] = useState([]);
+  const [joinRequests, setJoinRequests] = useState([]);
   const [assignedCourses, setAssignedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchInstructorData = useCallback(async () => {
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
       const userId = localStorage.getItem('user_id');
       const userEmail = (localStorage.getItem('user_email') || '').toLowerCase().trim();
-      const userName = localStorage.getItem('user_name') || 'Faculty Instructor';
 
-      // 1. Fetch current user from auth session
-      let authUser = null;
-      if (userId) {
-        try {
-          authUser = await api.auth.getMe(userId);
-        } catch {
-          // Fallback if auth/me failed
-        }
-      }
+      const list = itemsOf(await api.instructors.list({ limit: 1000 }));
+      const me = list.find((i) => (userId && i.userId === userId) || (userEmail && i.email?.toLowerCase() === userEmail));
+      if (!me) throw new Error('No instructor profile is linked to this account');
+      setInstructor(me);
+      localStorage.setItem('nexuspay_instructor_id', me.id);
 
-      // 2. Fetch instructor list from API
-      let matchedInstructor = null;
-      try {
-        const instListRes = await api.instructors.list({ limit: 1000 });
-        const list = Array.isArray(instListRes)
-          ? instListRes
-          : instListRes?.items || instListRes?.data || [];
-
-        matchedInstructor = list.find(
-          (i) =>
-            (userEmail && i.email?.toLowerCase() === userEmail) ||
-            (userId && i.userId === userId) ||
-            (authUser?.instructorId && i.id === authUser.instructorId)
-        );
-      } catch {
-        // Fallback
-      }
-
-      // Combine profile information
-      const finalOrgId = matchedInstructor?.organizationId || authUser?.organizationId || null;
-
-      const finalOrgName =
-        matchedInstructor?.organizationName ||
-        authUser?.organizationName ||
-        null;
-
-      const resolvedInstructor = {
-        id: matchedInstructor?.id || authUser?.instructorId || `inst-${userId || 'guest'}`,
-        name: matchedInstructor?.name || authUser?.name || userName,
-        email: matchedInstructor?.email || authUser?.email || userEmail,
-        avatar:
-          matchedInstructor?.avatar ||
-          authUser?.avatar ||
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-        specialization: matchedInstructor?.specialization || 'Computer Science & AI',
-        status: matchedInstructor?.status || authUser?.status || (finalOrgId ? 'Active' : 'Pending Affiliation'),
-        organizationId: finalOrgId,
-        organizationName: finalOrgName,
-      };
-
-      setInstructor(resolvedInstructor);
-      setIsAffiliated(Boolean(resolvedInstructor.organizationId));
-
-      // 3. Fetch invitations / teaching requests for this instructor
-      try {
-        const reqRes = await api.instructorRequests.list({ limit: 1000 });
-        const allReqs = Array.isArray(reqRes) ? reqRes : reqRes?.items || reqRes?.data || [];
-        const myRequests = allReqs.filter(
-          (r) =>
-            (resolvedInstructor.id && r.instructorId === resolvedInstructor.id) ||
-            (resolvedInstructor.email && r.email?.toLowerCase() === resolvedInstructor.email.toLowerCase()) ||
-            (userEmail && r.email?.toLowerCase() === userEmail)
-        );
-        setInvitations(myRequests);
-      } catch (reqErr) {
-        console.error('Error fetching instructor requests:', reqErr);
-        setInvitations([]);
-      }
-
-      // 4. Fetch assigned courses
-      try {
-        const coursesRes = await api.courses.list({ limit: 1000 });
-        const allCourses = Array.isArray(coursesRes) ? coursesRes : coursesRes?.items || coursesRes?.data || [];
-        
-        // Instructor only sees courses if affiliated and assigned
-        if (resolvedInstructor.organizationId) {
-          const myCourses = allCourses.filter((course) => {
-            const hasId = course.instructorId === resolvedInstructor.id;
-            const inInstructors = (course.instructors || []).some(
-              (inst) =>
-                inst.id === resolvedInstructor.id ||
-                (resolvedInstructor.email && inst.email?.toLowerCase() === resolvedInstructor.email.toLowerCase()) ||
-                (resolvedInstructor.name && inst.name?.toLowerCase() === resolvedInstructor.name.toLowerCase())
-            );
-            return hasId || inInstructors;
-          });
-          setAssignedCourses(myCourses);
-        } else {
-          setAssignedCourses([]);
-        }
-      } catch (cErr) {
-        console.error('Error fetching assigned courses:', cErr);
-        setAssignedCourses([]);
-      }
+      const [invRes, joinRes, coursesRes] = await Promise.allSettled([
+        api.instructorRequests.list({ instructorId: me.id, type: 'invitation', limit: 1000 }),
+        api.instructorRequests.myJoinRequests(),
+        api.instructors.getCourses(me.id),
+      ]);
+      setInvitations(invRes.status === 'fulfilled' ? itemsOf(invRes.value) : []);
+      setJoinRequests(joinRes.status === 'fulfilled' ? itemsOf(joinRes.value) : []);
+      setAssignedCourses(me.organizationId && coursesRes.status === 'fulfilled' ? itemsOf(coursesRes.value) : []);
     } catch (err) {
-      console.error('Error loading instructor context:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -127,47 +45,36 @@ export function InstructorProvider({ children }) {
     fetchInstructorData();
   }, [fetchInstructorData]);
 
-  // Accept formal course assignment & connect university
-  const acceptInvitation = async (requestId, notes = 'Accepted teaching assignment') => {
+  const run = async (fn) => {
+    setActionLoading(true);
     try {
-      setActionLoading(true);
-      await api.instructorRequests.respond(requestId, 'Accepted', notes);
+      const result = await fn();
       await fetchInstructorData();
-      return true;
-    } catch (err) {
-      console.error('Failed to accept invitation:', err);
-      throw err;
+      return result;
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Decline invitation
-  const declineInvitation = async (requestId, notes = 'Declined due to schedule constraints') => {
-    try {
-      setActionLoading(true);
-      await api.instructorRequests.respond(requestId, 'Declined', notes);
-      await fetchInstructorData();
-      return true;
-    } catch (err) {
-      console.error('Failed to decline invitation:', err);
-      throw err;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const isAffiliated = Boolean(instructor?.organizationId) && instructor?.status === 'Active';
+  const pendingJoinRequest = joinRequests.find((r) => /pending/i.test(r.status)) || null;
 
   const value = {
     instructor,
     isAffiliated,
     invitations,
+    joinRequests,
+    pendingJoinRequest,
     assignedCourses,
     loading,
     actionLoading,
     error,
-    acceptInvitation,
-    declineInvitation,
     refreshInstructor: fetchInstructorData,
+    acceptInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Accepted', notes)),
+    declineInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Declined', notes)),
+    requestToJoin: (organizationId, message) => run(() => api.instructorRequests.requestToJoin(organizationId, message)),
+    cancelJoinRequest: (id) => run(() => api.instructorRequests.cancelJoinRequest(id)),
+    leaveOrganization: () => run(() => api.instructors.leaveOrganization(instructor.id)),
   };
 
   return <InstructorContext.Provider value={value}>{children}</InstructorContext.Provider>;
@@ -177,16 +84,20 @@ const defaultInstructorContext = {
   instructor: null,
   isAffiliated: false,
   invitations: [],
+  joinRequests: [],
+  pendingJoinRequest: null,
   assignedCourses: [],
   loading: false,
   actionLoading: false,
   error: null,
+  refreshInstructor: async () => {},
   acceptInvitation: async () => {},
   declineInvitation: async () => {},
-  refreshInstructor: async () => {},
+  requestToJoin: async () => {},
+  cancelJoinRequest: async () => {},
+  leaveOrganization: async () => {},
 };
 
 export function useInstructor() {
-  const context = useContext(InstructorContext);
-  return context || defaultInstructorContext;
+  return useContext(InstructorContext) || defaultInstructorContext;
 }

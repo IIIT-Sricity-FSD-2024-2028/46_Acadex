@@ -1,789 +1,285 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  User, 
-  Bell, 
-  Menu, 
-  X, 
-  BookOpen, 
-  Award, 
-  CreditCard, 
-  FileQuestion, 
-  TrendingUp,
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Search,
+  User,
+  Menu,
+  X,
+  BookOpen,
+  Award,
+  CreditCard,
   LayoutDashboard,
-  Settings, 
   LogOut,
   ChevronRight,
-  Flame,
-  Building2,
-  ShieldCheck,
-  Clock3,
-  PlusCircle,
-  CheckCircle2,
-  Layers,
-  GraduationCap,
-  Bookmark
+  Compass,
 } from 'lucide-react';
 import api from '../../services/api';
-import { useToast } from '../common/Toast';
 import HumanAvatar from '../common/HumanAvatar';
 import { useStudent } from '../../context/StudentContext';
 
-const defaultUser = {
-  name: localStorage.getItem('user_name') || 'Learner',
-  email: localStorage.getItem('user_email') || '',
-  avatar: null,
-  streakDays: 0,
-  orgMembershipStatus: '',
-  university: '',
-};
-
-const FALLBACK_NAVBAR_COURSES = [
+const navGroups = [
   {
-    id: 'crs-1',
-    title: 'Advanced Enterprise Architecture & Payment Systems',
-    category: 'Cloud Architecture',
-    institution: 'Stanford University',
-    rating: 4.8,
-    thumbnail: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&auto=format&fit=crop&q=80',
-    description: 'Master distributed systems, consensus protocols, and resilient banking architectures.',
+    title: 'Learning',
+    items: [
+      { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard, match: ['/student', '/student/dashboard'] },
+      { name: 'Browse Catalog', href: '/student/explore', icon: Compass, match: ['/student/explore', '/student/course/'] },
+      { name: 'My Learning', href: '/student/my-learning', icon: BookOpen, match: ['/student/my-learning', '/student/learn/'] },
+      { name: 'Certificates', href: '/student/certificates', icon: Award, match: ['/student/certificates'] },
+    ],
   },
   {
-    id: 'crs-2',
-    title: 'Machine Learning for Fraud Detection & Financial Risk',
-    category: 'Machine Learning',
-    institution: 'MIT Department of EECS',
-    rating: 4.9,
-    thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80',
-    description: 'Build anomaly detection models, graph neural networks for transaction clustering.',
-  },
-  {
-    id: 'crs-3',
-    title: 'Zero-Trust Cybersecurity & Banking Cryptography',
-    category: 'Cybersecurity',
-    institution: 'Carnegie Mellon University',
-    rating: 4.7,
-    thumbnail: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=80',
-    description: 'Implement mTLS, hardware security modules (HSMs), tokenization vaults.',
-  },
-  {
-    id: 'crs-4',
-    title: 'Automated Kubernetes & GitOps CI/CD Pipelines',
-    category: 'DevOps',
-    institution: 'UC Berkeley Extension',
-    rating: 4.8,
-    thumbnail: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=600&auto=format&fit=crop&q=80',
-    description: 'Continuous deployment strategies, ArgoCD, Helm, Canary rollouts.',
-  },
-  {
-    id: 'crs-5',
-    title: 'Scalable Event-Driven Microservices with Apache Kafka',
-    category: 'Data Engineering',
-    institution: 'Stanford University',
-    rating: 4.8,
-    thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=80',
-    description: 'Partitioning, exactly-once semantics, consumer rebalancing, schema registry.',
-  },
-  {
-    id: 'cou-b00839da',
-    title: 'Distributed Systems Architecture',
-    category: 'Cloud Architecture',
-    institution: 'NexusTech Institute',
-    rating: 5.0,
-    thumbnail: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&auto=format&fit=crop&q=80',
-    description: 'Fundamental principles of distributed consensus, state replication, and RPC.',
+    title: 'Account',
+    items: [
+      { name: 'Profile & Settings', href: '/student/profile', icon: User, match: ['/student/profile'] },
+      { name: 'Billing & Payments', href: '/student/billing', icon: CreditCard, match: ['/student/billing', '/student/checkout', '/student/payment-success'] },
+    ],
   },
 ];
 
-export default function Navbar() {
+function isItemActive(item, pathname) {
+  return item.match.some((m) => (m.endsWith('/') ? pathname.startsWith(m) : pathname === m));
+}
+
+export function signOutStudent(navigate) {
+  ['auth_token', 'nexuspay_auth_token', 'nexuspay_student_token', 'user_id', 'nexuspay_user_id', 'user_role',
+    'nexuspay_active_role', 'user_name', 'user_email'].forEach((k) => localStorage.removeItem(k));
+  navigate('/signin?role=Student');
+}
+
+export function StudentSidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addToast } = useToast();
+  const { student } = useStudent();
+  const name = student?.name || localStorage.getItem('user_name') || '';
+  const email = student?.email || localStorage.getItem('user_email') || '';
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('q') || params.get('search') || '';
-    } catch {
-      return '';
-    }
-  });
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const content = (
+    <div className="h-full w-64 flex flex-col justify-between bg-white border-r border-slate-200/90 select-none">
+      <div className="min-h-0 flex flex-col">
+        <div className="h-16 px-5 border-b border-slate-200/90 flex items-center justify-between shrink-0">
+          <Link to="/student/dashboard" onClick={onClose} className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#0056D2] flex items-center justify-center text-white">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <span className="font-extrabold text-lg text-slate-900 tracking-tight">
+              Nexus<span className="text-[#0056D2]">Edu</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0056D2] border border-blue-200/80">
+              Learner
+            </span>
+          </Link>
+          <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:bg-slate-100" aria-label="Close menu">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-  let studentCtx = null;
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    studentCtx = useStudent();
-  } catch (e) {
-    // Standalone / public fallback
-  }
-  const student = studentCtx?.student;
+        <nav className="p-3 space-y-4 overflow-y-auto">
+          {navGroups.map((group) => (
+            <div key={group.title} className="space-y-1">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">{group.title}</p>
+              {group.items.map((item) => {
+                const active = isItemActive(item, location.pathname);
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    onClick={onClose}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      active
+                        ? 'bg-blue-50 text-[#0056D2] font-bold border border-blue-200/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#0056D2]' : 'text-slate-400'}`} />
+                    <span>{item.name}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+      </div>
 
-  const [userData, setUserData] = useState(() => {
-    const storedName = localStorage.getItem('user_name');
-    const storedEmail = localStorage.getItem('user_email');
-    return {
-      ...defaultUser,
-      name: storedName || defaultUser.name,
-      email: storedEmail || defaultUser.email,
-    };
-  });
-
-  useEffect(() => {
-    if (student) {
-      setUserData((prev) => ({
-        ...prev,
-        name: student.name || prev.name,
-        email: student.email || prev.email,
-        streakDays: student.streakDays || prev.streakDays,
-        university: student.institution || prev.university,
-      }));
-    }
-  }, [student]);
-  const [coursesData, setCoursesData] = useState([]);
-  const [orgsList, setOrgsList] = useState([]);
-  const [showOrgModal, setShowOrgModal] = useState(false);
-  const [selectedOrg, setSelectedOrg] = useState(null);
-  const [submittingOrg, setSubmittingOrg] = useState(false);
-
-  const [notifications, setNotifications] = useState([]);
-
-  const searchRef = useRef(null);
-
-  const fetchUserData = () => {
-    const userId = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '';
-    if (!userId) return;
-    api.student.getProfile(userId)
-      .then((p) => { if (p) setUserData({ ...defaultUser, ...p }); })
-      .catch(() => {});
-  };
-
-  useEffect(() => {
-    fetchUserData();
-    api.courses.list()
-      .then((c) => { 
-        const items = Array.isArray(c) ? c : (c?.items || []);
-        if (items.length > 0) {
-          setCoursesData(items);
-        }
-      })
-      .catch(() => {});
-    api.student.getOrganizations()
-      .then((o) => { setOrgsList(Array.isArray(o) ? o : []); })
-      .catch(() => {});
-  }, []);
-
-  // Sync search query with URL params so what was typed stays in the search bar
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const q = params.get('q') || params.get('search') || '';
-    if (q) {
-      setSearchQuery(q);
-    }
-  }, [location.search]);
-
-  // Close search suggestions on outside click
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSearchResults(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Prevent background scroll when mobile drawer is open
-  useEffect(() => {
-    if (isDrawerOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isDrawerOpen]);
-
-  // Deduplicate suggestions so no course is shown 2 times
-  const searchSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase().trim();
-    const seen = new Set();
-    return coursesData.filter(c => {
-      const key = (c.id || c.title || '').toLowerCase().trim();
-      if (!key || seen.has(key)) return false;
-      const matches = (
-        c.title?.toLowerCase().includes(q) ||
-        c.category?.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q) ||
-        c.institution?.toLowerCase().includes(q) ||
-        c.instructorName?.toLowerCase().includes(q) ||
-        c.leadInstructorName?.toLowerCase().includes(q)
-      );
-      if (matches) {
-        seen.add(key);
-        return true;
-      }
-      return false;
-    }).slice(0, 5);
-  }, [coursesData, searchQuery]);
-
-  const handleSearch = (e) => {
-    e?.preventDefault();
-    const q = searchQuery.trim();
-    if (q) {
-      navigate(`/student/explore?q=${encodeURIComponent(q)}`);
-      setShowSearchResults(false);
-      // Retains searchQuery in state so what we typed stays in the search bar
-    }
-  };
-
-  const handleRequestJoinOrg = async () => {
-    if (!selectedOrg) return;
-    try {
-      setSubmittingOrg(true);
-      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name, localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id') || '');
-      addToast(`Join request submitted to ${selectedOrg.name}!`, 'success');
-      setShowOrgModal(false);
-      fetchUserData();
-    } catch (err) {
-      addToast('Failed to submit request: ' + err.message, 'error');
-    } finally {
-      setSubmittingOrg(false);
-    }
-  };
-
-  const handleSignOut = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('nexuspay_auth_token');
-    localStorage.removeItem('nexuspay_student_token');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('nexuspay_active_role');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_email');
-    addToast('Signed out successfully', 'info');
-    navigate('/signin?role=Student');
-  };
-
-  // SaaS Coursera Style Sidebar Pages
-  const learningPages = [
-    { name: 'Dashboard', path: '/student', icon: LayoutDashboard },
-    { name: 'Explore Course Catalog', path: '/student/explore', icon: Search },
-    { name: 'My Courses & Enrolled Tracks', path: '/student/my-learning', icon: BookOpen },
-    { name: 'Saved / Wishlist', path: '/student/bookmarks', icon: Bookmark },
-    { name: 'Certificates', path: '/student/certificates', icon: Award },
-  ];
-
-  const accountPages = [
-    { name: 'Academic Profile & Settings', path: '/student/profile', icon: User },
-    { name: 'Billing & Payment Details', path: '/student/profile', icon: CreditCard },
-  ];
-
-  const isActive = (path) => {
-    if (path === '/student' && (location.pathname === '/student' || location.pathname === '/student/dashboard')) return true;
-    return location.pathname === path;
-  };
-
-  const membershipStatus = userData.orgMembershipStatus || (userData.university && userData.university !== 'Independent Learner' ? 'Verified Student' : 'Independent Learner');
-  const orgName = userData.requestedOrgName || userData.university || 'Stanford University';
+      <div className="p-3 border-t border-slate-200/90 bg-slate-50/50 shrink-0">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80">
+          <HumanAvatar name={name || 'Learner'} size="sm" />
+          <div className="flex-1 min-w-0 leading-tight">
+            <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
+            <p className="text-[10px] text-slate-500 truncate">{email}</p>
+          </div>
+          <button
+            onClick={() => signOutStudent(navigate)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      <header className="bg-surface/95 backdrop-blur-md border-b border-outline-variant/80 sticky top-0 z-40 shadow-ambient w-full">
-        <div className="flex justify-between items-center h-16 px-4 md:px-8 lg:px-12 w-full gap-4 lg:gap-8">
-          
-          {/* Left: Hamburger & Brand Logo */}
-          <div className="flex items-center gap-3 md:gap-5 flex-shrink-0">
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="p-2 rounded-xl hover:bg-surface-container text-on-surface transition-colors flex items-center justify-center border border-outline-variant/60 shadow-xs"
-              aria-label="Open Navigation Menu"
-              title="Open Navigation Menu"
-            >
-              <Menu className="w-5 h-5 text-on-surface" />
-            </button>
-
-            <Link to="/student" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-xl bg-coursera flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-base text-coursera tracking-tight leading-none">
-                  NexusPay <span className="text-slate-900 font-semibold">Learning</span>
-                </span>
-              </div>
-            </Link>
-
-            {/* Quick Top Nav */}
-            <nav className="hidden md:flex items-center gap-1.5 ml-4">
-              <Link
-                to="/student"
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  isActive('/student')
-                    ? 'bg-blue-50 text-coursera shadow-xs border border-blue-200/60'
-                    : 'text-slate-600 hover:text-coursera hover:bg-slate-50'
-                }`}
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/student/explore"
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  isActive('/student/explore')
-                    ? 'bg-blue-50 text-coursera shadow-xs border border-blue-200/60'
-                    : 'text-slate-600 hover:text-coursera hover:bg-slate-50'
-                }`}
-              >
-                Browse Catalog
-              </Link>
-              <Link
-                to="/student/my-learning"
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  isActive('/student/my-learning')
-                    ? 'bg-blue-50 text-coursera shadow-xs border border-blue-200/60'
-                    : 'text-slate-600 hover:text-coursera hover:bg-slate-50'
-                }`}
-              >
-                My Learning
-              </Link>
-              <Link
-                to="/student/certificates"
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  isActive('/student/certificates')
-                    ? 'bg-blue-50 text-coursera shadow-xs border border-blue-200/60'
-                    : 'text-slate-600 hover:text-coursera hover:bg-slate-50'
-                }`}
-              >
-                Certifications
-              </Link>
-            </nav>
-          </div>
-
-          {/* Center Search Input with Instant Dropdown */}
-          <div ref={searchRef} className="flex-1 max-w-xl mx-2 md:mx-6 relative">
-            <form onSubmit={handleSearch} className="w-full relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-coursera transition-colors pointer-events-none" />
-              <input
-                type="text"
-                autoComplete="off"
-                spellCheck="false"
-                placeholder="Search courses, skills, topics (e.g. AWS, Microservices, Python)..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSearchResults(true);
-                }}
-                onFocus={() => setShowSearchResults(true)}
-                className="w-full h-10 pl-10 pr-9 text-xs md:text-sm bg-slate-100/90 border border-slate-200 rounded-full focus:outline-none focus:border-coursera focus:bg-white focus:ring-2 focus:ring-coursera/20 transition-all text-slate-900 font-medium placeholder:text-slate-400 shadow-xs"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowSearchResults(false);
-                  }}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </form>
-
-            {/* LIVE COURSES SEARCH DROPDOWN */}
-            {showSearchResults && searchQuery.trim().length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1">
-                <div className="p-3 bg-slate-50/90 border-b border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    Matching Courses ({searchSuggestions.length})
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">
-                    Press Enter for catalog
-                  </span>
-                </div>
-
-                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-                  {searchSuggestions.length > 0 ? (
-                    searchSuggestions.map((course) => (
-                      <div
-                        key={course.id}
-                        onClick={() => {
-                          setShowSearchResults(false);
-                          navigate(`/student/course/${course.id}`);
-                        }}
-                        className="p-3 hover:bg-blue-50/70 cursor-pointer transition-colors flex items-center gap-3 group"
-                      >
-                        <img
-                          src={course.thumbnail || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=100&auto=format&fit=crop&q=80'}
-                          alt={course.title}
-                          className="w-12 h-10 rounded-lg object-cover flex-shrink-0 bg-slate-100 border border-slate-200"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-bold text-slate-900 group-hover:text-coursera transition-colors truncate">
-                            {course.title}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
-                            <span className="font-semibold text-coursera">{course.category}</span>
-                            <span>•</span>
-                            <span className="truncate">{course.institution || 'Stanford University'}</span>
-                            {course.rating && (
-                              <>
-                                <span>•</span>
-                                <span className="font-bold text-amber-600 flex items-center gap-0.5">
-                                  ★ {course.rating}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-coursera group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-6 text-center">
-                      <p className="text-xs font-bold text-slate-700">No courses match "{searchQuery}"</p>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        Try searching for Cloud, Architecture, Machine Learning, or DevOps
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-2.5 bg-slate-50 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSearchResults(false);
-                      navigate(`/student/explore?q=${encodeURIComponent(searchQuery)}`);
-                    }}
-                    className="w-full text-center text-xs font-bold text-coursera hover:underline py-1"
-                  >
-                    View all matching results in Catalog →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Quick Suggestions on empty focus */}
-            {showSearchResults && searchQuery.trim().length === 0 && (
-              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-4 z-50 animate-in fade-in">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                  Popular Searches
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    'Cloud Architecture',
-                    'Distributed Systems',
-                    'Kubernetes & DevOps',
-                    'Machine Learning',
-                    'FinTech Engineering',
-                    'Cybersecurity'
-                  ].map((topic) => (
-                    <button
-                      key={topic}
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery(topic);
-                        setShowSearchResults(true);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-coursera text-xs font-medium text-slate-700 transition-colors"
-                    >
-                      {topic}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Header Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            {/* Profile Avatar */}
-            <div className="relative">
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/60 transition-all shadow-xs"
-              >
-                <HumanAvatar name={userData.name} size="xs" />
-                <span className="hidden md:inline text-xs font-semibold text-on-surface">
-                  {userData.name.split(' ')[0]}
-                </span>
-              </button>
-
-              {showProfileMenu && (
-                <div 
-                  className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in"
-                  onClick={() => setShowProfileMenu(false)}
-                >
-                  <div className="p-2.5 border-b border-slate-100 flex items-center gap-2.5">
-                    <HumanAvatar name={userData.name} size="sm" />
-                    <div className="overflow-hidden">
-                      <p className="text-xs font-bold text-slate-900 truncate">{userData.name}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{userData.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="py-1 text-xs text-slate-700 space-y-0.5">
-                    <Link to="/student/profile" className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-                      <User className="w-3.5 h-3.5" />
-                      <span>Profile & Settings</span>
-                    </Link>
-                    <Link to="/student/my-learning" className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>My Enrolled Courses</span>
-                    </Link>
-                    <Link to="/student/certificates" className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-                      <Award className="w-3.5 h-3.5" />
-                      <span>Certificates</span>
-                    </Link>
-                  </div>
-
-                  <div className="pt-1 border-t border-slate-100">
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-      </header>
-
-      {/* SAAS STYLE SIDEBAR DRAWER */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in"
-            onClick={() => setIsDrawerOpen(false)}
-          />
-
-          {/* Sliding Sidebar Panel */}
-          <div className="relative w-80 max-w-[85vw] bg-white border-r border-slate-200 shadow-2xl h-full flex flex-col z-10 animate-in slide-in-from-left duration-200">
-            
-            {/* Header */}
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 leading-tight">NexusPay Learning</h3>
-                  <p className="text-[10px] text-slate-500">Coursera-Style EdTech SaaS</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsDrawerOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-600 transition-colors"
-                title="Close Menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* User Profile Summary */}
-            <div className="p-4 border-b border-slate-100 bg-indigo-50/40">
-              <div className="flex items-center gap-3">
-                <HumanAvatar name={userData.name} size="md" />
-                <div className="overflow-hidden">
-                  <h4 className="text-xs font-bold text-slate-900 truncate">{userData.name}</h4>
-                  <p className="text-[11px] text-slate-500 truncate">{userData.email}</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
-                      <Flame className="w-3 h-3 text-amber-600 fill-current" />
-                      {userData.streakDays || 14}-Day Streak
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* SaaS Sidebar Categories */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              
-              {/* 1. LEARNING LMS */}
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-2 mb-2">
-                  Learning Hub
-                </span>
-                <div className="space-y-1">
-                  {learningPages.map((item) => {
-                    const Icon = item.icon;
-                    const isCur = isActive(item.path);
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        onClick={() => setIsDrawerOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                          isCur
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Icon className="w-4 h-4 flex-shrink-0" />
-                          <span>{item.name}</span>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-
-
-
-              {/* 3. ACCOUNT & SETTINGS */}
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-2 mb-2">
-                  Account & Settings
-                </span>
-                <div className="space-y-1">
-                  {accountPages.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        onClick={() => setIsDrawerOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Icon className="w-4 h-4 flex-shrink-0 text-slate-400" />
-                          <span>{item.name}</span>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50">
-              <button
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  handleSignOut();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-200 hover:bg-red-100 text-red-700 text-xs font-bold transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* JOIN / MY ORGANIZATION MODAL FROM SIDEBAR */}
-      {showOrgModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
-                <Building2 className="w-5 h-5 text-indigo-600" />
-                <span>
-                  {membershipStatus === 'Verified Student' 
-                    ? 'My Organization Details' 
-                    : membershipStatus === 'Pending Organization Approval'
-                    ? 'Pending Organization Membership'
-                    : 'Join an Organization to become a Student'}
-                </span>
-              </div>
-              <button onClick={() => setShowOrgModal(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
-            </div>
-
-            {membershipStatus === 'Verified Student' ? (
-              <div className="space-y-4">
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-emerald-950">{orgName}</h3>
-                    <p className="text-xs text-emerald-700 font-medium">Official Verified Student Affiliation</p>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  You are officially enrolled under {orgName}. Your academic progress, grades, and certificates are synchronized with institutional faculty.
-                </p>
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={() => setShowOrgModal(false)}
-                    className="px-5 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-xs"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="text-xs text-slate-500">
-                  Select an accredited university or enterprise organization from our platform registry. Submitting a request sends your profile to the Organization Admin for student membership verification.
-                </p>
-
-                <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                  {orgsList.map((org) => (
-                    <div
-                      key={org.id}
-                      onClick={() => setSelectedOrg(org)}
-                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                        selectedOrg?.id === org.id
-                          ? 'border-indigo-600 bg-indigo-50/50 shadow-xs'
-                          : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-900">{org.name}</h4>
-                          <p className="text-[11px] text-slate-500">{org.location} • {org.domain || 'edu'}</p>
-                        </div>
-                        {selectedOrg?.id === org.id && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowOrgModal(false)}
-                    className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!selectedOrg || submittingOrg}
-                    onClick={handleRequestJoinOrg}
-                    className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl shadow-sm transition-all"
-                  >
-                    {submittingOrg ? 'Submitting...' : 'Submit Join Request'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <aside className="hidden lg:flex shrink-0 h-screen sticky top-0 z-30">{content}</aside>
+      {isOpen && <div className="fixed inset-0 bg-slate-950/50 z-40 lg:hidden" onClick={onClose} />}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 lg:hidden transition-transform duration-200 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {content}
+      </aside>
     </>
+  );
+}
+
+export default function StudentTopbar({ onMenuClick }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { student } = useStudent();
+  const [query, setQuery] = useState('');
+  const [catalog, setCatalog] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const searchRef = useRef(null);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    api.student.getCatalog().then((c) => setCatalog(Array.isArray(c) ? c : [])).catch(() => setCatalog([]));
+  }, []);
+
+  useEffect(() => {
+    setShowResults(false);
+    setShowMenu(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowResults(false);
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return catalog
+      .filter((c) =>
+        [c.title, c.category, c.instructorName, c.leadInstructorName, c.organizationName]
+          .some((v) => v?.toLowerCase().includes(q))
+      )
+      .slice(0, 6);
+  }, [catalog, query]);
+
+  const submitSearch = (e) => {
+    e.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/student/explore?q=${encodeURIComponent(q)}` : '/student/explore');
+    setShowResults(false);
+  };
+
+  const name = student?.name || localStorage.getItem('user_name') || '';
+
+  return (
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90">
+      <div className="h-16 px-4 md:px-8 flex items-center gap-4">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div ref={searchRef} className="flex-1 max-w-xl relative">
+          <form onSubmit={submitSearch} className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              autoComplete="off"
+              placeholder="Search courses, topics or instructors"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+              className="w-full h-10 pl-10 pr-9 text-sm bg-slate-100/90 border border-slate-200 rounded-full focus:outline-none focus:border-[#0056D2] focus:bg-white focus:ring-2 focus:ring-[#0056D2]/20"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
+
+          {showResults && query.trim() && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50">
+              {results.length > 0 ? (
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                  {results.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => navigate(`/student/course/${c.id}`)}
+                      className="w-full p-3 hover:bg-blue-50/70 flex items-center gap-3 text-left"
+                    >
+                      {c.thumbnail ? (
+                        <img src={c.thumbnail} alt="" className="w-12 h-10 rounded-lg object-cover bg-slate-100" />
+                      ) : (
+                        <div className="w-12 h-10 rounded-lg bg-slate-100" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-900 truncate">{c.title}</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {[c.category, c.leadInstructorName || c.instructorName].filter(Boolean).join(' • ')}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="p-5 text-center text-xs text-slate-500">No courses match "{query}"</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div ref={menuRef} className="relative ml-auto">
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-slate-100 border border-slate-200"
+          >
+            <HumanAvatar name={name || 'Learner'} size="xs" />
+            <span className="hidden md:inline text-xs font-semibold text-slate-800">{name.split(' ')[0]}</span>
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 text-xs">
+              <Link to="/student/profile" className="flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-slate-100">
+                <User className="w-3.5 h-3.5" /> Profile & Settings
+              </Link>
+              <Link to="/student/billing" className="flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-slate-100">
+                <CreditCard className="w-3.5 h-3.5" /> Billing & Payments
+              </Link>
+              <button
+                onClick={() => signOutStudent(navigate)}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-red-600 hover:bg-red-50 font-semibold"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Sign out
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
   );
 }

@@ -41,16 +41,21 @@ export class OrganizationController {
 
   @Get('student-requests')
   @ApiOperation({ summary: 'Get pending student membership join requests' })
-  async getStudentJoinRequests() {
-    return this.organizationService.getStudentJoinRequests();
+  async getStudentJoinRequests(
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-user-email') userEmail?: string,
+  ) {
+    return this.organizationService.getStudentJoinRequests(userId, userEmail);
   }
 
   @Post('student-requests/:id/respond')
   @ApiOperation({ summary: 'Approve or reject a learner membership request' })
   async respondStudentJoinRequest(
     @Param('id') learnerId: string,
-    @Body() body: { action: 'approve' | 'reject' }
+    @Body() body: { action: 'approve' | 'reject' },
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-user-email') userEmail?: string,
   ) {
-    return this.organizationService.respondStudentJoinRequest(learnerId, body.action);
+    return this.organizationService.respondStudentJoinRequest(learnerId, body.action, userId, userEmail);
   }
 }

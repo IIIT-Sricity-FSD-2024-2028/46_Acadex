@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "enr-1792046450649",
+    "learnerId": "lrn-1",
+    "learnerName": "Arjun Sharma",
+    "learnerEmail": "arjun.sharma@email.com",
+    "courseId": "cou-e7ae7b46",
+    "courseTitle": "Cloud computing",
+    "organizationId": null,
+    "instructorId": "inst-1",
+    "enrolledDate": "2026-10-15",
+    "enrolledAt": "2026-10-15T06:40:50.649Z",
+    "progress": 0,
+    "status": "Active",
+    "completedLessons": [],
+    "lastAccessedAt": null,
+    "createdAt": "2026-10-15T06:40:50.653Z",
+    "updatedAt": "2026-10-15T06:40:50.653Z"
+  }
+]

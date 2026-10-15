@@ -51,7 +51,7 @@ const instructorNavGroups = [
 
 export function InstructorSidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
-  const { instructor, isAffiliated, invitations } = useInstructor();
+  const { instructor, isAffiliated, invitations, pendingJoinRequest } = useInstructor();
 
   const pendingCount = (invitations || []).filter((i) => i.status?.includes('Pending')).length;
 
@@ -63,8 +63,7 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
     window.location.href = '/signin?role=Instructor';
   };
 
-  const displayName = instructor?.name || 'Faculty Member';
-  const displayOrg = instructor?.organizationName || 'Affiliation Pending';
+  const displayName = instructor?.name || '';
 
   const sidebarContent = (
     <div className="h-full flex flex-col justify-between bg-white text-slate-900 border-r border-slate-200/90 select-none">
@@ -110,7 +109,7 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-bold text-xs">
                   <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>Affiliation Required</span>
+                  <span>{pendingJoinRequest ? 'Request pending' : 'Join an organization'}</span>
                 </div>
                 {pendingCount > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-extrabold">
@@ -119,8 +118,13 @@ export function InstructorSidebar({ isOpen, toggleSidebar }) {
                 )}
               </div>
               <p className="text-[11px] text-amber-800 leading-snug font-normal">
-                Awaiting organization teaching invitation. Review incoming requests to accept or decline.
+                {pendingJoinRequest
+                  ? `Waiting for ${pendingJoinRequest.organizationName} to approve your request.`
+                  : 'Send a join request or accept an invitation to unlock your studio.'}
               </p>
+              <Link to="/instructor/dashboard" className="block text-[11px] font-bold text-amber-900 underline">
+                Manage affiliation
+              </Link>
             </div>
           </div>
         )}

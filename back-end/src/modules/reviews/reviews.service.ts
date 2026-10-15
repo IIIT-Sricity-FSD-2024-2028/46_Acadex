@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 
@@ -9,7 +9,18 @@ export class ReviewsService {
     private readonly reviewsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.COURSES)
     private readonly coursesRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.LEARNERS)
+    private readonly learnersRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.ENROLLMENTS)
+    private readonly enrollmentsRepo: JsonRepository<any>,
   ) {}
+
+  private async learnerIdFor(userId?: string) {
+    if (!userId) return '';
+    const learners = await this.learnersRepo.find();
+    const learner = learners.find((l) => l.id === userId || l.userId === userId);
+    return learner?.id || userId;
+  }
 
   async findAll() {
     return this.reviewsRepo.find();
@@ -21,13 +32,16 @@ export class ReviewsService {
 
   async create(data: any, userId?: string) {
     const courseId = data?.courseId || '';
-    const learnerId = userId || data?.learnerId || '';
+    const learnerId = await this.learnerIdFor(userId);
 
-    if (!courseId) throw new NotFoundException('courseId is required');
-    if (!learnerId) throw new NotFoundException('learnerId (x-user-id header) is required');
+    if (!courseId) throw new BadRequestException('courseId is required');
+    if (!learnerId) throw new BadRequestException('x-user-id header is required');
 
     const course = await this.coursesRepo.findById(courseId);
     if (!course) throw new NotFoundException(`Course '${courseId}' not found`);
+
+    const enrollment = await this.enrollmentsRepo.findOne({ learnerId, courseId });
+    if (!enrollment) throw new ForbiddenException('Only enrolled learners can review this course');
 
     // Prevent duplicate reviews from same learner for same course
     const existing = await this.reviewsRepo.find({ where: { courseId, learnerId } });
@@ -40,7 +54,7 @@ export class ReviewsService {
 
     const review = await this.reviewsRepo.create({
       learnerId,
-      learnerName: data?.learnerName || data?.userName || 'Student',
+      learnerName: data?.learnerName || 'Learner',
       learnerAvatar: data?.learnerAvatar || data?.avatar || '',
       courseId,
       courseTitle: course?.title || '',
@@ -58,7 +72,7 @@ export class ReviewsService {
     const review = await this.reviewsRepo.findById(id);
     if (!review) throw new NotFoundException(`Review '${id}' not found`);
 
-    if (userId && review.learnerId !== userId) {
+    if (review.learnerId !== (await this.learnerIdFor(userId))) {
       throw new ForbiddenException('You can only edit your own reviews');
     }
 
@@ -75,7 +89,7 @@ export class ReviewsService {
     const review = await this.reviewsRepo.findById(id);
     if (!review) throw new NotFoundException(`Review '${id}' not found`);
 
-    if (userId && review.learnerId !== userId) {
+    if (review.learnerId !== (await this.learnerIdFor(userId))) {
       throw new ForbiddenException('You can only delete your own reviews');
     }
 

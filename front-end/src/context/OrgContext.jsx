@@ -50,6 +50,7 @@ export function OrgProvider({ children }) {
     info: {},
     instructors: [],
     instructorRequests: [],
+    joinRequests: [],
     learners: [],
     courses: [],
     enrollments: [],
@@ -74,6 +75,8 @@ export function OrgProvider({ children }) {
     return [];
   };
 
+  const scopeInvitations = (list, orgId) => list.filter((r) => r.type !== 'join' && (!orgId || r.organizationId === orgId));
+
   // Fetch all collections from the backend JSON database
   const refreshData = useCallback(async () => {
     try {
@@ -90,6 +93,7 @@ export function OrgProvider({ children }) {
         transactionsRes,
         notificationsRes,
         settingsRes,
+        joinRes,
       ] = await Promise.allSettled([
         api?.organization?.get ? api.organization.get() : Promise.resolve(null),
         api?.instructors?.list ? api.instructors.list({ limit: 1000 }) : Promise.resolve([]),
@@ -100,12 +104,16 @@ export function OrgProvider({ children }) {
         api?.payments?.listTransactions ? api.payments.listTransactions({ limit: 1000 }) : Promise.resolve([]),
         api?.notifications?.list ? api.notifications.list({ limit: 1000 }) : Promise.resolve([]),
         api?.settings?.get ? api.settings.get() : Promise.resolve(null),
+        api.instructorRequests.incomingJoinRequests(),
       ]);
+
+      const orgInfo = orgRes.status === 'fulfilled' ? orgRes.value : null;
 
       setState((prev) => ({
         info: orgRes.status === 'fulfilled' && orgRes.value ? orgRes.value : prev.info,
         instructors: instructorsRes.status === 'fulfilled' ? getItems(instructorsRes.value) : prev.instructors,
-        instructorRequests: requestsRes.status === 'fulfilled' ? getItems(requestsRes.value) : prev.instructorRequests,
+        instructorRequests: requestsRes.status === 'fulfilled' ? scopeInvitations(getItems(requestsRes.value), orgInfo?.id) : prev.instructorRequests,
+        joinRequests: joinRes.status === 'fulfilled' ? getItems(joinRes.value) : prev.joinRequests,
         learners: learnersRes.status === 'fulfilled' ? getItems(learnersRes.value) : prev.learners,
         courses: coursesRes.status === 'fulfilled' ? getItems(coursesRes.value) : prev.courses,
         enrollments: enrollmentsRes.status === 'fulfilled' ? getItems(enrollmentsRes.value) : prev.enrollments,
@@ -132,13 +140,8 @@ export function OrgProvider({ children }) {
     totalLearners: state.learners.length,
     activeCourses: state.courses.length,
     totalEnrollments: state.enrollments.length,
-    pendingRequests: state.instructorRequests.filter(
-      (r) =>
-        r.status === 'Pending Professor Response' ||
-        r.status === 'Invite Sent' ||
-        r.status === 'Pending' ||
-        r.status?.toLowerCase().includes('pending')
-    ).length,
+    pendingRequests: state.instructorRequests.filter((r) => /pending|sent/i.test(r.status || '')).length,
+    pendingJoinRequests: state.joinRequests.filter((r) => /pending/i.test(r.status || '')).length,
     unreadNotifications: state.notifications.filter((n) => !n.read).length,
     annualRevenue: state.courses.reduce((sum, c) => sum + (c.revenue || 0), 0),
     monthlyRevenue: Math.round(state.courses.reduce((sum, c) => sum + (c.revenue || 0), 0) * 0.3),
@@ -276,11 +279,11 @@ export function OrgProvider({ children }) {
       const payload = {
         instructorId,
         courseId,
-        courseTitle: courseTitle || 'Advanced Distributed Systems',
-        semester: semester || 'Fall 2026',
-        creditHours: creditHours || '4 Academic Credits',
-        proposedTerms: proposedTerms || 'Departmental faculty honorarium + course royalties',
-        message: message || `College administration sent formal course teaching request for ${courseTitle}.`,
+        courseTitle,
+        semester,
+        creditHours,
+        proposedTerms,
+        message,
         organizationId: organizationId || state.info?.id,
         organizationName: organizationName || state.info?.name,
       };
@@ -295,7 +298,7 @@ export function OrgProvider({ children }) {
 
       setState((prev) => ({
         ...prev,
-        instructorRequests: getItems(requestsRes),
+        instructorRequests: scopeInvitations(getItems(requestsRes), prev.info?.id),
         notifications: getItems(notifsRes),
       }));
 
@@ -319,7 +322,7 @@ export function OrgProvider({ children }) {
 
       setState((prev) => ({
         ...prev,
-        instructorRequests: getItems(requestsRes),
+        instructorRequests: scopeInvitations(getItems(requestsRes), prev.info?.id),
         courses: getItems(coursesRes),
         notifications: getItems(notifsRes),
       }));
@@ -329,6 +332,30 @@ export function OrgProvider({ children }) {
       console.error('Failed to respond to teaching request on backend:', err);
       throw err;
     }
+  };
+
+  const decideJoinRequest = async (requestId, action, notes) => {
+    const updated = await api.instructorRequests.decideJoinRequest(requestId, action, notes);
+    await refreshData();
+    return updated;
+  };
+
+  const resendInvitation = async (requestId) => {
+    const updated = await api.instructorRequests.resend(requestId);
+    setState((prev) => ({
+      ...prev,
+      instructorRequests: prev.instructorRequests.map((r) => (r.id === requestId ? updated : r)),
+    }));
+    return updated;
+  };
+
+  const withdrawInvitation = async (requestId, reason) => {
+    const updated = await api.instructorRequests.withdraw(requestId, reason);
+    setState((prev) => ({
+      ...prev,
+      instructorRequests: prev.instructorRequests.map((r) => (r.id === requestId ? updated : r)),
+    }));
+    return updated;
   };
 
   // 4. Enrollments & Course Assignment
@@ -431,6 +458,7 @@ export function OrgProvider({ children }) {
         info: state.info,
         instructors: state.instructors,
         instructorRequests: state.instructorRequests,
+        joinRequests: state.joinRequests,
         learners: state.learners,
         courses: state.courses,
         enrollments: state.enrollments,
@@ -448,6 +476,9 @@ export function OrgProvider({ children }) {
         deleteCourse,
         sendCourseTeachingRequest,
         respondToTeachingRequest,
+        decideJoinRequest,
+        resendInvitation,
+        withdrawInvitation,
         assignCoursesToLearners,
         markNotificationRead,
         markAllNotificationsRead,

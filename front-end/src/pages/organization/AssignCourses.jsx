@@ -19,7 +19,9 @@ export default function AssignCourses() {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
-  const { instructors, courses, sendCourseTeachingRequest, organization } = useOrg();
+  const { instructors: allInstructors, courses: allCourses, sendCourseTeachingRequest, info: organization } = useOrg();
+  const courses = allCourses.filter((c) => c.organizationId === organization?.id);
+  const instructors = allInstructors.filter((i) => !i.organizationId || i.organizationId === organization?.id);
 
   // Only use an explicit URL selection; otherwise start with no selections.
   const queryParams = new URLSearchParams(location.search);
@@ -32,12 +34,10 @@ export default function AssignCourses() {
   const [selectedCourseIds, setSelectedCourseIds] = useState(
     preselectedCourseId ? [preselectedCourseId] : []
   );
-  const [semester, setSemester] = useState('Fall 2026');
+  const [semester, setSemester] = useState('');
   const [creditHours, setCreditHours] = useState('');
-  const [proposedTerms, setProposedTerms] = useState('Departmental faculty honorarium + 70/30 course royalties');
-  const [customMessage, setCustomMessage] = useState(
-    'The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.'
-  );
+  const [proposedTerms, setProposedTerms] = useState('');
+  const [customMessage, setCustomMessage] = useState('');
 
   const [instructorSearch, setInstructorSearch] = useState('');
   const [courseSearch, setCourseSearch] = useState('');
@@ -69,7 +69,7 @@ export default function AssignCourses() {
       return;
     }
 
-    try {
+    {
       const promises = [];
       // Send one request for every selected instructor-course pairing.
       selectedCourseIds.forEach(cId => {
@@ -79,11 +79,10 @@ export default function AssignCourses() {
             sendCourseTeachingRequest({
               instructorId: instructor.id,
               courseId: course?.id,
-              courseTitle: course ? course.title : 'Specialized Engineering Track',
-              semester,
-              creditHours,
-              proposedTerms,
-              message: customMessage,
+              semester: semester.trim() || undefined,
+              creditHours: creditHours.trim() || undefined,
+              proposedTerms: proposedTerms.trim() || undefined,
+              message: customMessage.trim() || undefined,
               organizationId: organization?.id,
               organizationName: organization?.name,
             })
@@ -91,26 +90,23 @@ export default function AssignCourses() {
         });
       });
 
-      await Promise.all(promises);
-
-      addToast(
-        `${selectedInstructors.length * selectedCourseIds.length} teaching request(s) dispatched to ${selectedInstructors.length} instructor(s)!`,
-        'success'
-      );
-      navigate('/org/instructor-requests');
-    } catch (err) {
-      addToast(`Failed to dispatch teaching requests: ${err.message || 'Server error'}`, 'error');
+      const results = await Promise.allSettled(promises);
+      const failed = results.filter((r) => r.status === 'rejected');
+      const sent = results.length - failed.length;
+      if (sent) addToast(`${sent} invitation(s) sent`, 'success');
+      if (failed.length) addToast(`${failed.length} not sent: ${failed[0].reason?.message || 'server error'}`, 'error');
+      if (!failed.length) navigate('/org/instructor-requests');
     }
   };
 
   const filteredInstructors = instructors.filter(i =>
-    i.name.toLowerCase().includes(instructorSearch.toLowerCase()) ||
-    i.specialization.toLowerCase().includes(instructorSearch.toLowerCase())
+    (i.name || '').toLowerCase().includes(instructorSearch.toLowerCase()) ||
+    (i.specialization || '').toLowerCase().includes(instructorSearch.toLowerCase())
   );
 
   const filteredCourses = courses.filter(c =>
-    c.title.toLowerCase().includes(courseSearch.toLowerCase()) ||
-    c.category.toLowerCase().includes(courseSearch.toLowerCase())
+    (c.title || '').toLowerCase().includes(courseSearch.toLowerCase()) ||
+    (c.category || '').toLowerCase().includes(courseSearch.toLowerCase())
   );
 
   return (
@@ -173,7 +169,10 @@ export default function AssignCourses() {
                       <div className="flex items-center gap-3">
                         <img src={inst.avatar} alt={inst.name} className="w-10 h-10 rounded-2xl object-cover" />
                         <div>
-                          <h3 className="font-bold text-xs text-on-surface">{inst.name}</h3>
+                          <h3 className="font-bold text-xs text-on-surface">
+                            {inst.name}
+                            {!inst.organizationId && <span className="ml-1.5 text-[9px] font-bold text-amber-700">Not affiliated</span>}
+                          </h3>
                           <p className="text-[10px] text-primary font-semibold">{inst.specialization}</p>
                           <span className="text-[10px] text-outline flex items-center gap-1 mt-0.5">
                             <Mail className="w-2.5 h-2.5" /> {inst.email}
@@ -234,7 +233,9 @@ export default function AssignCourses() {
                         <img src={c.thumbnail} alt={c.title} className="w-12 h-9 rounded-xl object-cover flex-shrink-0" />
                         <div>
                           <h3 className="font-bold text-xs text-on-surface line-clamp-1">{c.title}</h3>
-                          <p className="text-[10px] text-outline">{c.category} • {c.totalHours} • Currently: {c.instructorName}</p>
+                          <p className="text-[10px] text-outline">
+                            {[c.category, c.totalHours, c.instructorName ? `Currently: ${c.instructorName}` : 'No instructor yet'].filter(Boolean).join(' • ')}
+                          </p>
                         </div>
                       </div>
                       <span className="font-bold text-xs text-emerald-700">₹{c.price}</span>
@@ -246,55 +247,43 @@ export default function AssignCourses() {
 
           </div>
 
-          {/* Step 3: Semester & Compensation Terms */}
-          {/* <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 space-y-4">
+          {/* Step 3: Optional terms */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
             <h2 className="text-sm font-bold text-on-surface pb-3 border-b border-outline-variant flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">3</span>
-              <span>Teaching Assignment Terms & Scheduling</span>
+              <span>Invitation details (optional)</span>
             </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-on-surface block mb-1">Academic Term / Semester</label>
-                <select
-                  value={semester}
-                  onChange={(e) => setSemester(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
-                >
-                  <option>Fall 2026 (Aug – Dec)</option>
-                  <option>Spring 2027 (Jan – May)</option>
-                  <option>Summer Intensive 2027 (Jun – Jul)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-on-surface block mb-1">Course Credits & Lecture Hours</label>
-                <input
-                  type="text"
-                  value={creditHours}
-                  onChange={(e) => setCreditHours(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                ['Term / semester', semester, setSemester, 'e.g. Spring 2027'],
+                ['Credits or hours', creditHours, setCreditHours, 'e.g. 4 credits / 45 hours'],
+                ['Compensation', proposedTerms, setProposedTerms, 'e.g. ₹40,000 per term'],
+              ].map(([label, value, setter, placeholder]) => (
+                <div key={label}>
+                  <label className="text-xs font-bold text-on-surface block mb-1">{label}</label>
+                  <input
+                    type="text"
+                    value={value}
+                    maxLength={120}
+                    onChange={(e) => setter(e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+              ))}
             </div>
-
             <div>
-              <label className="text-xs font-bold text-on-surface block mb-1">Faculty Honorarium & Compensation Terms</label>
-              <input
-                type="text"
-                value={proposedTerms}
-                onChange={(e) => setProposedTerms(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+              <label className="text-xs font-bold text-on-surface block mb-1">Message to the instructor</label>
+              <textarea
+                value={customMessage}
+                maxLength={1000}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                placeholder="Tell the instructor what you expect: schedule, batch size, start date."
+                rows={3}
+                className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface focus:outline-none focus:border-primary resize-none"
               />
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200/60 text-indigo-950 text-xs flex items-center gap-2.5">
-              <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-              <span>
-                When confirmed, the outreach system sends a teaching request to every selected instructor. Once accepted, each instructor is added to that course’s teaching team.
-              </span>
-            </div>
-          </div> */}
+          </div>
 
           {/* Submission Bar */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -304,7 +293,7 @@ export default function AssignCourses() {
                 Assigning <strong className="text-primary">{selectedCourseIds.length} course(s)</strong> to <strong className="text-primary">{selectedInstructors.length} instructor(s)</strong>
               </p>
               <p className="text-xs text-outline mt-0.5">
-                Target Term: {semester} • {selectedInstructors.length * selectedCourseIds.length} request(s) will be sent
+                {semester ? `Term: ${semester} • ` : ''}{selectedInstructors.length * selectedCourseIds.length} invitation(s) will be sent
               </p>
             </div>
             <button

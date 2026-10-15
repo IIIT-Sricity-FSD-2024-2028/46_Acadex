@@ -57,7 +57,7 @@ export default function CertificateModal({ certificate: propCert, cert, onClose 
                 N
               </div>
               <span className="font-headline-md text-xl font-bold text-primary tracking-widest uppercase">
-                {certificate.institution || "NexusPay Learning Institute"}
+                {certificate.institution}
               </span>
             </div>
 
@@ -78,7 +78,7 @@ export default function CertificateModal({ certificate: propCert, cert, onClose 
             </p>
 
             <h3 className="text-xl md:text-2xl font-extrabold text-on-surface mb-4 px-4 leading-snug">
-              {certificate.title || certificate.courseTitle || 'Advanced Enterprise Architecture Certificate'}
+              {certificate.courseTitle || certificate.title}
             </h3>
 
             {/* Skills Pills */}
@@ -93,7 +93,7 @@ export default function CertificateModal({ certificate: propCert, cert, onClose 
             {/* Signatures & Seal Row */}
             <div className="pt-6 border-t border-outline-variant/60 grid grid-cols-3 gap-6 items-end text-xs">
               <div className="text-center">
-                <p className="font-serif italic text-base font-bold text-on-surface mb-0.5">{certificate.issueDate || "October 15, 2024"}</p>
+                <p className="font-serif italic text-base font-bold text-on-surface mb-0.5">{certificate.issueDate}</p>
                 <div className="w-28 h-px bg-outline-variant mx-auto mb-1"></div>
                 <p className="text-[10px] font-bold text-outline uppercase tracking-wider">Date of Issuance</p>
               </div>
@@ -110,7 +110,7 @@ export default function CertificateModal({ certificate: propCert, cert, onClose 
               </div>
 
               <div className="text-center">
-                <p className="font-serif italic text-base font-bold text-on-surface mb-0.5">{certificate.instructor || "Dr. Marcus Vance"}</p>
+                <p className="font-serif italic text-base font-bold text-on-surface mb-0.5">{certificate.instructorName || certificate.instructor}</p>
                 <div className="w-28 h-px bg-outline-variant mx-auto mb-1"></div>
                 <p className="text-[10px] font-bold text-outline uppercase tracking-wider">Dean / Lead Architect</p>
               </div>

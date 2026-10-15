@@ -1,7 +1,16 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { UpdateStudentProfileDto, StudentCheckoutDto } from './dto/student.dto';
+
+const PAYMENT_METHODS = ['card', 'upi'];
 
 @Injectable()
 export class StudentService {
@@ -17,215 +26,301 @@ export class StudentService {
     @Inject(REPOSITORY_TOKENS.TRANSACTIONS)
     private readonly transactionsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.ORGANIZATION)
-    private readonly orgsRepo: JsonRepository<any>
+    private readonly orgsRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
+    private readonly notifsRepo: JsonRepository<any>,
   ) {}
 
-  async getProfile(userId: string) {
+  private async resolveLearner(userId: string) {
+    if (!userId) throw new NotFoundException('Missing x-user-id header');
     let learner = await this.learnersRepo.findById(userId);
     if (!learner) {
       const all = await this.learnersRepo.find();
       learner = all.find((l) => l.userId === userId || l.email === userId) || null;
     }
-    if (!learner) {
-      throw new NotFoundException(`Learner '${userId}' not found`);
-    }
-
-    if (!learner.orgMembershipStatus) {
-      learner.orgMembershipStatus = learner.university && learner.university !== 'Independent Learner' 
-        ? 'Verified Student' 
-        : 'Independent Learner';
-    }
-
+    if (!learner) throw new NotFoundException(`Learner '${userId}' not found`);
     return learner;
   }
 
+  private hasInstructor(course: any) {
+    return Boolean(course?.instructorId || course?.instructors?.length);
+  }
+
+  private isAvailable(course: any) {
+    return course && course.status === 'Published' && this.hasInstructor(course);
+  }
+
+  private lessonIdsFor(course: any): string[] {
+    const ids: string[] = [];
+    for (const mod of course?.modules || []) {
+      const count = Array.isArray(mod.lessons) ? mod.lessons.length : Number(mod.lessons) || 0;
+      for (let i = 1; i <= count; i++) ids.push(`${mod.id}-l${i}`);
+    }
+    return ids;
+  }
+
+  async getProfile(userId: string) {
+    const learner = await this.resolveLearner(userId);
+    const [enrollments, certificates] = await Promise.all([
+      this.enrollmentsRepo.find({ where: { learnerId: learner.id } }),
+      this.certificatesRepo.find({ where: { learnerId: learner.id } }),
+    ]);
+    const completed = enrollments.filter((e) => e.status === 'Completed').length;
+
+    return {
+      ...learner,
+      orgMembershipStatus: learner.orgMembershipStatus || 'Independent Learner',
+      enrolledCourses: enrollments.length,
+      inProgressCourses: enrollments.length - completed,
+      completedCourses: completed,
+      certificatesEarned: certificates.length,
+    };
+  }
+
   async updateProfile(userId: string, dto: UpdateStudentProfileDto) {
-    const learner = await this.getProfile(userId);
-    const updated = await this.learnersRepo.update(learner.id, dto);
-    return updated;
+    const learner = await this.resolveLearner(userId);
+    const allowed: any = {};
+    for (const key of ['name', 'title', 'location', 'bio', 'phone']) {
+      if (dto[key] !== undefined) allowed[key] = String(dto[key]).trim();
+    }
+    if (allowed.name !== undefined && allowed.name.length < 2) {
+      throw new BadRequestException('Name must be at least 2 characters');
+    }
+    await this.learnersRepo.update(learner.id, { ...allowed, updatedAt: new Date().toISOString() });
+    return this.getProfile(userId);
   }
 
   async requestJoinOrganization(userId: string, orgId: string, orgName: string) {
-    const learner = await this.getProfile(userId);
-    const updated = await this.learnersRepo.update(learner.id, {
+    const learner = await this.resolveLearner(userId);
+    const org = await this.orgsRepo.findById(orgId);
+    if (!org) throw new NotFoundException(`Organization '${orgId}' not found`);
+    await this.learnersRepo.update(learner.id, {
       orgMembershipStatus: 'Pending Organization Approval',
-      requestedOrgId: orgId,
-      requestedOrgName: orgName,
+      requestedOrgId: org.id,
+      requestedOrgName: org.name || orgName,
       requestedAt: new Date().toISOString(),
     });
-    return updated;
+    return this.getProfile(userId);
   }
 
   async getOrganizationsList() {
     return this.orgsRepo.find();
   }
 
-  async getEnrollments(userId: string) {
-    const learner = await this.getProfile(userId);
-    const enrollments = await this.enrollmentsRepo.find({
-      where: { learnerId: learner.id },
-    });
-    const allCourses = await this.coursesRepo.find();
-    
-    // Enrich with accurate course thumbnail and metadata
-    const enriched = enrollments.map((enr) => {
-      const course = allCourses.find((c) => c.id === enr.courseId || c.title?.toLowerCase() === enr.courseTitle?.toLowerCase());
-      const resolvedThumbnail = enr.thumbnail || enr.thumbnailUrl || course?.thumbnail || course?.thumbnailUrl;
-      const resolvedTitle = enr.courseTitle || course?.title || 'Academic Course Track';
-      const resolvedInstitution = enr.institution || course?.institution || course?.organizationName || 'Stanford University';
-      const resolvedProgress = typeof enr.progress === 'number' ? enr.progress : (enr.status === 'Completed' ? 100 : 0);
-      return {
-        ...enr,
-        courseTitle: resolvedTitle,
-        thumbnail: resolvedThumbnail,
-        thumbnailUrl: resolvedThumbnail,
-        institution: resolvedInstitution,
-        progress: resolvedProgress,
-      };
-    });
-    return enriched;
+  async getCatalog() {
+    const courses = await this.coursesRepo.find();
+    return courses.filter((c) => this.isAvailable(c));
   }
 
-  async enrollCourse(userId: string, courseId: string, extra?: { thumbnail?: string; institution?: string; courseTitle?: string }) {
-    const learner = await this.getProfile(userId);
-    let course = await this.coursesRepo.findById(courseId);
-    if (!course) {
-      const allCourses = await this.coursesRepo.find();
-      course = allCourses.find((c) => c.id === courseId || c.title?.toLowerCase() === extra?.courseTitle?.toLowerCase());
-    }
+  async getCatalogCourse(courseId: string) {
+    const course = await this.coursesRepo.findById(courseId);
+    if (!this.isAvailable(course)) throw new NotFoundException(`Course '${courseId}' is not available`);
+    return course;
+  }
 
-    const resolvedThumbnail = extra?.thumbnail || course?.thumbnail || course?.thumbnailUrl;
-    const resolvedInstitution = extra?.institution || course?.institution || course?.organizationName || 'Stanford University';
-    const resolvedTitle = extra?.courseTitle || course?.title || 'Masterclass Track';
+  async getEnrollments(userId: string) {
+    const learner = await this.resolveLearner(userId);
+    const enrollments = await this.enrollmentsRepo.find({ where: { learnerId: learner.id } });
+    const courses = await this.coursesRepo.find();
 
-    const existing = await this.enrollmentsRepo.findOne({
-      learnerId: learner.id,
-      courseId: courseId,
-    });
+    return enrollments
+      .map((enr) => {
+        const course = courses.find((c) => c.id === enr.courseId);
+        if (!course || !this.hasInstructor(course)) return null;
+        const totalLessons = this.lessonIdsFor(course).length;
+        return {
+          ...enr,
+          courseTitle: course.title,
+          category: course.category,
+          description: course.description,
+          thumbnail: course.thumbnail,
+          institution: course.organizationName || '',
+          instructorName: course.leadInstructorName || course.instructorName || '',
+          totalLessons,
+          completedLessons: enr.completedLessons || [],
+          progress: typeof enr.progress === 'number' ? enr.progress : 0,
+        };
+      })
+      .filter(Boolean);
+  }
 
-    if (existing) {
-      // Ensure existing record has latest course thumbnail, institution, and resets to 0 if newly purchased
-      await this.enrollmentsRepo.update(existing.id, {
-        thumbnail: resolvedThumbnail || existing.thumbnail,
-        thumbnailUrl: resolvedThumbnail || existing.thumbnailUrl,
-        institution: resolvedInstitution || existing.institution,
-        courseTitle: resolvedTitle || existing.courseTitle,
-        progress: 0,
-        status: 'Active',
-      });
-      return {
-        ...existing,
-        thumbnail: resolvedThumbnail || existing.thumbnail,
-        thumbnailUrl: resolvedThumbnail || existing.thumbnailUrl,
-        institution: resolvedInstitution || existing.institution,
-        courseTitle: resolvedTitle || existing.courseTitle,
-        progress: 0,
-        status: 'Active',
-      };
-    }
+  async getEnrollmentForCourse(userId: string, courseId: string) {
+    const all = await this.getEnrollments(userId);
+    const enrollment = all.find((e) => e.courseId === courseId);
+    if (!enrollment) throw new NotFoundException('You are not enrolled in this course');
+    return enrollment;
+  }
 
-    const newEnrollment = await this.enrollmentsRepo.create({
+  private async createEnrollment(learner: any, course: any) {
+    const now = new Date();
+    const enrollment = await this.enrollmentsRepo.create({
       id: `enr-${Date.now()}`,
       learnerId: learner.id,
       learnerName: learner.name,
       learnerEmail: learner.email,
-      learnerAvatar: learner.avatar,
-      courseId: course?.id || courseId,
-      courseTitle: resolvedTitle,
-      thumbnail: resolvedThumbnail,
-      thumbnailUrl: resolvedThumbnail,
-      institution: resolvedInstitution,
-      enrolledDate: new Date().toISOString().split('T')[0],
-      enrolledAt: new Date().toISOString(),
+      courseId: course.id,
+      courseTitle: course.title,
+      organizationId: course.organizationId || null,
+      instructorId: course.instructorId || course.instructors?.[0]?.id || null,
+      enrolledDate: now.toISOString().split('T')[0],
+      enrolledAt: now.toISOString(),
       progress: 0,
       status: 'Active',
       completedLessons: [],
-      lastAccessedLesson: null,
+      lastAccessedAt: null,
     });
 
-    if (course) {
-      await this.coursesRepo.update(course.id, {
-        enrolledCount: (course.enrolledCount || 0) + 1,
-      });
-    }
+    await this.coursesRepo.update(course.id, {
+      enrolledCount: (course.enrolledCount || 0) + 1,
+    });
+    return enrollment;
+  }
 
-    return newEnrollment;
+  private async assertNotEnrolled(learnerId: string, courseId: string) {
+    const existing = await this.enrollmentsRepo.findOne({ learnerId, courseId });
+    if (existing) throw new ConflictException('You are already enrolled in this course');
+  }
+
+  async enrollCourse(userId: string, courseId: string) {
+    const learner = await this.resolveLearner(userId);
+    const course = await this.getCatalogCourse(courseId);
+    if (Number(course.price) > 0) {
+      throw new BadRequestException('This is a paid course. Complete checkout to enroll.');
+    }
+    await this.assertNotEnrolled(learner.id, course.id);
+    return this.createEnrollment(learner, course);
   }
 
   async updateProgress(userId: string, enrollmentId: string, lessonId: string, completed: boolean) {
+    const learner = await this.resolveLearner(userId);
     const enrollment = await this.enrollmentsRepo.findById(enrollmentId);
-    if (!enrollment) {
-      throw new NotFoundException(`Enrollment '${enrollmentId}' not found`);
-    }
-
-    const completedLessons = new Set<string>(enrollment.completedLessons || []);
-    if (completed) {
-      completedLessons.add(lessonId);
-    } else {
-      completedLessons.delete(lessonId);
-    }
+    if (!enrollment) throw new NotFoundException(`Enrollment '${enrollmentId}' not found`);
+    if (enrollment.learnerId !== learner.id) throw new ForbiddenException('Not your enrollment');
 
     const course = await this.coursesRepo.findById(enrollment.courseId);
-    const totalLessons = course?.lessonsCount || 10;
-    const progress = Math.min(100, Math.round((completedLessons.size / totalLessons) * 100));
-    const status = progress >= 100 ? 'Completed' : 'Active';
+    const lessonIds = this.lessonIdsFor(course);
+    if (!lessonIds.includes(lessonId)) throw new BadRequestException(`Unknown lesson '${lessonId}'`);
 
-    const updated = await this.enrollmentsRepo.update(enrollmentId, {
-      completedLessons: Array.from(completedLessons),
+    const done = new Set<string>((enrollment.completedLessons || []).filter((id) => lessonIds.includes(id)));
+    if (completed) done.add(lessonId);
+    else done.delete(lessonId);
+
+    const progress = lessonIds.length ? Math.round((done.size / lessonIds.length) * 100) : 0;
+    const nowCompleted = progress >= 100;
+    const now = new Date().toISOString();
+
+    await this.enrollmentsRepo.update(enrollmentId, {
+      completedLessons: Array.from(done),
       progress,
-      status,
+      status: nowCompleted ? 'Completed' : 'Active',
+      lastAccessedAt: now,
+      ...(nowCompleted && enrollment.status !== 'Completed' ? { completedAt: now } : {}),
     });
 
-    return updated;
+    if (nowCompleted) await this.issueCertificate(learner, enrollment, course);
+
+    return this.getEnrollmentForCourse(userId, enrollment.courseId);
+  }
+
+  private async issueCertificate(learner: any, enrollment: any, course: any) {
+    const existing = await this.certificatesRepo.findOne({ learnerId: learner.id, courseId: course.id });
+    if (existing) return existing;
+
+    const tag = course.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    const credentialId = `NX-${tag}-${Math.floor(100000 + Math.random() * 900000)}`;
+    const issuedAt = new Date();
+
+    const cert = await this.certificatesRepo.create({
+      id: `cert-${Date.now()}`,
+      learnerId: learner.id,
+      learnerName: learner.name,
+      courseId: course.id,
+      courseTitle: course.title,
+      institution: course.organizationName || '',
+      organizationId: course.organizationId || null,
+      instructorName: course.leadInstructorName || course.instructorName || '',
+      category: course.category || '',
+      skills: (course.modules || []).map((m: any) => m.title).slice(0, 4),
+      issueDate: issuedAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      issuedAt: issuedAt.toISOString(),
+      credentialId,
+      status: 'Verified',
+      grade: 'Completed',
+    });
+
+    await this.enrollmentsRepo.update(enrollment.id, { certificateId: cert.credentialId });
+    await this.notifsRepo.create({
+      title: 'Course Completed',
+      desc: `${learner.name} completed "${course.title}" and received a certificate.`,
+      time: 'Just now',
+      category: 'Certificate',
+      read: false,
+      color: 'green',
+      learnerId: learner.id,
+    });
+    return cert;
   }
 
   async getCertificates(userId: string) {
-    const learner = await this.getProfile(userId);
-    const certificates = await this.certificatesRepo.find({
-      where: { learnerId: learner.id },
-    });
-    return certificates;
+    const learner = await this.resolveLearner(userId);
+    return this.certificatesRepo.find({ where: { learnerId: learner.id } });
   }
 
   async getPayments(userId: string) {
-    const learner = await this.getProfile(userId);
-    const transactions = await this.transactionsRepo.find({
-      where: { payerId: learner.id },
-    });
-    return transactions;
+    const learner = await this.resolveLearner(userId);
+    const txs = await this.transactionsRepo.find({ where: { payerId: learner.id } });
+    return txs.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   }
 
   async checkout(userId: string, dto: StudentCheckoutDto) {
-    const learner = await this.getProfile(userId);
-    const course = await this.coursesRepo.findById(dto.courseId);
+    const learner = await this.resolveLearner(userId);
+    const course = await this.getCatalogCourse(dto.courseId);
+    await this.assertNotEnrolled(learner.id, course.id);
+
+    const method = String(dto.paymentMethod || '').toLowerCase();
+    if (!PAYMENT_METHODS.includes(method)) {
+      throw new BadRequestException('Payment method must be card or upi');
+    }
+    if (method === 'upi' && !/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(dto.upiId || '')) {
+      throw new BadRequestException('A valid UPI ID is required (e.g. name@bank)');
+    }
+    if (method === 'card' && !/^\d{4}$/.test(dto.cardLast4 || '')) {
+      throw new BadRequestException('Card details are incomplete');
+    }
 
     const now = new Date().toISOString();
+    const methodLabel = method === 'upi' ? `UPI (${dto.upiId})` : `Card •••• ${dto.cardLast4}`;
     const transaction = await this.transactionsRepo.create({
       id: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
       type: 'Payment',
       payerId: learner.id,
       payer: learner.name,
-      course: course?.title || 'Masterclass Track',
-      amount: dto.amount || course?.price || 4999,
-      method: dto.paymentMethod || 'Credit Card',
+      courseId: course.id,
+      course: course.title,
+      organizationId: course.organizationId || null,
+      organizationName: course.organizationName || null,
+      amount: Number(course.price) || 0,
+      method: methodLabel,
       date: now,
       status: 'Completed',
       createdAt: now,
       updatedAt: now,
     });
 
-    await this.enrollCourse(userId, dto.courseId, {
-      thumbnail: dto.thumbnail,
-      institution: dto.institution,
-      courseTitle: dto.courseTitle,
+    const enrollment = await this.createEnrollment(learner, course);
+    await this.coursesRepo.update(course.id, {
+      revenue: (course.revenue || 0) + (Number(course.price) || 0),
     });
 
     return {
       success: true,
       transactionId: transaction.id,
-      courseTitle: dto.courseTitle || course?.title || 'Masterclass Track',
+      enrollmentId: enrollment.id,
+      courseId: course.id,
+      courseTitle: course.title,
       amount: transaction.amount,
-      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      method: methodLabel,
+      date: now,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { InstructorsService } from './instructors.service';
 import { CreateInstructorDto, InstructorQueryDto, UpdateInstructorDto } from './dto/instructor.dto';
@@ -50,13 +50,9 @@ export class InstructorsController {
     return this.instructorsService.getInstructorCourses(id);
   }
 
-  @Post(':id/connect-organization')
-  @ApiOperation({ summary: 'Associate instructor with an accredited organization' })
-  @ApiResponse({ status: 200, description: 'Organization connected successfully' })
-  async connectOrganization(
-    @Param('id') id: string,
-    @Body() body: { organizationId: string; organizationName?: string }
-  ) {
-    return this.instructorsService.connectUniversity(id, body.organizationId, body.organizationName);
+  @Post(':id/leave-organization')
+  @ApiOperation({ summary: 'Instructor leaves their organization' })
+  async leaveOrganization(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    return this.instructorsService.leaveOrganization(id, userId);
   }
 }

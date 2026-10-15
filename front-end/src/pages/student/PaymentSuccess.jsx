@@ -1,152 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { 
-  CheckCircle, 
-  Download, 
-  Play, 
-  ArrowRight, 
-  BookOpen, 
-  ShieldCheck, 
-  ChevronRight,
-  Sparkles
-} from 'lucide-react';
+import React from 'react';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { CheckCircle2, Play, Receipt } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import CourseCard from '../../components/common/CourseCard';
-import api from '../../services/api';
 
 export default function PaymentSuccess() {
-  const location = useLocation();
-  const state = location.state || {};
+  const { state } = useLocation();
+  if (!state?.transactionId) return <Navigate to="/student/my-learning" replace />;
 
-  const courseTitle = state.courseTitle || "Advanced Enterprise Architecture & Payment Systems";
-  const amount = state.amount || "₹4,999";
-  const transactionId = state.transactionId || "#NX-48291";
-  const date = state.date || "October 2026";
-  const courseId = state.courseId || "crs-1";
-
-  const [recommendedCourses, setRecommendedCourses] = useState([]);
-
-  useEffect(() => {
-    api.courses.list()
-      .then((res) => {
-        const list = Array.isArray(res) ? res : (res?.items || []);
-        setRecommendedCourses(list.slice(0, 3));
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleDownloadReceipt = () => {
-    window.print();
-  };
+  const rows = [
+    ['Course', state.courseTitle],
+    ['Amount paid', `₹${Number(state.amount || 0).toLocaleString('en-IN')}`],
+    ['Payment method', state.method],
+    ['Transaction ID', state.transactionId],
+    ['Date', new Date(state.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })],
+  ];
 
   return (
     <PageLayout>
-      <div className="bg-[#F8FAFC] min-h-screen py-10">
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <Link to="/student" className="hover:text-coursera transition-colors">Home</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <Link to="/student/explore" className="hover:text-coursera transition-colors">Courses</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-slate-900 font-semibold">Order Confirmation</span>
-          </nav>
-
-          {/* Success Card (Stitch Spec: 600px max, rounded-xl, green check circle) */}
-          <div className="bg-white border border-slate-200/80 rounded-xl p-8 md:p-10 shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col items-center text-center">
-            
-            {/* Green Success Icon */}
-            <div className="w-20 h-20 rounded-full bg-emerald-100 text-secondary flex items-center justify-center mb-4">
-              <CheckCircle className="w-10 h-10 text-secondary" />
-            </div>
-
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Payment Successful!
-            </h1>
-            <p className="text-sm text-slate-500 max-w-md mb-6 leading-relaxed">
-              Thank you for your purchase. Your course enrollment is confirmed and all lessons and milestone exams are now accessible.
-            </p>
-
-            {/* Receipt Summary Box (Stitch Spec) */}
-            <div className="w-full bg-slate-50/70 rounded-xl p-5 mb-6 text-left border border-slate-200/80 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Course</p>
-                  <p className="text-sm font-bold text-slate-900 line-clamp-1">{courseTitle}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Amount</p>
-                  <p className="text-base font-extrabold text-coursera">{amount}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-200 pt-3 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Transaction ID</p>
-                  <p className="text-xs font-mono font-medium text-slate-700">{transactionId}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date</p>
-                  <p className="text-xs font-medium text-slate-700">{date}</p>
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-center border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={handleDownloadReceipt}
-                  className="flex items-center gap-1.5 text-xs font-bold text-coursera hover:underline transition-colors py-1"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download Tax Invoice (PDF)</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Primary Action Button (Stitch Spec) */}
-            <div className="w-full space-y-3">
-              <Link
-                to="/student/player"
-                className="w-full py-3.5 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-white" />
-                <span>Go to Course Player</span>
-              </Link>
-
-              <Link
-                to="/student/my-learning"
-                className="w-full py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Return to My Learning</span>
-              </Link>
-            </div>
-
+      <div className="max-w-lg mx-auto px-4 py-12">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-5">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
           </div>
-
-          {/* Recommended Next Courses */}
-          {recommendedCourses.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">Recommended Next Steps</h2>
-                  <p className="text-xs text-slate-500">Other courses chosen by learners in your specialization</p>
-                </div>
-                <Link to="/student/explore" className="text-xs font-bold text-coursera hover:underline flex items-center gap-1">
-                  <span>Browse Catalog</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+          <div>
+            <h1 className="text-xl font-extrabold text-slate-900">Payment successful</h1>
+            <p className="text-sm text-slate-500 mt-1">You are now enrolled.</p>
+          </div>
+          <dl className="text-left text-sm divide-y divide-slate-100 border border-slate-200 rounded-xl">
+            {rows.map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-4 px-4 py-2.5">
+                <dt className="text-slate-500">{k}</dt>
+                <dd className="font-semibold text-slate-900 text-right">{v}</dd>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                {recommendedCourses.map((c) => (
-                  <CourseCard key={c.id} course={c} variant="explore" />
-                ))}
-              </div>
-            </div>
-          )}
-
+            ))}
+          </dl>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Link
+              to={`/student/learn/${state.courseId}`}
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#0056D2] text-white text-sm font-bold hover:bg-[#00419E]"
+            >
+              <Play className="w-4 h-4 fill-current" /> Start learning
+            </Link>
+            <Link
+              to="/student/billing"
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50"
+            >
+              <Receipt className="w-4 h-4" /> View billing
+            </Link>
+          </div>
         </div>
       </div>
     </PageLayout>

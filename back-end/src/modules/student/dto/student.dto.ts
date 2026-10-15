@@ -1,86 +1,72 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateStudentProfileDto {
-  @ApiPropertyOptional({ example: 'Alex Johnson' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @MaxLength(80)
   name?: string;
 
-  @ApiPropertyOptional({ example: 'alex.johnson@stanford.edu' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  email?: string;
+  @MaxLength(80)
+  title?: string;
 
-  @ApiPropertyOptional({ example: 'Stanford University' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  university?: string;
+  @MaxLength(80)
+  location?: string;
 
-  @ApiPropertyOptional({ example: 'Undergraduate' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  learnerType?: string;
+  @MaxLength(500)
+  bio?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phone?: string;
 }
 
 export class StudentCheckoutDto {
-  @ApiProperty({ example: 'crs-101' })
+  @ApiProperty({ example: 'crs-1' })
   @IsString()
   @IsNotEmpty()
   courseId: string;
 
-  @ApiProperty({ example: 'Credit Card (Stripe)' })
-  @IsString()
+  @ApiProperty({ enum: ['card', 'upi'] })
+  @IsIn(['card', 'upi'])
   paymentMethod: string;
 
-  @ApiPropertyOptional({ example: 189.00 })
-  @IsOptional()
-  @IsNumber()
-  amount?: number;
-
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'name@okaxis' })
   @IsOptional()
   @IsString()
-  thumbnail?: string;
+  upiId?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: '4242' })
   @IsOptional()
   @IsString()
-  institution?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  courseTitle?: string;
+  cardLast4?: string;
 }
 
 export class StudentEnrollDto {
-  @ApiProperty({ example: 'crs-101' })
+  @ApiProperty({ example: 'crs-1' })
   @IsString()
   @IsNotEmpty()
   courseId: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  thumbnail?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  institution?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  courseTitle?: string;
 }
 
 export class UpdateProgressDto {
-  @ApiProperty({ example: 'les-101' })
+  @ApiProperty({ example: 'mod-1-l1' })
   @IsString()
   lessonId: string;
 
   @ApiProperty({ example: true })
+  @IsBoolean()
   completed: boolean;
 }

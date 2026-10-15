@@ -23,7 +23,6 @@ export { StatCard } from './StatCard';
 export { LoadingState } from './LoadingState';
 export { EmptyState } from './EmptyState';
 export { ErrorState } from './ErrorState';
-export { default as CourseCard } from './CourseCard';
 export { default as RatingStars } from './RatingStars';
 export {
   LinearProgressBar,

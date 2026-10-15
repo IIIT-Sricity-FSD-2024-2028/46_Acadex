@@ -29,7 +29,6 @@ import { ReportsModule }            from './modules/reports/reports.module';
 import { AnalyticsModule }          from './modules/analytics/analytics.module';
 import { NotificationsModule }      from './modules/notifications/notifications.module';
 import { SettingsModule }           from './modules/settings/settings.module';
-import { BookmarksModule }          from './modules/bookmarks/bookmarks.module';
 
 @Module({
   imports: [
@@ -59,7 +58,6 @@ import { BookmarksModule }          from './modules/bookmarks/bookmarks.module';
     AnalyticsModule,
     NotificationsModule,
     SettingsModule,
-    BookmarksModule,
   ],
 })
 export class AppModule implements NestModule {

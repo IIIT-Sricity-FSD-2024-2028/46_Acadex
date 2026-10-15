@@ -7,7 +7,13 @@
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     "educatorType": "Senior Instructor",
     "specialization": "Full Stack Development & Python",
-    "expertise": ["React", "Node.js", "Python", "FastAPI", "PostgreSQL"],
+    "expertise": [
+      "React",
+      "Node.js",
+      "Python",
+      "FastAPI",
+      "PostgreSQL"
+    ],
     "bio": "Eight years building production web applications at startups and scale-ups. Teaches full stack development with a focus on shipping real things, not toy projects.",
     "status": "Active",
     "organizationId": "org-1",
@@ -18,7 +24,7 @@
     "revenueGenerated": 0,
     "joinedDate": "March 2024",
     "createdAt": "2024-03-10T09:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
+    "updatedAt": "2026-10-15T06:57:47.125Z"
   },
   {
     "id": "inst-2",
@@ -28,7 +34,13 @@
     "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
     "educatorType": "Senior Instructor",
     "specialization": "Cloud Infrastructure & DevOps",
-    "expertise": ["AWS", "Docker", "Kubernetes", "Terraform", "CI/CD"],
+    "expertise": [
+      "AWS",
+      "Docker",
+      "Kubernetes",
+      "Terraform",
+      "CI/CD"
+    ],
     "bio": "Former site reliability engineer at a fintech company. Has designed and maintained cloud infrastructure serving millions of daily requests. Believes DevOps is a mindset, not a job title.",
     "status": "Active",
     "organizationId": "org-1",
@@ -49,7 +61,13 @@
     "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
     "educatorType": "Lead Instructor",
     "specialization": "Machine Learning & Data Science",
-    "expertise": ["scikit-learn", "Python", "Pandas", "PyTorch", "Statistics"],
+    "expertise": [
+      "scikit-learn",
+      "Python",
+      "Pandas",
+      "PyTorch",
+      "Statistics"
+    ],
     "bio": "PhD in Statistics. Has published research on predictive modeling for healthcare and finance. Loves making machine learning intuitive for people who never thought they could do it.",
     "status": "Active",
     "organizationId": "org-2",
@@ -70,7 +88,13 @@
     "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
     "educatorType": "Senior Instructor",
     "specialization": "Cybersecurity & Network Security",
-    "expertise": ["Zero Trust", "Network Security", "Cryptography", "Penetration Testing", "SIEM"],
+    "expertise": [
+      "Zero Trust",
+      "Network Security",
+      "Cryptography",
+      "Penetration Testing",
+      "SIEM"
+    ],
     "bio": "CISSP certified. Spent a decade in enterprise security consulting before moving to education. Wrote a course because he kept seeing the same mistakes made by developers who never learned security fundamentals.",
     "status": "Active",
     "organizationId": "org-2",

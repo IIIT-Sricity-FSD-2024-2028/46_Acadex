@@ -9,79 +9,88 @@ export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   @Get('profile')
-  @ApiOperation({ summary: 'Get student academic profile and university affiliation' })
-  async getProfile(@Headers('x-user-id') userId: string = 'lrn-1') {
+  @ApiOperation({ summary: 'Get learner profile with stats computed from enrollments and certificates' })
+  getProfile(@Headers('x-user-id') userId: string) {
     return this.studentService.getProfile(userId);
   }
 
   @Put('profile')
-  @ApiOperation({ summary: 'Update student academic profile details' })
-  async updateProfile(
-    @Body() dto: UpdateStudentProfileDto,
-    @Headers('x-user-id') userId: string = 'lrn-1'
-  ) {
+  @ApiOperation({ summary: 'Update learner profile details' })
+  updateProfile(@Body() dto: UpdateStudentProfileDto, @Headers('x-user-id') userId: string) {
     return this.studentService.updateProfile(userId, dto);
   }
 
   @Get('organizations')
-  @ApiOperation({ summary: 'List verified institutions that learners can request to join' })
-  async getOrganizations() {
+  @ApiOperation({ summary: 'List organizations learners can request to join' })
+  getOrganizations() {
     return this.studentService.getOrganizationsList();
   }
 
   @Post('join-organization')
-  @ApiOperation({ summary: 'Learner submits request to join an organization to become a Student' })
-  async requestJoinOrganization(
+  @ApiOperation({ summary: 'Request to join an organization' })
+  requestJoinOrganization(
     @Body() body: { organizationId: string; organizationName: string },
-    @Headers('x-user-id') userId: string = 'lrn-1'
+    @Headers('x-user-id') userId: string,
   ) {
     return this.studentService.requestJoinOrganization(userId, body.organizationId, body.organizationName);
   }
 
+  @Get('catalog')
+  @ApiOperation({ summary: 'Published courses that have an assigned instructor' })
+  getCatalog() {
+    return this.studentService.getCatalog();
+  }
+
+  @Get('catalog/:courseId')
+  @ApiOperation({ summary: 'Single available catalog course' })
+  getCatalogCourse(@Param('courseId') courseId: string) {
+    return this.studentService.getCatalogCourse(courseId);
+  }
+
   @Get('enrollments')
-  @ApiOperation({ summary: 'List all enrolled courses and progress metrics' })
-  async getEnrollments(@Headers('x-user-id') userId: string = 'lrn-1') {
+  @ApiOperation({ summary: 'List enrolled courses with progress' })
+  getEnrollments(@Headers('x-user-id') userId: string) {
     return this.studentService.getEnrollments(userId);
   }
 
+  @Get('enrollments/course/:courseId')
+  @ApiOperation({ summary: 'Get the learner enrollment for a course' })
+  getEnrollmentForCourse(@Param('courseId') courseId: string, @Headers('x-user-id') userId: string) {
+    return this.studentService.getEnrollmentForCourse(userId, courseId);
+  }
+
   @Post('enrollments')
-  @ApiOperation({ summary: 'Enroll in a course' })
-  async enroll(
-    @Body() dto: StudentEnrollDto,
-    @Headers('x-user-id') userId: string = 'lrn-1'
-  ) {
-    return this.studentService.enrollCourse(userId, dto.courseId, dto);
+  @ApiOperation({ summary: 'Enroll in a free course' })
+  enroll(@Body() dto: StudentEnrollDto, @Headers('x-user-id') userId: string) {
+    return this.studentService.enrollCourse(userId, dto.courseId);
   }
 
   @Patch('enrollments/:id/progress')
-  @ApiOperation({ summary: 'Update module/lesson completion and recalculate progress' })
-  async updateProgress(
+  @ApiOperation({ summary: 'Mark a lesson complete/incomplete; issues a certificate at 100%' })
+  updateProgress(
     @Param('id') enrollmentId: string,
     @Body() dto: UpdateProgressDto,
-    @Headers('x-user-id') userId: string = 'lrn-1'
+    @Headers('x-user-id') userId: string,
   ) {
     return this.studentService.updateProgress(userId, enrollmentId, dto.lessonId, dto.completed);
   }
 
   @Get('certificates')
-  @ApiOperation({ summary: 'List verified student credentials and certificates' })
-  async getCertificates(@Headers('x-user-id') userId: string = 'lrn-1') {
+  @ApiOperation({ summary: 'List learner certificates' })
+  getCertificates(@Headers('x-user-id') userId: string) {
     return this.studentService.getCertificates(userId);
   }
 
   @Get('payments')
-  @ApiOperation({ summary: 'Get student tuition and course payment history' })
-  async getPayments(@Headers('x-user-id') userId: string = 'lrn-1') {
+  @ApiOperation({ summary: 'Learner payment history' })
+  getPayments(@Headers('x-user-id') userId: string) {
     return this.studentService.getPayments(userId);
   }
 
   @Post('payments/checkout')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Execute course enrollment checkout with NexusPay' })
-  async checkout(
-    @Body() dto: StudentCheckoutDto,
-    @Headers('x-user-id') userId: string = 'lrn-1'
-  ) {
+  @ApiOperation({ summary: 'Pay for a course (card or UPI) and enroll' })
+  checkout(@Body() dto: StudentCheckoutDto, @Headers('x-user-id') userId: string) {
     return this.studentService.checkout(userId, dto);
   }
 }

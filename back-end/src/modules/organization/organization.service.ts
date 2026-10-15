@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -223,32 +223,31 @@ export class OrganizationService {
     return { success: true, message: `Organization '${id}' removed` };
   }
 
-  async getStudentJoinRequests() {
+  async getStudentJoinRequests(userId?: string, userEmail?: string) {
+    const org = await this.resolveOrg(userId, userEmail);
     const learners = await this.learnersRepo.find();
     return learners.filter(
-      (l) => l.orgMembershipStatus === 'Pending Organization Approval' || l.requestedOrgName
+      (l) => l.orgMembershipStatus === 'Pending Organization Approval' && l.requestedOrgId === org.id
     );
   }
 
-  async respondStudentJoinRequest(learnerId: string, action: 'approve' | 'reject') {
+  async respondStudentJoinRequest(learnerId: string, action: 'approve' | 'reject', userId?: string, userEmail?: string) {
+    const org = await this.resolveOrg(userId, userEmail);
     const learner = await this.learnersRepo.findById(learnerId);
-    if (!learner) {
-      throw new NotFoundException(`Learner '${learnerId}' not found`);
+    if (!learner) throw new NotFoundException(`Learner '${learnerId}' not found`);
+    if (learner.requestedOrgId !== org.id || learner.orgMembershipStatus !== 'Pending Organization Approval') {
+      throw new BadRequestException('This learner has no pending request with your organization');
     }
 
-    const isApprove = action === 'approve';
-    const updated = await this.learnersRepo.update(learnerId, {
-      orgMembershipStatus: isApprove ? 'Verified Student' : 'Independent Learner',
-      university: isApprove ? (learner.requestedOrgName || learner.university || 'Verified Organization') : 'Independent Learner',
-      organizationId: isApprove ? (learner.requestedOrgId || learner.organizationId || null) : null,
-      organizationName: isApprove ? (learner.requestedOrgName || learner.organizationName || null) : null,
-      learnerType: isApprove ? 'Student' : 'Learner',
-      status: isApprove ? 'Active Student' : 'Active Learner',
+    const approve = action === 'approve';
+    return this.learnersRepo.update(learnerId, {
+      orgMembershipStatus: approve ? 'Verified Student' : 'Independent Learner',
+      organizationId: approve ? org.id : null,
+      organizationName: approve ? org.name : null,
+      learnerType: approve ? 'Student' : learner.learnerType,
       requestedOrgId: null,
       requestedOrgName: null,
+      orgDecisionAt: new Date().toISOString(),
     });
-
-    return updated;
   }
 }
-

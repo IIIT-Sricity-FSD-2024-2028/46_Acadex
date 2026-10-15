@@ -1,14 +1,33 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import {
+  CreateJoinRequestDto,
   CreateTeachingRequestDto,
+  DecideJoinRequestDto,
   InstructorRequestQueryDto,
   RespondTeachingRequestDto,
   TeachingRequestDecision,
   WithdrawTeachingRequestDto,
 } from './dto/instructor-request.dto';
 import { QueryFilter } from '../../database/interfaces/database.interface';
+
+export const JOIN_STATUS = {
+  PENDING: 'Pending Organization Approval',
+  APPROVED: 'Approved by Organization',
+  REJECTED: 'Rejected by Organization',
+  CANCELLED: 'Cancelled by Instructor',
+};
+
+const isPending = (status?: string) => /pending|sent/i.test(status || '');
+const isJoin = (r: any) => r?.type === 'join';
 
 @Injectable()
 export class InstructorRequestsService {
@@ -27,30 +46,64 @@ export class InstructorRequestsService {
     private readonly usersRepo: JsonRepository<any>,
   ) {}
 
-  async findAll(query: InstructorRequestQueryDto) {
-    const { page = 1, limit = 10, search, status, instructorId, email, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
-    const skip = (page - 1) * limit;
+  // ── Identity helpers ────────────────────────────────────────────
 
+  private async instructorForUser(userId?: string) {
+    if (!userId) throw new BadRequestException('Missing x-user-id header');
+    const all = await this.instructorsRepo.find();
+    const instructor = all.find((i) => i.userId === userId || i.id === userId);
+    if (!instructor) throw new ForbiddenException('Only instructors can perform this action');
+    return instructor;
+  }
+
+  private async orgForAdmin(userEmail?: string) {
+    if (!userEmail) throw new BadRequestException('Missing x-user-email header');
+    const orgs = await this.orgsRepo.find();
+    const org = orgs.find((o) => o.email?.toLowerCase() === userEmail.toLowerCase());
+    if (!org) throw new ForbiddenException('Only organization admins can perform this action');
+    return org;
+  }
+
+  private isAffiliated(instructor: any) {
+    return Boolean(instructor?.organizationId) && instructor.status === 'Active';
+  }
+
+  private async affiliate(instructor: any, org: any) {
+    const now = new Date().toISOString();
+    await this.instructorsRepo.update(instructor.id, {
+      organizationId: org.id,
+      organizationName: org.name,
+      status: 'Active',
+      orgJoinedAt: now,
+    });
+    const user = instructor.userId
+      ? await this.usersRepo.findById(instructor.userId)
+      : await this.usersRepo.findOne({ email: instructor.email });
+    if (user) {
+      await this.usersRepo.update(user.id, { organizationId: org.id, organizationName: org.name, status: 'Active' });
+    }
+    const roster = org.instructorIds || [];
+    if (!roster.includes(instructor.id)) {
+      await this.orgsRepo.update(org.id, { instructorIds: [...roster, instructor.id] });
+    }
+  }
+
+  // ── Listing ─────────────────────────────────────────────────────
+
+  async findAll(query: InstructorRequestQueryDto) {
+    const { page = 1, limit = 10, search, status, instructorId, email, organizationId, type, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
     const where: QueryFilter<any> = {};
 
-    if (instructorId) {
-      where.instructorId = instructorId;
-    }
-
-    if (email) {
-      where.email = { $contains: email };
-    }
+    if (instructorId) where.instructorId = instructorId;
+    if (organizationId) where.organizationId = organizationId;
+    if (email) where.email = { $contains: email };
 
     if (status && status !== 'All') {
-      if (status.toLowerCase().includes('pending')) {
-        where.status = { $regex: /pending|sent/i };
-      } else if (status.toLowerCase().includes('accepted')) {
-        where.status = { $regex: /accepted/i };
-      } else if (status.toLowerCase().includes('declined')) {
-        where.status = { $regex: /declined/i };
-      } else {
-        where.status = status;
-      }
+      const s = status.toLowerCase();
+      if (s.includes('pending')) where.status = { $regex: /pending|sent/i };
+      else if (s.includes('accepted') || s.includes('approved')) where.status = { $regex: /accepted|approved/i };
+      else if (s.includes('declined') || s.includes('rejected')) where.status = { $regex: /declined|rejected/i };
+      else where.status = status;
     }
 
     if (search) {
@@ -62,245 +115,282 @@ export class InstructorRequestsService {
       ];
     }
 
-    return this.requestsRepo.findAndCount({
-      where,
-      skip,
+    if (!type) {
+      return this.requestsRepo.findAndCount({ where, skip: (page - 1) * limit, limit, sort: { [sortBy]: sortOrder } });
+    }
+
+    const all = (await this.requestsRepo.findAndCount({ where, sort: { [sortBy]: sortOrder } })).items.filter((r) =>
+      type === 'join' ? isJoin(r) : !isJoin(r)
+    );
+    const totalPages = Math.ceil(all.length / limit) || 1;
+    return {
+      items: all.slice((page - 1) * limit, page * limit),
+      total: all.length,
+      page,
       limit,
-      sort: { [sortBy]: sortOrder },
-    });
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
   }
 
   async findOne(id: string) {
     const request = await this.requestsRepo.findById(id);
-    if (!request) {
-      throw new NotFoundException(`Teaching request with ID '${id}' not found`);
-    }
+    if (!request) throw new NotFoundException(`Request '${id}' not found`);
     return request;
   }
 
+  // ── Organization → instructor teaching invitations ──────────────
+
   async create(dto: CreateTeachingRequestDto) {
     const instructor = await this.instructorsRepo.findById(dto.instructorId);
-    if (!instructor) {
-      throw new NotFoundException(`Instructor with ID '${dto.instructorId}' not found`);
+    if (!instructor) throw new NotFoundException(`Instructor '${dto.instructorId}' not found`);
+    if (!dto.organizationId) throw new BadRequestException('organizationId is required');
+
+    const org = await this.orgsRepo.findById(dto.organizationId);
+    if (!org) throw new NotFoundException(`Organization '${dto.organizationId}' not found`);
+
+    if (this.isAffiliated(instructor) && instructor.organizationId !== org.id) {
+      throw new BadRequestException(`${instructor.name} is already affiliated with ${instructor.organizationName}`);
     }
 
-    if (!dto.organizationId) {
-      throw new BadRequestException('organizationId is required to send a teaching request');
-    }
-    const orgId = dto.organizationId;
-    let orgName = dto.organizationName;
-    if (!orgName) {
-      const org = await this.orgsRepo.findById(orgId);
-      if (!org) {
-        throw new NotFoundException(`Organization '${orgId}' not found`);
+    let courseTitle = dto.courseTitle;
+    if (dto.courseId) {
+      const course = await this.coursesRepo.findById(dto.courseId);
+      if (!course) throw new NotFoundException(`Course '${dto.courseId}' not found`);
+      if (course.organizationId && course.organizationId !== org.id) {
+        throw new ForbiddenException('This course belongs to another organization');
       }
-      orgName = org.name;
+      courseTitle = course.title;
     }
+    if (!courseTitle) throw new BadRequestException('courseId or courseTitle is required');
 
-    const courseTitle = dto.courseTitle || 'Advanced Distributed Systems';
-    const semester = dto.semester || 'Fall 2026';
+    const duplicate = (await this.requestsRepo.find({ where: { instructorId: instructor.id, organizationId: org.id } })).find(
+      (r) => !isJoin(r) && isPending(r.status) && (r.courseId || r.courseTitle) === (dto.courseId || courseTitle)
+    );
+    if (duplicate) throw new ConflictException('A pending invitation for this course already exists');
+
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-    const newRequest = await this.requestsRepo.create({
+    const request = await this.requestsRepo.create({
+      type: 'invitation',
       instructorId: instructor.id,
       courseId: dto.courseId || null,
-      organizationId: orgId,
-      organizationName: orgName,
+      organizationId: org.id,
+      organizationName: org.name,
       name: instructor.name,
       email: instructor.email,
       avatar: instructor.avatar,
       specialization: instructor.specialization,
       courseTitle,
-      semester,
-      creditHours: dto.creditHours || '4 Academic Credits',
-      submittedDate: dateStr,
-      sentDate: dateStr,
+      semester: dto.semester || null,
+      creditHours: dto.creditHours || null,
+      proposedTerms: dto.proposedTerms || null,
+      description: dto.message || '',
+      submittedDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       status: 'Pending Professor Response',
-      outreachMethod: 'Sent request by mail',
-      mailSubject: `${orgName} Teaching Invitation: ${courseTitle} (${semester})`,
-      description: dto.message || `${orgName} administration sent formal course teaching request by mail to ${instructor.name} to teach '${courseTitle}' for ${semester}.`,
-      bio: instructor.bio,
-      sampleSyllabus: `Curriculum and lab syllabus for ${courseTitle}`,
-      proposedTerms: dto.proposedTerms || 'Departmental faculty honorarium + course royalties',
-      trackingStatus: `Awaiting professor decision • Dispatched to ${instructor.email}`,
-      adminNotes: `Dispatched by ${orgName} Academic Dean via college mail server.`,
+      trackingStatus: `Awaiting decision from ${instructor.name}`,
     });
 
     await this.notifsRepo.create({
-      title: `Teaching Invitation Dispatched: ${instructor.name}`,
-      desc: `Formal course teaching request sent to ${instructor.name} for "${courseTitle}".`,
+      title: `Teaching invitation sent to ${instructor.name}`,
+      desc: `${org.name} invited ${instructor.name} to teach "${courseTitle}".`,
       time: 'Just now',
       category: 'Instructor',
       read: false,
       color: 'blue',
+      organizationId: org.id,
+      instructorId: instructor.id,
     });
-
-    return newRequest;
+    return request;
   }
 
   async respond(id: string, dto: RespondTeachingRequestDto) {
-    const request = await this.requestsRepo.findById(id);
-    if (!request) {
-      throw new NotFoundException(`Teaching request with ID '${id}' not found`);
-    }
+    const request = await this.findOne(id);
+    if (isJoin(request)) throw new BadRequestException('Join requests are decided by the organization');
+    if (!isPending(request.status)) throw new BadRequestException('This invitation has already been resolved');
 
-    const isAccepted = dto.decision === TeachingRequestDecision.ACCEPTED;
-    const newStatus = isAccepted ? 'Accepted by Professor' : 'Declined by Professor';
-    const tracking = isAccepted
-      ? 'Accepted by Professor • Official Notification Sent to College'
-      : 'Declined by Professor (Sabbatical/Schedule conflict)';
+    const instructor = await this.instructorsRepo.findById(request.instructorId);
+    if (!instructor) throw new NotFoundException('Instructor no longer exists');
+    const accepted = dto.decision === TeachingRequestDecision.ACCEPTED;
 
-    const updatedRequest = await this.requestsRepo.update(id, {
-      status: newStatus,
-      trackingStatus: tracking,
-      adminNotes: dto.notes
-        ? `${request.adminNotes || ''} • ${dto.notes}`
-        : request.adminNotes,
-    });
-
-    // Create system notification
-    await this.notifsRepo.create({
-      title: isAccepted
-        ? `Professor ${request.name} Accepted Course Assignment`
-        : `Teaching Request Declined: ${request.name}`,
-      desc: isAccepted
-        ? `Great news! ${request.name} has accepted the college request from ${request.organizationName || 'the university'} to teach "${request.courseTitle || 'the course'}" for ${request.semester || 'the semester'}.`
-        : `${request.name} declined the teaching request for "${request.courseTitle || 'the course'}".`,
-      time: 'Just now',
-      category: 'Instructor',
-      read: false,
-      color: isAccepted ? 'green' : 'amber',
-    });
-
-    // If accepted, add instructor to course team and associate with university
-    if (isAccepted) {
-      const courses = await this.coursesRepo.find();
-      const matchedCourse = courses.find((c) =>
-        request.courseId
-          ? c.id === request.courseId
-          : c.title.toLowerCase() === (request.courseTitle || '').toLowerCase()
-      );
-
-      const instructor = await this.instructorsRepo.findById(request.instructorId);
-
-      if (matchedCourse && instructor) {
-        const currentInstructors = matchedCourse.instructors || [];
-        const exists = currentInstructors.some((inst: any) => inst.id === instructor.id || inst.email === instructor.email);
-
-        if (!exists) {
-          const updatedTeam = [
-            ...currentInstructors,
-            {
-              id: instructor.id,
-              name: instructor.name,
-              role: 'Co-Instructor',
-              avatar: instructor.avatar,
-              specialization: instructor.specialization,
-            },
-          ];
-
-          await this.coursesRepo.update(matchedCourse.id, {
-            instructors: updatedTeam,
-            instructorName: updatedTeam.map((i: any) => i.name).join(', '),
-          });
-        }
-      }
-
-      // Associate instructor with the organization & mark Active
-      if (instructor) {
-        const orgId = request.organizationId;
-        let orgName = request.organizationName;
-        if (orgId && !orgName) {
-          const org = await this.orgsRepo.findById(orgId);
-          orgName = org?.name || orgName;
-        }
-
-        const newCoursesCount = (instructor.coursesCount || 0) + 1;
-        await this.instructorsRepo.update(instructor.id, {
-          organizationId: orgId,
-          organizationName: orgName,
-          status: 'Active',
-          coursesCount: newCoursesCount,
-        });
-
-        // Also update corresponding user record if exists
-        if (instructor.userId) {
-          await this.usersRepo.update(instructor.userId, {
-            organizationId: orgId,
-            organizationName: orgName,
-            status: 'Active',
-          });
-        } else {
-          const matchedUser = await this.usersRepo.findOne({ email: instructor.email });
-          if (matchedUser) {
-            await this.usersRepo.update(matchedUser.id, {
-              organizationId: orgId,
-              organizationName: orgName,
-              status: 'Active',
-            });
-          }
-        }
-
-        // Add to organization instructorIds list
-        const org = await this.orgsRepo.findById(orgId);
-        if (org) {
-          const currentList = org.instructorIds || [];
-          if (!currentList.includes(instructor.id)) {
-            await this.orgsRepo.update(orgId, {
-              instructorIds: [...currentList, instructor.id],
-            });
-          }
-        }
-      }
-    }
-
-    return updatedRequest;
-  }
-
-  async withdraw(id: string, dto: WithdrawTeachingRequestDto) {
-    const request = await this.requestsRepo.findById(id);
-    if (!request) {
-      throw new NotFoundException(`Teaching request with ID '${id}' not found`);
-    }
-
-    return this.requestsRepo.update(id, {
-      status: 'Declined by College',
-      trackingStatus: 'Invitation withdrawn by organization administration',
-      adminNotes: dto.reason
-        ? `${request.adminNotes || ''} • Withdrawn: ${dto.reason}`
-        : 'Withdrawn by administration',
-    });
-  }
-
-  async resend(id: string) {
-    const request = await this.requestsRepo.findById(id);
-    if (!request) {
-      throw new NotFoundException(`Teaching request with ID '${id}' not found`);
+    if (accepted && this.isAffiliated(instructor) && instructor.organizationId !== request.organizationId) {
+      throw new BadRequestException(`Leave ${instructor.organizationName} before accepting an invitation from another organization`);
     }
 
     const updated = await this.requestsRepo.update(id, {
-      sentDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      trackingStatus: `Reminder dispatched via Mail • Resent to ${request.email}`,
+      status: accepted ? 'Accepted by Professor' : 'Declined by Professor',
+      trackingStatus: accepted ? 'Accepted — instructor added to course' : 'Declined by instructor',
+      respondedAt: new Date().toISOString(),
+      instructorNotes: dto.notes || null,
     });
 
+    if (accepted) {
+      const org = await this.orgsRepo.findById(request.organizationId);
+      if (org) await this.affiliate(instructor, org);
+
+      const course = request.courseId ? await this.coursesRepo.findById(request.courseId) : null;
+      if (course) {
+        const team = course.instructors || [];
+        if (!team.some((m: any) => m.id === instructor.id)) {
+          const role = team.length === 0 ? 'Lead Instructor' : 'Co-Instructor';
+          await this.coursesRepo.update(course.id, {
+            instructors: [...team, { id: instructor.id, name: instructor.name, role, avatar: instructor.avatar, specialization: instructor.specialization }],
+            ...(team.length === 0
+              ? { instructorId: instructor.id, instructorName: instructor.name, leadInstructorName: instructor.name }
+              : {}),
+          });
+          await this.instructorsRepo.update(instructor.id, { coursesCount: (instructor.coursesCount || 0) + 1 });
+        }
+      }
+    }
+
     await this.notifsRepo.create({
-      title: `Outreach Email Resent: ${request.name}`,
-      desc: `Teaching request reminder email resent to ${request.email} for "${request.courseTitle}".`,
+      title: accepted ? `${request.name} accepted your invitation` : `${request.name} declined your invitation`,
+      desc: `Teaching invitation for "${request.courseTitle}".`,
       time: 'Just now',
       category: 'Instructor',
       read: false,
-      color: 'blue',
+      color: accepted ? 'green' : 'amber',
+      organizationId: request.organizationId,
     });
 
     return updated;
   }
 
-  async delete(id: string) {
-    const request = await this.requestsRepo.findById(id);
-    if (!request) {
-      throw new NotFoundException(`Teaching request with ID '${id}' not found`);
+  async withdraw(id: string, dto: WithdrawTeachingRequestDto) {
+    const request = await this.findOne(id);
+    if (isJoin(request)) throw new BadRequestException('Use the join-request endpoints');
+    if (!isPending(request.status)) throw new BadRequestException('Only pending invitations can be withdrawn');
+    return this.requestsRepo.update(id, {
+      status: 'Withdrawn by Organization',
+      trackingStatus: dto.reason ? `Withdrawn: ${dto.reason}` : 'Withdrawn by organization',
+    });
+  }
+
+  async resend(id: string) {
+    const request = await this.findOne(id);
+    if (isJoin(request) || !isPending(request.status)) {
+      throw new BadRequestException('Only pending invitations can be resent');
     }
+    const updated = await this.requestsRepo.update(id, {
+      lastReminderAt: new Date().toISOString(),
+      trackingStatus: `Reminder sent to ${request.email}`,
+    });
+    await this.notifsRepo.create({
+      title: `Reminder sent to ${request.name}`,
+      desc: `Reminder for the "${request.courseTitle}" teaching invitation.`,
+      time: 'Just now',
+      category: 'Instructor',
+      read: false,
+      color: 'blue',
+      organizationId: request.organizationId,
+      instructorId: request.instructorId,
+    });
+    return updated;
+  }
+
+  async delete(id: string) {
+    await this.findOne(id);
     return this.requestsRepo.delete(id);
+  }
+
+  // ── Instructor → organization join requests ─────────────────────
+
+  async myJoinRequests(userId?: string) {
+    const instructor = await this.instructorForUser(userId);
+    const all = await this.requestsRepo.find({ where: { instructorId: instructor.id } });
+    return all.filter(isJoin).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+
+  async createJoinRequest(userId: string, dto: CreateJoinRequestDto) {
+    const instructor = await this.instructorForUser(userId);
+    if (this.isAffiliated(instructor)) {
+      throw new BadRequestException(`You are already a member of ${instructor.organizationName}. Leave it first.`);
+    }
+    const org = await this.orgsRepo.findById(dto.organizationId);
+    if (!org) throw new NotFoundException(`Organization '${dto.organizationId}' not found`);
+
+    const existing = (await this.requestsRepo.find({ where: { instructorId: instructor.id } })).filter(
+      (r) => isJoin(r) && isPending(r.status)
+    );
+    if (existing.length) {
+      throw new ConflictException(`You already have a pending request with ${existing[0].organizationName}`);
+    }
+
+    const request = await this.requestsRepo.create({
+      type: 'join',
+      instructorId: instructor.id,
+      organizationId: org.id,
+      organizationName: org.name,
+      name: instructor.name,
+      email: instructor.email,
+      avatar: instructor.avatar,
+      specialization: instructor.specialization,
+      description: (dto.message || '').trim(),
+      status: JOIN_STATUS.PENDING,
+      submittedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    });
+
+    await this.notifsRepo.create({
+      title: `Join request from ${instructor.name}`,
+      desc: `${instructor.name} asked to join ${org.name} as an instructor.`,
+      time: 'Just now',
+      category: 'Instructor',
+      read: false,
+      color: 'blue',
+      organizationId: org.id,
+    });
+    return request;
+  }
+
+  async cancelJoinRequest(userId: string, id: string) {
+    const instructor = await this.instructorForUser(userId);
+    const request = await this.findOne(id);
+    if (!isJoin(request) || request.instructorId !== instructor.id) throw new ForbiddenException('Not your join request');
+    if (!isPending(request.status)) throw new BadRequestException('This request has already been decided');
+    return this.requestsRepo.update(id, { status: JOIN_STATUS.CANCELLED, decidedAt: new Date().toISOString() });
+  }
+
+  async orgJoinRequests(userEmail?: string) {
+    const org = await this.orgForAdmin(userEmail);
+    const all = await this.requestsRepo.find({ where: { organizationId: org.id } });
+    return all.filter(isJoin).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+
+  async decideJoinRequest(userEmail: string, id: string, dto: DecideJoinRequestDto) {
+    const org = await this.orgForAdmin(userEmail);
+    const request = await this.findOne(id);
+    if (!isJoin(request) || request.organizationId !== org.id) {
+      throw new ForbiddenException('This request was not sent to your organization');
+    }
+    if (!isPending(request.status)) throw new BadRequestException('This request has already been decided');
+
+    const instructor = await this.instructorsRepo.findById(request.instructorId);
+    if (!instructor) throw new NotFoundException('Instructor no longer exists');
+
+    const approve = dto.action === 'approve';
+    if (approve && this.isAffiliated(instructor) && instructor.organizationId !== org.id) {
+      throw new BadRequestException(`${instructor.name} has since joined ${instructor.organizationName}`);
+    }
+
+    const updated = await this.requestsRepo.update(id, {
+      status: approve ? JOIN_STATUS.APPROVED : JOIN_STATUS.REJECTED,
+      decidedAt: new Date().toISOString(),
+      orgNotes: dto.notes || null,
+    });
+
+    if (approve) await this.affiliate(instructor, org);
+
+    await this.notifsRepo.create({
+      title: approve ? `${org.name} approved your join request` : `${org.name} declined your join request`,
+      desc: approve ? `You are now an instructor at ${org.name}.` : dto.notes || 'Your request to join was not approved.',
+      time: 'Just now',
+      category: 'Instructor',
+      read: false,
+      color: approve ? 'green' : 'amber',
+      instructorId: instructor.id,
+    });
+
+    return updated;
   }
 }

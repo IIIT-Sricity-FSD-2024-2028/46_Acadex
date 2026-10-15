@@ -124,49 +124,32 @@ export const api = {
       }),
   },
 
-  // 2. Student / Learner LMS
+  // 2. Student / Learner LMS (x-user-id header is attached by request())
   student: {
-    getProfile: (userId) => request('/student/profile', { headers: { 'x-user-id': userId } }),
-    updateProfile: (data, userId) => request('/student/profile', { method: 'PUT', body: data, headers: { 'x-user-id': userId } }),
+    getProfile: () => request('/student/profile'),
+    updateProfile: (data) => request('/student/profile', { method: 'PUT', body: data }),
     getOrganizations: () => request('/student/organizations'),
-    joinOrganization: (organizationId, organizationName, userId) =>
-      request('/student/join-organization', {
-        method: 'POST',
-        body: { organizationId, organizationName },
-        headers: { 'x-user-id': userId },
-        
-      }),
-    getEnrollments: (userId) => request('/student/enrollments', { headers: { 'x-user-id': userId } }),
-    enroll: (courseId, userId, extra = {}) => request('/student/enrollments', { method: 'POST', body: { courseId, ...extra }, headers: { 'x-user-id': userId } }),
-    updateProgress: (enrollmentId, lessonId, completed, userId) =>
-      request(`/student/enrollments/${enrollmentId}/progress`, {
-        method: 'PATCH',
-        body: { lessonId, completed },
-        headers: { 'x-user-id': userId },
-      }),
-    getCertificates: (userId) => request('/student/certificates', { headers: { 'x-user-id': userId } }),
-    getPayments: (userId) => request('/student/payments', { headers: { 'x-user-id': userId } }),
-    checkout: (courseId, paymentMethod, amount, userId, extra = {}) =>
-      request('/student/payments/checkout', {
-        method: 'POST',
-        body: { courseId, paymentMethod, amount, ...extra },
-        headers: { 'x-user-id': userId },
-      }),
+    joinOrganization: (organizationId, organizationName) =>
+      request('/student/join-organization', { method: 'POST', body: { organizationId, organizationName } }),
+    getCatalog: () => request('/student/catalog'),
+    getCatalogCourse: (courseId) => request(`/student/catalog/${courseId}`),
+    getEnrollments: () => request('/student/enrollments'),
+    getEnrollmentForCourse: (courseId) => request(`/student/enrollments/course/${courseId}`),
+    enrollFree: (courseId) => request('/student/enrollments', { method: 'POST', body: { courseId } }),
+    updateProgress: (enrollmentId, lessonId, completed) =>
+      request(`/student/enrollments/${enrollmentId}/progress`, { method: 'PATCH', body: { lessonId, completed } }),
+    getCertificates: () => request('/student/certificates'),
+    getPayments: () => request('/student/payments'),
+    checkout: (payload) => request('/student/payments/checkout', { method: 'POST', body: payload }),
   },
 
   // 3. Courses, Modules, Lessons & Curriculum
   courses: {
     list: (params = {}) => {
       const query = new URLSearchParams(params).toString();
-      return request(`/courses${query ? `?${query}` : ''}`).catch(() => {
-        return jsonDataClient.getCourses();
-      });
+      return request(`/courses${query ? `?${query}` : ''}`);
     },
-    get: (id) =>
-      request(`/courses/${id}`).catch(() => {
-        const courses = jsonDataClient.getCourses();
-        return courses.find((c) => c.id === id || String(c.id) === String(id)) || courses[0];
-      }),
+    get: (id) => request(`/courses/${id}`),
     create: (data) => request('/courses', { method: 'POST', body: data }),
     update: (id, data) => request(`/courses/${id}`, { method: 'PATCH', body: data }),
     delete: (id) => request(`/courses/${id}`, { method: 'DELETE' }),
@@ -176,14 +159,6 @@ export const api = {
     updateReview: (reviewId, rating, comment) =>
       request(`/reviews/${reviewId}`, { method: 'PATCH', body: { rating, comment } }),
     deleteReview: (reviewId) => request(`/reviews/${reviewId}`, { method: 'DELETE' }),
-  },
-
-  // 3b. Bookmarks
-  bookmarks: {
-    list: () => request('/bookmarks'),
-    toggle: (courseId) => request(`/bookmarks/${courseId}/toggle`, { method: 'POST' }),
-    status: (courseId) => request(`/bookmarks/${courseId}/status`),
-    remove: (courseId) => request(`/bookmarks/${courseId}`, { method: 'DELETE' }),
   },
 
   // 4. Quizzes & Academic Assessments
@@ -226,11 +201,7 @@ export const api = {
     get: (id) => request(`/instructors/${id}`),
     create: (data) => request('/instructors', { method: 'POST', body: data }),
     update: (id, data) => request(`/instructors/${id}`, { method: 'PATCH', body: data }),
-    connectOrganization: (id, organizationId, organizationName) =>
-      request(`/instructors/${id}/connect-organization`, {
-        method: 'POST',
-        body: { organizationId, organizationName },
-      }),
+    leaveOrganization: (id) => request(`/instructors/${id}/leave-organization`, { method: 'POST' }),
     getCourses: (id) => request(`/instructors/${id}/courses`),
     getRequests: (params) => {
       const query = params ? new URLSearchParams(params).toString() : '';
@@ -250,6 +221,15 @@ export const api = {
     create: (data) => request('/instructor-requests', { method: 'POST', body: data }),
     respond: (id, action, notes) =>
       request(`/instructor-requests/${id}/respond`, { method: 'PATCH', body: { decision: action, notes } }),
+    resend: (id) => request(`/instructor-requests/${id}/resend`, { method: 'POST' }),
+    withdraw: (id, reason) => request(`/instructor-requests/${id}/withdraw`, { method: 'PATCH', body: { reason } }),
+    myJoinRequests: () => request('/instructor-requests/join/mine'),
+    requestToJoin: (organizationId, message) =>
+      request('/instructor-requests/join', { method: 'POST', body: { organizationId, message } }),
+    cancelJoinRequest: (id) => request(`/instructor-requests/join/${id}/cancel`, { method: 'PATCH' }),
+    incomingJoinRequests: () => request('/instructor-requests/join/incoming'),
+    decideJoinRequest: (id, action, notes) =>
+      request(`/instructor-requests/join/${id}/decide`, { method: 'PATCH', body: { action, notes } }),
   },
 
   // 8c. Learners Management

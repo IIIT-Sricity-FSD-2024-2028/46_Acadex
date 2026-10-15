@@ -1,179 +1,112 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button, Input, Avatar, Badge } from "../../../components/common";
-import { Camera, Building2, CheckCircle2, LogOut, AlertTriangle, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { api } from "../../../utils/api";
-import { useInstructor } from "../../../context/InstructorContext";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Input, Avatar, Badge } from '../../../components/common';
+import { Building2, CheckCircle2, LogOut, AlertTriangle, X, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { api } from '../../../services/api';
+import { useInstructor } from '../../../context/InstructorContext';
+import { ConnectUniversity } from '../onboarding/ConnectUniversity';
+
+const toForm = (d = {}) => ({
+  name: d.name || '',
+  educatorType: d.educatorType || '',
+  specialization: d.specialization || '',
+  department: d.department || '',
+  phone: d.phone || '',
+  location: d.location || '',
+  website: d.website || '',
+  bio: d.bio || '',
+  expertise: Array.isArray(d.expertise) ? d.expertise.join(', ') : d.expertise || '',
+  qualification: d.qualification || '',
+  experience: d.experience || '',
+});
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="block text-xs font-bold text-slate-700 mb-1.5">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const textareaClass =
+  'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2]';
 
 export function Profile() {
-  const { instructor, refreshInstructor } = useInstructor();
-  const instructorId = instructor?.id || localStorage.getItem('nexuspay_instructor_id') || 'inst-1';
-  const [savedSuccess, setSavedSuccess] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [orgStatusMessage, setOrgStatusMessage] = useState("");
-  const [isAffiliated, setIsAffiliated] = useState(true);
-  const [loading, setLoading] = useState(true);
-
-  const [formData, setFormData] = useState({
-    fullName: "",
-    title: "Lead Instructor, Computer Science",
-    email: "",
-    phone: "",
-    location: "",
-    website: "",
-    bio: "",
-    orgName: "",
-    orgDepartment: "",
-    orgRole: "",
-    orgWorkEmail: "",
-    orgWebsite: "",
-    orgJoined: "",
-    skills: "",
-    education: "",
-    experience: "Teaching and software engineering leader.",
-  });
+  const { instructor, isAffiliated, refreshInstructor, leaveOrganization, actionLoading } = useInstructor();
+  const [form, setForm] = useState(toForm());
+  const [initial, setInitial] = useState(toForm());
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState(null);
+  const [showLeave, setShowLeave] = useState(false);
+  const [leaveError, setLeaveError] = useState('');
 
   useEffect(() => {
-    if (!instructorId) return;
-    api.get(`/instructors/${instructorId}`, "instructor")
-      .then((data) => {
-        if (data) {
-          setFormData({
-            fullName: data.name || '',
-            title: data.educatorType || data.specialization || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            location: data.location || '',
-            website: data.website || '',
-            bio: data.bio || '',
-            orgName: data.organization || '',
-            orgDepartment: data.orgDepartment || '',
-            orgRole: data.orgRole || data.educatorType || '',
-            orgWorkEmail: data.orgWorkEmail || data.email || '',
-            orgWebsite: data.orgWebsite || '',
-            orgJoined: data.orgJoined || data.joinedDate || '',
-            skills: Array.isArray(data.expertise) ? data.expertise.join(', ') : (data.expertise || data.specialization || ''),
-            education: data.qualification || '',
-            experience: data.experience || '',
-          });
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching instructor profile:", err);
-        setLoading(false);
-      });
-  }, [instructorId]);
+    if (instructor) {
+      setForm(toForm(instructor));
+      setInitial(toForm(instructor));
+    }
+  }, [instructor]);
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const set = (field) => (e) => setForm((p) => ({ ...p, [field]: e.target.value }));
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial);
 
-  const handleSave = (e) => {
+  const save = async (e) => {
     e.preventDefault();
-    api.patch(`/instructors/${instructorId}`, {
-      name: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      location: formData.location,
-      website: formData.website,
-      bio: formData.bio,
-      organization: formData.orgName,
-      expertise: formData.skills,
-      qualification: formData.education,
-    }, "instructor")
-      .then(() => {
-        setSavedSuccess(true);
-        if (refreshInstructor) refreshInstructor();
-        setTimeout(() => setSavedSuccess(false), 4000);
-      })
-      .catch((err) => console.error("Error updating profile:", err));
+    if (form.name.trim().length < 2) return setStatus({ type: 'error', text: 'Full name is required' });
+    if (form.website && !/^https?:\/\/\S+\.\S+/.test(form.website)) {
+      return setStatus({ type: 'error', text: 'Website must start with http:// or https://' });
+    }
+    setSaving(true);
+    setStatus(null);
+    try {
+      await api.instructors.update(instructor.id, {
+        ...form,
+        name: form.name.trim(),
+        expertise: form.expertise.split(',').map((s) => s.trim()).filter(Boolean),
+      });
+      localStorage.setItem('user_name', form.name.trim());
+      await refreshInstructor();
+      setStatus({ type: 'success', text: 'Profile saved' });
+    } catch (err) {
+      setStatus({ type: 'error', text: err.message || 'Could not save profile' });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleLeaveOrganization = () => {
-    setIsAffiliated(false);
-    api.patch(`/instructors/${instructorId}`, {
-      organization: null,
-      organizationId: null,
-      status: 'Pending Affiliation',
-    }, "instructor")
-      .then(() => {
-        if (refreshInstructor) refreshInstructor();
-      })
-      .catch((err) => console.error("Error leaving organization on server:", err));
-
-    setFormData((prev) => ({
-      ...prev,
-      orgName: "",
-      orgDepartment: "",
-      orgRole: "Independent Instructor",
-      orgWorkEmail: "",
-      orgWebsite: "",
-      orgJoined: "",
-    }));
-    setShowLeaveModal(false);
-    setOrgStatusMessage("You have successfully left the organization.");
-    setTimeout(() => setOrgStatusMessage(""), 5000);
+  const leave = async () => {
+    setLeaveError('');
+    try {
+      await leaveOrganization();
+      setShowLeave(false);
+      setStatus({ type: 'success', text: 'You left the organization' });
+    } catch (err) {
+      setLeaveError(err.message || 'Could not leave the organization');
+    }
   };
+
+  if (!instructor) return null;
 
   return (
-    <form onSubmit={handleSave} className="space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Instructor Profile</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage your public academic credentials, personal details, and institutional affiliation.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Instructor profile</h1>
+          <p className="text-slate-500 text-sm mt-1">Your public details and organization membership.</p>
         </div>
-        <div className="flex items-center gap-3">
-          {savedSuccess && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 shadow-2xs animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Saved successfully!
-            </div>
-          )}
-          {orgStatusMessage && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-2xs animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 text-[#0056D2]" />
-              {orgStatusMessage}
-            </div>
-          )}
-          <Button type="submit">Save Changes</Button>
-        </div>
+        {status && (
+          <div
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border ${
+              status.type === 'success' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'
+            }`}
+          >
+            {status.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            {status.text}
+          </div>
+        )}
       </div>
 
-      {/* Header Profile Summary */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            <div className="relative group">
-              <Avatar fallback={formData.fullName || "Dr. Sarah Jenkins"} size="xl" className="h-24 w-24 text-2xl font-bold bg-blue-50 text-[#0056D2] border border-blue-200/60" />
-              <button type="button" className="absolute inset-0 bg-slate-900/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="w-6 h-6 text-white" />
-              </button>
-            </div>
-            <div className="flex-1 space-y-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name</label>
-                  <Input 
-                    value={formData.fullName} 
-                    onChange={(e) => handleChange("fullName", e.target.value)} 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Professional Title</label>
-                  <Input 
-                    value={formData.title} 
-                    onChange={(e) => handleChange("title", e.target.value)} 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Organization Details Card */}
-      <Card className="border-blue-100 shadow-2xs">
+      <Card className="border-blue-100">
         <CardHeader className="border-b border-slate-100 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -181,224 +114,168 @@ export function Profile() {
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-base font-bold text-slate-900">Institutional Organization Affiliation</CardTitle>
-                <CardDescription>Your affiliated university or institutional department account.</CardDescription>
+                <CardTitle className="text-base font-bold text-slate-900">Organization</CardTitle>
+                <CardDescription>Membership is approved by the organization's admin.</CardDescription>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant={isAffiliated ? "success" : "default"}>
-                {isAffiliated ? "Active Affiliation" : "Independent"}
-              </Badge>
-              {isAffiliated ? (
-                <Button 
-                  type="button" 
-                  variant="outline" 
+              <Badge variant={isAffiliated ? 'success' : 'default'}>{isAffiliated ? 'Member' : 'Not a member'}</Badge>
+              {isAffiliated && (
+                <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setShowLeaveModal(true)}
+                  onClick={() => setShowLeave(true)}
                   className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
                 >
-                  <LogOut className="w-4 h-4 mr-1.5" />
-                  Leave Organization
+                  <LogOut className="w-4 h-4 mr-1.5" /> Leave
                 </Button>
-              ) : (
-                <Link to="/instructor/connect">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                  >
-                    <Building2 className="w-4 h-4 mr-1.5" />
-                    View Incoming Requests
-                  </Button>
-                </Link>
               )}
             </div>
           </div>
         </CardHeader>
-        
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="pt-6">
           {isAffiliated ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Organization Name</label>
-                <Input 
-                  value={formData.orgName} 
-                  onChange={(e) => handleChange("orgName", e.target.value)} 
-                />
+                <dt className="text-xs font-bold text-slate-500">Organization</dt>
+                <dd className="font-semibold text-slate-900 mt-0.5">{instructor.organizationName}</dd>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Department / Faculty</label>
-                <Input 
-                  value={formData.orgDepartment} 
-                  onChange={(e) => handleChange("orgDepartment", e.target.value)} 
-                />
+                <dt className="text-xs font-bold text-slate-500">Member since</dt>
+                <dd className="font-semibold text-slate-900 mt-0.5">
+                  {instructor.orgJoinedAt
+                    ? new Date(instructor.orgJoinedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                    : instructor.joinedDate || '—'}
+                </dd>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Role in Organization</label>
-                <Input 
-                  value={formData.orgRole} 
-                  onChange={(e) => handleChange("orgRole", e.target.value)} 
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Institutional Email</label>
-                <Input 
-                  type="email" 
-                  value={formData.orgWorkEmail} 
-                  onChange={(e) => handleChange("orgWorkEmail", e.target.value)} 
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Organization Website</label>
-                <Input 
-                  type="url" 
-                  value={formData.orgWebsite} 
-                  onChange={(e) => handleChange("orgWebsite", e.target.value)} 
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Joined Date</label>
-                <Input 
-                  value={formData.orgJoined} 
-                  readOnly 
-                  className="bg-slate-50 text-slate-500 cursor-not-allowed"
-                />
-              </div>
-            </div>
+            </dl>
           ) : (
-            <div className="text-center py-6 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-              <Building2 className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-800">You are currently an Independent Instructor</p>
-              <p className="text-xs text-slate-500 mt-1">You are not affiliated with any university or institutional organization account.</p>
-            </div>
+            <ConnectUniversity embedded />
           )}
         </CardContent>
       </Card>
 
-      {/* Leave Organization Confirmation Modal */}
-      {showLeaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 animate-in zoom-in-95">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-6 h-6" />
+      <form onSubmit={save} className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-6">
+              <Avatar fallback={form.name || instructor.email} size="xl" className="h-20 w-20 text-2xl font-bold bg-blue-50 text-[#0056D2] border border-blue-200/60" />
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                <Field label="Full name">
+                  <Input value={form.name} onChange={set('name')} placeholder="e.g. Priya Nair" maxLength={80} />
+                </Field>
+                <Field label="Title">
+                  <Input value={form.educatorType} onChange={set('educatorType')} placeholder="e.g. Senior Lecturer" maxLength={80} />
+                </Field>
+                <Field label="Specialization">
+                  <Input value={form.specialization} onChange={set('specialization')} placeholder="e.g. Full Stack Development" maxLength={100} />
+                </Field>
+                <Field label="Department">
+                  <Input value={form.department} onChange={set('department')} placeholder="e.g. Computer Science" maxLength={100} />
+                </Field>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact details</CardTitle>
+            <CardDescription>Visible to your organization's admins.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Email">
+                <Input value={instructor.email} disabled className="bg-slate-50 text-slate-500" />
+              </Field>
+              <Field label="Phone">
+                <Input type="tel" value={form.phone} onChange={set('phone')} placeholder="e.g. +91 98765 43210" maxLength={20} />
+              </Field>
+              <Field label="Location">
+                <Input value={form.location} onChange={set('location')} placeholder="e.g. Bengaluru, India" maxLength={80} />
+              </Field>
+              <Field label="Website or portfolio">
+                <Input type="url" value={form.website} onChange={set('website')} placeholder="https://your-site.com" maxLength={200} />
+              </Field>
+            </div>
+            <Field label="Bio">
+              <textarea
+                className={`${textareaClass} min-h-[100px]`}
+                value={form.bio}
+                onChange={set('bio')}
+                maxLength={1000}
+                placeholder="A short introduction students will see on your courses."
+              />
+            </Field>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Credentials</CardTitle>
+            <CardDescription>Expertise, education and experience.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field label="Expertise (comma separated)">
+              <Input value={form.expertise} onChange={set('expertise')} placeholder="e.g. React, Node.js, System Design" />
+            </Field>
+            <Field label="Education">
+              <Input value={form.qualification} onChange={set('qualification')} placeholder="e.g. M.Tech, Computer Science — IIT Madras" />
+            </Field>
+            <Field label="Experience">
+              <textarea
+                className={`${textareaClass} min-h-[80px]`}
+                value={form.experience}
+                onChange={set('experience')}
+                maxLength={1000}
+                placeholder="Roles, years of teaching, notable projects."
+              />
+            </Field>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" disabled={!dirty || saving} onClick={() => setForm(initial)}>
+            Discard changes
+          </Button>
+          <Button type="submit" disabled={!dirty || saving}>
+            {saving ? 'Saving…' : 'Save changes'}
+          </Button>
+        </div>
+      </form>
+
+      {showLeave && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900">Leave Organization?</h3>
+                <h3 className="text-lg font-bold text-slate-900">Leave {instructor.organizationName}?</h3>
                 <p className="text-sm text-slate-500 mt-1">
-                  Are you sure you want to leave <span className="font-semibold text-slate-800">{formData.orgName}</span>? You will lose access to institutional resources and faculty privileges.
+                  You'll be removed from its courses and lose access to your studio until another organization approves you.
                 </p>
               </div>
-              <button 
-                type="button" 
-                onClick={() => setShowLeaveModal(false)}
-                className="text-slate-400 hover:text-slate-700 p-1"
-              >
+              <button type="button" onClick={() => setShowLeave(false)} className="text-slate-400 hover:text-slate-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowLeaveModal(false)}>
+            {leaveError && <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3">{leaveError}</p>}
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowLeave(false)}>
                 Cancel
               </Button>
-              <Button 
-                type="button" 
-                onClick={handleLeaveOrganization}
-                className="bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                Confirm & Leave
+              <Button type="button" disabled={actionLoading} onClick={leave} className="bg-rose-600 hover:bg-rose-700 text-white">
+                Leave organization
               </Button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Personal Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Contact Details</CardTitle>
-          <CardDescription>Direct contact channels visible to affiliated administrators</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Personal Email</label>
-              <Input 
-                type="email" 
-                value={formData.email} 
-                onChange={(e) => handleChange("email", e.target.value)} 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone Number</label>
-              <Input 
-                type="tel" 
-                value={formData.phone} 
-                onChange={(e) => handleChange("phone", e.target.value)} 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Location / Campus</label>
-              <Input 
-                value={formData.location} 
-                onChange={(e) => handleChange("location", e.target.value)} 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Academic Website / Portfolio</label>
-              <Input 
-                type="url" 
-                value={formData.website} 
-                onChange={(e) => handleChange("website", e.target.value)} 
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Academic Bio</label>
-            <textarea 
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] min-h-[100px]"
-              value={formData.bio}
-              onChange={(e) => handleChange("bio", e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Professional Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Professional Credentials</CardTitle>
-          <CardDescription>Specializations, qualifications, and curriculum leadership history</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Expertise / Core Domains</label>
-            <Input 
-              value={formData.skills} 
-              onChange={(e) => handleChange("skills", e.target.value)} 
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Education & Degrees</label>
-            <Input 
-              value={formData.education} 
-              onChange={(e) => handleChange("education", e.target.value)} 
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Experience & Leadership</label>
-            <textarea 
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] min-h-[80px]"
-              value={formData.experience}
-              onChange={(e) => handleChange("experience", e.target.value)}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end gap-3 border-t border-slate-100 pt-6">
-          <Button type="button" variant="outline">Cancel</Button>
-          <Button type="submit">Save Changes</Button>
-        </CardFooter>
-      </Card>
-    </form>
+    </div>
   );
 }
+
+export default Profile;

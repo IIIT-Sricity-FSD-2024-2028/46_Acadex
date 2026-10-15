@@ -26,7 +26,11 @@ export function InstructorLayout() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const { instructor, isAffiliated, loading } = useInstructor();
+  const { instructor, isAffiliated, loading, error, pendingJoinRequest } = useInstructor();
+  const location = useLocation();
+  const openWhileUnaffiliated = ['/instructor/profile', '/instructor/settings', '/instructor/notifications'].some((p) =>
+    location.pathname.startsWith(p)
+  );
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -49,9 +53,13 @@ export function InstructorLayout() {
     window.location.href = '/signin?role=Instructor';
   };
 
-  const displayName = instructor?.name || 'Faculty Member';
-  const displayEmail = instructor?.email || 'faculty@university.edu';
-  const displayOrg = instructor?.organizationName || 'Affiliation Pending';
+  const displayName = instructor?.name || localStorage.getItem('user_name') || '';
+  const displayEmail = instructor?.email || localStorage.getItem('user_email') || '';
+  const displayOrg = isAffiliated
+    ? instructor.organizationName
+    : pendingJoinRequest
+    ? `Request pending: ${pendingJoinRequest.organizationName}`
+    : 'No organization';
 
   return (
     <div className="min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -88,9 +96,9 @@ export function InstructorLayout() {
                 </span>
 
                 {!isAffiliated && (
-                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Awaiting university Affiliation</span>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>{pendingJoinRequest ? 'Join request pending' : 'Not part of an organization'}</span>
                   </span>
                 )}
               </div>
@@ -106,7 +114,6 @@ export function InstructorLayout() {
                 title="Notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#0056D2] ring-2 ring-white"></span>
               </Link>
 
               {/* Settings Shortcut */}
@@ -187,7 +194,12 @@ export function InstructorLayout() {
               <Loader2 className="w-7 h-7 animate-spin text-[#0056D2]" />
               <p className="text-xs font-medium">Loading faculty workspace...</p>
             </div>
-          ) : !isAffiliated ? (
+          ) : error ? (
+            <div className="max-w-md mx-auto text-center py-16">
+              <p className="text-sm font-bold text-slate-800">Could not load your instructor profile</p>
+              <p className="text-xs text-slate-500 mt-1">{error}</p>
+            </div>
+          ) : !isAffiliated && !openWhileUnaffiliated ? (
             <ConnectUniversity />
           ) : (
             <Outlet />

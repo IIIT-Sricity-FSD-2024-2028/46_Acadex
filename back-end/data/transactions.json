@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "TXN-652843",
+    "type": "Payment",
+    "payerId": "lrn-1",
+    "payer": "Arjun Sharma",
+    "courseId": "cou-e7ae7b46",
+    "course": "Cloud computing",
+    "organizationId": null,
+    "organizationName": null,
+    "amount": 4000,
+    "method": "UPI (nishanth@ybl)",
+    "date": "2026-10-15T06:40:50.638Z",
+    "status": "Completed",
+    "createdAt": "2026-10-15T06:40:50.638Z",
+    "updatedAt": "2026-10-15T06:40:50.639Z"
+  }
+]
