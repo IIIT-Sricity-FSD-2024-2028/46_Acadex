@@ -15,7 +15,7 @@ export default function EditCourse() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { courses, updateCourse, deleteCourse, instructors } = useOrg();
+  const { courses, updateCourse, deleteCourse, instructors, sendCourseTeachingRequest, info } = useOrg();
 
   const course = courses.find(c => c.id === id) || courses[0];
   
@@ -34,6 +34,9 @@ export default function EditCourse() {
     leadInstructorId: initialLeadId,
     coInstructorIds: initialCoIds
   });
+  const [originalInstructorIds] = useState(
+    () => new Set((course?.instructors || []).map((instructor) => instructor.id).filter(Boolean))
+  );
 
   const toggleCoInstructor = (instId) => {
     if (instId === courseForm.leadInstructorId) return;
@@ -91,7 +94,29 @@ export default function EditCourse() {
           instructorName: assignedInstructors.map(i => i.name).join(', ')
         });
 
-        addToast(`Course "${courseForm.title}" updated successfully with ${assignedInstructors.length} instructors!`, 'success');
+        // Match the faculty-assignment workflow: notify only the instructors
+        // newly added to this selected course's teaching team.
+        const newAssignments = assignedInstructors.filter(
+          (instructor) => !originalInstructorIds.has(instructor.id)
+        );
+        await Promise.all(newAssignments.map((instructor) =>
+          sendCourseTeachingRequest({
+            instructorId: instructor.id,
+            courseId: course.id,
+            courseTitle: courseForm.title,
+            semester: 'Fall 2026',
+            creditHours: '',
+            proposedTerms: 'Departmental faculty honorarium + 70/30 course royalties',
+            message: 'The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.',
+            organizationId: info?.id || 'org-101',
+            organizationName: info?.name || 'NexusPay Enterprise Academy',
+          })
+        ));
+
+        addToast(
+          `Course "${courseForm.title}" updated successfully with ${assignedInstructors.length} instructors${newAssignments.length ? `; ${newAssignments.length} teaching request(s) sent.` : '!'} `,
+          'success'
+        );
         navigate('/org/courses');
       } catch (err) {
         addToast(`Failed to update course: ${err.message || 'Server error'}`, 'error');
@@ -113,7 +138,7 @@ export default function EditCourse() {
 
   if (!course) {
     return (
-      <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/courses' }, { label: 'Edit' }]}>
+      <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/org/courses' }, { label: 'Edit' }]}>
         <div className="p-8 text-center">
           <p className="text-sm font-bold text-on-surface">Course not found</p>
           <Link to="/org/courses" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">
@@ -127,7 +152,7 @@ export default function EditCourse() {
   return (
     <OrgLayout
       breadcrumbs={[
-        { label: 'Courses', path: '/courses' },
+        { label: 'Courses', path: '/org/courses' },
         { label: `Edit: ${course.title}` }
       ]}
     >
@@ -208,12 +233,16 @@ export default function EditCourse() {
             <div className="flex items-center justify-between pb-2 border-b border-outline-variant/60">
               <h2 className="text-sm font-bold text-on-surface flex items-center gap-2">
                 <GraduationCap className="w-4 h-4 text-primary" />
-                <span>Assigned Teaching Team</span>
+                <span>Assigned Teaching Team & Faculty Requests</span>
               </h2>
               <span className="text-xs font-bold text-primary">
                 {1 + courseForm.coInstructorIds.length} Instructor(s)
               </span>
             </div>
+
+            <p className="text-[11px] text-outline">
+              Adding an instructor updates this course only and sends that faculty member a teaching request when you save.
+            </p>
 
             <div>
               <label className="text-xs font-bold text-on-surface block mb-1.5">Lead Instructor</label>

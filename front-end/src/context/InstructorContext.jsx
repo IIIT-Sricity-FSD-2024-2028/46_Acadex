@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
-
-const InstructorContext = createContext(null);
+import { InstructorContext } from './instructorContextValue';
 
 const itemsOf = (res) => (Array.isArray(res) ? res : res?.items || []);
 

@@ -1,7 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { Building2, Clock, Check, X, Loader2, Send, Inbox, History, AlertCircle } from 'lucide-react';
-import { useInstructor } from '../../../context/InstructorContext';
-import { api } from '../../../services/api';
+import React, { useState } from 'react';
+import {
+  Building2,
+  GraduationCap,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  BookOpen,
+  Mail,
+  ShieldCheck,
+  Check,
+  X,
+  AlertCircle,
+  HelpCircle,
+  Loader2,
+  RefreshCw,
+  Inbox,
+  UserCheck,
+  FileText,
+  BadgeAlert,
+  Calendar,
+  DollarSign,
+} from 'lucide-react';
+import { useInstructor } from '../../../hooks/useInstructor';
+import { useNavigate } from 'react-router-dom';
 
 const isPending = (s) => /pending|sent/i.test(s || '');
 const fmt = (d) => (d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '');

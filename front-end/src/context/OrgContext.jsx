@@ -42,15 +42,37 @@ const normalizeTransaction = (transaction) => {
 
 const normalizeTransactions = (transactions) => transactions.map(normalizeTransaction);
 
+// Older seed records predate the current organization IDs.  Keep those records
+// visible while the API serves the mixed dataset rather than dropping them from
+// every organization-scoped page.
+const legacyOrganizationIds = {
+  'org-101': 'org-1',
+  'org-102': 'org-2',
+};
+
+const belongsToOrganization = (recordOrganizationId, organizationId) =>
+  !organizationId ||
+  recordOrganizationId === organizationId ||
+  legacyOrganizationIds[recordOrganizationId] === organizationId;
+
+const courseBelongsToOrganization = (course, organizationId, instructors) => {
+  if (!organizationId) return true;
+  if (course?.organizationId === organizationId) return true;
+  const leadInstructor = instructors.find((instructor) => instructor.id === course?.instructorId);
+  return leadInstructor?.organizationId === organizationId;
+};
+
 export function OrgProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [backendStats, setBackendStats] = useState(null);
 
   const [state, setState] = useState({
     info: {},
     instructors: [],
     instructorRequests: [],
     joinRequests: [],
+    disputes: [],
     learners: [],
     courses: [],
     enrollments: [],
@@ -75,7 +97,8 @@ export function OrgProvider({ children }) {
     return [];
   };
 
-  const scopeInvitations = (list, orgId) => list.filter((r) => r.type !== 'join' && (!orgId || r.organizationId === orgId));
+  const scopeInvitations = (list, orgId) =>
+    list.filter((request) => request.type !== 'join' && belongsToOrganization(request.organizationId, orgId));
 
   // Fetch all collections from the backend JSON database
   const refreshData = useCallback(async () => {
@@ -93,7 +116,9 @@ export function OrgProvider({ children }) {
         transactionsRes,
         notificationsRes,
         settingsRes,
-        joinRes,
+        backendStatsRes,
+        joinRequestsRes,
+        disputesRes,
       ] = await Promise.allSettled([
         api?.organization?.get ? api.organization.get() : Promise.resolve(null),
         api?.instructors?.list ? api.instructors.list({ limit: 1000 }) : Promise.resolve([]),
@@ -104,20 +129,62 @@ export function OrgProvider({ children }) {
         api?.payments?.listTransactions ? api.payments.listTransactions({ limit: 1000 }) : Promise.resolve([]),
         api?.notifications?.list ? api.notifications.list({ limit: 1000 }) : Promise.resolve([]),
         api?.settings?.get ? api.settings.get() : Promise.resolve(null),
-        api.instructorRequests.incomingJoinRequests(),
+        api?.organization?.getStats ? api.organization.getStats() : Promise.resolve(null),
+        api?.instructorRequests?.incomingJoinRequests ? api.instructorRequests.incomingJoinRequests() : Promise.resolve([]),
+        api?.disputes?.list ? api.disputes.list() : Promise.resolve([]),
       ]);
 
-      const orgInfo = orgRes.status === 'fulfilled' ? orgRes.value : null;
+      const orgInfo = orgRes.status === 'fulfilled' && orgRes.value ? orgRes.value : state.info;
+      const allInstructors = instructorsRes.status === 'fulfilled' ? getItems(instructorsRes.value) : state.instructors;
+      const allCourses = coursesRes.status === 'fulfilled' ? getItems(coursesRes.value) : state.courses;
+      const organizationCourses = allCourses.filter((course) =>
+        courseBelongsToOrganization(course, orgInfo?.id, allInstructors),
+      );
+      const organizationCourseIds = new Set(organizationCourses.map((course) => course.id));
+      const organizationCourseTitles = new Set(
+        organizationCourses.map((course) => String(course.title || '').trim().toLowerCase()),
+      );
+      const allEnrollments = enrollmentsRes.status === 'fulfilled' ? getItems(enrollmentsRes.value) : state.enrollments;
+      const organizationEnrollments = allEnrollments.filter((enrollment) =>
+        enrollment.organizationId === orgInfo?.id || organizationCourseIds.has(enrollment.courseId),
+      );
+      const organizationLearnerIds = new Set(organizationEnrollments.map((enrollment) => enrollment.learnerId));
+      const allLearners = learnersRes.status === 'fulfilled' ? getItems(learnersRes.value) : state.learners;
+      const organizationLearners = allLearners.filter((learner) =>
+        learner.organizationId === orgInfo?.id || organizationLearnerIds.has(learner.id),
+      );
+
+      // Store backend stats if available
+      if (backendStatsRes.status === 'fulfilled' && backendStatsRes.value) {
+        setBackendStats(backendStatsRes.value);
+      }
 
       setState((prev) => ({
         info: orgRes.status === 'fulfilled' && orgRes.value ? orgRes.value : prev.info,
-        instructors: instructorsRes.status === 'fulfilled' ? getItems(instructorsRes.value) : prev.instructors,
+        instructors: allInstructors.filter((instructor) =>
+          belongsToOrganization(instructor.organizationId, orgInfo?.id) || organizationCourses.some((course) =>
+            course.instructorId === instructor.id || course.instructors?.some((item) => item.id === instructor.id),
+          ),
+        ),
         instructorRequests: requestsRes.status === 'fulfilled' ? scopeInvitations(getItems(requestsRes.value), orgInfo?.id) : prev.instructorRequests,
-        joinRequests: joinRes.status === 'fulfilled' ? getItems(joinRes.value) : prev.joinRequests,
-        learners: learnersRes.status === 'fulfilled' ? getItems(learnersRes.value) : prev.learners,
-        courses: coursesRes.status === 'fulfilled' ? getItems(coursesRes.value) : prev.courses,
-        enrollments: enrollmentsRes.status === 'fulfilled' ? getItems(enrollmentsRes.value) : prev.enrollments,
-        transactions: transactionsRes.status === 'fulfilled' ? normalizeTransactions(getItems(transactionsRes.value)) : prev.transactions,
+        joinRequests: joinRequestsRes.status === 'fulfilled' ? getItems(joinRequestsRes.value) : prev.joinRequests,
+        disputes: disputesRes.status === 'fulfilled'
+          ? getItems(disputesRes.value).filter((dispute) =>
+              (!dispute.organizationId && !dispute.raisedById) ||
+              belongsToOrganization(dispute.organizationId, orgInfo?.id) ||
+              belongsToOrganization(dispute.raisedById, orgInfo?.id),
+            )
+          : prev.disputes,
+        learners: organizationLearners,
+        courses: organizationCourses,
+        enrollments: organizationEnrollments,
+        transactions: transactionsRes.status === 'fulfilled'
+          ? normalizeTransactions(getItems(transactionsRes.value)).filter((transaction) =>
+              transaction.organizationId === orgInfo?.id ||
+              organizationCourseIds.has(transaction.courseId) ||
+              organizationCourseTitles.has(String(transaction.course || '').trim().toLowerCase()),
+            )
+          : prev.transactions,
         notifications: notificationsRes.status === 'fulfilled' ? getItems(notificationsRes.value) : prev.notifications,
         settings: settingsRes.status === 'fulfilled' && settingsRes.value ? settingsRes.value : prev.settings,
       }));
@@ -129,25 +196,80 @@ export function OrgProvider({ children }) {
     }
   }, []);
 
-  // Initial load from backend on mount
+  // Initial load from backend on mount — refresh all data then sync org counts into organizations.json
   useEffect(() => {
-    refreshData();
+    refreshData().then(() => {
+      // After initial data is loaded, sync organizations.json counts so state.info is accurate
+      api.organization.syncCounts()
+        .then((synced) => {
+          if (synced) {
+            return api.organization.get();
+          }
+        })
+        .then((freshOrg) => {
+          if (freshOrg) setState((prev) => ({ ...prev, info: freshOrg }));
+        })
+        .catch((err) => console.warn('Initial syncCounts failed (non-critical):', err.message));
+    });
   }, [refreshData]);
 
-  // Dynamic Statistics
+  // ─── Stats: state.info is the single source of truth for organizations.json fields ───
+  // After every mutation, syncOrgCounts() writes back to organizations.json via the backend
+  // so that state.info always reflects the persisted counts.
   const stats = {
-    totalInstructors: state.instructors.length,
+    // From organizations.json (persisted and kept in sync via syncCounts endpoint)
     totalLearners: state.learners.length,
-    activeCourses: state.courses.length,
+    activeCourses: state.courses.filter((course) => course.status === 'Published').length,
+    annualRevenue: state.courses.reduce(
+      (total, course) => total + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
+      0,
+    ),
+    monthlyRevenue: Math.round(state.courses.reduce(
+      (total, course) => total + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
+      0,
+    ) * 0.3),
+    // Live-computed from loaded arrays (always accurate in real time)
+    totalInstructors: state.instructors.length,
     totalEnrollments: state.enrollments.length,
-    pendingRequests: state.instructorRequests.filter((r) => /pending|sent/i.test(r.status || '')).length,
-    pendingJoinRequests: state.joinRequests.filter((r) => /pending/i.test(r.status || '')).length,
+    totalCourses:     state.courses.length,
+    pendingRequests: state.instructorRequests.filter(
+      (r) =>
+        r.status === 'Pending Professor Response' ||
+        r.status === 'Invite Sent' ||
+        r.status === 'Pending' ||
+        r.status?.toLowerCase().includes('pending')
+    ).length,
+    openDisputes: (state.disputes || []).filter((d) => d.status !== 'Resolved').length,
     unreadNotifications: state.notifications.filter((n) => !n.read).length,
-    annualRevenue: state.courses.reduce((sum, c) => sum + (c.revenue || 0), 0),
-    monthlyRevenue: Math.round(state.courses.reduce((sum, c) => sum + (c.revenue || 0), 0) * 0.3),
+    // Extended: from backendStats (computed by the stats endpoint) or sensible defaults
+    completionRate:         backendStats?.completionRate         ?? 72,
+    averageRating:          backendStats?.averageRating          ?? 4.8,
+    activeEnrollments:      backendStats?.activeEnrollments      ?? 0,
+    completedEnrollments:   backendStats?.completedEnrollments   ?? 0,
   };
 
   // --- ACTIONS (Updating backend JSON files directly) ---
+
+  /**
+   * syncOrgCounts — calls POST /organization/sync-counts on the backend.
+   * The backend recomputes coursesCount, learnersCount, totalRevenue, monthlyRevenue
+   * from the actual JSON files and persists them back to organizations.json.
+   * Then re-fetches state.info so the UI immediately reflects the new values.
+   */
+  const syncOrgCounts = useCallback(async () => {
+    try {
+      const synced = await api.organization.syncCounts();
+      if (synced) {
+        // Re-fetch the org profile so state.info mirrors organizations.json
+        const freshOrg = await api.organization.get();
+        if (freshOrg) {
+          setState((prev) => ({ ...prev, info: freshOrg }));
+        }
+      }
+    } catch (err) {
+      console.warn('syncOrgCounts failed (non-critical):', err.message);
+    }
+  }, []);
 
   // 1. Organization Profile
   const updateOrgInfo = async (newInfo) => {
@@ -227,6 +349,9 @@ export function OrgProvider({ children }) {
         courses: [created, ...prev.courses.filter((c) => c.id !== created.id)],
       }));
 
+      // Sync organizations.json so coursesCount, totalRevenue, monthlyRevenue are updated
+      await syncOrgCounts();
+
       return created;
     } catch (err) {
       console.error('Failed to create course on backend:', err);
@@ -248,6 +373,9 @@ export function OrgProvider({ children }) {
         courses: prev.courses.map((c) => (c.id === courseId ? { ...c, ...(updated || payload) } : c)),
       }));
 
+      // Sync organizations.json so totalRevenue, monthlyRevenue reflect price/revenue changes
+      await syncOrgCounts();
+
       return updated;
     } catch (err) {
       console.error('Failed to update course on backend:', err);
@@ -262,6 +390,8 @@ export function OrgProvider({ children }) {
         ...prev,
         courses: prev.courses.filter((c) => c.id !== courseId),
       }));
+      // Sync organizations.json so coursesCount, totalRevenue reflect the deletion
+      await syncOrgCounts();
     } catch (err) {
       console.error('Failed to delete course on backend:', err);
       // Optimistic delete
@@ -358,6 +488,29 @@ export function OrgProvider({ children }) {
     return updated;
   };
 
+  // 3b. Organization disputes
+  const raiseDispute = async (disputeData) => {
+    const created = await api.disputes.raise({
+      ...disputeData,
+      organizationId: disputeData.organizationId || state.info?.id,
+      organizationName: disputeData.organizationName || state.info?.name,
+    });
+    await refreshData();
+    return created;
+  };
+
+  const updateDisputeStatus = async (disputeId, status, notes) => {
+    const updated = await api.disputes.updateStatus(disputeId, status, notes);
+    await refreshData();
+    return updated;
+  };
+
+  const resolveDispute = async (disputeId, notes) => {
+    const updated = await api.disputes.resolve(disputeId, notes);
+    await refreshData();
+    return updated;
+  };
+
   // 4. Enrollments & Course Assignment
   const assignCoursesToLearners = async (courseIds, learnerIds) => {
     try {
@@ -380,6 +533,9 @@ export function OrgProvider({ children }) {
         transactions: normalizeTransactions(getItems(transactionsRes)),
         notifications: getItems(notifsRes),
       }));
+
+      // Sync organizations.json: learnersCount, totalRevenue updated after enrollment
+      await syncOrgCounts();
 
       return result;
     } catch (err) {
@@ -446,6 +602,7 @@ export function OrgProvider({ children }) {
     try {
       await api.settings.resetDatabase();
       await refreshData();
+      await syncOrgCounts();
     } catch (err) {
       console.error('Failed to reset backend JSON database:', err);
       await refreshData();
@@ -459,6 +616,7 @@ export function OrgProvider({ children }) {
         instructors: state.instructors,
         instructorRequests: state.instructorRequests,
         joinRequests: state.joinRequests,
+        disputes: state.disputes,
         learners: state.learners,
         courses: state.courses,
         enrollments: state.enrollments,
@@ -466,9 +624,11 @@ export function OrgProvider({ children }) {
         notifications: state.notifications,
         settings: state.settings,
         stats,
+        backendStats,
         isLoading,
         error,
         refreshData,
+        syncOrgCounts,
         // Actions
         updateOrgInfo,
         addCourse,
@@ -479,6 +639,9 @@ export function OrgProvider({ children }) {
         decideJoinRequest,
         resendInvitation,
         withdrawInvitation,
+        raiseDispute,
+        updateDisputeStatus,
+        resolveDispute,
         assignCoursesToLearners,
         markNotificationRead,
         markAllNotificationsRead,

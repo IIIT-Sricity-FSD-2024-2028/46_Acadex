@@ -15,7 +15,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from "react-router-dom";
 import { api } from "../../../utils/api";
-import { useInstructor } from "../../../context/InstructorContext";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 export function Dashboard() {
   const { instructor } = useInstructor();

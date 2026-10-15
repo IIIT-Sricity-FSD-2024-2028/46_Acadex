@@ -67,9 +67,9 @@ import OrgCourseDetails from './pages/organization/CourseDetails';
 import OrgCreateCourse from './pages/organization/CreateCourse';
 import OrgEditCourse from './pages/organization/EditCourse';
 import OrgEnrollments from './pages/organization/Enrollments';
-import OrgAssignCourses from './pages/organization/AssignCourses';
 import OrgPayments from './pages/organization/Payments';
-import OrgNotifications from './pages/organization/Notifications';
+import OrgDisputes from './pages/organization/Disputes';
+import OrgAnalytics from './pages/organization/Analytics';
 import OrgSettings from './pages/organization/Settings';
 
 // ──────────────────────────────────────────────────────────────
@@ -259,27 +259,23 @@ export default function App() {
       <Route path="/organization/courses/:id/edit" element={<OrgEditCourse />} />
 
       <Route path="/org/enrollments" element={<OrgEnrollments />} />
-      <Route path="/org/assign-courses" element={<OrgAssignCourses />} />
       <Route path="/organization/enrollments" element={<OrgEnrollments />} />
-      <Route path="/organization/assign-courses" element={<OrgAssignCourses />} />
 
       <Route path="/org/payments" element={<OrgPayments />} />
       <Route path="/org/transactions" element={<Navigate to="/org/payments" replace />} />
       <Route path="/organization/payments" element={<OrgPayments />} />
       <Route path="/organization/transactions" element={<Navigate to="/org/payments" replace />} />
 
-      <Route path="/org/disputes" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/org/raise-dispute" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/organization/disputes" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/organization/raise-dispute" element={<Navigate to="/org/dashboard" replace />} />
+      <Route path="/org/disputes" element={<OrgDisputes />} />
+      <Route path="/org/raise-dispute" element={<OrgDisputes />} />
+      <Route path="/organization/disputes" element={<OrgDisputes />} />
+      <Route path="/organization/raise-dispute" element={<OrgDisputes />} />
 
       <Route path="/org/reports" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/org/analytics" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/org/notifications" element={<OrgNotifications />} />
       <Route path="/org/settings" element={<OrgSettings />} />
       <Route path="/organization/reports" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/organization/analytics" element={<Navigate to="/org/dashboard" replace />} />
-      <Route path="/organization/notifications" element={<OrgNotifications />} />
+      <Route path="/org/analytics" element={<OrgAnalytics />} />
+      <Route path="/organization/analytics" element={<OrgAnalytics />} />
       <Route path="/organization/settings" element={<OrgSettings />} />
 
       {/* ────────────────────────────────────────────────────────────── */}

@@ -1,5 +1,50 @@
 [
   {
+    "id": "usr-1791915010416",
+    "name": "Test Instructor-1",
+    "email": "testins@gmail.com",
+    "password": "Password123!",
+    "role": "Instructor",
+    "status": "Pending Affiliation",
+    "verificationStatus": "Verified",
+    "organizationId": null,
+    "organizationName": null,
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-10-13T18:10:10.416Z",
+    "updatedAt": "2026-10-13T18:13:17.151Z",
+    "lastLogin": "2026-10-13T18:13:17.142Z"
+  },
+  {
+    "id": "usr-1791912292823",
+    "name": "Prof. Alan Turing",
+    "email": "prof.turing@cambridge.edu",
+    "password": "Password123!",
+    "role": "Instructor",
+    "status": "Active",
+    "verificationStatus": "Verified",
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-10-13T17:24:52.823Z",
+    "updatedAt": "2026-10-14T17:42:04.558Z",
+    "organizationId": "org-102",
+    "organizationName": "Stanford University School of Engineering",
+    "lastLogin": "2026-10-14T17:42:04.557Z"
+  },
+  {
+    "id": "usr-1791911606594",
+    "name": "Prof. Arthur Pendelton",
+    "email": "prof.arthur@cambridge.edu",
+    "password": "Password123!",
+    "role": "Instructor",
+    "status": "Active",
+    "verificationStatus": "Verified",
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-10-13T17:13:26.594Z",
+    "updatedAt": "2026-10-14T18:17:19.302Z",
+    "lastLogin": "2026-10-14T18:17:19.300Z",
+    "organizationId": "org-101",
+    "organizationName": "NexusPay Enterprise Academy"
+  },
+  {
     "id": "usr-1",
     "name": "Priya Nair",
     "email": "priya.nair@meridiantech.io",
@@ -11,8 +56,8 @@
     "organizationName": "Meridian Tech Institute",
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-03-10T09:00:00.000Z",
-    "updatedAt": "2026-10-15T06:41:09.546Z",
-    "lastLogin": "2026-10-15T06:41:09.543Z"
+    "updatedAt": "2026-10-15T11:10:58.979Z",
+    "lastLogin": "2026-10-15T11:10:58.978Z"
   },
   {
     "id": "usr-2",
@@ -69,8 +114,8 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2026-09-20T10:00:00.000Z",
-    "updatedAt": "2026-10-15T06:48:34.515Z",
-    "lastLogin": "2026-10-15T06:48:34.511Z"
+    "updatedAt": "2026-10-15T11:11:12.294Z",
+    "lastLogin": "2026-10-15T11:11:12.293Z"
   },
   {
     "id": "usr-6",
@@ -97,8 +142,8 @@
     "organizationName": "Meridian Tech Institute",
     "avatar": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-01-10T08:00:00.000Z",
-    "updatedAt": "2026-10-15T06:42:21.974Z",
-    "lastLogin": "2026-10-15T06:42:21.970Z"
+    "updatedAt": "2026-10-15T09:53:02.854Z",
+    "lastLogin": "2026-10-15T09:53:02.853Z"
   },
   {
     "id": "usr-8",

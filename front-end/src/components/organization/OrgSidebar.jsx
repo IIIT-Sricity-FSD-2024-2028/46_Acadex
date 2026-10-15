@@ -5,13 +5,15 @@ import {
   Users,
   GraduationCap,
   BookOpen,
-  UserPlus,
   CreditCard,
   Bell,
+  FileText,
+  BarChart3,
   Settings,
   Building2,
   Sparkles,
   Layers,
+  AlertCircle,
 } from 'lucide-react';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../common/Toast';
@@ -37,19 +39,19 @@ export default function OrgSidebar() {
       items: [
         { name: 'Courses', path: '/org/courses', icon: BookOpen },
         { name: 'Enrollments', path: '/org/enrollments', icon: Layers },
-        { name: 'Assign Courses', path: '/org/assign-courses', icon: UserPlus },
       ]
     },
     {
       group: "Financials",
       items: [
         { name: 'Payments & Revenue', path: '/org/payments', icon: CreditCard },
+        { name: 'Analytics', path: '/org/analytics', icon: BarChart3 },
       ]
     },
     {
       group: "Governance & System",
       items: [
-        { name: 'Notifications', path: '/org/notifications', icon: Bell, unread: stats.unreadNotifications },
+        { name: 'Disputes & Governance', path: '/org/disputes', icon: AlertCircle, badge: stats.openDisputes },
         { name: 'Organization Settings', path: '/org/settings', icon: Settings },
         { name: 'Org Profile', path: '/org/profile', icon: Building2 },
       ]
@@ -63,9 +65,9 @@ export default function OrgSidebar() {
     if (path === '/org/instructor-requests' && (location.pathname === '/instructor-requests' || location.pathname === '/org/instructor-requests')) return true;
     if (path === '/org/learners' && (location.pathname === '/learners' || location.pathname === '/org/learners')) return true;
     if (path === '/org/enrollments' && (location.pathname === '/enrollments' || location.pathname === '/org/enrollments')) return true;
-    if (path === '/org/assign-courses' && (location.pathname === '/assign-courses' || location.pathname === '/org/assign-courses')) return true;
     if (path === '/org/payments' && (location.pathname === '/payments' || location.pathname === '/org/payments' || location.pathname === '/transactions' || location.pathname === '/org/transactions')) return true;
-    if (path === '/org/notifications' && (location.pathname === '/notifications' || location.pathname === '/org/notifications')) return true;
+    if (path === '/org/analytics' && (location.pathname === '/analytics' || location.pathname === '/org/analytics')) return true;
+    if (path === '/org/disputes' && (location.pathname === '/disputes' || location.pathname === '/org/disputes' || location.pathname === '/org/raise-dispute' || location.pathname === '/raise-dispute')) return true;
     if (path === '/org/settings' && (location.pathname === '/settings' || location.pathname === '/org/settings')) return true;
     if (path === '/org/profile' && (location.pathname === '/org/profile' || location.pathname === '/profile')) return true;
     return location.pathname.startsWith(path);

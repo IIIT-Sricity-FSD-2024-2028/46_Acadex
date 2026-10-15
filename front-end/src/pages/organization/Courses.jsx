@@ -191,7 +191,7 @@ export default function Courses() {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               to={`/org/courses/${c.id}/edit`}
-                              title="Edit course"
+                              title="Edit course and assign faculty"
                               className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors"
                             >
                               <Edit className="w-3.5 h-3.5" />

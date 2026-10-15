@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "notif-1",
+    "title": "New Teaching Application Submitted",
+    "desc": "Dr. Elena Rostova submitted an accreditation application for 'Post-Quantum Cryptography'.",
+    "time": "10 minutes ago",
+    "read": false,
+    "type": "Application",
+    "createdAt": "2026-08-28T19:30:00.000Z"
+  },
+  {
+    "id": "notif-2",
+    "title": "Enterprise Cohort Enrollment Completed",
+    "desc": "50 new engineers from Stanford FinTech Lab enrolled in 'AWS Cloud Masterclass'.",
+    "time": "2 hours ago",
+    "read": false,
+    "type": "Enrollment",
+    "createdAt": "2026-08-28T17:30:00.000Z"
+  },
+  {
+    "id": "notif-3",
+    "title": "Dispute Escalated to Legal Governance",
+    "desc": "Dispute DSP-2026-081 (Royalty Payout Discrepancy) marked as urgent priority.",
+    "time": "1 day ago",
+    "read": true,
+    "type": "Dispute",
+    "createdAt": "2026-08-27T10:00:00.000Z"
+  }
+]

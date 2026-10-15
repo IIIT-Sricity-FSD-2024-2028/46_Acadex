@@ -70,26 +70,25 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-84 bg-surface-container-lowest rounded-2xl shadow-elevation-3 border border-outline-variant p-4 z-50 animate-in fade-in">
+            <div className="absolute right-0 mt-2 w-[28rem] max-w-[calc(100vw-1.5rem)] bg-surface-container-lowest rounded-2xl shadow-elevation-3 border border-outline-variant p-5 z-50 animate-in fade-in">
               <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
                 <span className="font-bold text-xs text-on-surface">
                   Notifications ({stats.unreadNotifications} unread)
                 </span>
-                {stats.unreadNotifications > 0 && (
-                  <button
-                    onClick={() => {
-                      markAllNotificationsRead();
-                      addToast('All notifications marked as read', 'info');
-                    }}
-                    className="text-[10px] text-primary font-bold hover:underline"
-                  >
-                    Mark all read
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    markAllNotificationsRead();
+                    addToast('All notifications marked as read', 'info');
+                  }}
+                  disabled={stats.unreadNotifications === 0}
+                  className="rounded-lg bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Mark all read
+                </button>
               </div>
 
-              <div className="py-2 divide-y divide-outline-variant/40 max-h-64 overflow-y-auto">
-                {notifications.slice(0, 5).map((n) => (
+              <div className="py-2 divide-y divide-outline-variant/40 max-h-96 overflow-y-auto">
+                {notifications.map((n) => (
                   <div
                     key={n.id}
                     onClick={() => markNotificationRead(n.id)}
@@ -105,9 +104,9 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
                 ))}
               </div>
 
-              <div className="pt-2 border-t border-outline-variant text-center">
+              <div className="hidden">
                 <Link
-                  to="/org/notifications"
+                  to="/org/dashboard"
                   onClick={() => setShowNotifications(false)}
                   className="text-xs font-bold text-primary hover:underline block py-1"
                 >

@@ -9,6 +9,7 @@ import {
   UpdateEnrollmentStatusDto,
 } from './dto/enrollment.dto';
 import { QueryFilter } from '../../database/interfaces/database.interface';
+import { OrganizationService } from '../organization/organization.service';
 
 @Injectable()
 export class EnrollmentsService {
@@ -25,7 +26,8 @@ export class EnrollmentsService {
     private readonly notifsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.CERTIFICATES)
     private readonly certificatesRepo: JsonRepository<any>,
-    private readonly dbService: JsonDatabaseService
+    private readonly dbService: JsonDatabaseService,
+    private readonly organizationService: OrganizationService,
   ) {}
 
   async findAll(query: EnrollmentQueryDto) {
@@ -108,6 +110,7 @@ export class EnrollmentsService {
 
       const createdEnrollments = [];
       const createdTransactions = [];
+      let enrollmentSequence = 0;
       const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       const nowIso = new Date().toISOString();
 
@@ -127,7 +130,7 @@ export class EnrollmentsService {
           });
 
           if (!existing) {
-            const enrId = `ENR-${Math.floor(100000 + Math.random() * 900000)}`;
+            const enrId = `enr-${Date.now() + enrollmentSequence++}`;
             const enrollment = await this.enrollmentsRepo.create({
               id: enrId,
               learnerId: learner.id,
@@ -165,12 +168,19 @@ export class EnrollmentsService {
           }
         }
 
-        // Update Course seats and revenue
-        const additionalSeats = targetLearners.length;
-        await this.coursesRepo.update(course.id, {
-          enrolledCount: (course.enrolledCount || 0) + additionalSeats,
-          revenue: (course.revenue || 0) + course.price * additionalSeats,
-        });
+        // Only newly-created enrollments add learners and revenue.
+        const additionalSeats = createdEnrollments.filter(
+          (enrollment) => enrollment.courseId === course.id,
+        ).length;
+        if (additionalSeats > 0) {
+          await this.coursesRepo.update(course.id, {
+            enrolledCount: (course.enrolledCount || 0) + additionalSeats,
+            revenue: (course.revenue || 0) + course.price * additionalSeats,
+          });
+          for (let index = 0; index < additionalSeats; index++) {
+            await this.organizationService.addEnrollmentRevenue(course);
+          }
+        }
       }
 
       // Update Learners enrolled count

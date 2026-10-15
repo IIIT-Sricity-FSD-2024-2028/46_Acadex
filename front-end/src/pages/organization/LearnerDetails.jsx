@@ -24,7 +24,7 @@ export default function LearnerDetails() {
   return (
     <OrgLayout
       breadcrumbs={[
-        { label: 'Learners', path: '/learners' },
+        { label: 'Learners', path: '/org/learners' },
         { label: learner.name }
       ]}
     >

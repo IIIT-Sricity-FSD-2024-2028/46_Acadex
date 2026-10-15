@@ -19,7 +19,7 @@ export default function CourseDetails() {
 
   if (!course) {
     return (
-      <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/courses' }, { label: 'Course Not Found' }]}>
+      <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/org/courses' }, { label: 'Course Not Found' }]}>
         <div className="p-8 text-center">
           <p className="text-sm font-bold text-on-surface">Course not found</p>
           <Link to="/org/courses" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">
@@ -46,7 +46,7 @@ export default function CourseDetails() {
   return (
     <OrgLayout
       breadcrumbs={[
-        { label: 'Courses', path: '/courses' },
+        { label: 'Courses', path: '/org/courses' },
         { label: course.title }
       ]}
       actions={

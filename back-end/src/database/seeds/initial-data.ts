@@ -503,7 +503,7 @@ export const initialCoursesData = [
 // ==========================================
 export const initialEnrollmentsData = [
   {
-    id: "enr-501",
+    id: "enr-1791657611306",
     learnerId: "lrn-1",
     learnerName: "Alex Johnson",
     learnerEmail: "alex.johnson@stanford.edu",
@@ -517,7 +517,7 @@ export const initialEnrollmentsData = [
     createdAt: "2026-08-15T10:30:00.000Z"
   },
   {
-    id: "enr-502",
+    id: "enr-1791657611307",
     learnerId: "lrn-2",
     learnerName: "Sarah Connor",
     learnerEmail: "sarah.connor@caltech.edu",
@@ -531,7 +531,7 @@ export const initialEnrollmentsData = [
     createdAt: "2026-08-10T09:15:00.000Z"
   },
   {
-    id: "enr-503",
+    id: "enr-1791657611308",
     learnerId: "lrn-3",
     learnerName: "Michael Chang",
     learnerEmail: "m.chang@mit.edu",

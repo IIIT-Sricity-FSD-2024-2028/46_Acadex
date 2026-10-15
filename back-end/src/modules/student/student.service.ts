@@ -9,6 +9,7 @@ import {
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { UpdateStudentProfileDto, StudentCheckoutDto } from './dto/student.dto';
+import { OrganizationService } from '../organization/organization.service';
 
 const PAYMENT_METHODS = ['card', 'upi'];
 
@@ -29,6 +30,7 @@ export class StudentService {
     private readonly orgsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
     private readonly notifsRepo: JsonRepository<any>,
+    private readonly organizationService: OrganizationService,
   ) {}
 
   private async resolveLearner(userId: string) {
@@ -173,6 +175,7 @@ export class StudentService {
     await this.coursesRepo.update(course.id, {
       enrolledCount: (course.enrolledCount || 0) + 1,
     });
+    await this.organizationService.addEnrollmentRevenue(course);
     return enrollment;
   }
 

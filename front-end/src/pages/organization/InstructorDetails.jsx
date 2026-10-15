@@ -23,16 +23,16 @@ export default function InstructorDetails() {
   return (
     <OrgLayout
       breadcrumbs={[
-        { label: 'Instructors', path: '/instructors' },
+        { label: 'Instructors', path: '/org/instructors' },
         { label: instructor.name }
       ]}
       actions={
         <Link
-          to={`/org/assign-courses?instructorId=${instructor.id}`}
+          to="/org/courses"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm transition-all"
         >
           <BookOpen className="w-4 h-4" />
-          <span>Assign Course to {instructor.name.split(' ')[0]}</span>
+          <span>Manage Course Faculty</span>
         </Link>
       }
     >

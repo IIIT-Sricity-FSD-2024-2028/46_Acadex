@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "../../common";
 import { InstructorSidebar } from "./InstructorSidebar";
-import { InstructorProvider, useInstructor } from "../../../context/InstructorContext";
+import { useInstructor } from "../../../hooks/useInstructor";
 import { ConnectUniversity } from "../../../pages/instructor/onboarding/ConnectUniversity";
 
 export function InstructorLayout() {

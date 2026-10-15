@@ -102,6 +102,7 @@ export class CoursesService {
       instructorId: leadInstructor.id,
       instructorName: instructorsList.map((i) => i.name).join(', '),
       leadInstructorName: leadInstructor.name,
+      organizationId: (await this.instructorsRepo.findById(leadInstructor.id))?.organizationId,
       instructors: instructorsList,
       enrolledCount: 0,
       price: typeof dto.price === 'number' ? dto.price : 89.99,

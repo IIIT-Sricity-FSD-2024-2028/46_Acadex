@@ -89,6 +89,11 @@ export default function CreateCourse() {
     }
 
     const leadInst = instructors.find(i => i.id === courseForm.leadInstructorId) || instructors[0];
+    if (!leadInst) {
+      addToast('Wait for faculty data to load, then select a lead instructor.', 'error');
+      return;
+    }
+
     const assignedInstructors = [
       {
         id: leadInst.id,
@@ -129,7 +134,7 @@ export default function CreateCourse() {
   return (
     <OrgLayout
       breadcrumbs={[
-        { label: 'Courses', path: '/courses' },
+        { label: 'Courses', path: '/org/courses' },
         { label: 'Create New Course' }
       ]}
     >

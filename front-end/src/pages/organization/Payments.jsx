@@ -12,8 +12,16 @@ import { useToast } from '../../components/common/Toast';
 import { exportToCSV } from '../../utils/csvDownload';
 
 export default function Payments() {
-  const { transactions, stats } = useOrg();
+  const { transactions, courses, stats } = useOrg();
   const { addToast } = useToast();
+
+  const getCoursePrice = (transaction) => {
+    const course = courses.find((item) =>
+      item.id === transaction.courseId ||
+      item.title?.trim().toLowerCase() === String(transaction.course || '').trim().toLowerCase()
+    );
+    return Number(course?.price) || 0;
+  };
 
   const handleDownloadStatement = () => {
     const headers = ['Record ID', 'Payer', 'Description', 'Gross Amount (₹)', 'Method', 'Date', 'Status'];
@@ -21,7 +29,7 @@ export default function Payments() {
       t.id,
       t.payer,
       t.course,
-      t.amount,
+      getCoursePrice(t),
       t.method,
       t.date,
       t.status
@@ -34,15 +42,6 @@ export default function Payments() {
   return (
     <OrgLayout
       breadcrumbs={[{ label: 'Payments & Revenue' }]}
-      actions={
-        <button
-          onClick={handleDownloadStatement}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm transition-all"
-        >
-          <Download className="w-4 h-4" />
-          <span>Download Financial Statement</span>
-        </button>
-      }
     >
       <div className="space-y-6">
         <div>
@@ -96,12 +95,14 @@ export default function Payments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/40">
-                {transactions.slice(0, 6).map((t) => (
+                {transactions.slice(0, 6).map((t) => {
+                  const coursePrice = getCoursePrice(t);
+                  return (
                   <tr key={t.id} className="hover:bg-surface-container-low/50 transition-colors">
                     <td className="py-4 font-mono font-bold text-primary">{t.id}</td>
                     <td className="py-4 font-bold text-on-surface">{t.payer}</td>
                     <td className="py-4 text-on-surface-variant font-medium">{t.course}</td>
-                    <td className="py-4 font-bold text-emerald-700">₹{t.amount}</td>
+                    <td className="py-4 font-bold text-emerald-700">₹{coursePrice.toLocaleString()}</td>
                     <td className="py-4 text-outline">{t.method}</td>
                     <td className="py-4 text-outline">{t.date}</td>
                     <td className="py-4 text-right">
@@ -110,7 +111,8 @@ export default function Payments() {
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -185,6 +185,7 @@ export const api = {
     get: () => request('/organization'),
     update: (data) => request('/organization', { method: 'PATCH', body: data }),
     getStats: () => request('/organization/stats'),
+    syncCounts: () => request('/organization/sync-counts', { method: 'POST' }),
     getStudentRequests: () => request('/organization/student-requests'),
     respondStudentRequest: (learnerId, action) =>
       request(`/organization/student-requests/${learnerId}/respond`, { method: 'POST', body: { action } }),

@@ -1,10 +1,31 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Send, Search, Eye, Check, X, RotateCcw, UserPlus, Inbox } from 'lucide-react';
+import {
+  Mail,
+  Send,
+  Search,
+  Eye,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  BookOpen,
+  Sparkles,
+  X,
+  UserSearch,
+  AlertCircle,
+  Loader2,
+  UserCheck,
+  GraduationCap,
+  ArrowRight,
+  Inbox,
+  UserPlus,
+} from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import HumanAvatar from '../../components/common/HumanAvatar';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
+import { api } from '../../services/api';
 
 const isPending = (s) => /pending|sent/i.test(s || '');
 const fmt = (d) => (d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
@@ -25,24 +46,37 @@ function matches(req, q) {
 
 export default function InstructorRequests() {
   const { addToast } = useToast();
-  const { instructorRequests, joinRequests, decideJoinRequest, resendInvitation, withdrawInvitation } = useOrg();
-  const [tab, setTab] = useState('join');
-  const [filter, setFilter] = useState('Pending');
+  const {
+    instructorRequests,
+    joinRequests,
+    sendCourseTeachingRequest,
+    decideJoinRequest,
+    resendInvitation,
+    refreshData,
+  } = useOrg();
+  const [filter, setFilter] = useState('All');
+  const [tab, setTab] = useState('invitations');
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState(null);
   const [rejecting, setRejecting] = useState(null);
   const [rejectNote, setRejectNote] = useState('');
 
-  const list = tab === 'join' ? joinRequests : instructorRequests;
-  const filtered = list.filter(
-    (r) =>
-      matches(r, search) &&
-      (filter === 'All' ||
-        (filter === 'Pending' && isPending(r.status)) ||
-        (filter === 'Resolved' && !isPending(r.status)))
-  );
-  const pendingJoin = joinRequests.filter((r) => isPending(r.status)).length;
-  const pendingInv = instructorRequests.filter((r) => isPending(r.status)).length;
+  // ── Invite-by-email form state ─────────────────────────────────────────────
+  const [emailInput, setEmailInput] = useState('');
+  const [lookupState, setLookupState] = useState('idle'); // 'idle' | 'loading' | 'found' | 'not_found' | 'sending' | 'sent'
+  const [foundInstructor, setFoundInstructor] = useState(null);
+  const [lookupError, setLookupError] = useState('');
+
+  const filteredRequests = instructorRequests.filter(req => {
+    const matchesFilter = filter === 'All' ||
+      (filter === 'Pending' && req.status.includes('Pending')) ||
+      (filter === 'Accepted' && req.status.includes('Accepted')) ||
+      (filter === 'Declined' && req.status.includes('Declined'));
+    const matchesSearch = [req.name, req.email, req.courseTitle, req.specialization]
+      .some((value) => String(value || '').toLowerCase().includes(search.toLowerCase()));
+
+    return matchesFilter && matchesSearch;
+  });
 
   const run = async (id, fn, success) => {
     setBusyId(id);
@@ -56,25 +90,290 @@ export default function InstructorRequests() {
     }
   };
 
+  const pendingCount = instructorRequests.filter(r => r.status.includes('Pending')).length;
+  const acceptedCount = instructorRequests.filter(r => r.status.includes('Accepted')).length;
+  const declinedCount = instructorRequests.filter(r => r.status.includes('Declined')).length;
+  const pendingJoin = joinRequests.filter((request) => isPending(request.status)).length;
+  const pendingInv = instructorRequests.filter((request) => isPending(request.status)).length;
+  const filtered = (tab === 'join' ? joinRequests : instructorRequests).filter((request) => {
+    const matchesFilter = filter === 'All' ||
+      (filter === 'Pending' && isPending(request.status)) ||
+      (filter === 'Resolved' && !isPending(request.status));
+    return matchesFilter && matches(request, search);
+  });
+
+  const handleResendMail = (requestId) =>
+    run(requestId, () => resendInvitation(requestId), 'Teaching request email resent');
+
+  // ── Instructor email lookup ────────────────────────────────────────────────
+  const handleEmailLookup = async (e) => {
+    e.preventDefault();
+    const trimmedEmail = emailInput.trim().toLowerCase();
+    if (!trimmedEmail) return;
+
+    setLookupState('loading');
+    setFoundInstructor(null);
+    setLookupError('');
+
+    try {
+      // Fetch all instructors and search by email client-side
+      const result = await api.instructors.list({ limit: 1000 });
+      const list = Array.isArray(result)
+        ? result
+        : result?.items || result?.data || [];
+
+      const match = list.find(
+        (inst) => inst.email?.toLowerCase().trim() === trimmedEmail
+      );
+
+      if (match) {
+        setFoundInstructor(match);
+        setLookupState('found');
+      } else {
+        setLookupState('not_found');
+        setLookupError(`No instructor with email "${emailInput.trim()}" was found in the platform.`);
+      }
+    } catch (err) {
+      setLookupState('not_found');
+      setLookupError('Could not connect to the server. Please try again.');
+    }
+  };
+
+  // ── Send invitation request ────────────────────────────────────────────────
+  const handleSendRequest = async () => {
+    if (!foundInstructor) return;
+    setLookupState('sending');
+
+    try {
+      await sendCourseTeachingRequest({
+        instructorId: foundInstructor.id,
+        courseTitle: 'General Course Assignment',
+        message: `You have been invited to join our faculty. Please review the request in your instructor dashboard.`,
+      });
+
+      await refreshData();
+      setLookupState('sent');
+      addToast(
+        `Teaching invitation successfully sent to ${foundInstructor.name} (${foundInstructor.email})!`,
+        'success'
+      );
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setLookupState('idle');
+        setEmailInput('');
+        setFoundInstructor(null);
+      }, 3000);
+    } catch (err) {
+      setLookupState('found'); // revert to found state on error
+      addToast(
+        err?.message || 'Failed to send the invitation. Please try again.',
+        'error'
+      );
+    }
+  };
+
+  const resetLookup = () => {
+    setLookupState('idle');
+    setEmailInput('');
+    setFoundInstructor(null);
+    setLookupError('');
+  };
+
+
   return (
     <OrgLayout
-      breadcrumbs={[{ label: 'Instructor Requests' }]}
-      actions={
-        <Link
-          to="/org/assign-courses"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm"
-        >
-          <Send className="w-4 h-4" /> Invite instructor to a course
-        </Link>
-      }
+      breadcrumbs={[{ label: 'Course Teaching Requests' }]}
     >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-on-surface">Instructor requests</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5 max-w-2xl">
-            Instructors who ask to join your organization appear under Join requests — they only become members once you approve.
-            Invitations you send to instructors are tracked separately.
-          </p>
+
+        {/* ── Invite Instructor by Email Panel ─────────────────────────────── */}
+        <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 border border-emerald-800/50 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+            {/* Ambient glow */}
+            <div className="absolute -right-16 -top-16 w-60 h-60 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute -left-16 -bottom-16 w-48 h-48 rounded-full bg-blue-500/10 blur-2xl pointer-events-none" />
+
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold mb-2">
+                    <UserSearch className="w-3.5 h-3.5" />
+                    <span>Faculty Outreach • Email Lookup</span>
+                  </div>
+                  <h2 className="text-lg font-extrabold text-white">Invite an Instructor by Email</h2>
+                  <p className="text-slate-400 text-xs mt-0.5 max-w-lg">
+                    Enter the instructor's registered email address. We'll verify they exist on the platform, then dispatch a formal teaching invitation to their dashboard.
+                  </p>
+                </div>
+                <button
+                  onClick={resetLookup}
+                  title="Clear form"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Email Input Form */}
+              <form onSubmit={handleEmailLookup} className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    id="invite-instructor-email"
+                    type="email"
+                    placeholder="e.g. professor@university.edu"
+                    value={emailInput}
+                    onChange={(e) => { setEmailInput(e.target.value); setLookupState('idle'); setFoundInstructor(null); setLookupError(''); }}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-500 text-sm font-medium focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all"
+                    disabled={lookupState === 'loading' || lookupState === 'sending'}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!emailInput.trim() || lookupState === 'loading' || lookupState === 'sending'}
+                  className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-900 disabled:text-emerald-700 text-white font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap"
+                >
+                  {lookupState === 'loading' ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /><span>Searching...</span></>
+                  ) : (
+                    <><Search className="w-4 h-4" /><span>Check Instructor</span></>
+                  )}
+                </button>
+              </form>
+
+              {/* Result: Instructor Found */}
+              {lookupState === 'found' && foundInstructor && (
+                <div className="mt-5 bg-white/8 border border-emerald-500/40 rounded-2xl p-5 animate-in fade-in duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={foundInstructor.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'}
+                          alt={foundInstructor.name}
+                          className="w-14 h-14 rounded-2xl object-cover ring-2 ring-emerald-400/50"
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center">
+                          <UserCheck className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Instructor Found
+                          </span>
+                        </div>
+                        <h3 className="text-white font-extrabold text-base mt-0.5">{foundInstructor.name}</h3>
+                        <p className="text-slate-400 text-xs flex items-center gap-1.5 mt-0.5">
+                          <Mail className="w-3 h-3 text-emerald-400" />
+                          <span>{foundInstructor.email}</span>
+                        </p>
+                        <p className="text-slate-500 text-[11px] mt-0.5 flex items-center gap-1">
+                          <GraduationCap className="w-3 h-3" />
+                          <span>{foundInstructor.specialization || 'General Educator'}</span>
+                          {foundInstructor.status && (
+                            <span className={`ml-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                              foundInstructor.status === 'Active'
+                                ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700'
+                                : 'bg-amber-900/50 text-amber-300 border border-amber-700'
+                            }`}>
+                              {foundInstructor.status}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <button
+                        onClick={resetLookup}
+                        className="px-4 py-2.5 rounded-xl border border-white/20 text-slate-400 hover:text-white hover:bg-white/10 text-xs font-semibold transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSendRequest}
+                        className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send Teaching Request</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Result: Sending */}
+              {lookupState === 'sending' && (
+                <div className="mt-5 bg-blue-900/30 border border-blue-500/40 rounded-2xl p-5 flex items-center gap-4 animate-in fade-in duration-200">
+                  <Loader2 className="w-6 h-6 text-blue-400 animate-spin shrink-0" />
+                  <div>
+                    <p className="text-white font-bold text-sm">Dispatching Teaching Invitation…</p>
+                    <p className="text-blue-300 text-xs mt-0.5">Creating a formal request and notifying the instructor's dashboard.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Result: Sent successfully */}
+              {lookupState === 'sent' && (
+                <div className="mt-5 bg-emerald-900/30 border border-emerald-500/40 rounded-2xl p-5 flex items-center gap-4 animate-in fade-in duration-200">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-extrabold text-sm">Invitation Dispatched Successfully!</p>
+                    <p className="text-emerald-300 text-xs mt-0.5">
+                      {foundInstructor?.name || 'The instructor'} will see the request in their dashboard. Closing form…
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Result: Not Found */}
+              {lookupState === 'not_found' && (
+                <div className="mt-5 bg-red-900/30 border border-red-500/40 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in duration-200">
+                  <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-sm">Instructor Does Not Exist</p>
+                    <p className="text-red-300 text-xs mt-0.5">{lookupError}</p>
+                    <p className="text-slate-400 text-[11px] mt-1.5">
+                      Make sure the instructor is registered on the platform. They can sign up at the platform's registration page as an "Instructor".
+                    </p>
+                  </div>
+                  <button
+                    onClick={resetLookup}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+        {/* Header & Status Metrics */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface">Faculty Course Teaching Requests</h1>
+            <p className="text-xs text-on-surface-variant mt-0.5 max-w-2xl">
+              All faculty teaching assignment invitations dispatched to professors. When a professor accepts, the curriculum assignment is automatically confirmed.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="px-3.5 py-1.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+              <span>Pending Response: {pendingCount}</span>
+            </div>
+            <div className="px-3.5 py-1.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Accepted & Assigned: {acceptedCount}</span>
+            </div>
+            <div className="px-3.5 py-1.5 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs font-bold flex items-center gap-1.5">
+              <XCircle className="w-3.5 h-3.5 text-red-600" />
+              <span>Declined: {declinedCount}</span>
+            </div>
+          </div>
         </div>
 
         <div className="flex border-b border-outline-variant gap-6">
@@ -210,70 +509,98 @@ export default function InstructorRequests() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="text-outline uppercase text-[10px] tracking-wider border-b border-outline-variant">
-                  <th className="pb-3 font-bold">Instructor</th>
-                  <th className="pb-3 font-bold">Course</th>
-                  <th className="pb-3 font-bold">Sent</th>
-                  <th className="pb-3 font-bold">Status</th>
+                  <th className="pb-3 font-bold">College Faculty Member</th>
+                  <th className="pb-3 font-bold">Requested Course to Teach</th>
+                  <th className="pb-3 font-bold">Professor's Choice</th>
                   <th className="pb-3 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/40">
-                {filtered.map((r) => (
-                  <tr key={r.id}>
-                    <td className="py-4">
-                      <div className="flex items-center gap-3">
-                        <HumanAvatar name={r.name} size="sm" />
-                        <div>
-                          <p className="font-bold text-sm text-on-surface">{r.name}</p>
-                          <p className="text-[11px] text-outline">{r.email}</p>
+                {filteredRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
+                          <BookOpen className="w-6 h-6 text-outline" />
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-4 max-w-xs">
-                      <p className="font-bold text-primary">{r.courseTitle}</p>
-                      <p className="text-[10px] text-outline">{[r.semester, r.creditHours].filter(Boolean).join(' • ')}</p>
-                      {r.trackingStatus && <p className="text-[10px] text-outline">{r.trackingStatus}</p>}
-                    </td>
-                    <td className="py-4 whitespace-nowrap">{fmt(r.createdAt)}</td>
-                    <td className="py-4">
-                      <StatusPill status={r.status} />
-                    </td>
-                    <td className="py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {isPending(r.status) && (
-                          <>
-                            <button
-                              title="Send a reminder"
-                              disabled={busyId === r.id}
-                              onClick={() => run(r.id, () => resendInvitation(r.id), `Reminder sent to ${r.name}`)}
-                              className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary border border-outline-variant"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              title="Withdraw invitation"
-                              disabled={busyId === r.id}
-                              onClick={() => {
-                                if (window.confirm(`Withdraw the invitation to ${r.name}?`)) {
-                                  run(r.id, () => withdrawInvitation(r.id), 'Invitation withdrawn');
-                                }
-                              }}
-                              className="p-2 rounded-xl bg-surface-container hover:bg-rose-50 text-rose-600 border border-outline-variant"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </>
-                        )}
-                        <Link
-                          to={`/org/instructor-requests/${r.id}`}
-                          className="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-bold text-xs inline-flex items-center gap-1.5 border border-outline-variant/60"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-primary" /> Details
-                        </Link>
+                        <p className="text-sm font-bold text-on-surface">No teaching requests found</p>
+                        <p className="text-xs text-on-surface-variant max-w-xs">
+                          {search || filter !== 'All'
+                            ? 'Try adjusting your search or filter.'
+                            : 'Use "Invite Instructor by Email" above to send your first teaching request.'}
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredRequests.map((req) => {
+                    const isPending = req.status.includes('Pending');
+                    const isAccepted = req.status.includes('Accepted');
+                    const isDeclined = req.status.includes('Declined');
+
+                    return (
+                      <tr key={req.id} className="hover:bg-surface-container-low/50 transition-colors">
+
+                        {/* Faculty Member */}
+                        <td className="py-4">
+                          <div className="flex items-center gap-3">
+                            <img src={req.avatar} alt={req.name} className="w-10 h-10 rounded-2xl object-cover" />
+                            <div>
+                              <p className="font-bold text-sm text-on-surface">{req.name}</p>
+                              <span className="text-[11px] text-outline flex items-center gap-1">
+                                <Mail className="w-3 h-3 text-primary" />
+                                <span>{req.email}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Requested Course */}
+                        <td className="py-4 max-w-xs">
+                          <span className="font-bold text-primary block leading-snug">
+                            {req.courseTitle || req.sampleSyllabus}
+                          </span>
+                          <span className="text-[10px] text-outline block mt-0.5">
+                            {req.specialization || 'General Academic Domain'}
+                          </span>
+                        </td>
+
+                        {/* Status / Professor's Choice */}
+                        <td className="py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                            isAccepted ? 'bg-emerald-100 text-emerald-800' :
+                            isPending ? 'bg-amber-100 text-amber-900' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {isAccepted ? 'Accepted & Assigned' : isPending ? 'Pending Professor Choice' : 'Declined by Professor'}
+                          </span>
+                        </td>
+
+                        {/* Actions: View Details and Resend Mail (No Accept/Decline here, as that is the instructor's choice) */}
+                        <td className="py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {isPending && (
+                              <button
+                                title="Resend teaching request email to professor"
+                                onClick={() => handleResendMail(req.id)}
+                                className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary border border-outline-variant transition-colors"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <Link
+                              to={`/org/instructor-requests/${req.id}`}
+                              className="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-bold text-xs inline-flex items-center gap-1.5 transition-colors border border-outline-variant/60"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-primary" />
+                              <span>View Details</span>
+                            </Link>
+                          </div>
+                        </td>
+
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>

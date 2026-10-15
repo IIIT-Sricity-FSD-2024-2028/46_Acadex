@@ -39,6 +39,13 @@ export class OrganizationController {
     return this.organizationService.getStats(userId, userEmail);
   }
 
+  @Post('sync-counts')
+  @ApiOperation({ summary: 'Recompute and persist coursesCount, learnersCount, totalRevenue, monthlyRevenue to organizations.json' })
+  @ApiResponse({ status: 200, description: 'Organizations.json synced with live counts' })
+  async syncCounts() {
+    return this.organizationService.syncCounts();
+  }
+
   @Get('student-requests')
   @ApiOperation({ summary: 'Get pending student membership join requests' })
   async getStudentJoinRequests(

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Layers,
-  Search,
-  UserPlus
+  Search
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
@@ -25,15 +23,6 @@ export default function Enrollments() {
   return (
     <OrgLayout
       breadcrumbs={[{ label: 'Enrollments' }]}
-      actions={
-        <Link
-          to="/org/assign-courses"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm transition-all"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Assign Courses</span>
-        </Link>
-      }
     >
       <div className="space-y-6">
         

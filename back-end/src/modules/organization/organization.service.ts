@@ -49,51 +49,133 @@ export class OrganizationService {
     return this.orgRepo.update(org.id, dto);
   }
 
+  /**
+   * Recomputes coursesCount, totalRevenue, and monthlyRevenue
+   * from the live data files and writes them back into organizations.json.
+   * Call this after any mutation that affects these fields.
+   */
+  async syncCounts() {
+    const orgs = await this.orgRepo.find();
+    if (orgs.length === 0) throw new NotFoundException('No organization found to sync');
+
+    const [courses, instructors, enrollments] = await Promise.all([
+      this.coursesRepo.find(),
+      this.instructorsRepo.find(),
+      this.enrollmentsRepo.find(),
+    ]);
+
+    const courseOrganizationIds = new Map<string, string>();
+    await Promise.all(courses.map(async (course) => {
+      const organizationId = this.resolveOrganizationId(course, instructors, orgs);
+      if (!organizationId) return;
+      courseOrganizationIds.set(course.id, organizationId);
+      if (course.organizationId !== organizationId) {
+        await this.coursesRepo.update(course.id, { organizationId });
+      }
+    }));
+
+    await Promise.all(enrollments.map(async (enrollment) => {
+      const organizationId = courseOrganizationIds.get(enrollment.courseId);
+      if (organizationId && enrollment.organizationId !== organizationId) {
+        await this.enrollmentsRepo.update(enrollment.id, { organizationId });
+      }
+    }));
+
+    const synced = await Promise.all(orgs.map(async (org) => {
+      const organizationCourses = courses.filter((course) => courseOrganizationIds.get(course.id) === org.id);
+      const coursesCount = organizationCourses.length;
+      const learnerIds = new Set(
+        enrollments
+          .filter((enrollment) => courseOrganizationIds.get(enrollment.courseId) === org.id)
+          .map((enrollment) => enrollment.learnerId)
+          .filter(Boolean),
+      );
+
+      // Revenue is always calculated from the number of learners and the price
+      // of the course they enrolled in; the old course/organization revenue
+      // values are deliberately not used as an input.
+      const totalRevenue = Math.round(organizationCourses.reduce(
+        (sum: number, course: any) =>
+          sum + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
+        0,
+      ));
+      return this.orgRepo.update(org.id, {
+        coursesCount,
+        learnersCount: learnerIds.size,
+        totalRevenue,
+        monthlyRevenue: Math.round(totalRevenue * 0.3),
+        updatedAt: new Date().toISOString(),
+      });
+    }));
+
+    return { synced: synced.filter(Boolean) };
+  }
+
+  /** Adds one paid enrollment to the owning organization's stored revenue. */
+  async addEnrollmentRevenue(course: any) {
+    const [organizations, instructors] = await Promise.all([
+      this.orgRepo.find(),
+      this.instructorsRepo.find(),
+    ]);
+    const organizationId = this.resolveOrganizationId(course, instructors, organizations);
+    const organization = organizations.find((org) => org.id === organizationId);
+    if (!organization) return null;
+
+    const coursePrice = Number(course.price) || 0;
+    if (coursePrice <= 0) return organization;
+
+    const totalRevenue = Math.round((Number(organization.totalRevenue) || 0) + coursePrice);
+    const monthlyRevenue = Math.round((Number(organization.monthlyRevenue) || 0) + coursePrice);
+    return this.orgRepo.update(organization.id, { totalRevenue, monthlyRevenue });
+  }
+
+  private resolveOrganizationId(course: any, instructors: any[], organizations: any[]): string | undefined {
+    if (course.organizationId && organizations.some((org) => org.id === course.organizationId)) {
+      return course.organizationId;
+    }
+
+    const leadInstructor = instructors.find((instructor) => instructor.id === course.instructorId);
+    if (leadInstructor?.organizationId && organizations.some((org) => org.id === leadInstructor.organizationId)) {
+      return leadInstructor.organizationId;
+    }
+
+    return organizations.find((org) => org.instructorIds?.includes(course.instructorId))?.id;
+  }
+
   async getStats(userId?: string, userEmail?: string) {
     const org = await this.resolveOrg(userId, userEmail);
-
-    const [allCourses, allEnrollments, pendingRequests, unreadNotifs] = await Promise.all([
+    const [allCourses, allEnrollments, allInstructors, pendingRequests, unreadNotifs] = await Promise.all([
       this.coursesRepo.find(),
       this.enrollmentsRepo.find(),
+      this.instructorsRepo.find(),
       this.requestsRepo.count({ status: { $regex: /pending|sent/i } }),
       this.notifsRepo.count({ read: false }),
     ]);
 
-    const courses = allCourses.filter((c) => c.organizationId === org.id);
-    const courseIds = new Set(courses.map((c) => c.id));
-    const enrollments = allEnrollments.filter((e) => courseIds.has(e.courseId));
-
-    const orgInstructors = await this.instructorsRepo.find();
-    const totalInstructors = orgInstructors.filter((i) => i.organizationId === org.id).length;
-
-    const learnersInOrg = await this.learnersRepo.count({ organizationId: org.id });
-
-    const activeCourses = courses.filter((c) => c.status === 'Published').length;
-    const annualRevenue = courses.reduce((sum, c) => sum + (c.revenue || 0), 0);
-    const monthlyRevenue = Math.round(annualRevenue * 0.3);
-
+    const organizations = await this.orgRepo.find();
+    const courses = allCourses.filter(
+      (course) => this.resolveOrganizationId(course, allInstructors, organizations) === org.id,
+    );
+    const courseIds = new Set(courses.map((course) => course.id));
+    const enrollments = allEnrollments.filter((enrollment) => courseIds.has(enrollment.courseId));
+    const totalInstructors = allInstructors.filter((instructor) => instructor.organizationId === org.id).length;
+    const totalLearners = await this.learnersRepo.count({ organizationId: org.id });
     const completedEnrollments = enrollments.filter(
-      (e) => e.status === 'Completed' || e.progress === 100
+      (enrollment) => enrollment.status === 'Completed' || enrollment.progress === 100,
     ).length;
     const activeEnrollments = enrollments.filter(
-      (e) => e.status === 'Active' && (e.progress || 0) < 100
+      (enrollment) => enrollment.status === 'Active' && (enrollment.progress || 0) < 100,
     ).length;
-
-    const completionRate =
-      enrollments.length > 0
-        ? Math.round((completedEnrollments / enrollments.length) * 100)
-        : null;
-
-    const ratedCourses = courses.filter((c) => c.rating);
-    const averageRating =
-      ratedCourses.length > 0
-        ? Number((ratedCourses.reduce((s, c) => s + c.rating, 0) / ratedCourses.length).toFixed(1))
-        : null;
+    const annualRevenue = Math.round(courses.reduce(
+      (sum, course) => sum + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
+      0,
+    ));
+    const ratedCourses = courses.filter((course) => Number(course.rating) > 0);
 
     return {
       totalInstructors,
-      totalLearners: learnersInOrg,
-      activeCourses,
+      totalLearners,
+      activeCourses: courses.filter((course) => course.status === 'Published').length,
       totalCourses: courses.length,
       totalEnrollments: enrollments.length,
       activeEnrollments,
@@ -101,9 +183,11 @@ export class OrganizationService {
       pendingRequests,
       unreadNotifications: unreadNotifs,
       annualRevenue,
-      monthlyRevenue,
-      completionRate,
-      averageRating,
+      monthlyRevenue: Math.round(annualRevenue * 0.3),
+      completionRate: enrollments.length ? Math.round((completedEnrollments / enrollments.length) * 100) : null,
+      averageRating: ratedCourses.length
+        ? Number((ratedCourses.reduce((sum, course) => sum + Number(course.rating), 0) / ratedCourses.length).toFixed(1))
+        : null,
       currency: 'USD',
     };
   }
@@ -129,7 +213,7 @@ export class OrganizationService {
         return false;
       });
 
-      const grossRevenue = Number(org.totalRevenue) || 100000;
+      const grossRevenue = Number(org.totalRevenue) || 0;
       const orgShare85 = Math.round(grossRevenue * 0.85);
       const superAdminShare15 = Math.round(grossRevenue * 0.15);
 
@@ -161,7 +245,7 @@ export class OrganizationService {
     const associatedInstructors = allInstructors.filter((inst) =>
       org.instructorIds?.includes(inst.id)
     );
-    const grossRevenue = Number(org.totalRevenue) || 100000;
+    const grossRevenue = Number(org.totalRevenue) || 0;
     return {
       ...org,
       instructors: associatedInstructors,
@@ -189,8 +273,8 @@ export class OrganizationService {
       website: dto.website || `https://${newId}.edu`,
       status: dto.status || 'Active',
       establishedYear: dto.establishedYear || new Date().getFullYear(),
-      totalRevenue: Number(dto.totalRevenue) || 50000,
-      monthlyRevenue: Math.round((Number(dto.totalRevenue) || 50000) * 0.3),
+      totalRevenue: 0,
+      monthlyRevenue: 0,
       currency: dto.currency || 'USD',
       instructorIds: dto.instructorIds || [],
       coursesCount: dto.coursesCount || 2,

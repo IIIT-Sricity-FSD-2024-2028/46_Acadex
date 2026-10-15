@@ -510,7 +510,7 @@ export default function OrgLanding() {
               {
                 title: 'Batch Cohort Enrollments',
                 desc: 'Bulk enroll hundreds of students into mandatory skill programs with CSV uploads and automated email notifications.',
-                path: '/org/assign-courses',
+                path: '/org/courses',
                 icon: GraduationCap
               },
               {

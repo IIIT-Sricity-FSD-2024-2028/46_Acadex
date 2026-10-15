@@ -4,7 +4,7 @@ import { Search, Star, Users, X, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { api } from "../../../utils/api";
-import { useInstructor } from "../../../context/InstructorContext";
+import { useInstructor } from "../../../hooks/useInstructor";
 
 export function MyCourses() {
   const { instructor } = useInstructor();

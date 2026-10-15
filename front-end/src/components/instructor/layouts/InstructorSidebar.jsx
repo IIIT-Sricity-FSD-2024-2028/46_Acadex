@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Avatar } from '../../common';
 import { cn } from '../../../utils/cn';
-import { useInstructor } from '../../../context/InstructorContext';
+import { useInstructor } from '../../../hooks/useInstructor';
 
 const instructorNavGroups = [
   {

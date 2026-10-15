@@ -62,8 +62,13 @@ export default function InstructorRequestDetails() {
       ];
 
   return (
-    <OrgLayout breadcrumbs={[{ label: 'Instructor Requests', path: '/org/instructor-requests' }, { label: request.name }]}>
-      <div className="max-w-4xl mx-auto space-y-6">
+    <OrgLayout
+      breadcrumbs={[
+        { label: 'Course Teaching Requests', path: '/org/instructor-requests' },
+        { label: request.name }
+      ]}
+    >
+      <div className="max-w-5xl mx-auto space-y-6">
         <Link to="/org/instructor-requests" className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
           <ChevronLeft className="w-4 h-4" /> Back to instructor requests
         </Link>
@@ -77,6 +82,47 @@ export default function InstructorRequestDetails() {
                 <p className="text-xs text-outline">{request.email}</p>
                 {request.specialization && <p className="text-xs text-primary font-bold">{request.specialization}</p>}
               </div>
+
+              {/* Outreach Banner */}
+              <div className="mt-6 p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-primary text-white flex items-center justify-center">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-indigo-950 uppercase tracking-wider">
+                    Teaching Request Notification
+                  </span>
+                </div>
+                <p className="text-xs text-indigo-900 leading-relaxed pl-9">
+                  {request.description}
+                </p>
+                <div className="pl-9 flex flex-wrap gap-4 text-[11px] text-indigo-800 pt-1 font-medium">
+                  <span>Professor Email: <strong>{request.email}</strong></span>
+                  <span>Tracking: <strong>{request.trackingStatus}</strong></span>
+                </div>
+              </div>
+
+              {/* Course Assignment Details */}
+              <div className="py-6 border-b border-outline-variant space-y-4">
+                <h2 className="text-xs font-bold text-outline uppercase tracking-wider">Course Assignment Specification</h2>
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 space-y-2">
+                  <h3 className="text-sm font-bold text-on-surface">{request.courseTitle || request.sampleSyllabus}</h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    {request.sampleSyllabus}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs font-semibold pt-1">
+                    <span className="text-primary">{request.creditHours || '4 Credits'}</span>
+                    <span className="text-emerald-700">{request.proposedTerms}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Faculty Bio */}
+              <div className="pt-6 space-y-2">
+                <h2 className="text-xs font-bold text-outline uppercase tracking-wider">College Faculty Profile</h2>
+                <p className="text-xs text-on-surface leading-relaxed">{request.bio}</p>
+              </div>
+
             </div>
             <dl className="divide-y divide-outline-variant/40 text-sm">
               {rows

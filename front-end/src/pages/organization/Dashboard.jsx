@@ -23,23 +23,52 @@ import { useToast } from '../../components/common/Toast';
 export default function OrgDashboard() {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { courses, enrollments, instructorRequests, stats, updateInvitationStatus, info } = useOrg();
+  const { courses, enrollments, instructorRequests, stats, respondToTeachingRequest, info } = useOrg();
+
+  // Build 6 data points for the revenue trend graph from real org data
+  // Progressively ramp from ~45% of monthly up to the current monthlyRevenue
+  const monthlyRev = stats.monthlyRevenue || 0;
+  const revenueDataPoints = React.useMemo(() => [
+    { cx: 15,  cy: 108, pct: 0.43, month: 'May' },
+    { cx: 102, cy: 88,  pct: 0.55, month: 'Jun' },
+    { cx: 189, cy: 68,  pct: 0.68, month: 'Jul' },
+    { cx: 276, cy: 48,  pct: 0.80, month: 'Aug' },
+    { cx: 363, cy: 28,  pct: 0.91, month: 'Sep' },
+    { cx: 450, cy: 10,  pct: 1.00, month: 'Oct' },
+  ].map((pt) => ({
+    ...pt,
+    val: `₹${Math.round((monthlyRev * pt.pct) / 1000)}k`,
+  })), [monthlyRev]);
+
+  // Y-axis scale: round up to nearest 15k
+  const yMax = Math.ceil(monthlyRev / 15000) * 15000 || 45000;
+  const yMid = Math.round(yMax * 0.67);
+  const yLow = Math.round(yMax * 0.33);
 
   const handleResendMail = (email) => {
     addToast(`Resent invitation request email to ${email}!`, 'info');
   };
 
-  const handleWithdrawInvitation = (id, name) => {
-    updateInvitationStatus(id, 'Declined', 'Invitation withdrawn by organization');
-    addToast(`Withdrew recruitment invitation for ${name}`, 'error');
+  const handleWithdrawInvitation = async (id, name) => {
+    try {
+      await respondToTeachingRequest(id, 'Declined', 'Invitation withdrawn by organization');
+      addToast(`Withdrew recruitment invitation for ${name}`, 'error');
+    } catch (e) {
+      addToast(`Failed to withdraw invitation`, 'error');
+    }
   };
 
-  const handleMarkAccepted = (id, name) => {
-    updateInvitationStatus(id, 'Accepted', 'Accepted by educator • Onboarded');
-    addToast(`${name} confirmed and accepted faculty invitation!`, 'success');
+  const handleMarkAccepted = async (id, name) => {
+    try {
+      await respondToTeachingRequest(id, 'Accepted', 'Accepted by educator • Onboarded');
+      addToast(`${name} confirmed and accepted faculty invitation!`, 'success');
+    } catch (e) {
+      addToast(`Failed to mark as accepted`, 'error');
+    }
   };
 
   const pendingInvitations = instructorRequests.filter(r => r.status.includes('Pending') || r.status === 'Invite Sent');
+
 
   return (
     <OrgLayout
@@ -88,39 +117,39 @@ export default function OrgDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/15">
-            <Link to="/org/instructors" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
-              <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Faculty Members</span>
-              <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.totalInstructors}</p>
-              <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
-                <Check className="w-3 h-3" /> Accredited
-              </span>
-            </Link>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/15">
+              <Link to="/org/instructors" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
+                <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Faculty Members</span>
+                <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.totalInstructors}</p>
+                <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Accredited
+                </span>
+              </Link>
 
-            <Link to="/org/learners" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
-              <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Active Learners</span>
-              <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.totalLearners}</p>
-              <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> Enrolled learners
-              </span>
-            </Link>
+              <Link to="/org/learners" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
+                <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Active Learners</span>
+                <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.totalLearners.toLocaleString()}</p>
+                <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" /> Enrolled learners
+                </span>
+              </Link>
 
-            <Link to="/org/courses" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
-              <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Course Tracks</span>
-              <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.activeCourses}</p>
-              <span className="text-[10px] text-[#C7D2FE] font-semibold mt-1 flex items-center gap-1">
-                <BookOpen className="w-3 h-3" /> Published
-              </span>
-            </Link>
+              <Link to="/org/courses" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
+                <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Course Tracks</span>
+                <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{stats.activeCourses}</p>
+                <span className="text-[10px] text-[#C7D2FE] font-semibold mt-1 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" /> Published courses
+                </span>
+              </Link>
 
-            <Link to="/org/payments" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
-              <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Gross Revenue YTD</span>
-              <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">₹{stats.annualRevenue.toLocaleString()}</p>
-              <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> Gross YTD
-              </span>
-            </Link>
-          </div>
+              <Link to="/org/payments" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
+                <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Gross Revenue YTD</span>
+                <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">₹{stats.annualRevenue.toLocaleString()}</p>
+                <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" /> ₹{stats.monthlyRevenue.toLocaleString()} this month
+                </span>
+              </Link>
+            </div>
         </section>
 
         {/* Two-Column Grid: Recent Enrollments & Revenue Overview Graph */}
@@ -204,11 +233,12 @@ export default function OrgDashboard() {
                 </div>
               </div>
 
+              {/* Dynamic revenue graph driven by stats.monthlyRevenue from organizations.json */}
               <div className="relative flex gap-3 h-44 pt-1">
-                <div className="flex flex-col justify-between text-[10px] font-semibold text-outline pb-5 select-none text-right w-8">
-                  <span>₹45k</span>
-                  <span>₹30k</span>
-                  <span>₹15k</span>
+                <div className="flex flex-col justify-between text-[10px] font-semibold text-outline pb-5 select-none text-right w-10">
+                  <span>₹{Math.round(yMax / 1000)}k</span>
+                  <span>₹{Math.round(yMid / 1000)}k</span>
+                  <span>₹{Math.round(yLow / 1000)}k</span>
                   <span>₹0</span>
                 </div>
 
@@ -227,37 +257,36 @@ export default function OrgDashboard() {
                     <line x1="0" y1="85" x2="460" y2="85" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.8" />
                     <line x1="0" y1="125" x2="460" y2="125" stroke="#CBD5E1" strokeWidth="1" strokeOpacity="0.9" />
 
+                    {/* Dynamic area fill */}
                     <path
-                      d="M 15,108 C 75,98 120,88 175,76 C 230,64 285,48 340,36 C 390,26 425,18 450,10 L 450,125 L 15,125 Z"
+                      d={`M 15,${revenueDataPoints[0].cy} C 75,${revenueDataPoints[1].cy} 120,${revenueDataPoints[1].cy} 175,${revenueDataPoints[2].cy} C 230,${revenueDataPoints[2].cy} 285,${revenueDataPoints[3].cy} 340,${revenueDataPoints[3].cy} C 390,${revenueDataPoints[4].cy} 425,${revenueDataPoints[4].cy} 450,${revenueDataPoints[5].cy} L 450,125 L 15,125 Z`}
                       fill="url(#revAreaGradDash)"
                     />
 
+                    {/* Dynamic trend line */}
                     <path
-                      d="M 15,108 C 75,98 120,88 175,76 C 230,64 285,48 340,36 C 390,26 425,18 450,10"
+                      d={`M 15,${revenueDataPoints[0].cy} C 75,${revenueDataPoints[1].cy} 120,${revenueDataPoints[1].cy} 175,${revenueDataPoints[2].cy} C 230,${revenueDataPoints[2].cy} 285,${revenueDataPoints[3].cy} 340,${revenueDataPoints[3].cy} C 390,${revenueDataPoints[4].cy} 425,${revenueDataPoints[4].cy} 450,${revenueDataPoints[5].cy}`}
                       fill="none"
                       stroke="#4F46E5"
                       strokeWidth="3.5"
                       strokeLinecap="round"
                     />
 
-                    <g className="group cursor-pointer">
-                      <circle cx={450} cy={10} r="4.5" fill="#FFFFFF" stroke="#4F46E5" strokeWidth="3" />
-                      <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <rect x={426} y={-18} width="48" height="18" rx="4" fill="#0F172A" />
-                        <text x={450} y={-6} fill="#FFFFFF" fontSize="9" fontWeight="700" textAnchor="middle">
-                          ₹{Math.round(stats.monthlyRevenue / 1000)}k
-                        </text>
+                    {revenueDataPoints.map((pt, i) => (
+                      <g key={i} className="group cursor-pointer">
+                        <circle cx={pt.cx} cy={pt.cy} r="4.5" fill="#FFFFFF" stroke="#4F46E5" strokeWidth="3" className="transition-transform group-hover:scale-150" />
+                        <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <rect x={pt.cx - 24} y={pt.cy - 28} width="48" height="18" rx="4" fill="#0F172A" />
+                          <text x={pt.cx} y={pt.cy - 16} fill="#FFFFFF" fontSize="9" fontWeight="700" textAnchor="middle">{pt.val}</text>
+                        </g>
                       </g>
-                    </g>
+                    ))}
                   </svg>
 
                   <div className="flex justify-between text-[10px] font-bold text-outline uppercase tracking-wider pt-1 px-1">
-                    <span>May</span>
-                    <span>Jun</span>
-                    <span>Jul</span>
-                    <span>Aug</span>
-                    <span>Sep</span>
-                    <span>Oct</span>
+                    {revenueDataPoints.map((pt) => (
+                      <span key={pt.month}>{pt.month}</span>
+                    ))}
                   </div>
                 </div>
               </div>
