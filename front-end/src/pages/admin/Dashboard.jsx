@@ -176,17 +176,13 @@ export const Dashboard = () => {
           <div className="mb-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 text-xs font-semibold backdrop-blur-sm">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Platform Operations Active • Enterprise Learning Management Console</span>
+              <span>Platform Administration Console</span>
             </div>
           </div>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 tracking-tight">
-            Platform Administration Hub
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-6 tracking-tight">
+            Platform Administration
           </h1>
-          <p className="text-blue-100 text-xs md:text-sm leading-relaxed mb-6 font-normal max-w-2xl">
-            Monitor verified academic operations, evaluate syllabus publications, audit student enrollments,
-            and review organizational settlements across all partner institutions.
-          </p>
 
           {/* Banner Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">

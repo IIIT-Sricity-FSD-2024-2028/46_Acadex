@@ -252,10 +252,7 @@ export const Users = () => {
     <div className="space-y-6">
       {/* Page Header without Add User button */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
-        <p className="text-slate-500 text-sm mt-0.5">
-          Manage all learners, instructors, and partner organizations.
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Users</h1>
       </div>
 
       {/* Static Role Overview Metric Cards (Disabled clicking / filtering) */}

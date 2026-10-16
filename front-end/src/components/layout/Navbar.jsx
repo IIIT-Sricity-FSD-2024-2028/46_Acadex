@@ -17,23 +17,13 @@ import api from '../../services/api';
 import HumanAvatar from '../common/HumanAvatar';
 import { useStudent } from '../../context/StudentContext';
 
-const navGroups = [
-  {
-    title: 'Learning',
-    items: [
-      { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard, match: ['/student', '/student/dashboard'] },
-      { name: 'Browse Catalog', href: '/student/explore', icon: Compass, match: ['/student/explore', '/student/course/'] },
-      { name: 'My Learning', href: '/student/my-learning', icon: BookOpen, match: ['/student/my-learning', '/student/learn/'] },
-      { name: 'Certificates', href: '/student/certificates', icon: Award, match: ['/student/certificates'] },
-    ],
-  },
-  {
-    title: 'Account',
-    items: [
-      { name: 'Profile & Settings', href: '/student/profile', icon: User, match: ['/student/profile'] },
-      { name: 'Billing & Payments', href: '/student/billing', icon: CreditCard, match: ['/student/billing', '/student/checkout', '/student/payment-success'] },
-    ],
-  },
+const studentNavItems = [
+  { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard, match: ['/student', '/student/dashboard'] },
+  { name: 'Browse Courses', href: '/student/explore', icon: Compass, match: ['/student/explore', '/student/course/'] },
+  { name: 'My Learning', href: '/student/my-learning', icon: BookOpen, match: ['/student/my-learning', '/student/learn/'] },
+  { name: 'Certificates', href: '/student/certificates', icon: Award, match: ['/student/certificates'] },
+  { name: 'Profile', href: '/student/profile', icon: User, match: ['/student/profile'] },
+  { name: 'Billing', href: '/student/billing', icon: CreditCard, match: ['/student/billing', '/student/checkout', '/student/payment-success'] },
 ];
 
 function isItemActive(item, pathname) {
@@ -73,31 +63,26 @@ export function StudentSidebar({ isOpen, onClose }) {
           </button>
         </div>
 
-        <nav className="p-3 space-y-4 overflow-y-auto">
-          {navGroups.map((group) => (
-            <div key={group.title} className="space-y-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">{group.title}</p>
-              {group.items.map((item) => {
-                const active = isItemActive(item, location.pathname);
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    onClick={onClose}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                      active
-                        ? 'bg-blue-50 text-[#0056D2] font-bold border border-blue-200/60'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#0056D2]' : 'text-slate-400'}`} />
-                    <span>{item.name}</span>
-                  </NavLink>
-                );
-              })}
-            </div>
-          ))}
+        <nav className="p-3 space-y-1 overflow-y-auto">
+          {studentNavItems.map((item) => {
+            const active = isItemActive(item, location.pathname);
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150 ${
+                  active
+                    ? 'bg-blue-50 text-[#0056D2] font-semibold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
+                }`}
+              >
+                <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-[#0056D2]' : 'text-slate-400'}`} />
+                <span>{item.name}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 
@@ -263,18 +248,18 @@ export default function StudentTopbar({ onMenuClick }) {
             <span className="hidden md:inline text-xs font-semibold text-slate-800">{name.split(' ')[0]}</span>
           </button>
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 text-xs">
-              <Link to="/student/profile" className="flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-slate-100">
-                <User className="w-3.5 h-3.5" /> Profile & Settings
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 text-sm">
+              <Link to="/student/profile" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
+                <User className="w-4 h-4 text-slate-500" /> Profile
               </Link>
-              <Link to="/student/billing" className="flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-slate-100">
-                <CreditCard className="w-3.5 h-3.5" /> Billing & Payments
+              <Link to="/student/billing" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
+                <CreditCard className="w-4 h-4 text-slate-500" /> Billing
               </Link>
               <button
                 onClick={() => signOutStudent(navigate)}
-                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-red-600 hover:bg-red-50 font-semibold"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-medium text-left"
               >
-                <LogOut className="w-3.5 h-3.5" /> Sign out
+                <LogOut className="w-4 h-4" /> Sign out
               </button>
             </div>
           )}

@@ -15,28 +15,13 @@ import {
 import clsx from 'clsx';
 import HumanAvatar from '../common/HumanAvatar';
 
-const navGroups = [
-  {
-    group: 'Platform Governance',
-    items: [
-      { name: 'Dashboard', path: '/super-admin/dashboard', icon: LayoutDashboard },
-      { name: 'Organizations', path: '/super-admin/organizations', icon: Building2 },
-      { name: 'Learners', path: '/super-admin/learners', icon: GraduationCap },
-    ],
-  },
-  {
-    group: 'Treasury & Finance',
-    items: [
-      { name: 'Payments & Revenue', path: '/super-admin/payments', icon: CreditCard },
-    ],
-  },
-  {
-    group: 'Security & Audit',
-    items: [
-      { name: 'Admin History', path: '/super-admin/admins', icon: ShieldCheck },
-      { name: 'Settings & Policies', path: '/super-admin/settings', icon: Settings },
-    ],
-  },
+const superAdminNavItems = [
+  { name: 'Dashboard', path: '/super-admin/dashboard', icon: LayoutDashboard },
+  { name: 'Organizations', path: '/super-admin/organizations', icon: Building2 },
+  { name: 'Learners', path: '/super-admin/learners', icon: GraduationCap },
+  { name: 'Payments', path: '/super-admin/payments', icon: CreditCard },
+  { name: 'Admins', path: '/super-admin/admins', icon: ShieldCheck },
+  { name: 'Settings', path: '/super-admin/settings', icon: Settings },
 ];
 
 export const SuperAdminSidebar = ({ isOpen, toggleSidebar }) => {
@@ -92,42 +77,35 @@ export const SuperAdminSidebar = ({ isOpen, toggleSidebar }) => {
           )}
         </div>
 
-        {/* Grouped Nav Items */}
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-170px)] scrollbar-thin">
-          {navGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">
-                {group.group}
-              </p>
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => {
-                      if (isOpen && toggleSidebar) toggleSidebar();
-                    }}
-                    className={({ isActive }) =>
-                      clsx(
-                        'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150',
-                        isActive
-                          ? 'bg-blue-50 text-[#0056D2] font-bold shadow-2xs border border-blue-200/60'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                      )
-                    }
-                  >
-                    {({ isActive }) => (
-                      <div className="flex items-center gap-2.5">
-                        <Icon className={clsx('w-4 h-4 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
-                        <span>{item.name}</span>
-                      </div>
-                    )}
-                  </NavLink>
-                );
-              })}
-            </div>
-          ))}
+        {/* Navigation Items */}
+        <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-170px)] scrollbar-thin">
+          {superAdminNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => {
+                  if (isOpen && toggleSidebar) toggleSidebar();
+                }}
+                className={({ isActive }) =>
+                  clsx(
+                    'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150',
+                    isActive
+                      ? 'bg-blue-50 text-[#0056D2] font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon className={clsx('w-5 h-5 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
+                    <span className="truncate">{item.name}</span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 

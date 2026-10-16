@@ -535,18 +535,18 @@ export default function Landing() {
               
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#E0D7CB] text-blue-800 text-xs font-bold uppercase tracking-wider shadow-2xs">
                 <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>Next-Gen Global Academic & Professional LMS</span>
+                <span>Online Learning Platform</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                Learn Without Limits. <br />
+                Master In-Demand Skills. <br />
                 <span className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 bg-clip-text text-transparent">
-                  Master In-Demand Skills.
+                  Advance Your Career.
                 </span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Build job-ready expertise with online courses, verified specializations, and accredited university credentials from the world's leading faculty.
+                Learn from leading institutions and instructors with self-paced courses, hands-on projects, and verified credentials.
               </p>
 
               {/* Action Buttons */}
@@ -681,13 +681,13 @@ export default function Landing() {
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-blue-800 text-xs font-bold uppercase tracking-wider mb-2 border border-[#E0D7CB]">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-              <span>Explore Top Programs</span>
+              <span>Explore Programs</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Start Learning with World-Class Courses
+              Explore Courses
             </h2>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-              Select a domain below or search to discover curated masterclasses, practical code labs, and accredited certifications.
+              Browse courses, hands-on projects, and verified certificates across key technical and business disciplines.
             </p>
           </div>
 
@@ -853,10 +853,10 @@ export default function Landing() {
         
         <div className="mb-10 text-center sm:text-left">
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Find the right plan for your goals
+            Plans & Pricing
           </h2>
           <p className="text-sm text-slate-600 mt-1">
-            Choose flexible individual masterclasses or unlock thousands of accredited programs with EduSphere Plus.
+            Enroll in individual courses or access the complete catalog with EduSphere Plus.
           </p>
         </div>
 
@@ -1052,10 +1052,10 @@ export default function Landing() {
               <span>EDUSPHERE PLUS</span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-black leading-snug">
-              Time's on your side. Start turning minutes into milestones.
+              Start your 7-day free trial
             </h3>
             <p className="text-xs sm:text-sm text-blue-100 leading-relaxed font-normal">
-              In just seven days, you can move from short lessons to real skills. Ready to make today count?
+              Gain access to courses, practice assignments, and certificates on your own schedule.
             </p>
             <div className="pt-2">
               <Link

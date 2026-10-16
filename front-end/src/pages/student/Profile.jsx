@@ -92,7 +92,7 @@ export default function Profile() {
     <PageLayout>
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Profile & settings</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Profile</h1>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

@@ -24,38 +24,18 @@ export default function OrgSidebar() {
   const { addToast } = useToast();
   const { stats, info } = useOrg();
 
-  const navGroups = [
-    {
-      group: "Core Administration",
-      items: [
-        { name: 'Dashboard', path: '/org/dashboard', icon: LayoutDashboard },
-        { name: 'Instructors', path: '/org/instructors', icon: GraduationCap },
-        { name: 'Instructor Requests', path: '/org/instructor-requests', icon: BookOpen, badge: (stats.pendingRequests || 0) + (stats.pendingJoinRequests || 0) },
-        { name: 'Learners', path: '/org/learners', icon: Users },
-      ]
-    },
-    {
-      group: "Academic Catalog",
-      items: [
-        { name: 'Courses', path: '/org/courses', icon: BookOpen },
-        { name: 'Enrollments', path: '/org/enrollments', icon: Layers },
-      ]
-    },
-    {
-      group: "Financials",
-      items: [
-        { name: 'Payments & Revenue', path: '/org/payments', icon: CreditCard },
-        { name: 'Analytics', path: '/org/analytics', icon: BarChart3 },
-      ]
-    },
-    {
-      group: "Governance & System",
-      items: [
-        { name: 'Disputes & Governance', path: '/org/disputes', icon: AlertCircle, badge: stats.openDisputes },
-        { name: 'Organization Settings', path: '/org/settings', icon: Settings },
-        { name: 'Org Profile', path: '/org/profile', icon: Building2 },
-      ]
-    }
+  const navItems = [
+    { name: 'Dashboard', path: '/org/dashboard', icon: LayoutDashboard },
+    { name: 'Instructors', path: '/org/instructors', icon: GraduationCap },
+    { name: 'Instructor Requests', path: '/org/instructor-requests', icon: BookOpen, badge: (stats.pendingRequests || 0) + (stats.pendingJoinRequests || 0) },
+    { name: 'Learners', path: '/org/learners', icon: Users },
+    { name: 'Courses', path: '/org/courses', icon: BookOpen },
+    { name: 'Enrollments', path: '/org/enrollments', icon: Layers },
+    { name: 'Payments', path: '/org/payments', icon: CreditCard },
+    { name: 'Analytics', path: '/org/analytics', icon: BarChart3 },
+    { name: 'Disputes', path: '/org/disputes', icon: AlertCircle, badge: stats.openDisputes },
+    { name: 'Settings', path: '/org/settings', icon: Settings },
+    { name: 'Profile', path: '/org/profile', icon: Building2 },
   ];
 
   const isActive = (path) => {
@@ -92,48 +72,41 @@ export default function OrgSidebar() {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="p-3 space-y-4 max-h-[calc(100vh-170px)] overflow-y-auto custom-scrollbar">
-          {navGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1 block">
-                {group.group}
-              </span>
-              {group.items.map((item, idx) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={idx}
-                    to={item.path}
-                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
-                      active
-                        ? 'bg-[#4F46E5] text-white shadow-sm font-bold ring-1 ring-indigo-400/40'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${active ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                      <span>{item.name}</span>
-                    </div>
+        <nav className="p-3 space-y-1 max-h-[calc(100vh-170px)] overflow-y-auto custom-scrollbar">
+          {navItems.map((item, idx) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
+            return (
+              <Link
+                key={idx}
+                to={item.path}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150 group ${
+                  active
+                    ? 'bg-[#4F46E5] text-white font-semibold shadow-xs'
+                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                  <span className="truncate">{item.name}</span>
+                </div>
 
-                    {/* Numeric Badge (e.g. Pending Invitations or Open Disputes) */}
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-full shadow-xs ${
-                        item.name.includes('Dispute') ? 'bg-rose-500 text-white' : 'bg-amber-400 text-amber-950'
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
+                {/* Numeric Badge */}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`px-2 py-0.5 text-xs font-bold rounded-full shadow-xs shrink-0 ${
+                    item.name.includes('Dispute') ? 'bg-rose-500 text-white' : 'bg-amber-400 text-amber-950'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
 
-                    {/* Unread Alert Dot */}
-                    {item.unread !== undefined && item.unread > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-rose-400 ring-2 ring-[#0F172A]" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+                {/* Unread Alert Dot */}
+                {item.unread !== undefined && item.unread > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-rose-400 ring-2 ring-[#0F172A] shrink-0" />
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </div>
 

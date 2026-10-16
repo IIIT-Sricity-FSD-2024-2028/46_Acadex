@@ -39,7 +39,7 @@ export default function PaymentSuccess() {
               to={`/student/learn/${state.courseId}`}
               className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#0056D2] text-white text-sm font-bold hover:bg-[#00419E]"
             >
-              <Play className="w-4 h-4 fill-current" /> Start learning
+              <Play className="w-4 h-4 fill-current" /> Start course
             </Link>
             <Link
               to="/student/billing"

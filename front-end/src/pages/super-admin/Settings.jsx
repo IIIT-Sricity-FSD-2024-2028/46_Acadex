@@ -78,14 +78,11 @@ export default function SuperAdminSettings() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-bold mb-1 border border-purple-200/60">
             <SettingsIcon className="w-3.5 h-3.5" />
-            <span>Master Governance Configuration</span>
+            <span>Platform Configuration</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Super Admin Platform Settings
+            Settings
           </h1>
-          <p className="text-xs text-slate-500">
-            Configure global 85/15 revenue split ratios, automated settlement schedules, and root platform security policies.
-          </p>
         </div>
 
         {savedToast && (

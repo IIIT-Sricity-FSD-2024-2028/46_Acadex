@@ -39,7 +39,7 @@ export default function QuizHeader({ quizData, isSubmitted, onSubmitClick }) {
           onClick={onSubmitClick}
           className="px-5 py-2.5 rounded-xl bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold shadow-sm transition-all shrink-0 active:scale-95"
         >
-          Submit Exam
+          Submit Quiz
         </button>
       )}
     </div>

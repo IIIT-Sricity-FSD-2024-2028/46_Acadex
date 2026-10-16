@@ -512,8 +512,8 @@ export default function SignIn() {
             <div className="p-3.5 rounded-2xl bg-[#F4EFE6] border border-[#E5DDD2] text-xs text-slate-600 flex items-start gap-2.5">
               <KeyRound className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-slate-800 block">Instant Demo Access</span>
-                Clicking any role above automatically pre-populates verified credentials from <code className="text-blue-700 font-bold">users.json</code>.
+                <span className="font-semibold text-slate-800 block">Demo Access</span>
+                Select a role above to pre-fill sample credentials.
               </div>
             </div>
           </div>
@@ -527,13 +527,12 @@ export default function SignIn() {
                 <span className="text-xs font-bold uppercase tracking-wider text-blue-800 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                   {demoAccounts[selectedRole]?.badge || selectedRole} Portal
                 </span>
-                <span className="text-xs text-slate-500">JSON Mock API Connected</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-3">
                 Sign In as {demoAccounts[selectedRole]?.title || selectedRole}
               </h1>
               <p className="text-sm text-slate-600 mt-1">
-                Enter your credentials to access the {demoAccounts[selectedRole]?.title || selectedRole} workspace on EduSphere.
+                Enter your credentials to access your account.
               </p>
             </div>
 

@@ -38,10 +38,7 @@ export default function Profile() {
     <OrgLayout breadcrumbs={[{ label: 'Organization Profile' }]}>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Organization Profile & Institutional Identity</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            Manage legal entity credentials, accreditation records, and contact channels.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">Organization Profile</h1>
         </div>
 
         {/* Profile Card Header */}

@@ -96,8 +96,7 @@ export const Refunds = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Refund Requests</h1>
-          <p className="text-slate-500">Manage learner refund requests.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Refunds</h1>
         </div>
       </div>
 

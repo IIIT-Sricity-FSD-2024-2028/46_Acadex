@@ -68,7 +68,7 @@ export default function QuizResultSummary({
               ? 'bg-emerald-50 text-secondary border border-emerald-200' 
               : 'bg-rose-50 text-rose-800 border border-rose-200'
           }`}>
-            {isPassed ? "✓ Passed with Academic Distinction" : `Did Not Pass (Requires ${passingScore}%)`}
+            {isPassed ? "Passed" : `Did Not Pass (Requires ${passingScore}%)`}
           </span>
 
           <h2 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
@@ -119,7 +119,7 @@ export default function QuizResultSummary({
       {showExplanations && (
         <div className="border-t border-slate-100 pt-8 space-y-6">
           <h3 className="text-base font-bold text-slate-900">
-            Question Review & Comprehensive Explanations
+            Question Review
           </h3>
 
           <div className="space-y-4">

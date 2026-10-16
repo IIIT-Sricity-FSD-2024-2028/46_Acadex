@@ -100,8 +100,7 @@ export default function Learners() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant pb-5">
           <div>
-            <h1 className="text-xl md:text-2xl font-extrabold text-on-surface">Institutional Student & Learner Roster</h1>
-            <p className="text-xs text-outline mt-1">Review student enrollments, academic progress, and membership join requests</p>
+            <h1 className="text-xl md:text-2xl font-extrabold text-on-surface">Learners</h1>
           </div>
         </div>
 

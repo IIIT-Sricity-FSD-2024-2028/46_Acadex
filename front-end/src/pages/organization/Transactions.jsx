@@ -57,10 +57,7 @@ export default function Transactions() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Institutional Transaction Ledger</h1>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Auditable record of student payments, royalty disbursements, and settlements.
-            </p>
+            <h1 className="text-2xl font-bold text-on-surface">Transactions</h1>
           </div>
           <div className="flex items-center gap-3">
             <span className="px-3.5 py-1.5 rounded-xl bg-surface-container border border-outline-variant text-xs font-bold text-on-surface">

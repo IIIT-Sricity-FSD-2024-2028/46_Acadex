@@ -126,14 +126,11 @@ export default function SuperAdminDashboard() {
             <div className="w-8 h-8 rounded-xl bg-[#0056D2] text-white flex items-center justify-center font-black shadow-xs">
               <ShieldCheck className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Executive Dashboard</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dashboard</h1>
             <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0056D2] text-[10px] font-bold border border-blue-200">
               Super Admin
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Platform governance, institutional revenue volume, and administrative operations.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

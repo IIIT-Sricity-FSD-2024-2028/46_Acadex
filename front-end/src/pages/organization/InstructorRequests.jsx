@@ -355,10 +355,7 @@ export default function InstructorRequests() {
         {/* Header & Status Metrics */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Faculty Course Teaching Requests</h1>
-            <p className="text-xs text-on-surface-variant mt-0.5 max-w-2xl">
-              All faculty teaching assignment invitations dispatched to professors. When a professor accepts, the curriculum assignment is automatically confirmed.
-            </p>
+            <h1 className="text-2xl font-bold text-on-surface">Teaching Requests</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-3.5 py-1.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-1.5">

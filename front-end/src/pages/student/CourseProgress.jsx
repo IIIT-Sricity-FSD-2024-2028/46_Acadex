@@ -68,15 +68,15 @@ export default function CourseProgress() {
         if (matchedEnr) {
           setEnrollment(matchedEnr);
         } else if (currentCourse) {
-          // Synthesize an active enrollment record so the student page always functions
+          // Default active enrollment record if not enrolled yet
           setEnrollment({
             id: `enr-${currentCourse.id}`,
             courseId: currentCourse.id,
             courseTitle: currentCourse.title,
-            progress: 45,
+            progress: 0,
             enrolledDate: 'Recently Enrolled',
             status: 'Active',
-            grade: '92.5%',
+            completedLessons: [],
           });
         }
 
@@ -115,8 +115,9 @@ export default function CourseProgress() {
     );
   }
 
-  const courseTitle = course?.title || enrollment?.courseTitle || 'NexusPay Core Architecture';
-  const progressPercent = enrollment?.progress ?? 50;
+  const courseTitle = course?.title || enrollment?.courseTitle || 'Course Overview';
+  const progressPercent = typeof enrollment?.progress === 'number' ? enrollment.progress : 0;
+  const isCompletedCourse = enrollment?.status === 'Completed' || progressPercent === 100;
 
   // Dynamically map course modules from backend / courses.json
   const rawModules = course?.modules && Array.isArray(course.modules) && course.modules.length > 0
@@ -124,38 +125,44 @@ export default function CourseProgress() {
     : [
         {
           id: 'mod-1',
-          title: 'Foundations of Payment Orchestration & Ledger Architecture',
+          title: 'Foundations & Architecture',
           lessons: 3,
           duration: '2h 15m'
         },
         {
           id: 'mod-2',
-          title: 'Advanced Routing & High Availability Failover',
+          title: 'Advanced Implementation',
           lessons: 4,
           duration: '3h 30m'
         },
         {
           id: 'mod-3',
-          title: 'PCI-DSS Compliance & Card Vault Security',
+          title: 'Security & Production Readiness',
           lessons: 3,
           duration: '2h 45m'
         }
       ];
+
+  const modCount = rawModules.length || 1;
+  const modShare = 100 / modCount;
 
   const modules = rawModules.map((m, idx) => {
     const modId = m.id || idx + 1;
     const modNum = idx + 1;
     const cleanTitle = (m.title || `Module ${modNum}`).replace(/^Module \d+:\s*/i, '');
 
-    // Determine status & progress
+    // Determine status & progress dynamically
+    const modStart = idx * modShare;
+    const modEnd = (idx + 1) * modShare;
     let status = 'locked';
     let progress = 0;
-    if (idx === 0) {
+
+    if (isCompletedCourse || progressPercent >= modEnd) {
       status = 'completed';
       progress = 100;
-    } else if (idx === 1) {
+    } else if (progressPercent > modStart || idx === 0) {
       status = 'in-progress';
-      progress = 45;
+      progress = Math.min(100, Math.max(0, Math.round(((progressPercent - modStart) / modShare) * 100)));
     } else {
       status = 'locked';
       progress = 0;
@@ -169,10 +176,10 @@ export default function CourseProgress() {
         title: it.title || `${modNum}.${itIdx + 1} ${it.name || 'Lecture'}`,
         type: it.type || (itIdx % 2 === 0 ? 'video' : 'reading'),
         duration: it.duration || '15 min',
-        completed: idx === 0,
-        current: idx === 1 && itIdx === 0,
-        locked: idx > 1,
-        grade: it.grade || (it.type === 'quiz' && idx === 0 ? '95%' : undefined),
+        completed: status === 'completed',
+        current: status === 'in-progress' && itIdx === 0,
+        locked: status === 'locked',
+        grade: it.grade,
       }));
     } else {
       const lessonCount = typeof m.lessons === 'number' ? m.lessons : 3;
@@ -182,27 +189,27 @@ export default function CourseProgress() {
           title: `${modNum}.1 ${cleanTitle} — Core Architecture & Theory`,
           type: 'video',
           duration: '16 min',
-          completed: idx === 0,
-          current: idx === 1,
-          locked: idx > 1,
+          completed: status === 'completed',
+          current: status === 'in-progress',
+          locked: status === 'locked',
         },
         {
           id: `${modNum}.2`,
           title: `${modNum}.2 Implementation Specifications & Best Practices`,
           type: 'reading',
           duration: '10 min',
-          completed: idx === 0,
+          completed: status === 'completed',
           current: false,
-          locked: idx > 1,
+          locked: status === 'locked',
         },
         {
           id: `${modNum}.3`,
           title: `${modNum}.3 Graded Assessment: ${cleanTitle}`,
           type: 'quiz',
           duration: '20 min',
-          completed: idx === 0,
-          grade: idx === 0 ? '95%' : undefined,
-          locked: idx > 1,
+          completed: status === 'completed',
+          grade: status === 'completed' ? '100%' : undefined,
+          locked: status === 'locked',
         },
       ];
 
@@ -210,11 +217,11 @@ export default function CourseProgress() {
         for (let extra = 4; extra <= lessonCount; extra++) {
           items.push({
             id: `${modNum}.${extra}`,
-            title: `${modNum}.${extra} Advanced Production Case Study`,
+            title: `${modNum}.${extra} Practical Case Study`,
             type: 'video',
             duration: '14 min',
-            completed: idx === 0,
-            locked: idx > 1,
+            completed: status === 'completed',
+            locked: status === 'locked',
           });
         }
       }
@@ -344,9 +351,6 @@ export default function CourseProgress() {
                 <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">
                   Course Progress & Grades
                 </h1>
-                <p className="text-sm text-slate-500 mt-1">
-                  Track your curriculum milestones, assessment scores, and completion status.
-                </p>
               </div>
 
               {/* Top Stats Bento Grid */}
@@ -393,10 +397,10 @@ export default function CourseProgress() {
                     </h3>
                     <div className="flex items-center gap-4 mb-3">
                       <div className="w-14 h-14 rounded-full bg-emerald-50 border-2 border-secondary text-secondary flex items-center justify-center font-black text-2xl">
-                        A
+                        {enrollment?.grade ? String(enrollment.grade).charAt(0) : (progressPercent >= 80 ? 'A' : progressPercent >= 60 ? 'B' : '—')}
                       </div>
                       <div>
-                        <p className="text-xl font-extrabold text-slate-900">92.5%</p>
+                        <p className="text-xl font-extrabold text-slate-900">{enrollment?.grade || (progressPercent > 0 ? `${progressPercent}%` : 'In progress')}</p>
                         <p className="text-xs text-slate-500">Pass Mark: 80%</p>
                       </div>
                     </div>

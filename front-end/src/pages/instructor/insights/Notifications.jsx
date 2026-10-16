@@ -91,7 +91,6 @@ export function Notifications() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Studio Notifications</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Stay updated with course approvals, student enrollments, and reviews.</p>
         </div>
         <Button variant="ghost" onClick={markAllRead} className="text-[#0056D2] hover:bg-blue-50 font-semibold text-xs">
           Mark all as read

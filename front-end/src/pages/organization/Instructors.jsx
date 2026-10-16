@@ -41,12 +41,7 @@ export default function Instructors() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">College Faculty Instructors</h1>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              {affiliatedInstructors.length > 0
-                ? `Managing ${affiliatedInstructors.length} affiliated professor${affiliatedInstructors.length !== 1 ? 's' : ''} who have accepted teaching requests. Click on any educator to view full details.`
-                : 'No instructors are currently affiliated with your organization. Invite instructors via the Requests page.'}
-            </p>
+            <h1 className="text-2xl font-bold text-on-surface">Instructors</h1>
           </div>
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-outline absolute left-3.5 top-1/2 -translate-y-1/2" />

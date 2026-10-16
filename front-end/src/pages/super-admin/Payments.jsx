@@ -175,14 +175,11 @@ export default function SuperAdminPayments() {
             <div className="w-8 h-8 rounded-xl bg-[#0056D2] text-white flex items-center justify-center font-black shadow-xs">
               <CreditCard className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payments & Revenue</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payments</h1>
             <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0056D2] text-[10px] font-bold border border-blue-200">
               {normalizedTransactions.length} Transactions
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Central platform ledger auditing enrolled learner course fees, organization disbursals (85%), and platform margin (15%).
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

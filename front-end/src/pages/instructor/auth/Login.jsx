@@ -144,9 +144,9 @@ export function Login() {
       <div className="relative hidden w-0 flex-1 lg:block bg-[#002554]">
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center bg-gradient-to-br from-primary-900 to-[#002554]">
           <div className="max-w-md">
-            <h3 className="text-3xl font-bold mb-4">Empower Learners Worldwide</h3>
+            <h3 className="text-3xl font-bold mb-4">Instructor Portal</h3>
             <p className="text-primary-100 text-lg mb-8">
-              Join thousands of instructors who are sharing their knowledge and building their professional teaching business on EduLMS.
+              Manage courses, monitor student progress, and evaluate assessments in your instructor studio.
             </p>
             <div className="grid grid-cols-2 gap-4 text-left">
               <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/20">

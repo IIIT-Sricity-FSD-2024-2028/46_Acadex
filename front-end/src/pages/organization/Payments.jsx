@@ -45,10 +45,7 @@ export default function Payments() {
     >
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Payments & Revenue Settlement</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            Monitor institutional tuition collections, gateway processor fees, and educator royalty splits.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">Payments</h1>
         </div>
 
         {/* Financial Stat Cards */}

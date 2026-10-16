@@ -156,9 +156,6 @@ export default function SuperAdminLearners() {
               {totalLearners} Enrolled
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Enrolled student roster, organization affiliations, course fees, and contractual revenue allocation.
-          </p>
         </div>
 
         <button

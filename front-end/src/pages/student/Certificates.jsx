@@ -30,7 +30,6 @@ export default function Certificates() {
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Certificates</h1>
-          <p className="text-sm text-slate-500 mt-1">Issued automatically when you complete every lesson in a course.</p>
         </header>
 
         <div className="grid grid-cols-3 gap-4">

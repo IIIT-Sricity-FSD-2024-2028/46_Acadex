@@ -125,8 +125,8 @@ export function Dashboard() {
             </div>
           </div>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 tracking-tight">
-            Welcome back, {instructor?.name || 'Professor'}!
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-6 tracking-tight">
+            Welcome back{instructor?.name ? `, ${instructor.name}` : ''}
           </h1>
 
           {/* Banner Action Buttons */}
@@ -219,7 +219,7 @@ export function Dashboard() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Your university administrator assigned you to lead the following academic tracks.
+                  Your organization assigned you to the following courses.
                 </p>
               </div>
             </div>

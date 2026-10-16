@@ -66,7 +66,7 @@ export default function OrgLanding() {
       badge: 'FOR CORPORATIONS',
       icon: Briefcase,
       color: 'from-blue-600 to-indigo-600',
-      description: 'Close critical skill gaps in Generative AI, Cloud DevOps, Cybersecurity, and Strategic Leadership with customized learning journeys.',
+      description: 'Address skill gaps in AI, Cloud DevOps, Cybersecurity, and Leadership with structured curricula.',
       features: [
         'Role-based skill benchmark assessments',
         'Custom corporate learning paths & playlists',
@@ -79,7 +79,7 @@ export default function OrgLanding() {
       badge: 'FOR HIGHER EDUCATION',
       icon: GraduationCap,
       color: 'from-emerald-600 to-teal-700',
-      description: 'Equip your students with world-class online courses, remote laboratory assignments, and dual credentials from Stanford, MITx, and IBM.',
+      description: 'Provide students with accredited online courses, remote laboratory assignments, and university credentials.',
       features: [
         'Direct credit-transfer pathway support',
         'Faculty-assisted grading & rubric coordination',
@@ -161,7 +161,7 @@ export default function OrgLanding() {
   const enterpriseFaqs = [
     {
       q: 'How does SSO and LMS (Canvas, Blackboard, Moodle) integration work?',
-      a: 'EduSphere Enterprise connects seamlessly via LTI 1.3 standards and SAML 2.0 / OAuth2 single sign-on (Okta, Microsoft Azure AD, Google Workspace). Course grades, attendance, and completions synchronize directly back into your existing SIS or LMS roster.'
+      a: 'EduSphere Enterprise connects directly via LTI 1.3 standards and SAML 2.0 / OAuth2 single sign-on (Okta, Microsoft Azure AD, Google Workspace). Course grades, attendance, and completions synchronize directly back into your existing SIS or LMS roster.'
     },
     {
       q: 'Can we batch enroll employee cohorts or student classes using CSV files?',
@@ -288,7 +288,7 @@ export default function OrgLanding() {
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Empower your organization with accredited skill benchmarks, multi-faculty outreach, batch student enrollments, and real-time learning telemetry.
+                Deliver accredited programs, manage faculty, enroll cohorts, and track learner progress in one central platform.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">

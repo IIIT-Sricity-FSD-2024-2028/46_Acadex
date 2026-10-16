@@ -70,11 +70,11 @@ export default function Dashboard() {
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               Welcome back{firstName ? `, ${firstName}` : ''}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              {enrollments.length === 0
-                ? 'You have not enrolled in any course yet. Browse the catalog to get started.'
-                : `You have ${inProgress.length} course${inProgress.length === 1 ? '' : 's'} in progress.`}
-            </p>
+            {enrollments.length === 0 && (
+              <p className="text-sm text-slate-500 mt-1">
+                Browse courses to get started.
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs font-semibold">
             {membership === 'Pending Organization Approval' ? (
@@ -124,7 +124,7 @@ export default function Dashboard() {
                 to="/student/explore"
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E]"
               >
-                Browse catalog <ArrowRight className="w-3.5 h-3.5" />
+                Browse courses <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           ) : (

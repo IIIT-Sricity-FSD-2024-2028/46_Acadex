@@ -74,7 +74,6 @@ export function CreateLesson() {
     <div className="max-w-4xl mx-auto pb-24">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Create Lesson</h1>
-        <p className="text-slate-500">Add instructional content, videos, or readings to your curriculum module.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -39,7 +39,6 @@ export function Analytics() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Studio Performance & Analytics</h1>
-          <p className="text-slate-500 text-sm mt-1">Cross-course student enrollment metrics, engagement hours, and completion rates.</p>
         </div>
         <div className="flex gap-3">
           <select className="border border-slate-200 rounded-xl text-xs font-semibold px-3 py-2 bg-white focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] outline-none transition-all shadow-2xs text-slate-700">

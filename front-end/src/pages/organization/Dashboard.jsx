@@ -98,13 +98,9 @@ export default function OrgDashboard() {
         <section className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#312E81] text-white rounded-3xl p-6 md:p-8 shadow-elevation-2 relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div>
-              <span className="text-xs font-bold text-[#C7D2FE] uppercase tracking-wider">Enterprise Overview</span>
-              <h1 className="text-2xl md:text-3xl font-extrabold mt-1 tracking-tight">
-                {info.name || 'NexusPay Academy'} Administration
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                {info.name || 'Organization'} Dashboard
               </h1>
-              <p className="text-xs text-slate-300 mt-1 max-w-xl">
-                Institutional telemetry across faculty authoring, learner enrollments, and tuition gateway settlements.
-              </p>
             </div>
             <div className="flex items-center gap-3">
               <Link

@@ -31,8 +31,7 @@ export default function Billing() {
     <PageLayout>
       <div className="max-w-[1000px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Billing & payments</h1>
-          <p className="text-sm text-slate-500 mt-1">Your course purchases and receipts.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Billing</h1>
         </header>
 
         <div className="grid grid-cols-2 gap-4 max-w-md">

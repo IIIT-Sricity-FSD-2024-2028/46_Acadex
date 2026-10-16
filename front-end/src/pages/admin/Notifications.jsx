@@ -17,7 +17,6 @@ export const Notifications = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Notifications</h1>
-          <p className="text-slate-500">Send platform announcements and view alerts.</p>
         </div>
         <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium">
           <Plus className="w-4 h-4" />

@@ -45,7 +45,6 @@ export default function MyLearning() {
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">My learning</h1>
-          <p className="text-sm text-slate-500 mt-1">Courses you are enrolled in.</p>
         </header>
 
         <div className="flex border-b border-slate-200 gap-6">
@@ -103,7 +102,7 @@ export default function MyLearning() {
                 to="/student/explore"
                 className="mt-4 inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold"
               >
-                Browse catalog <ArrowRight className="w-3.5 h-3.5" />
+                Browse courses <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             )}
           </div>

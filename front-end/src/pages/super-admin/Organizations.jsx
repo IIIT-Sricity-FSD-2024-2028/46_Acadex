@@ -242,9 +242,6 @@ export default function SuperAdminOrganizations() {
               {organizations.length} Active
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Accredited academic institutions, faculty instructor rosters, courses taught, and contractual revenue allocation.
-          </p>
         </div>
       </div>
 

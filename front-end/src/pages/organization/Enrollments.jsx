@@ -29,10 +29,7 @@ export default function Enrollments() {
         {/* Header & Stats */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Course Enrollments & Progress</h1>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Live tracking of {enrollments.length} active course seats and student completion progression.
-            </p>
+            <h1 className="text-2xl font-bold text-on-surface">Enrollments</h1>
           </div>
           <div className="flex items-center gap-3">
             <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">

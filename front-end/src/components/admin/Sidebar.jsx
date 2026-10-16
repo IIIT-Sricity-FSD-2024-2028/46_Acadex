@@ -25,44 +25,24 @@ import {
 import { Avatar } from '../common/Avatar';
 import { cn } from '../../utils/cn';
 
-const adminNavGroups = [
-  {
-    title: 'Academic Operations',
-    items: [
-      { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-      { name: 'Courses Catalog', href: '/admin/courses', icon: FolderOpen },
-      { name: 'Course Approvals', href: '/admin/courses/approval', icon: CheckCircle2 },
-      { name: 'Users Directory', href: '/admin/users', icon: Users },
-      { name: 'Learners', href: '/admin/learners', icon: GraduationCap },
-      { name: 'Instructors', href: '/admin/instructors', icon: UserCheck },
-      { name: 'Organizations', href: '/admin/organizations', icon: Building2 },
-    ],
-  },
-  {
-    title: 'Financial Management',
-    items: [
-      { name: 'Tuition Payments', href: '/admin/payments', icon: CreditCard },
-      { name: 'Transactions', href: '/admin/transactions', icon: Receipt },
-      { name: 'Refunds', href: '/admin/refunds', icon: RotateCcw },
-    ],
-  },
-  {
-    title: 'Governance & Records',
-    items: [
-      { name: 'Enrollments', href: '/admin/enrollments', icon: Layers },
-      { name: 'Disputes & Support', href: '/admin/disputes', icon: ShieldAlert },
-      { name: 'Certificates', href: '/admin/certificates', icon: Award },
-    ],
-  },
-  {
-    title: 'System Intelligence',
-    items: [
-      { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-      { name: 'Audit Reports', href: '/admin/reports', icon: FileText },
-      { name: 'Notifications', href: '/admin/notifications', icon: Bell },
-      { name: 'Platform Settings', href: '/admin/settings', icon: Settings },
-    ],
-  },
+const adminNavItems = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Courses', href: '/admin/courses', icon: FolderOpen },
+  { name: 'Course Approvals', href: '/admin/courses/approval', icon: CheckCircle2 },
+  { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Learners', href: '/admin/learners', icon: GraduationCap },
+  { name: 'Instructors', href: '/admin/instructors', icon: UserCheck },
+  { name: 'Organizations', href: '/admin/organizations', icon: Building2 },
+  { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+  { name: 'Transactions', href: '/admin/transactions', icon: Receipt },
+  { name: 'Refunds', href: '/admin/refunds', icon: RotateCcw },
+  { name: 'Enrollments', href: '/admin/enrollments', icon: Layers },
+  { name: 'Disputes', href: '/admin/disputes', icon: ShieldAlert },
+  { name: 'Certificates', href: '/admin/certificates', icon: Award },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { name: 'Reports', href: '/admin/reports', icon: FileText },
+  { name: 'Notifications', href: '/admin/notifications', icon: Bell },
+  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -116,41 +96,34 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
           )}
         </div>
 
-        {/* Navigation Groups */}
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
-          {adminNavGroups.map((group, idx) => (
-            <div key={idx} className="space-y-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">
-                {group.title}
-              </p>
-              {group.items.map((item) => {
-                const isActive =
-                  location.pathname === item.href ||
-                  (item.href === '/admin/dashboard' && location.pathname === '/admin') ||
-                  (item.href !== '/admin/dashboard' && location.pathname.startsWith(item.href));
-                const Icon = item.icon;
+        {/* Navigation Items */}
+        <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
+          {adminNavItems.map((item) => {
+            const isActive =
+              location.pathname === item.href ||
+              (item.href === '/admin/dashboard' && location.pathname === '/admin') ||
+              (item.href !== '/admin/dashboard' && location.pathname.startsWith(item.href));
+            const Icon = item.icon;
 
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    onClick={() => {
-                      if (isOpen && toggleSidebar) toggleSidebar();
-                    }}
-                    className={cn(
-                      'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all',
-                      isActive
-                        ? 'bg-blue-50 text-[#0056D2] font-bold shadow-2xs border border-blue-200/60'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                    )}
-                  >
-                    <Icon className={cn('w-4 h-4 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
-                    <span>{item.name}</span>
-                  </NavLink>
-                );
-              })}
-            </div>
-          ))}
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={() => {
+                  if (isOpen && toggleSidebar) toggleSidebar();
+                }}
+                className={cn(
+                  'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150',
+                  isActive
+                    ? 'bg-blue-50 text-[#0056D2] font-semibold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
+                )}
+              >
+                <Icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
+                <span className="truncate">{item.name}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 

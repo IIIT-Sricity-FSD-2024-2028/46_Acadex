@@ -196,11 +196,8 @@ export const Disputes = () => {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             <ShieldAlert className="w-7 h-7 text-indigo-500" />
-            Dispute Resolution
+            Disputes
           </h1>
-          <p className="text-slate-500 mt-0.5">
-            Review, investigate, and resolve disputes raised by learners and organizations.
-          </p>
         </div>
         <button
           onClick={fetchDisputes}

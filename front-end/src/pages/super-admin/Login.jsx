@@ -9,7 +9,6 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   Activity,
   Zap,
 } from 'lucide-react';
@@ -155,15 +154,14 @@ export default function SuperAdminLogin() {
             </div>
 
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-[#0056D2]/40 text-[#388BFD] text-[11px] font-bold uppercase tracking-wider mb-3">
-              <Sparkles className="w-3 h-3" />
               <span>Super Admin Portal</span>
             </div>
 
             <h1 className="text-2xl font-black text-white tracking-tight">
-              Platform Governance
+              Super Admin Login
             </h1>
             <p className="text-sm text-slate-400 mt-1.5 leading-relaxed">
-              Restricted to authorised platform administrators only.
+              Authorized administrators only.
             </p>
           </div>
 

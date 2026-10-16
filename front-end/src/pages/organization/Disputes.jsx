@@ -166,10 +166,7 @@ export default function Disputes() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Institutional Disputes & Governance</h1>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Official dispute resolution tracking for faculty royalties, course content, academic integrity, and chargebacks.
-            </p>
+            <h1 className="text-2xl font-bold text-on-surface">Disputes</h1>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3.5 py-1.5 rounded-xl bg-surface-container border border-outline-variant text-xs font-bold text-on-surface">

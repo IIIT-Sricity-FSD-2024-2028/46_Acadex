@@ -198,10 +198,7 @@ export default function Analytics() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Organization Analytics</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            Real-time metrics from your courses, instructors, and learner activity.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">Analytics</h1>
         </div>
 
         {/* 4 KPI Cards — all driven by real org data */}

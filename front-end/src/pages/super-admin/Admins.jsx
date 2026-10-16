@@ -254,14 +254,11 @@ export default function SuperAdminAdmins() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-bold mb-1 border border-purple-200/60">
             <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
-            <span>Operational Administration Oversight</span>
+            <span>Administration Oversight</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Admin Governance & Resolution History
+            Admins
           </h1>
-          <p className="text-xs text-slate-500">
-            Audit what operational admins have resolved, inspect investigated cases, track turnaround performance, and manage admin credentials.
-          </p>
         </div>
 
         {/* 3 Core Tabs */}

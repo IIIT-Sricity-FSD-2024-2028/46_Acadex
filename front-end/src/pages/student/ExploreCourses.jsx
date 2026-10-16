@@ -15,11 +15,11 @@ export default function ExploreCourses() {
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
-    document.title = 'Browse Catalog | NexusEdu';
+    document.title = 'Browse Courses | NexusEdu';
     api.student
       .getCatalog()
       .then((res) => setCourses(Array.isArray(res) ? res : []))
-      .catch((err) => setError(err.message || 'Could not load the catalog'))
+      .catch((err) => setError(err.message || 'Could not load courses'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -58,8 +58,7 @@ export default function ExploreCourses() {
     <PageLayout>
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Browse catalog</h1>
-          <p className="text-sm text-slate-500 mt-1">Published courses taught by verified instructors.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Browse Courses</h1>
         </header>
 
         <div className="flex flex-col sm:flex-row gap-3">

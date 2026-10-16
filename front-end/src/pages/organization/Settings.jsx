@@ -38,10 +38,7 @@ export default function Settings() {
     <OrgLayout breadcrumbs={[{ label: 'Organization Settings' }]}>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Organization Settings & Policies</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            Configure automated enrollment rules, payout currency, and security requirements.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">Settings</h1>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">

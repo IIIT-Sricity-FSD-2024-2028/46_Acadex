@@ -62,10 +62,7 @@ export default function Courses() {
         {/* Header & Counters */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Organization Course Catalog</h1>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Managing {courses.length} active masterclasses, curriculum modules, and enterprise tracks.
-            </p>
+            <h1 className="text-2xl font-bold text-on-surface">Courses</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 rounded-xl bg-surface-container border border-outline-variant text-xs font-semibold text-on-surface">

@@ -28,7 +28,7 @@ export default function SubmitConfirmationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
       <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
         <h3 className="text-base font-bold text-slate-900">
-          Submit Graded Assessment?
+          Submit Assessment?
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
           You have answered <strong className="text-slate-900 font-bold">{answeredCount} of {totalQuestions}</strong> questions.
@@ -45,14 +45,14 @@ export default function SubmitConfirmationModal({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100"
           >
-            Keep Working
+            Continue Quiz
           </button>
           <button
             type="button"
             onClick={onConfirmSubmit}
             className="px-5 py-2 rounded-xl bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold shadow-xs"
           >
-            Submit Final Grade
+            Submit Assessment
           </button>
         </div>
       </div>

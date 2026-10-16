@@ -124,8 +124,7 @@ export const Enrollments = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Enrollment Management</h1>
-          <p className="text-slate-500">Live roster of student course enrollments, track completions, and progress telemetry.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Enrollments</h1>
         </div>
       </div>
 

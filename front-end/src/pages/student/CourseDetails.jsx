@@ -147,7 +147,7 @@ export default function CourseDetails() {
           <h2 className="text-xl font-bold text-slate-800">Course not available</h2>
           <p className="text-xs text-slate-500 mt-2 mb-4">This course does not exist or is not open for enrollment.</p>
           <Link to="/student/explore" className="px-4 py-2 bg-[#0056D2] text-white text-xs font-bold rounded-lg">
-            Browse catalog
+            Browse courses
           </Link>
         </div>
       </PageLayout>
@@ -402,7 +402,7 @@ export default function CourseDetails() {
                 {course.totalHours && (
                   <li className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /> {course.totalHours} of content</li>
                 )}
-                <li className="flex items-center gap-2"><Award className="w-4 h-4 text-slate-400" /> Certificate when you complete every lesson</li>
+                <li className="flex items-center gap-2"><Award className="w-4 h-4 text-slate-400" /> Certificate of completion</li>
               </ul>
             </div>
           </div>

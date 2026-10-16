@@ -145,10 +145,7 @@ export default function CreateCourse() {
         </Link>
 
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Author &amp; Publish New Course</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            Configure curriculum metadata, assign multi-faculty instruction teams, and structure lesson modules.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">Create New Course</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

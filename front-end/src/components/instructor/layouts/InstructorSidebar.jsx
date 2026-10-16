@@ -23,30 +23,15 @@ import { Avatar } from '../../common';
 import { cn } from '../../../utils/cn';
 import { useInstructor } from '../../../hooks/useInstructor';
 
-const instructorNavGroups = [
-  {
-    title: 'Core Studio',
-    items: [
-      { name: 'Dashboard', href: '/instructor/dashboard', icon: LayoutDashboard },
-      { name: 'My Courses', href: '/instructor/courses', icon: BookOpen },
-      { name: 'Students', href: '/instructor/students', icon: Users },
-    ],
-  },
-  {
-    title: 'Teaching Insights',
-    items: [
-      { name: 'Reviews & Feedback', href: '/instructor/reviews', icon: MessageSquare },
-      { name: 'Analytics', href: '/instructor/analytics', icon: BarChart3 },
-    ],
-  },
-  {
-    title: 'Account & Operations',
-    items: [
-      { name: 'Notifications', href: '/instructor/notifications', icon: Bell },
-      { name: 'Studio Settings', href: '/instructor/settings', icon: Settings },
-      { name: 'Faculty Profile', href: '/instructor/profile', icon: User },
-    ],
-  },
+const instructorNavItems = [
+  { name: 'Dashboard', href: '/instructor/dashboard', icon: LayoutDashboard, requiresAffiliation: false },
+  { name: 'My Courses', href: '/instructor/courses', icon: BookOpen, requiresAffiliation: true },
+  { name: 'Students', href: '/instructor/students', icon: Users, requiresAffiliation: true },
+  { name: 'Reviews & Feedback', href: '/instructor/reviews', icon: MessageSquare, requiresAffiliation: true },
+  { name: 'Analytics', href: '/instructor/analytics', icon: BarChart3, requiresAffiliation: true },
+  { name: 'Notifications', href: '/instructor/notifications', icon: Bell, requiresAffiliation: false },
+  { name: 'Settings', href: '/instructor/settings', icon: Settings, requiresAffiliation: false },
+  { name: 'Profile', href: '/instructor/profile', icon: User, requiresAffiliation: false },
 ];
 
 export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0 }) {
@@ -121,7 +106,7 @@ export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0
               <p className="text-[11px] text-amber-800 leading-snug font-normal">
                 {pendingJoinRequest
                   ? `Waiting for ${pendingJoinRequest.organizationName} to approve your request.`
-                  : 'Send a join request or accept an invitation to unlock your studio.'}
+                  : 'Send a join request or accept an invitation to access instructor tools.'}
               </p>
               <Link to="/instructor/dashboard" className="block text-[11px] font-bold text-amber-900 underline">
                 Manage affiliation
@@ -130,72 +115,65 @@ export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0
           </div>
         )}
 
-        {/* Navigation Groups */}
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin">
-          {instructorNavGroups.map((group, idx) => (
-            <div key={idx} className="space-y-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1">
-                {group.title}
-              </p>
-              {group.items.map((item) => {
-                const isActive =
-                  location.pathname === item.href ||
-                  (item.href === '/instructor/dashboard' && location.pathname === '/instructor') ||
-                  (item.href !== '/instructor/dashboard' && location.pathname.startsWith(item.href));
-                const Icon = item.icon;
+        {/* Navigation Items */}
+        <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin">
+          {instructorNavItems.map((item) => {
+            const isActive =
+              location.pathname === item.href ||
+              (item.href === '/instructor/dashboard' && location.pathname === '/instructor') ||
+              (item.href !== '/instructor/dashboard' && location.pathname.startsWith(item.href));
+            const Icon = item.icon;
 
-                // When unaffiliated, core studio and insights tools require affiliation
-                const isLocked = !isAffiliated && (group.title === 'Core Studio' || group.title === 'Teaching Insights');
+            // When unaffiliated, certain tools require affiliation
+            const isLocked = !isAffiliated && item.requiresAffiliation;
 
-                if (isLocked) {
-                  return (
-                    <div
-                      key={item.name}
-                      title="Connect to an accredited university to unlock this tool"
-                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 cursor-not-allowed bg-slate-50/50"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4 text-slate-300 shrink-0" />
-                        <span>{item.name}</span>
-                      </div>
-                      <Lock className="w-3 h-3 text-slate-300" />
-                    </div>
-                  );
-                }
+            if (isLocked) {
+              return (
+                <div
+                  key={item.name}
+                  title="Connect to an organization to access this section"
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 cursor-not-allowed bg-slate-50/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-5 h-5 text-slate-300 shrink-0" />
+                    <span>{item.name}</span>
+                  </div>
+                  <Lock className="w-4 h-4 text-slate-300" />
+                </div>
+              );
+            }
 
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    onClick={() => {
-                      if (isOpen && toggleSidebar) toggleSidebar();
-                    }}
-                    className={cn(
-                      'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all',
-                      isActive
-                        ? 'bg-blue-50 text-[#0056D2] font-bold shadow-2xs border border-blue-200/60'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className={cn('w-4 h-4 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
-                      <span className="truncate">{item.name}</span>
-                    </div>
-                    {item.name === 'My Courses' && pendingCourseCount > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#0056D2] text-white shrink-0">
-                        {pendingCourseCount}
-                      </span>
-                    )}
-                    {item.name === 'Notifications' && unreadNotifsCount > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#0056D2] text-white shrink-0">
-                        {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
-                      </span>
-                    )}
-                  </NavLink>
-                );
-              })}
-            </div>
-          ))}
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={() => {
+                  if (isOpen && toggleSidebar) toggleSidebar();
+                }}
+                className={cn(
+                  'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150',
+                  isActive
+                    ? 'bg-blue-50 text-[#0056D2] font-semibold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-[#0056D2]' : 'text-slate-400')} />
+                  <span className="truncate">{item.name}</span>
+                </div>
+                {item.name === 'My Courses' && pendingCourseCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#0056D2] text-white shrink-0">
+                    {pendingCourseCount}
+                  </span>
+                )}
+                {item.name === 'Notifications' && unreadNotifsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#0056D2] text-white shrink-0">
+                    {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 

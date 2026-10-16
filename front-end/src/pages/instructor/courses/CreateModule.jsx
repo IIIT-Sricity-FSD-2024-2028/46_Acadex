@@ -45,7 +45,6 @@ export function CreateModule() {
     <div className="max-w-2xl mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Create New Module</h1>
-        <p className="text-slate-500">A module groups related lessons and quizzes together.</p>
       </div>
 
       <Card>

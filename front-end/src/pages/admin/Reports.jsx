@@ -27,7 +27,6 @@ export const Reports = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Reports</h1>
-          <p className="text-slate-500">Generate and download platform reports.</p>
         </div>
       </div>
 

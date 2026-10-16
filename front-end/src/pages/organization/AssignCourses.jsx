@@ -119,14 +119,11 @@ export default function AssignCourses() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Link to="/org/courses" className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
           <ChevronLeft className="w-4 h-4" />
-          <span>Back to Course Catalog</span>
+          <span>Back to Courses</span>
         </Link>
 
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Assign Courses to Faculty Instructors</h1>
-          <p className="text-xs text-on-surface-variant mt-0.5 max-w-2xl">
-            Select one or more faculty instructors and curriculum courses. A teaching request is sent for every selected instructor-course pairing.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">Assign Courses</h1>
         </div>
 
         <form onSubmit={handleAssignSubmit} className="space-y-6">
