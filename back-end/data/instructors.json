@@ -8,15 +8,16 @@
     "educatorType": "Faculty Instructor",
     "specialization": "Computer Science",
     "bio": "Newly registered faculty educator on the platform.",
-    "status": "Pending Affiliation",
-    "organizationId": null,
-    "organizationName": null,
+    "status": "Active",
+    "organizationId": "org-1",
+    "organizationName": "Meridian Tech Institute",
     "coursesCount": 0,
     "enrolledStudents": 0,
     "avgRating": 5,
     "revenueGenerated": 0,
     "createdAt": "2026-10-13T18:10:10.420Z",
-    "updatedAt": "2026-10-13T18:10:10.420Z"
+    "updatedAt": "2026-10-16T15:48:44.888Z",
+    "orgJoinedAt": "2026-10-16T15:48:44.887Z"
   },
   {
     "id": "inst-1791912292835",

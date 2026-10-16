@@ -6,7 +6,6 @@ import {
   Building2,
   ShieldCheck,
   Shield,
-  Search,
   Compass,
   ChevronDown,
   ChevronUp,
@@ -33,7 +32,6 @@ export default function Landing() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [showAllFaqs, setShowAllFaqs] = useState(false);
@@ -235,28 +233,13 @@ export default function Landing() {
     loadCourses();
   }, []);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    const catalogEl = document.getElementById('catalog-section');
-    if (catalogEl) {
-      catalogEl.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   const filteredCards = defaultCards.filter((card) => {
     const matchesCategory =
       selectedCategory === 'All' ||
       card.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
       (selectedCategory === 'AI & Machine Learning' && card.category.includes('AI'));
 
-    const matchesSearch =
-      !searchQuery.trim() ||
-      card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.instructorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.institution.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesCategory && matchesSearch;
+    return matchesCategory;
   });
 
   const displayedFaqs = showAllFaqs ? faqs : faqs.slice(0, 6);
@@ -286,25 +269,25 @@ export default function Landing() {
               <span className="material-symbols-outlined text-[15px]">school</span> STUDENT
             </a>
             <Link
-              to="/instructor"
+              to="/signin?role=Instructor"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors"
             >
               <span className="material-symbols-outlined text-[15px]">group</span> INSTRUCTOR
             </Link>
             <Link
-              to="/org/dashboard"
+              to="/signin?role=Organization"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition-colors"
             >
               <span className="material-symbols-outlined text-[15px]">apartment</span> ORGANISATION
             </Link>
             <Link
-              to="/admin"
+              to="/signin?role=Admin"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition-colors"
             >
               <span className="material-symbols-outlined text-[15px]">verified_user</span> ADMIN
             </Link>
             <Link
-              to="/super-admin/dashboard"
+              to="/super-admin/login"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors"
             >
               <span className="material-symbols-outlined text-[15px]">security</span> SUPER ADMIN
@@ -335,28 +318,6 @@ export default function Landing() {
             </Link>
           </div>
 
-          {/* Center: Search Input */}
-          <div className="flex-1 max-w-md">
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
-              <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px]">
-                search
-              </span>
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-11 pl-11 pr-24 rounded-full bg-white border border-[#E2E8F0] text-sm text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:border-[#0056D2] focus:ring-2 focus:ring-blue-100 transition-all"
-                placeholder="What do you want to learn today? (e.g., AI, React, Cloud)"
-                type="text"
-              />
-              <button
-                type="submit"
-                className="absolute right-1.5 px-3 py-1.5 rounded-full bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-semibold shadow-sm transition-colors"
-              >
-                Search
-              </button>
-            </form>
-          </div>
-
           {/* Right: Links & Actions */}
           <div className="flex items-center gap-4">
             <a
@@ -373,7 +334,7 @@ export default function Landing() {
               Courses
             </a>
             <Link
-              to="/organization/landing"
+              to="/signin?role=Organization"
               className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               For Enterprise
@@ -1067,38 +1028,38 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-bold select-none cursor-default">
+                  <Link to="/signin?role=Student" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
                     <span className="material-symbols-outlined text-[13px]">school</span> STUDENT PORTAL
-                  </span>
+                  </Link>
                 </li>
                 <li>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-bold select-none cursor-default">
+                  <Link to="/signin?role=Instructor" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-bold hover:bg-blue-100 transition-colors">
                     <span className="material-symbols-outlined text-[13px]">group</span> EDUCATOR STUDIO
-                  </span>
+                  </Link>
                 </li>
                 <li>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-purple-50 text-purple-800 font-bold select-none cursor-default">
+                  <Link to="/signin?role=Organization" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-purple-50 text-purple-800 font-bold hover:bg-purple-100 transition-colors">
                     <span className="material-symbols-outlined text-[13px]">apartment</span> ORGANIZATION PORTAL
-                  </span>
+                  </Link>
                 </li>
                 <li>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 font-bold select-none cursor-default">
+                  <Link to="/signin?role=Admin" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 font-bold hover:bg-indigo-100 transition-colors">
                     <span className="material-symbols-outlined text-[13px]">verified_user</span> ADMIN CENTER
-                  </span>
+                  </Link>
                 </li>
                 <li>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 text-amber-800 font-bold select-none cursor-default">
+                  <Link to="/super-admin/login" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition-colors">
                     <span className="material-symbols-outlined text-[13px]">security</span> SUPER ADMIN PORTAL
-                  </span>
+                  </Link>
                 </li>
                 <li className="pt-2 text-slate-600">
-                  <span className="font-semibold select-none cursor-default">
+                  <Link to="/signin" className="font-semibold hover:text-blue-700">
                     Sign In
-                  </span>{' '}
+                  </Link>{' '}
                   •{' '}
-                  <span className="font-semibold select-none cursor-default">
+                  <Link to="/signup" className="font-semibold hover:text-blue-700">
                     Create Account
-                  </span>
+                  </Link>
                 </li>
               </ul>
             </div>

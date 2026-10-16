@@ -15,11 +15,13 @@
     "proposedTerms": null,
     "description": "You have been invited to join our faculty. Please review the request in your instructor dashboard.",
     "submittedDate": "October 16, 2026",
-    "status": "Pending Professor Response",
-    "trackingStatus": "Awaiting decision from Test Instructor-1",
+    "status": "Accepted by Professor",
+    "trackingStatus": "Accepted — instructor joined organization",
     "id": "ins-6b477d61",
     "createdAt": "2026-10-16T10:52:25.377Z",
-    "updatedAt": "2026-10-16T10:52:25.377Z"
+    "updatedAt": "2026-10-16T15:48:44.868Z",
+    "respondedAt": "2026-10-16T15:48:44.864Z",
+    "instructorNotes": null
   },
   {
     "instructorId": "inst-1791911606628",

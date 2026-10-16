@@ -5,7 +5,6 @@ import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-do
 // 0. LANDING & GATEWAY
 // ──────────────────────────────────────────────────────────────
 import Landing from './pages/Landing';
-import LandingOrganization from './pages/Landing_Organization';
 import SignIn from './pages/Signin';
 import SignUp from './pages/Signup';
 import ForgotPassword from './pages/Forgot_Password';
@@ -26,8 +25,8 @@ import StudentProfile from './pages/student/Profile';
 import StudentBilling from './pages/student/Billing';
 import StudentReviews from './pages/student/Reviews';
 import StudentDisputes from './pages/student/Disputes';
-import StudentGuard from './components/student/layout/StudentGuard';
 import StudentRouteMiddleware from './components/student/layout/StudentRouteMiddleware';
+import RoleGuard from './components/auth/RoleGuard';
 
 // ──────────────────────────────────────────────────────────────
 // 2. INSTRUCTOR / EDUCATOR PAGES & LAYOUTS
@@ -56,7 +55,6 @@ import { Settings as InstructorSettings } from './pages/instructor/insights/Sett
 // ──────────────────────────────────────────────────────────────
 // 3. ORGANIZATION ADMIN PAGES
 // ──────────────────────────────────────────────────────────────
-import OrgLanding from './pages/Landing_Organization';
 import OrgDashboard from './pages/organization/Dashboard';
 import OrgProfile from './pages/organization/Profile';
 import OrgInstructorRequests from './pages/organization/InstructorRequests';
@@ -161,8 +159,8 @@ export default function App() {
         <Route path="settings" element={<SuperAdminSettings />} />
       </Route>
 
-      <Route path="/organization" element={<Navigate to="/organization/landing" replace />} />
-      <Route path="/organization/landing" element={<LandingOrganization />} />
+      <Route path="/organization" element={<Navigate to="/signin?role=Organization" replace />} />
+      <Route path="/organization/landing" element={<Navigate to="/signin?role=Organization" replace />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -171,7 +169,8 @@ export default function App() {
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 1. STUDENT / LEARNER ROUTES (Protected by Route Middleware)     */}
       {/* ────────────────────────────────────────────────────────────── */}
-      <Route element={<StudentRouteMiddleware />}>
+      <Route element={<RoleGuard allowedRoles={['Student']} loginRole="Student" />}>
+       <Route element={<StudentRouteMiddleware />}>
         <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/student/explore" element={<StudentExplore />} />
@@ -201,6 +200,7 @@ export default function App() {
         {/* Student Catch-All 404 Route Redirect */}
         <Route path="/student/*" element={<Navigate to="/student/dashboard" replace />} />
       </Route>
+      </Route>
 
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 2. INSTRUCTOR / EDUCATOR ROUTES */}
@@ -208,6 +208,7 @@ export default function App() {
       <Route path="/instructor/login" element={<Navigate to="/signin?role=Instructor" replace />} />
       <Route path="/instructor/register" element={<Navigate to="/signup?role=Instructor" replace />} />
 
+      <Route element={<RoleGuard allowedRoles={['Instructor']} loginRole="Instructor" />}>
       <Route path="/instructor" element={<InstructorProvider><InstructorLayout /></InstructorProvider>}>
         <Route index element={<InstructorDashboard />} />
         <Route path="dashboard" element={<InstructorDashboard />} />
@@ -234,11 +235,12 @@ export default function App() {
         <Route path="notifications" element={<InstructorNotifications />} />
         <Route path="settings" element={<InstructorSettings />} />
       </Route>
+      </Route>
 
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 3. ORGANIZATION ADMIN ROUTES */}
       {/* ────────────────────────────────────────────────────────────── */}
-      <Route path = '/organization/landing' element = {<OrgLanding/>} />
+      <Route element={<RoleGuard allowedRoles={['Organization']} loginRole="Organization" />}>
       <Route path="/org" element={<OrgDashboard />} />
       <Route path="/org/dashboard" element={<OrgDashboard />} />
       <Route path="/organization/dashboard" element={<OrgDashboard />} />
@@ -293,10 +295,12 @@ export default function App() {
       <Route path="/org/analytics" element={<OrgAnalytics />} />
       <Route path="/organization/analytics" element={<OrgAnalytics />} />
       <Route path="/organization/settings" element={<OrgSettings />} />
+      </Route>
 
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 4. PLATFORM ADMIN ROUTES */}
       {/* ────────────────────────────────────────────────────────────── */}
+      <Route element={<RoleGuard allowedRoles={['Admin']} loginRole="Admin" />}>
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
@@ -332,6 +336,7 @@ export default function App() {
 
         <Route path="profile" element={<AdminProfile />} />
         <Route path="settings" element={<AdminSettings />} />
+      </Route>
       </Route>
 
       {/* Fallback */}

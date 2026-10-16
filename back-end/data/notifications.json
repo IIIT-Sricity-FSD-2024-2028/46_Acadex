@@ -1,74 +1,88 @@
 [
   {
+    "title": "Test Instructor-1 accepted your invitation",
+    "desc": "Faculty invitation to join Meridian Tech Institute.",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": true,
+    "color": "green",
+    "organizationId": "org-1",
+    "id": "not-e55bd460",
+    "createdAt": "2026-10-16T15:48:44.946Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
+  },
+  {
     "title": "Course Completed",
     "desc": "krjun Sharma completed \"Python Backend Development with FastAPI\" and received a certificate.",
     "time": "Just now",
     "category": "Certificate",
-    "read": false,
+    "read": true,
     "color": "green",
     "learnerId": "lrn-1",
     "id": "not-06a794d8",
     "createdAt": "2026-10-16T13:57:52.238Z",
-    "updatedAt": "2026-10-16T13:57:52.238Z"
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "title": "Course Completed",
     "desc": "krjun Sharma completed \"Object Oriented Programming\" and received a certificate.",
     "time": "Just now",
     "category": "Certificate",
-    "read": false,
+    "read": true,
     "color": "green",
     "learnerId": "lrn-1",
     "id": "not-dde2f573",
     "createdAt": "2026-10-16T13:52:18.961Z",
-    "updatedAt": "2026-10-16T13:52:18.961Z"
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "title": "Course Completed",
     "desc": "krjun Sharma completed \"Backend Development - 2345\" and received a certificate.",
     "time": "Just now",
     "category": "Certificate",
-    "read": false,
+    "read": true,
     "color": "green",
     "learnerId": "lrn-1",
     "id": "not-21a1732e",
     "createdAt": "2026-10-16T13:47:40.519Z",
-    "updatedAt": "2026-10-16T13:47:40.519Z"
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "title": "Teaching invitation sent to Test Instructor-1",
     "desc": "Meridian Tech Institute invited Test Instructor-1 to teach \"General Course Assignment\".",
     "time": "Just now",
     "category": "Instructor",
-    "read": false,
+    "read": true,
     "color": "blue",
     "organizationId": "org-1",
     "instructorId": "inst-1791915010420",
     "id": "not-72516796",
     "createdAt": "2026-10-16T10:52:25.383Z",
-    "updatedAt": "2026-10-16T10:52:25.383Z"
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "id": "notif-1",
     "title": "New Teaching Application Submitted",
     "desc": "Dr. Elena Rostova submitted an accreditation application for 'Post-Quantum Cryptography'.",
     "time": "10 minutes ago",
-    "read": false,
+    "read": true,
     "type": "Application",
     "category": "System",
     "recipientRole": "admin",
-    "createdAt": "2026-08-28T19:30:00.000Z"
+    "createdAt": "2026-08-28T19:30:00.000Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "id": "notif-2",
     "title": "Enterprise Cohort Enrollment Completed",
     "desc": "50 new engineers from Stanford FinTech Lab enrolled in 'AWS Cloud Masterclass'.",
     "time": "2 hours ago",
-    "read": false,
+    "read": true,
     "type": "Enrollment",
     "category": "Course",
     "recipientRole": "admin",
-    "createdAt": "2026-08-28T17:30:00.000Z"
+    "createdAt": "2026-08-28T17:30:00.000Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "id": "notif-3",
@@ -102,7 +116,7 @@
     "title": "New 4★ Feedback on Object Oriented Programming",
     "desc": "Marcus Vance submitted feedback on the concurrency section and requested more TDD examples.",
     "time": "4 hours ago",
-    "read": false,
+    "read": true,
     "type": "Review",
     "category": "Review",
     "recipientId": "inst-1791912292835",
@@ -110,14 +124,15 @@
     "courseId": "cou-fb5ac543",
     "actionUrl": "/instructor/reviews",
     "color": "amber",
-    "createdAt": "2026-10-15T12:00:00.000Z"
+    "createdAt": "2026-10-15T12:00:00.000Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "id": "notif-inst-3",
     "title": "Course Assignment: Distributed Systems",
     "desc": "NexusPay Enterprise Academy assigned you as Co-Instructor for Distributed Systems.",
     "time": "6 hours ago",
-    "read": false,
+    "read": true,
     "type": "Course",
     "category": "Course",
     "recipientId": "inst-1791911606628",
@@ -125,7 +140,8 @@
     "courseId": "cou-b00839da",
     "actionUrl": "/instructor/courses",
     "color": "blue",
-    "createdAt": "2026-10-15T09:15:00.000Z"
+    "createdAt": "2026-10-15T09:15:00.000Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   },
   {
     "id": "notif-inst-4",
@@ -161,7 +177,7 @@
     "title": "New 5★ Rating on Distributed Systems",
     "desc": "Arjun Sharma reviewed: 'The consensus algorithms module (Raft & Paxos) is by far the best theoretical breakdown.'",
     "time": "8 hours ago",
-    "read": false,
+    "read": true,
     "type": "Review",
     "category": "Review",
     "recipientId": "inst-1791911606628",
@@ -169,6 +185,7 @@
     "courseId": "cou-b00839da",
     "actionUrl": "/instructor/reviews",
     "color": "amber",
-    "createdAt": "2026-10-15T08:00:00.000Z"
+    "createdAt": "2026-10-15T08:00:00.000Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
   }
 ]
