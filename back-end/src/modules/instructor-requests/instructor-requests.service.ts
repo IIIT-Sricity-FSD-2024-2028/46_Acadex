@@ -150,50 +150,85 @@ export class InstructorRequestsService {
     const org = await this.orgsRepo.findById(dto.organizationId);
     if (!org) throw new NotFoundException(`Organization '${dto.organizationId}' not found`);
 
-    if (this.isAffiliated(instructor) && instructor.organizationId !== org.id) {
-      throw new BadRequestException(`${instructor.name} is already affiliated with ${instructor.organizationName}`);
-    }
+    const isCourseAssignment = Boolean(dto.courseId) || (Boolean(dto.courseTitle) && dto.courseTitle !== 'General Course Assignment');
 
     let courseTitle = dto.courseTitle;
-    if (dto.courseId) {
-      const course = await this.coursesRepo.findById(dto.courseId);
-      if (!course) throw new NotFoundException(`Course '${dto.courseId}' not found`);
-      if (course.organizationId && course.organizationId !== org.id) {
-        throw new ForbiddenException('This course belongs to another organization');
+    let course: any = null;
+
+    if (isCourseAssignment) {
+      // Rule: An instructor MUST be already associated with this organization before receiving course requests!
+      if (!this.isAffiliated(instructor) || instructor.organizationId !== org.id) {
+        throw new BadRequestException(
+          `${instructor.name} is not associated with ${org.name}. Instructors must be affiliated members of your organization before being assigned to teach a course.`
+        );
       }
-      courseTitle = course.title;
+
+      if (dto.courseId) {
+        course = await this.coursesRepo.findById(dto.courseId);
+        if (!course) throw new NotFoundException(`Course '${dto.courseId}' not found`);
+        if (course.organizationId && course.organizationId !== org.id) {
+          throw new ForbiddenException('This course belongs to another organization');
+        }
+        courseTitle = course.title;
+      }
+      if (!courseTitle) throw new BadRequestException('courseId or courseTitle is required for course assignment');
+    } else {
+      // Rule: Organization association invitation.
+      // If the instructor is ALREADY associated with ANY organization, they CANNOT receive invitations!
+      if (this.isAffiliated(instructor)) {
+        if (instructor.organizationId === org.id) {
+          throw new BadRequestException(`${instructor.name} is already a faculty member of your organization.`);
+        } else {
+          throw new BadRequestException(
+            `${instructor.name} is already associated with ${instructor.organizationName || 'another organization'} and cannot receive invitations.`
+          );
+        }
+      }
     }
-    if (!courseTitle) throw new BadRequestException('courseId or courseTitle is required');
 
     const duplicate = (await this.requestsRepo.find({ where: { instructorId: instructor.id, organizationId: org.id } })).find(
-      (r) => !isJoin(r) && isPending(r.status) && (r.courseId || r.courseTitle) === (dto.courseId || courseTitle)
+      (r) => !isJoin(r) && isPending(r.status) && (
+        isCourseAssignment
+          ? (r.courseId === (dto.courseId || course?.id) || r.courseTitle === courseTitle)
+          : (r.type === 'org-invitation' || !r.courseId)
+      )
     );
-    if (duplicate) throw new ConflictException('A pending invitation for this course already exists');
+    if (duplicate) {
+      throw new ConflictException(
+        isCourseAssignment
+          ? 'A pending invitation for this course already exists'
+          : 'A pending faculty invitation has already been sent to this instructor'
+      );
+    }
 
     const now = new Date();
     const request = await this.requestsRepo.create({
-      type: 'invitation',
+      type: isCourseAssignment ? 'course-assignment' : 'org-invitation',
       instructorId: instructor.id,
-      courseId: dto.courseId || null,
+      courseId: isCourseAssignment ? (dto.courseId || course?.id || null) : null,
       organizationId: org.id,
       organizationName: org.name,
       name: instructor.name,
       email: instructor.email,
       avatar: instructor.avatar,
       specialization: instructor.specialization,
-      courseTitle,
-      semester: dto.semester || null,
-      creditHours: dto.creditHours || null,
+      courseTitle: isCourseAssignment ? courseTitle : null,
+      semester: isCourseAssignment ? (dto.semester || null) : null,
+      creditHours: isCourseAssignment ? (dto.creditHours || null) : null,
       proposedTerms: dto.proposedTerms || null,
-      description: dto.message || '',
+      description: dto.message || (isCourseAssignment ? '' : `You have been invited to join the faculty of ${org.name}.`),
       submittedDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       status: 'Pending Professor Response',
       trackingStatus: `Awaiting decision from ${instructor.name}`,
     });
 
     await this.notifsRepo.create({
-      title: `Teaching invitation sent to ${instructor.name}`,
-      desc: `${org.name} invited ${instructor.name} to teach "${courseTitle}".`,
+      title: isCourseAssignment
+        ? `Course assignment sent to ${instructor.name}`
+        : `Faculty invitation sent to ${instructor.name}`,
+      desc: isCourseAssignment
+        ? `${org.name} assigned ${instructor.name} to teach "${courseTitle}".`
+        : `${org.name} invited ${instructor.name} to join their faculty.`,
       time: 'Just now',
       category: 'Instructor',
       read: false,
@@ -213,62 +248,82 @@ export class InstructorRequestsService {
     if (!instructor) throw new NotFoundException('Instructor no longer exists');
     const accepted = dto.decision === TeachingRequestDecision.ACCEPTED;
 
-    if (accepted && this.isAffiliated(instructor) && instructor.organizationId !== request.organizationId) {
-      throw new BadRequestException(`Leave ${instructor.organizationName} before accepting an invitation from another organization`);
+    const isCourseAssignment = request.type === 'course-assignment' || Boolean(request.courseId);
+
+    if (accepted) {
+      if (isCourseAssignment) {
+        // Must be affiliated with this organization to accept a course from it
+        if (!this.isAffiliated(instructor) || instructor.organizationId !== request.organizationId) {
+          throw new BadRequestException(`You are not associated with ${request.organizationName}. You can only accept courses from your associated organization.`);
+        }
+      } else {
+        // Org invitation
+        if (this.isAffiliated(instructor) && instructor.organizationId !== request.organizationId) {
+          throw new BadRequestException(`Leave ${instructor.organizationName} before accepting an invitation from another organization`);
+        }
+      }
     }
 
     const updated = await this.requestsRepo.update(id, {
       status: accepted ? 'Accepted by Professor' : 'Declined by Professor',
-      trackingStatus: accepted ? 'Accepted — instructor added to course' : 'Declined by instructor',
+      trackingStatus: accepted
+        ? (isCourseAssignment ? 'Accepted — instructor added to course' : 'Accepted — instructor joined organization')
+        : (isCourseAssignment ? 'Declined by instructor' : 'Declined faculty invitation'),
       respondedAt: new Date().toISOString(),
       instructorNotes: dto.notes || null,
     });
 
     if (accepted) {
-      const org = await this.orgsRepo.findById(request.organizationId);
-      if (org) await this.affiliate(instructor, org);
+      if (!isCourseAssignment) {
+        // Stage 1: Affiliate instructor with the inviting organization
+        const org = await this.orgsRepo.findById(request.organizationId);
+        if (org) await this.affiliate(instructor, org);
+      } else {
+        // Stage 2: Add instructor to course
+        let course = request.courseId ? await this.coursesRepo.findById(request.courseId) : null;
+        if (!course && request.courseTitle) {
+          const allCourses = await this.coursesRepo.find();
+          course = allCourses.find((c: any) =>
+            (c.title?.toLowerCase() === request.courseTitle?.toLowerCase() || c.id === request.courseId) &&
+            (!request.organizationId || c.organizationId === request.organizationId)
+          ) || null;
+        }
 
-      let course = request.courseId ? await this.coursesRepo.findById(request.courseId) : null;
-      if (!course && request.courseTitle) {
-        const allCourses = await this.coursesRepo.find();
-        course = allCourses.find((c: any) =>
-          (c.title?.toLowerCase() === request.courseTitle?.toLowerCase() || c.id === request.courseId) &&
-          (!request.organizationId || c.organizationId === request.organizationId)
-        ) || null;
-      }
+        if (course) {
+          const team = Array.isArray(course.instructors) ? [...course.instructors] : [];
+          if (!team.some((m: any) => m.id === instructor.id)) {
+            const role = team.length === 0 ? 'Lead Instructor' : 'Co-Instructor';
+            team.push({
+              id: instructor.id,
+              name: instructor.name,
+              role,
+              avatar: instructor.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+              specialization: instructor.specialization || 'Faculty Instructor',
+            });
 
-      if (course) {
-        const team = Array.isArray(course.instructors) ? [...course.instructors] : [];
-        if (!team.some((m: any) => m.id === instructor.id)) {
-          const role = team.length === 0 ? 'Lead Instructor' : 'Co-Instructor';
-          team.push({
-            id: instructor.id,
-            name: instructor.name,
-            role,
-            avatar: instructor.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
-            specialization: instructor.specialization || 'Faculty Instructor',
-          });
+            const updatePayload: any = {
+              instructors: team,
+              coInstructorIds: team.map((i: any) => i.id).filter((id: string) => id !== (course.instructorId || instructor.id)),
+            };
 
-          const updatePayload: any = {
-            instructors: team,
-            coInstructorIds: team.map((i: any) => i.id).filter((id: string) => id !== (course.instructorId || instructor.id)),
-          };
+            if (!course.instructorId || team.length === 1) {
+              updatePayload.instructorId = instructor.id;
+              updatePayload.instructorName = instructor.name;
+              updatePayload.leadInstructorName = instructor.name;
+            }
 
-          if (!course.instructorId || team.length === 1) {
-            updatePayload.instructorId = instructor.id;
-            updatePayload.instructorName = instructor.name;
-            updatePayload.leadInstructorName = instructor.name;
+            await this.coursesRepo.update(course.id, updatePayload);
+            await this.instructorsRepo.update(instructor.id, { coursesCount: (instructor.coursesCount || 0) + 1 });
           }
-
-          await this.coursesRepo.update(course.id, updatePayload);
-          await this.instructorsRepo.update(instructor.id, { coursesCount: (instructor.coursesCount || 0) + 1 });
         }
       }
     }
 
     await this.notifsRepo.create({
       title: accepted ? `${request.name} accepted your invitation` : `${request.name} declined your invitation`,
-      desc: `Teaching invitation for "${request.courseTitle}".`,
+      desc: isCourseAssignment
+        ? `Teaching invitation for "${request.courseTitle}".`
+        : `Faculty invitation to join ${request.organizationName}.`,
       time: 'Just now',
       category: 'Instructor',
       read: false,
@@ -325,44 +380,9 @@ export class InstructorRequestsService {
   }
 
   async createJoinRequest(userId: string, dto: CreateJoinRequestDto) {
-    const instructor = await this.instructorForUser(userId);
-    if (this.isAffiliated(instructor)) {
-      throw new BadRequestException(`You are already a member of ${instructor.organizationName}. Leave it first.`);
-    }
-    const org = await this.orgsRepo.findById(dto.organizationId);
-    if (!org) throw new NotFoundException(`Organization '${dto.organizationId}' not found`);
-
-    const existing = (await this.requestsRepo.find({ where: { instructorId: instructor.id } })).filter(
-      (r) => isJoin(r) && isPending(r.status)
+    throw new BadRequestException(
+      'Instructors cannot request to join an organization. Organizations must initiate and send an invitation directly to the instructor.'
     );
-    if (existing.length) {
-      throw new ConflictException(`You already have a pending request with ${existing[0].organizationName}`);
-    }
-
-    const request = await this.requestsRepo.create({
-      type: 'join',
-      instructorId: instructor.id,
-      organizationId: org.id,
-      organizationName: org.name,
-      name: instructor.name,
-      email: instructor.email,
-      avatar: instructor.avatar,
-      specialization: instructor.specialization,
-      description: (dto.message || '').trim(),
-      status: JOIN_STATUS.PENDING,
-      submittedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-    });
-
-    await this.notifsRepo.create({
-      title: `Join request from ${instructor.name}`,
-      desc: `${instructor.name} asked to join ${org.name} as an instructor.`,
-      time: 'Just now',
-      category: 'Instructor',
-      read: false,
-      color: 'blue',
-      organizationId: org.id,
-    });
-    return request;
   }
 
   async cancelJoinRequest(userId: string, id: string) {
