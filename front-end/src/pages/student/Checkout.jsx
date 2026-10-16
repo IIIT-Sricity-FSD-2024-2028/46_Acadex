@@ -24,12 +24,19 @@ function luhnValid(digits) {
 }
 
 function expiryValid(value) {
-  const m = /^(\d{2})\/(\d{2})$/.exec(value);
+  const clean = String(value || '').trim();
+  const m = /^(\d{2})\/(\d{2}|\d{4})$/.exec(clean);
   if (!m) return false;
   const month = Number(m[1]);
   if (month < 1 || month > 12) return false;
-  const expiresEnd = new Date(2000 + Number(m[2]), month, 1);
-  return expiresEnd > new Date();
+  let year = Number(m[2]);
+  if (year < 100) year += 2000;
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  if (year < curYear) return false;
+  if (year === curYear && month < curMonth) return false;
+  return true;
 }
 
 export default function Checkout() {
@@ -46,6 +53,7 @@ export default function Checkout() {
   const [upiId, setUpiId] = useState('');
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
+  const [paidSuccess, setPaidSuccess] = useState(false);
 
   useEffect(() => {
     if (!courseId) return;
@@ -61,7 +69,9 @@ export default function Checkout() {
   }, []);
 
   if (!courseId) return <Navigate to="/student/explore" replace />;
-  if (enrollments.some((e) => e.courseId === courseId)) return <Navigate to={`/student/learn/${courseId}`} replace />;
+  if (!paidSuccess && enrollments.some((e) => e.courseId === courseId)) {
+    return <Navigate to={`/student/learn/${courseId}`} replace />;
+  }
 
   const setCardField = (field, value) => {
     setCard((prev) => ({ ...prev, [field]: value }));
@@ -71,11 +81,11 @@ export default function Checkout() {
   const validate = () => {
     const e = {};
     if (method === 'card') {
-      const digits = card.number.replace(/\s/g, '');
+      const digits = card.number.replace(/\D/g, '');
       if (card.name.trim().length < 2) e.name = 'Enter the name on the card';
       if (!/^\d{13,19}$/.test(digits) || !luhnValid(digits)) e.number = 'Enter a valid card number';
       if (!expiryValid(card.expiry)) e.expiry = 'Enter a valid future expiry (MM/YY)';
-      if (!/^\d{3,4}$/.test(card.cvv)) e.cvv = 'Enter the 3 or 4 digit CVV';
+      if (!/^\d{3,4}$/.test(card.cvv.replace(/\D/g, ''))) e.cvv = 'Enter the 3 or 4 digit CVV';
     } else if (!UPI_PATTERN.test(upiId.trim())) {
       e.upiId = 'Enter a valid UPI ID, e.g. name@okaxis';
     }
@@ -88,13 +98,23 @@ export default function Checkout() {
     if (!validate()) return;
     setProcessing(true);
     try {
+      const cleanDigits = card.number.replace(/\D/g, '');
       const payload =
         method === 'card'
-          ? { courseId, paymentMethod: 'card', cardLast4: card.number.replace(/\s/g, '').slice(-4) }
+          ? { courseId, paymentMethod: 'card', cardLast4: cleanDigits.slice(-4) }
           : { courseId, paymentMethod: 'upi', upiId: upiId.trim() };
       const result = await api.student.checkout(payload);
+      setPaidSuccess(true);
+      try {
+        sessionStorage.setItem('nexuspay_last_payment', JSON.stringify(result));
+      } catch (e) {
+        // ignore
+      }
       await refreshData();
-      navigate('/student/payment-success', { state: result, replace: true });
+      navigate(`/student/payment-success?transactionId=${result.transactionId}&courseId=${courseId}`, {
+        state: result,
+        replace: true,
+      });
     } catch (err) {
       addToast(err.message || 'Payment failed', 'error');
     } finally {
@@ -199,7 +219,7 @@ export default function Checkout() {
                           const d = e.target.value.replace(/\D/g, '').slice(0, 19);
                           setCardField('number', d.replace(/(.{4})/g, '$1 ').trim());
                         }}
-                        placeholder="1234 5678 9012 3456"
+                        placeholder="4242 4242 4242 4242"
                         className={`${inputClass('number')} font-mono`}
                       />
                       {errors.number && <p className="text-[11px] text-rose-600 mt-1">{errors.number}</p>}

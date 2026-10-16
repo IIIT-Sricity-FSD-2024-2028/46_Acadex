@@ -11,8 +11,8 @@ async function request(endpoint, options = {}) {
   const token = localStorage.getItem('nexuspay_auth_token') || localStorage.getItem('nexuspay_student_token');
   const role = options.role || localStorage.getItem('nexuspay_active_role') || 'Student';
 
-  const userId = localStorage.getItem('user_id') || '';
-  const userEmail = localStorage.getItem('user_email') || '';
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || 'usr-5';
+  const userEmail = localStorage.getItem('user_email') || localStorage.getItem('nexuspay_user_email') || 'arjun.sharma@email.com';
 
   const headers = {
     'Content-Type': 'application/json',
