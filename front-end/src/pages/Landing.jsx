@@ -926,58 +926,34 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2.5 text-xs text-slate-500">
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Accounting &amp; Finance
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Artificial Intelligence
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Cybersecurity Threat Hunting
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Data Analytics with Python
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Cloud DevOps &amp; SRE
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Full Stack Web Engineering
-                  </a>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -989,49 +965,29 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2.5 text-xs text-slate-500">
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Google Cloud Architect
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Google Cybersecurity Spec
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     IBM Data Scientist
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Stanford Machine Learning
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     AWS Solutions Architect
-                  </a>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -1043,49 +999,29 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2.5 text-xs text-slate-500">
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     AI Essentials for Leaders
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Deep Learning &amp; PyTorch
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Financial Markets &amp; Quant
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Kubernetes Enterprise Ops
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Zero-Trust Network Defense
-                  </a>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -1097,49 +1033,29 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2.5 text-xs text-slate-500">
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Career Assessment Test
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     CompTIA Security+ Prep
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     IT Certifications Roadmap
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     Resume &amp; Portfolio Review
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student/explore')}
-                    className="hover:text-[#0056D2] transition-colors cursor-pointer"
-                  >
+                  <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                     LinkedIn Credential Sync
-                  </a>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -1151,54 +1067,38 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
-                  <a
-                    href="/signin?role=Student"
-                    onClick={(e) => handleProtectedNavigation(e, '/student')}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-bold select-none cursor-default">
                     <span className="material-symbols-outlined text-[13px]">school</span> STUDENT PORTAL
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <Link
-                    to="/instructor"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-bold hover:bg-blue-100 transition-colors"
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-bold select-none cursor-default">
                     <span className="material-symbols-outlined text-[13px]">group</span> EDUCATOR STUDIO
-                  </Link>
+                  </span>
                 </li>
                 <li>
-                  <Link
-                    to="/organization/landing"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-purple-50 text-purple-800 font-bold hover:bg-purple-100 transition-colors"
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-purple-50 text-purple-800 font-bold select-none cursor-default">
                     <span className="material-symbols-outlined text-[13px]">apartment</span> ORGANIZATION PORTAL
-                  </Link>
+                  </span>
                 </li>
                 <li>
-                  <Link
-                    to="/admin"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 font-bold hover:bg-indigo-100 transition-colors"
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 font-bold select-none cursor-default">
                     <span className="material-symbols-outlined text-[13px]">verified_user</span> ADMIN CENTER
-                  </Link>
+                  </span>
                 </li>
                 <li>
-                  <Link
-                    to="/super-admin/dashboard"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition-colors"
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 text-amber-800 font-bold select-none cursor-default">
                     <span className="material-symbols-outlined text-[13px]">security</span> SUPER ADMIN PORTAL
-                  </Link>
+                  </span>
                 </li>
                 <li className="pt-2 text-slate-600">
-                  <Link to="/signin" className="hover:text-[#0056D2] font-semibold">
+                  <span className="font-semibold select-none cursor-default">
                     Sign In
-                  </Link>{' '}
+                  </span>{' '}
                   •{' '}
-                  <Link to="/signup" className="hover:text-[#0056D2] font-semibold">
+                  <span className="font-semibold select-none cursor-default">
                     Create Account
-                  </Link>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -1208,25 +1108,18 @@ export default function Landing() {
           <div className="pt-8 flex items-center justify-between text-xs text-slate-500">
             <div>&copy; 2026 EduSphere Global Inc. All rights reserved.</div>
             <div className="flex items-center gap-6">
-              <Link to="/privacy" className="hover:text-slate-800 transition-colors">
+              <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                 Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-slate-800 transition-colors">
+              </span>
+              <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                 Terms of Service
-              </Link>
-              <Link to="/honor-code" className="hover:text-slate-800 transition-colors">
+              </span>
+              <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                 Honor Code
-              </Link>
-              <a
-                href="#catalog-section"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert('Cookie preferences updated.');
-                }}
-                className="hover:text-slate-800 transition-colors"
-              >
+              </span>
+              <span className="hover:text-slate-800 transition-colors select-none cursor-default">
                 Cookie Preferences
-              </a>
+              </span>
             </div>
           </div>
         </div>
