@@ -7,7 +7,8 @@ import {
   Edit,
   Eye,
   Users,
-  Trash2
+  Trash2,
+  UserPlus
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
@@ -48,13 +49,22 @@ export default function Courses() {
     <OrgLayout
       breadcrumbs={[{ label: 'Courses' }]}
       actions={
-        <Link
-          to="/org/courses/create"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create New Course</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/org/courses/assign"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant text-xs font-bold shadow-xs transition-all"
+          >
+            <UserPlus className="w-4 h-4 text-primary" />
+            <span>Assign Course to Faculty</span>
+          </Link>
+          <Link
+            to="/org/courses/create"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create New Course</span>
+          </Link>
+        </div>
       }
     >
       <div className="space-y-6">
@@ -187,8 +197,15 @@ export default function Courses() {
                         <td className="py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Link
+                              to={`/org/courses/assign?courseId=${c.id}`}
+                              title="Assign this course to faculty instructor"
+                              className="p-2 rounded-xl bg-surface-container hover:bg-primary/10 text-primary transition-colors"
+                            >
+                              <UserPlus className="w-3.5 h-3.5" />
+                            </Link>
+                            <Link
                               to={`/org/courses/${c.id}/edit`}
-                              title="Edit course and assign faculty"
+                              title="Edit course details"
                               className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors"
                             >
                               <Edit className="w-3.5 h-3.5" />

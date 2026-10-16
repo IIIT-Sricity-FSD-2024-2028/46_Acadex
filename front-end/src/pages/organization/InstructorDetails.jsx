@@ -28,11 +28,11 @@ export default function InstructorDetails() {
       ]}
       actions={
         <Link
-          to="/org/courses"
+          to={`/org/courses/assign?instructorId=${instructor.id}`}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm transition-all"
         >
           <BookOpen className="w-4 h-4" />
-          <span>Manage Course Faculty</span>
+          <span>Assign Course</span>
         </Link>
       }
     >

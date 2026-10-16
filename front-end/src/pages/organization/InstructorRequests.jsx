@@ -53,6 +53,7 @@ export default function InstructorRequests() {
     decideJoinRequest,
     resendInvitation,
     refreshData,
+    info: organization,
   } = useOrg();
   const [filter, setFilter] = useState('All');
   const [tab, setTab] = useState('invitations');
@@ -142,19 +143,27 @@ export default function InstructorRequests() {
   // ── Send invitation request ────────────────────────────────────────────────
   const handleSendRequest = async () => {
     if (!foundInstructor) return;
+    if (foundInstructor.organizationId && foundInstructor.organizationId !== organization?.id) {
+      addToast(
+        `${foundInstructor.name} is already affiliated with ${foundInstructor.organizationName || 'another organization'} and cannot receive invitations.`,
+        'error'
+      );
+      return;
+    }
     setLookupState('sending');
 
     try {
       await sendCourseTeachingRequest({
         instructorId: foundInstructor.id,
-        courseTitle: 'General Course Assignment',
-        message: `You have been invited to join our faculty. Please review the request in your instructor dashboard.`,
+        courseTitle: undefined,
+        courseId: undefined,
+        message: `You have been invited to join the faculty of ${organization?.name || 'our institution'}. Please review the invitation in your dashboard.`,
       });
 
       await refreshData();
       setLookupState('sent');
       addToast(
-        `Teaching invitation successfully sent to ${foundInstructor.name} (${foundInstructor.email})!`,
+        `Faculty invitation successfully sent to ${foundInstructor.name} (${foundInstructor.email})!`,
         'success'
       );
 
@@ -262,6 +271,21 @@ export default function InstructorRequests() {
                             <CheckCircle2 className="w-3 h-3" />
                             Instructor Found
                           </span>
+                          {foundInstructor.organizationId ? (
+                            foundInstructor.organizationId === organization?.id ? (
+                              <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30">
+                                In Your Faculty
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/30">
+                                Affiliated with {foundInstructor.organizationName || 'Another Org'}
+                              </span>
+                            )
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                              Available to Invite
+                            </span>
+                          )}
                         </div>
                         <h3 className="text-white font-extrabold text-base mt-0.5">{foundInstructor.name}</h3>
                         <p className="text-slate-400 text-xs flex items-center gap-1.5 mt-0.5">
@@ -271,15 +295,6 @@ export default function InstructorRequests() {
                         <p className="text-slate-500 text-[11px] mt-0.5 flex items-center gap-1">
                           <GraduationCap className="w-3 h-3" />
                           <span>{foundInstructor.specialization || 'General Educator'}</span>
-                          {foundInstructor.status && (
-                            <span className={`ml-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-                              foundInstructor.status === 'Active'
-                                ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700'
-                                : 'bg-amber-900/50 text-amber-300 border border-amber-700'
-                            }`}>
-                              {foundInstructor.status}
-                            </span>
-                          )}
                         </p>
                       </div>
                     </div>
@@ -291,14 +306,23 @@ export default function InstructorRequests() {
                       >
                         Cancel
                       </button>
-                      <button
-                        onClick={handleSendRequest}
-                        className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Send Teaching Request</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
+                      {foundInstructor.organizationId ? (
+                        <button
+                          disabled
+                          className="px-5 py-2.5 rounded-xl bg-slate-700/80 text-slate-400 font-bold text-xs cursor-not-allowed flex items-center gap-2 border border-slate-600"
+                        >
+                          <span>{foundInstructor.organizationId === organization?.id ? 'Already In Faculty' : 'Cannot Invite (Affiliated)'}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleSendRequest}
+                          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Send Faculty Invitation</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

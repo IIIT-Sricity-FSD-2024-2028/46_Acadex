@@ -34,7 +34,7 @@ export function InstructorProvider({ children }) {
       localStorage.setItem('nexuspay_instructor_id', me.id);
 
       const [invRes, joinRes, coursesRes] = await Promise.allSettled([
-        api.instructorRequests.list({ instructorId: me.id, type: 'invitation', limit: 1000 }),
+        api.instructorRequests.list({ instructorId: me.id, limit: 1000 }),
         api.instructorRequests.myJoinRequests(),
         api.instructors.getCourses(me.id),
       ]);
@@ -64,16 +64,30 @@ export function InstructorProvider({ children }) {
   };
 
   const isAffiliated = Boolean(instructor?.organizationId) && instructor?.status === 'Active';
-  const pendingJoinRequest = joinRequests.find((r) => /pending/i.test(r.status)) || null;
 
   const isPendingStatus = (s) => /pending|sent/i.test(s || '');
-  const pendingCourseRequests = invitations.filter(
-    (i) => isPendingStatus(i.status) && (i.courseId || (i.courseTitle && i.courseTitle !== 'General Course Assignment'))
-  );
+
+  // Stage 1: Organization association invitations (Org -> Instructor)
+  // Only valid when instructor is unaffiliated, or for review
   const pendingOrgInvitations = invitations.filter(
-    (i) => isPendingStatus(i.status) && (!i.courseTitle || i.courseTitle === 'General Course Assignment' || !i.courseId)
+    (i) =>
+      isPendingStatus(i.status) &&
+      (i.type === 'org-invitation' || !i.courseId || i.courseTitle === 'General Course Assignment')
   );
-  const pendingCount = invitations.filter((i) => isPendingStatus(i.status)).length;
+
+  // Stage 2: Course teaching requests (Org -> Instructor)
+  // Rule: An instructor MUST already be affiliated with the organization to receive course requests!
+  const pendingCourseRequests = isAffiliated
+    ? invitations.filter(
+        (i) =>
+          isPendingStatus(i.status) &&
+          (i.type === 'course-assignment' || Boolean(i.courseId)) &&
+          i.courseTitle !== 'General Course Assignment' &&
+          i.organizationId === instructor.organizationId
+      )
+    : [];
+
+  const pendingCount = isAffiliated ? pendingCourseRequests.length : pendingOrgInvitations.length;
 
   const value = {
     instructor,
@@ -82,19 +96,17 @@ export function InstructorProvider({ children }) {
     pendingCourseRequests,
     pendingOrgInvitations,
     pendingCount,
-    joinRequests,
-    pendingJoinRequest,
     assignedCourses,
     loading,
     actionLoading,
     error,
     refreshInstructor: fetchInstructorData,
+    acceptOrgInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Accepted', notes)),
+    declineOrgInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Declined', notes)),
     acceptInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Accepted', notes)),
     declineInvitation: (id, notes) => run(() => api.instructorRequests.respond(id, 'Declined', notes)),
     acceptCourseRequest: (id, notes) => run(() => api.instructorRequests.respond(id, 'Accepted', notes)),
     declineCourseRequest: (id, notes) => run(() => api.instructorRequests.respond(id, 'Declined', notes)),
-    requestToJoin: (organizationId, message) => run(() => api.instructorRequests.requestToJoin(organizationId, message)),
-    cancelJoinRequest: (id) => run(() => api.instructorRequests.cancelJoinRequest(id)),
     leaveOrganization: () => run(() => api.instructors.leaveOrganization(instructor.id)),
   };
 
@@ -105,17 +117,20 @@ const defaultInstructorContext = {
   instructor: null,
   isAffiliated: false,
   invitations: [],
-  joinRequests: [],
-  pendingJoinRequest: null,
+  pendingCourseRequests: [],
+  pendingOrgInvitations: [],
+  pendingCount: 0,
   assignedCourses: [],
   loading: false,
   actionLoading: false,
   error: null,
   refreshInstructor: async () => {},
+  acceptOrgInvitation: async () => {},
+  declineOrgInvitation: async () => {},
   acceptInvitation: async () => {},
   declineInvitation: async () => {},
-  requestToJoin: async () => {},
-  cancelJoinRequest: async () => {},
+  acceptCourseRequest: async () => {},
+  declineCourseRequest: async () => {},
   leaveOrganization: async () => {},
 };
 

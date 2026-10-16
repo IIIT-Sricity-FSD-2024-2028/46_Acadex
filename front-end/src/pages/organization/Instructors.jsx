@@ -76,11 +76,11 @@ export default function Instructors() {
                   <span>Invite Instructor by Email</span>
                 </Link>
                 <Link
-                  to="/org/courses"
+                  to="/org/courses/assign"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold border border-outline-variant transition-all"
                 >
                   <BookOpen className="w-4 h-4" />
-                  <span>Manage Course Faculty</span>
+                  <span>Assign Courses to Faculty</span>
                 </Link>
               </div>
               {/* How it works */}
@@ -170,7 +170,7 @@ export default function Instructors() {
                       <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                     <Link
-                      to="/org/courses"
+                      to={`/org/courses/assign?instructorId=${inst.id}`}
                       className="py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold transition-colors flex items-center justify-center gap-1"
                       title="Assign a course to this professor"
                     >

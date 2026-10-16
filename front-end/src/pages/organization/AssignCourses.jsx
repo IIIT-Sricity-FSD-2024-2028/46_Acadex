@@ -21,7 +21,8 @@ export default function AssignCourses() {
   const { addToast } = useToast();
   const { instructors: allInstructors, courses: allCourses, sendCourseTeachingRequest, info: organization } = useOrg();
   const courses = allCourses.filter((c) => c.organizationId === organization?.id);
-  const instructors = allInstructors.filter((i) => !i.organizationId || i.organizationId === organization?.id);
+  // Rule: Only instructors associated with this organization can be assigned courses.
+  const instructors = allInstructors.filter((i) => i.organizationId === organization?.id);
 
   // Only use an explicit URL selection; otherwise start with no selections.
   const queryParams = new URLSearchParams(location.search);

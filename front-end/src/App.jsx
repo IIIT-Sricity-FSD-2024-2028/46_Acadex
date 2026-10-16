@@ -67,6 +67,7 @@ import OrgCourses from './pages/organization/Courses';
 import OrgCourseDetails from './pages/organization/CourseDetails';
 import OrgCreateCourse from './pages/organization/CreateCourse';
 import OrgEditCourse from './pages/organization/EditCourse';
+import OrgAssignCourses from './pages/organization/AssignCourses';
 import OrgEnrollments from './pages/organization/Enrollments';
 import OrgPayments from './pages/organization/Payments';
 import OrgDisputes from './pages/organization/Disputes';
@@ -256,10 +257,14 @@ export default function App() {
 
       <Route path="/org/courses" element={<OrgCourses />} />
       <Route path="/org/courses/create" element={<OrgCreateCourse />} />
+      <Route path="/org/courses/assign" element={<OrgAssignCourses />} />
+      <Route path="/org/assign-courses" element={<OrgAssignCourses />} />
       <Route path="/org/courses/:id" element={<OrgCourseDetails />} />
       <Route path="/org/courses/:id/edit" element={<OrgEditCourse />} />
       <Route path="/organization/courses" element={<OrgCourses />} />
       <Route path="/organization/courses/create" element={<OrgCreateCourse />} />
+      <Route path="/organization/courses/assign" element={<OrgAssignCourses />} />
+      <Route path="/organization/assign-courses" element={<OrgAssignCourses />} />
       <Route path="/organization/courses/:id" element={<OrgCourseDetails />} />
       <Route path="/organization/courses/:id/edit" element={<OrgEditCourse />} />
 

@@ -95,7 +95,7 @@ export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-bold text-xs">
                   <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>{pendingJoinRequest ? 'Request pending' : 'Join an organization'}</span>
+                  <span>Awaiting Faculty Invitation</span>
                 </div>
                 {pendingCount > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-extrabold">
@@ -104,12 +104,12 @@ export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0
                 )}
               </div>
               <p className="text-[11px] text-amber-800 leading-snug font-normal">
-                {pendingJoinRequest
-                  ? `Waiting for ${pendingJoinRequest.organizationName} to approve your request.`
-                  : 'Send a join request or accept an invitation to access instructor tools.'}
+                {pendingCount > 0
+                  ? 'An institution has invited you to join their faculty. Review your invitations to begin.'
+                  : 'An organization must invite you to join their faculty before you can receive course assignments.'}
               </p>
               <Link to="/instructor/dashboard" className="block text-[11px] font-bold text-amber-900 underline">
-                Manage affiliation
+                View invitations
               </Link>
             </div>
           </div>

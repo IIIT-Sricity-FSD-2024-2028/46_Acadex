@@ -14,10 +14,13 @@ const defaultInstructorContext = {
   loading: false,
   actionLoading: false,
   error: null,
+  acceptOrgInvitation: async () => {},
+  declineOrgInvitation: async () => {},
   acceptInvitation: async () => {},
   declineInvitation: async () => {},
   acceptCourseRequest: async () => {},
   declineCourseRequest: async () => {},
+  leaveOrganization: async () => {},
   refreshInstructor: async () => {},
 };
 
