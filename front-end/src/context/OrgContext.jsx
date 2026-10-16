@@ -170,7 +170,6 @@ export function OrgProvider({ children }) {
         joinRequests: joinRequestsRes.status === 'fulfilled' ? getItems(joinRequestsRes.value) : prev.joinRequests,
         disputes: disputesRes.status === 'fulfilled'
           ? getItems(disputesRes.value).filter((dispute) =>
-              (!dispute.organizationId && !dispute.raisedById) ||
               belongsToOrganization(dispute.organizationId, orgInfo?.id) ||
               belongsToOrganization(dispute.raisedById, orgInfo?.id),
             )
@@ -180,9 +179,13 @@ export function OrgProvider({ children }) {
         enrollments: organizationEnrollments,
         transactions: transactionsRes.status === 'fulfilled'
           ? normalizeTransactions(getItems(transactionsRes.value)).filter((transaction) =>
-              transaction.organizationId === orgInfo?.id ||
+              belongsToOrganization(transaction.organizationId, orgInfo?.id) ||
               organizationCourseIds.has(transaction.courseId) ||
-              organizationCourseTitles.has(String(transaction.course || '').trim().toLowerCase()),
+              organizationCourseTitles.has(String(transaction.course || '').trim().toLowerCase()) ||
+              // Some historical payments predate organization and course IDs.
+              // Keep an unscoped transaction visible when its payer is enrolled
+              // with this organization, without exposing other orgs' payments.
+              (!transaction.organizationId && organizationLearnerIds.has(transaction.payerId)),
             )
           : prev.transactions,
         notifications: notificationsRes.status === 'fulfilled' ? getItems(notificationsRes.value) : prev.notifications,

@@ -1,5 +1,27 @@
 [
   {
+    "type": "invitation",
+    "instructorId": "inst-1791915010420",
+    "courseId": null,
+    "organizationId": "org-1",
+    "organizationName": "Meridian Tech Institute",
+    "name": "Test Instructor-1",
+    "email": "testins@gmail.com",
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+    "specialization": "Computer Science",
+    "courseTitle": "General Course Assignment",
+    "semester": null,
+    "creditHours": null,
+    "proposedTerms": null,
+    "description": "You have been invited to join our faculty. Please review the request in your instructor dashboard.",
+    "submittedDate": "October 16, 2026",
+    "status": "Pending Professor Response",
+    "trackingStatus": "Awaiting decision from Test Instructor-1",
+    "id": "ins-6b477d61",
+    "createdAt": "2026-10-16T10:52:25.377Z",
+    "updatedAt": "2026-10-16T10:52:25.377Z"
+  },
+  {
     "instructorId": "inst-1791911606628",
     "courseId": "cou-fb5ac543",
     "organizationId": "org-101",

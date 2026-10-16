@@ -1,5 +1,23 @@
 [
   {
+    "id": "enr-1792148873181",
+    "learnerId": "lrn-2",
+    "learnerName": "Sofia Reyes",
+    "learnerEmail": "sofia.reyes@email.com",
+    "courseId": "crs-3",
+    "courseTitle": "Python Backend Development with FastAPI",
+    "organizationId": "org-2",
+    "instructorId": "inst-1",
+    "enrolledDate": "2026-10-16",
+    "enrolledAt": "2026-10-16T11:07:53.181Z",
+    "progress": 0,
+    "status": "Active",
+    "completedLessons": [],
+    "lastAccessedAt": null,
+    "createdAt": "2026-10-16T11:07:53.182Z",
+    "updatedAt": "2026-10-16T11:07:53.182Z"
+  },
+  {
     "id": "enr-1788420557191",
     "learnerId": "lrn-1",
     "learnerName": "Alex Chen",

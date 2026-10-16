@@ -20,7 +20,7 @@ export default function Payments() {
       item.id === transaction.courseId ||
       item.title?.trim().toLowerCase() === String(transaction.course || '').trim().toLowerCase()
     );
-    return Number(course?.price) || 0;
+    return Number(course?.price) || Number(transaction.amount) || 0;
   };
 
   const handleDownloadStatement = () => {

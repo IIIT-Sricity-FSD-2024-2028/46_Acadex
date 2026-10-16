@@ -16,16 +16,13 @@ import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 
 export default function Instructors() {
-  const { instructors, info } = useOrg();
+  const { instructors } = useOrg();
   const [search, setSearch] = useState('');
 
-  // Only show instructors who have accepted a request and are affiliated with this org
-  const orgId = info?.id || 'org-101';
-  const affiliatedInstructors = instructors.filter(
-    (inst) =>
-      inst.organizationId === orgId ||
-      (inst.organizationName && inst.organizationName === info?.name)
-  );
+  // OrgContext supplies the roster for the signed-in organization.  Do not
+  // filter it again here: accepted invitations can use legacy organization IDs
+  // while the active organization has the current ID.
+  const affiliatedInstructors = instructors;
 
   const filteredInstructors = affiliatedInstructors.filter(
     (inst) =>
