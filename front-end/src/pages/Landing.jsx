@@ -28,41 +28,6 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 
-/**
- * Verifies if the active visitor holds a verified authentication session.
- * Never defaults to logged-in state. Strictly checks for the presence of a non-empty token, user ID, and active role.
- */
-function isUserAuthenticated() {
-  try {
-    const rawToken =
-      localStorage.getItem('nexuspay_auth_token') ||
-      localStorage.getItem('auth_token');
-
-    if (!rawToken || typeof rawToken !== 'string') return false;
-    const token = rawToken.trim();
-    if (!token || token === 'null' || token === 'undefined' || token === 'false' || token.length < 8) {
-      return false;
-    }
-
-    const rawUid = localStorage.getItem('nexuspay_user_id') || localStorage.getItem('user_id');
-    if (!rawUid || typeof rawUid !== 'string') return false;
-    const uid = rawUid.trim();
-    if (!uid || uid === 'null' || uid === 'undefined' || uid === 'false') {
-      return false;
-    }
-
-    const rawRole = localStorage.getItem('nexuspay_active_role') || localStorage.getItem('user_role');
-    if (!rawRole || typeof rawRole !== 'string') return false;
-    const role = rawRole.trim();
-    if (!role || role === 'null' || role === 'undefined' || role === 'false') {
-      return false;
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -75,21 +40,17 @@ export default function Landing() {
 
   /**
    * Protected navigation interceptor for landing page buttons.
-   * If logged in, navigates directly to the target student route.
-   * If not logged in, redirects safely to /signin?role=Student, passing the destination in location state.
+   * All Explore, Learn More, and Student entry actions from the landing page
+   * safely navigate to /signin?role=Student, passing the intended destination in location state.
    */
   const handleProtectedNavigation = (e, destination) => {
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
     const target = destination || '/student/explore';
-    if (isUserAuthenticated()) {
-      navigate(target);
-    } else {
-      navigate('/signin?role=Student', {
-        state: { from: { pathname: target } },
-      });
-    }
+    navigate('/signin?role=Student', {
+      state: { from: { pathname: target } },
+    });
   };
 
   // Categories list
@@ -698,7 +659,8 @@ export default function Landing() {
               >
                 {/* Visual Header */}
                 <div
-                  className={`relative h-44 w-full bg-gradient-to-br ${card.gradient} overflow-hidden flex items-center justify-center border-b border-blue-100`}
+                  onClick={(e) => handleProtectedNavigation(e, `/student/course/${card.id}`)}
+                  className={`relative h-44 w-full bg-gradient-to-br ${card.gradient} overflow-hidden flex items-center justify-center border-b border-blue-100 cursor-pointer`}
                 >
                   <svg
                     className="absolute inset-0 w-full h-full opacity-20 pointer-events-none"
@@ -740,7 +702,10 @@ export default function Landing() {
                     <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#0056D2]">
                       {card.institution}
                     </span>
-                    <h3 className="font-heading text-lg font-bold text-[#0F172A] mt-1 leading-snug">
+                    <h3
+                      onClick={(e) => handleProtectedNavigation(e, `/student/course/${card.id}`)}
+                      className="font-heading text-lg font-bold text-[#0F172A] mt-1 leading-snug cursor-pointer hover:text-[#0056D2] transition-colors"
+                    >
                       {card.title}
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Instructor: {card.instructorName}</p>
