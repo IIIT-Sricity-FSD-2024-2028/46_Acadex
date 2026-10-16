@@ -28,6 +28,14 @@ export const JOIN_STATUS = {
 
 const isPending = (status?: string) => /pending|sent/i.test(status || '');
 const isJoin = (r: any) => r?.type === 'join';
+const legacyOrganizationIds: Record<string, string> = {
+  'org-101': 'org-1',
+  'org-102': 'org-2',
+};
+const belongsToOrganization = (recordOrganizationId?: string, organizationId?: string) =>
+  !recordOrganizationId ||
+  recordOrganizationId === organizationId ||
+  legacyOrganizationIds[recordOrganizationId] === organizationId;
 
 @Injectable()
 export class InstructorRequestsService {
@@ -166,7 +174,7 @@ export class InstructorRequestsService {
       if (dto.courseId) {
         course = await this.coursesRepo.findById(dto.courseId);
         if (!course) throw new NotFoundException(`Course '${dto.courseId}' not found`);
-        if (course.organizationId && course.organizationId !== org.id) {
+        if (!belongsToOrganization(course.organizationId, org.id)) {
           throw new ForbiddenException('This course belongs to another organization');
         }
         courseTitle = course.title;

@@ -9,11 +9,23 @@ import {
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
+import HumanAvatar from '../../components/common/HumanAvatar';
 
 export default function InstructorDetails() {
   const { id } = useParams();
-  const { instructors, courses } = useOrg();
-  const instructor = instructors.find(inst => inst.id === id) || instructors[0];
+  const { instructors, courses, isLoading } = useOrg();
+  const instructor = instructors.find((inst) => inst.id === id);
+
+  if (!instructor) {
+    return (
+      <OrgLayout breadcrumbs={[{ label: 'Instructors', path: '/org/instructors' }, { label: isLoading ? 'Loading' : 'Instructor Not Found' }]}>
+        <div className="p-8 text-center">
+          <p className="text-sm font-bold text-on-surface">{isLoading ? 'Loading instructor…' : 'Instructor not found'}</p>
+          {!isLoading && <Link to="/org/instructors" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">Return to Instructors</Link>}
+        </div>
+      </OrgLayout>
+    );
+  }
   const instructorCourses = courses.filter(c =>
     c.instructors?.some(courseInstructor => courseInstructor.id === instructor.id) ||
     c.instructorId === instructor.id ||
@@ -43,7 +55,11 @@ export default function InstructorDetails() {
         </Link>
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 flex flex-col md:flex-row items-center gap-6">
-          <img src={instructor.avatar} alt={instructor.name} className="w-24 h-24 rounded-3xl object-cover shadow-sm flex-shrink-0" />
+          {instructor.avatar ? (
+            <img src={instructor.avatar} alt={instructor.name} className="w-24 h-24 rounded-3xl object-cover shadow-sm flex-shrink-0" />
+          ) : (
+            <HumanAvatar name={instructor.name} size="3xl" className="rounded-3xl" />
+          )}
           <div className="flex-1 text-center md:text-left space-y-2">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
               <h1 className="text-2xl font-bold text-on-surface">{instructor.name}</h1>

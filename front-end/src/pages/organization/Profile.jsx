@@ -11,12 +11,14 @@ import {
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
+import { OrganizationSettingsPanel } from './Settings';
 
 export default function Profile() {
   const { info, updateOrgInfo, stats } = useOrg();
   const { addToast } = useToast();
 
   const [form, setForm] = useState({ ...info });
+  const [showSettings, setShowSettings] = useState(false);
 
   React.useEffect(() => {
     if (info) {
@@ -37,10 +39,20 @@ export default function Profile() {
   return (
     <OrgLayout breadcrumbs={[{ label: 'Organization Profile' }]}>
       <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-on-surface">Organization Profile</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-on-surface">
+            {showSettings ? 'Settings' : 'Organization Profile'}
+          </h1>
+          <button
+            type="button"
+            onClick={() => setShowSettings((current) => !current)}
+            className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface text-xs font-bold transition-colors"
+          >
+            {showSettings ? 'Profile' : 'Settings'}
+          </button>
         </div>
 
+        {showSettings ? <OrganizationSettingsPanel /> : <>
         {/* Profile Card Header */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 flex flex-col sm:flex-row items-center gap-6">
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#4F46E5] to-[#818CF8] text-white flex items-center justify-center font-black text-2xl shadow-md flex-shrink-0">
@@ -143,6 +155,7 @@ export default function Profile() {
             </button>
           </div>
         </form>
+        </>}
       </div>
     </OrgLayout>
   );

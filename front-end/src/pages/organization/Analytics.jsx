@@ -11,7 +11,6 @@ import {
   BarChart2,
   Loader2
 } from 'lucide-react';
-import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 import { api } from '../../services/api';
 
@@ -101,7 +100,13 @@ function buildDonutSegments(categories) {
   });
 }
 
-export default function Analytics() {
+export default function Analytics({
+  showSummary = true,
+  showDetails = true,
+  showHeading = true,
+  dashboardStyle = false,
+  inlineSummary = false,
+}) {
   const { courses, instructors, stats, backendStats } = useOrg();
   const [timeframe, setTimeframe] = useState('30d');
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -193,65 +198,55 @@ export default function Analytics() {
   const areaPath  = buildAreaPath(chartPoints);
 
   return (
-    <OrgLayout breadcrumbs={[{ label: 'Analytics' }]}>
-      <div className="space-y-6">
+    <div className={inlineSummary && !showDetails ? 'contents' : 'space-y-6'}>
 
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-on-surface">Analytics</h1>
-        </div>
+        {showSummary && <>
+        {showHeading && (
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface">Analytics</h1>
+          </div>
+        )}
 
         {/* 4 KPI Cards — all driven by real org data */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Cohort Enrollments</span>
+        <div className={inlineSummary ? 'contents' : dashboardStyle ? 'bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#312E81] text-white rounded-3xl p-6 md:p-8 shadow-elevation-2' : ''}>
+        <div className={inlineSummary ? 'contents' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'}>
+          <div className={dashboardStyle ? 'bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group' : 'bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1'}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider block ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>Course Completion Rate</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-2xl font-black text-on-surface">
-                {loadingAnalytics
-                  ? <Loader2 className="w-5 h-5 animate-spin text-outline inline" />
-                  : currentEnrollments.toLocaleString()}
-              </span>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                {tf.enrDelta}
-              </span>
-            </div>
-            <p className="text-[11px] text-outline mt-1">Total learners enrolled ({tf.label})</p>
-          </div>
-
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Course Completion Rate</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-2xl font-black text-primary">{orgCompletionRate}%</span>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              <span className={`text-2xl md:text-3xl font-black ${dashboardStyle ? 'text-white group-hover:scale-105 transition-transform' : 'text-primary'}`}>{orgCompletionRate}%</span>
+              <span className={`text-xs font-bold ${dashboardStyle ? 'text-emerald-300' : 'text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200'}`}>
                 +4.1%
               </span>
             </div>
-            <p className="text-[11px] text-outline mt-1">Above enterprise benchmark (65%)</p>
+            <p className={`text-[11px] mt-1 ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>Above enterprise benchmark (65%)</p>
           </div>
 
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Student Satisfaction Rating</span>
+          <div className={dashboardStyle ? 'bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group' : 'bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1'}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider block ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>Student Satisfaction Rating</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-2xl font-black text-amber-600 flex items-center gap-1">
+              <span className={`text-2xl md:text-3xl font-black flex items-center gap-1 ${dashboardStyle ? 'text-amber-300 group-hover:scale-105 transition-transform' : 'text-amber-600'}`}>
                 <Star className="w-5 h-5 fill-current" /> {orgAvgRating}
               </span>
-              <span className="text-xs font-bold text-outline">{stats.totalEnrollments || 0}+ reviews</span>
+              <span className={`text-xs font-bold ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>{stats.totalEnrollments || 0}+ reviews</span>
             </div>
-            <p className="text-[11px] text-outline mt-1">98% positive faculty feedback</p>
+            <p className={`text-[11px] mt-1 ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>98% positive faculty feedback</p>
           </div>
 
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Institutional Revenue</span>
+          <div className={dashboardStyle ? 'bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group' : 'bg-surface-container-lowest border border-outline-variant rounded-3xl p-5 shadow-elevation-1'}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider block ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>Institutional Revenue</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-2xl font-black text-emerald-700">₹{currentRevenue.toLocaleString()}</span>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              <span className={`text-2xl md:text-3xl font-black ${dashboardStyle ? 'text-white group-hover:scale-105 transition-transform' : 'text-emerald-700'}`}>₹{currentRevenue.toLocaleString()}</span>
+              <span className={`text-xs font-bold ${dashboardStyle ? 'text-emerald-300' : 'text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200'}`}>
                 {tf.revGrowth}
               </span>
             </div>
-            <p className="text-[11px] text-outline mt-1">From organizations.json · verified gross</p>
+            <p className={`text-[11px] mt-1 ${dashboardStyle ? 'text-white/70' : 'text-outline'}`}>Generated from course enrollments</p>
           </div>
         </div>
+        </div>
+        </>}
 
+        {showDetails && <>
         {/* Row 1: Charts (Enrollment Trends Line Chart + Revenue by Category Donut Chart) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -507,8 +502,8 @@ export default function Analytics() {
             Analytics data will populate as learners enroll and complete courses.
           </div>
         )}
+        </>}
 
-      </div>
-    </OrgLayout>
+    </div>
   );
 }

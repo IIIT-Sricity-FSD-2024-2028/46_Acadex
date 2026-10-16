@@ -156,7 +156,7 @@ export class CoursesService {
     if (!existing) {
       throw new NotFoundException(`Course with ID '${id}' not found`);
     }
-    return this.coursesRepo.delete(id);
+    return this.coursesRepo.update(id, { status: 'Archived' });
   }
 
   private async resolveInstructors(dto: { instructorId?: string; coInstructorIds?: string[]; instructors?: any[] }) {

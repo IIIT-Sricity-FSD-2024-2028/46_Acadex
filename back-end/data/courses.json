@@ -1,5 +1,61 @@
 [
   {
+    "title": "Engineering drawing",
+    "category": "Data Engineering",
+    "level": "Beginner",
+    "instructorId": "inst-1791911606628",
+    "instructorName": "Prof. Arthur Pendelton, Priya Nair",
+    "leadInstructorName": "Prof. Arthur Pendelton",
+    "organizationId": "org-101",
+    "instructors": [
+      {
+        "id": "inst-1791911606628",
+        "name": "Prof. Arthur Pendelton",
+        "role": "Lead Instructor",
+        "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+        "specialization": "Computer Science & AI"
+      },
+      {
+        "id": "inst-1",
+        "name": "Priya Nair",
+        "role": "Co-Instructor",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+        "specialization": "Full Stack Development & Python"
+      }
+    ],
+    "enrolledCount": 0,
+    "price": 4799,
+    "revenue": 0,
+    "rating": 5,
+    "completionRate": 75,
+    "totalHours": "18h 30m",
+    "lessonsCount": 6,
+    "modulesCount": 2,
+    "status": "Published",
+    "thumbnail": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=80",
+    "description": "teaches the concepts of engineering drawing",
+    "modules": [
+      {
+        "id": "1",
+        "title": "intro to drawing",
+        "lessons": 0,
+        "duration": ""
+      },
+      {
+        "id": "2",
+        "title": "engineering drawing module",
+        "lessons": 0,
+        "duration": ""
+      }
+    ],
+    "id": "cou-50d09a28",
+    "createdAt": "2026-10-16T19:11:59.172Z",
+    "updatedAt": "2026-10-16T19:13:19.394Z",
+    "coInstructorIds": [
+      "inst-1"
+    ]
+  },
+  {
     "title": "Object Oriented Programming",
     "category": "Cloud Architecture",
     "level": "Intermediate",
@@ -123,8 +179,8 @@
     "category": "Cloud Architecture",
     "level": "Advanced",
     "instructorId": "inst-1",
-    "instructorName": "Priya Nair",
-    "leadInstructorName": "Priya Nair",
+    "instructorName": "Prof. James Wilson",
+    "leadInstructorName": "Prof. James Wilson",
     "instructors": [
       {
         "id": "inst-1",
@@ -140,7 +196,7 @@
     "rating": 5,
     "reviewsCount": 1,
     "totalHours": "18h 30m",
-    "lessonsCount": 7,
+    "lessonsCount": "0[object Object],[object Object],[object Object][object Object],[object Object],[object Object],[object Object]",
     "modulesCount": 2,
     "status": "Published",
     "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop&q=80",
@@ -323,7 +379,7 @@
     ],
     "id": "cou-2238c587",
     "createdAt": "2026-09-03T06:25:51.044Z",
-    "updatedAt": "2026-10-15T10:57:53.420Z",
+    "updatedAt": "2026-10-16T17:54:06.798Z",
     "organizationId": "org-1"
   },
   {
@@ -1486,12 +1542,12 @@
     "price": 5499,
     "enrolledCount": 2,
     "rating": 4.9,
-    "status": "Published",
+    "status": "Archived",
     "thumbnail": "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=600&auto=format&fit=crop&q=80",
     "description": "Infrastructure as code, container orchestration, and automated pipelines on AWS. Learn to provision with Terraform, run containers on ECS and EKS, and build CI/CD workflows that deploy on every merge.",
     "totalHours": "19h 30m",
     "modulesCount": 4,
-    "lessonsCount": 22,
+    "lessonsCount": "0[object Object],[object Object],[object Object],[object Object],[object Object][object Object],[object Object],[object Object],[object Object],[object Object],[object Object][object Object],[object Object],[object Object],[object Object],[object Object],[object Object][object Object],[object Object],[object Object],[object Object],[object Object]",
     "modules": [
       {
         "id": "mod-1",
@@ -2020,7 +2076,7 @@
     ],
     "completionRate": 0,
     "createdAt": "2026-09-01T10:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
+    "updatedAt": "2026-10-16T17:42:22.158Z"
   },
   {
     "id": "crs-4",

@@ -25,7 +25,7 @@ export default function CreateCourse() {
     title: '',
     category: '',
     level: '',
-    leadInstructorId: instructors[0]?.id || 'inst-1',
+    leadInstructorId: '',
     coInstructorIds: [],
     price: '',
     description: '',
@@ -69,7 +69,7 @@ export default function CreateCourse() {
       ...courseForm,
       modules: [
         ...courseForm.modules,
-        { id: nextId, title: `Module ${nextId}`, lessons: 3, duration: '2h 00m' }
+        { id: nextId, title: '', lessons: '', duration: '' }
       ]
     });
   };
@@ -88,9 +88,9 @@ export default function CreateCourse() {
       return;
     }
 
-    const leadInst = instructors.find(i => i.id === courseForm.leadInstructorId) || instructors[0];
+    const leadInst = instructors.find(i => i.id === courseForm.leadInstructorId);
     if (!leadInst) {
-      addToast('Wait for faculty data to load, then select a lead instructor.', 'error');
+      addToast('Please select a lead instructor.', 'error');
       return;
     }
 
@@ -170,10 +170,12 @@ export default function CreateCourse() {
               <div>
                 <label className="text-xs font-bold text-on-surface block mb-1.5">Category</label>
                 <select
+                  required
                   value={courseForm.category}
                   onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })}
                   className="w-full px-4 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:border-primary text-on-surface font-medium"
                 >
+                  <option value="" disabled>Select category</option>
                   <option>Cloud Architecture</option>
                   <option>Machine Learning</option>
                   <option>Cybersecurity</option>
@@ -184,10 +186,12 @@ export default function CreateCourse() {
               <div>
                 <label className="text-xs font-bold text-on-surface block mb-1.5">Skill Level</label>
                 <select
+                  required
                   value={courseForm.level}
                   onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
                   className="w-full px-4 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:border-primary text-on-surface font-medium"
                 >
+                  <option value="" disabled>Select skill level</option>
                   <option>Beginner</option>
                   <option>Intermediate</option>
                   <option>Advanced</option>
@@ -239,7 +243,7 @@ export default function CreateCourse() {
                 </div>
               </div>
               <span className="px-3 py-1.5 rounded-full bg-white/70 backdrop-blur border border-primary/20 text-primary text-[11px] font-extrabold shadow-sm">
-                {1 + courseForm.coInstructorIds.length} Assigned
+                {(courseForm.leadInstructorId ? 1 : 0) + courseForm.coInstructorIds.length} Assigned
               </span>
             </div>
 
@@ -369,7 +373,7 @@ export default function CreateCourse() {
               <div className="rounded-2xl border border-outline-variant/60 overflow-hidden">
                 <div className="px-4 py-2.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/40">
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wide">Teaching Team Preview</span>
-                  <span className="text-[10px] text-outline">{1 + courseForm.coInstructorIds.length} member(s)</span>
+                  <span className="text-[10px] text-outline">{(courseForm.leadInstructorId ? 1 : 0) + courseForm.coInstructorIds.length} member(s)</span>
                 </div>
                 <div className="px-4 py-3 bg-white flex items-center gap-3 flex-wrap">
                   {(() => {
@@ -396,8 +400,8 @@ export default function CreateCourse() {
                       </div>
                     ) : null;
                   })}
-                  {courseForm.coInstructorIds.length === 0 && (
-                    <p className="text-[10px] text-outline italic ml-1">No co-instructors assigned yet — lead instructor only.</p>
+                  {!courseForm.leadInstructorId && courseForm.coInstructorIds.length === 0 && (
+                    <p className="text-[10px] text-outline italic ml-1">No faculty assigned yet. Select a lead instructor to continue.</p>
                   )}
                 </div>
               </div>
@@ -421,7 +425,7 @@ export default function CreateCourse() {
             <div className="space-y-3">
               {courseForm.modules.map((m, idx) => (
                 <div key={m.id || idx} className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-lg text-primary font-bold text-xs flex items-center justify-center flex-shrink-0">
+                  <span className="min-w-20 h-8 px-2 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center flex-shrink-0 whitespace-nowrap">
                     Module {idx + 1}
                   </span>
                   <input

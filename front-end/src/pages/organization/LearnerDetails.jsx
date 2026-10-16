@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -13,12 +13,24 @@ import {
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
-import { LinearProgressBar } from '../../components/common/ProgressBar';
+import { api } from '../../services/api';
 
 export default function LearnerDetails() {
   const { id } = useParams();
-  const { learners, courses, transactions, isLoading } = useOrg();
+  const { learners, courses, enrollments, isLoading } = useOrg();
   const learner = learners.find((item) => item.id === id);
+  const [certificates, setCertificates] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    api.certificates.list()
+      .then((result) => {
+        const items = Array.isArray(result) ? result : result?.items || result?.data || [];
+        if (active) setCertificates(items);
+      })
+      .catch(() => active && setCertificates([]));
+    return () => { active = false; };
+  }, []);
 
   if (!learner) {
     return (
@@ -35,7 +47,17 @@ export default function LearnerDetails() {
     );
   }
 
-  const learnerTransactions = transactions.filter(t => t.payer === learner.name);
+  const learnerEnrollments = enrollments.filter((enrollment) => enrollment.learnerId === learner.id);
+  const learnerCourses = learnerEnrollments.map((enrollment) => ({
+    enrollment,
+    course: courses.find((course) => course.id === enrollment.courseId),
+  })).filter(({ course }) => course);
+  const enrolledCourseCount = learnerEnrollments.length;
+  const certificateCount = certificates.filter((certificate) => certificate.learnerId === learner.id).length;
+  const learnerCertificates = certificates.filter((certificate) => certificate.learnerId === learner.id);
+  const enrolledSince = learner.joinedDate || (learner.createdAt
+    ? new Date(learner.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+    : 'Not available');
 
   return (
     <OrgLayout
@@ -59,52 +81,28 @@ export default function LearnerDetails() {
               <h1 className="text-2xl font-bold text-on-surface">{learner.name}</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                <span>{learner.status}</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface text-xs font-semibold">
-                {learner.learnerType}
+              <span>{learner.status || 'Active'}</span>
               </span>
             </div>
             <p className="text-xs text-on-surface-variant">{learner.university}</p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-outline pt-1">
               <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {learner.email}</span>
-              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Enrolled since {learner.joinedDate}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Enrolled since {enrolledSince}</span>
             </div>
           </div>
-          <div className="text-center md:text-right">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Total Spent</span>
-            <p className="text-2xl font-black text-primary">₹{Number(learner.totalSpent || 0).toFixed(2)}</p>
-          </div>
         </div>
 
-        {/* 4 Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Enrolled Courses</span>
-            <p className="text-xl font-bold text-on-surface mt-1">{learner.enrolledCourses}</p>
-          </div>
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Completed Tracks</span>
-            <p className="text-xl font-bold text-emerald-700 mt-1">{learner.completedCourses}</p>
-          </div>
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Assessment Avg</span>
-            <p className="text-xl font-bold text-primary mt-1">{learner.avgScore}</p>
-          </div>
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Accredited Certs</span>
-            <p className="text-xl font-bold text-amber-600 mt-1">{learner.certificatesCount}</p>
-          </div>
-        </div>
-
-        {/* 1. Enrolled Courses Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Enrolled Courses Section */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
           <h2 className="text-base font-bold text-on-surface pb-3 border-b border-outline-variant">
-            Enrolled Courses & Progress
+            Enrolled Courses
           </h2>
           <div className="divide-y divide-outline-variant/40">
-            {courses.slice(0, 3).map((c, idx) => (
-              <div key={c.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {learnerCourses.length === 0 ? (
+              <p className="py-4 text-xs text-outline">No enrolled courses are recorded for this learner.</p>
+            ) : learnerCourses.map(({ course: c }) => (
+              <div key={c.id} className="py-4 flex items-center gap-3">
                 <div className="flex items-center gap-3 max-w-md">
                   <img src={c.thumbnail} alt={c.title} className="w-12 h-9 rounded-lg object-cover" />
                   <div>
@@ -112,53 +110,38 @@ export default function LearnerDetails() {
                     <p className="text-[11px] text-outline">{c.instructorName} • {c.category}</p>
                   </div>
                 </div>
-                <div className="w-full sm:w-60">
-                  <LinearProgressBar progress={idx === 0 ? 72 : idx === 1 ? 40 : 100} showLabel={true} height="h-2" />
-                </div>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  idx === 2 ? 'bg-blue-100 text-blue-900' : 'bg-emerald-100 text-emerald-800'
-                }`}>
-                  {idx === 2 ? 'Completed' : 'In Progress'}
-                </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 2. Certificates Earned Section */}
+        {/* Certificates Earned Section */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
-            <h2 className="text-base font-bold text-on-surface">Certificates Earned ({learner.certificatesCount})</h2>
+            <h2 className="text-base font-bold text-on-surface">Certificates Earned ({certificateCount})</h2>
             <span className="text-xs text-outline font-medium">Cryptographically Verified</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5" />
+          <div className="divide-y divide-outline-variant/60">
+            {learnerCertificates.length === 0 ? (
+              <p className="py-4 text-xs text-outline">No certificates have been issued yet.</p>
+            ) : learnerCertificates.map((certificate) => (
+              <div key={certificate.id} className="py-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                  <Award className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-xs text-on-surface truncate">{certificate.courseTitle || 'Course Certificate'}</h3>
+                  <p className="text-[11px] text-outline truncate">Credential ID: {certificate.credentialId || certificate.id}</p>
+                </div>
+                <span className="text-[10px] text-emerald-700 font-bold whitespace-nowrap">{certificate.issueDate || 'Issued'}</span>
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-xs text-on-surface">Advanced Enterprise Architecture Certificate</h3>
-                <p className="text-[11px] text-outline mt-0.5">Credential ID: NX-CERT-2026-0819</p>
-                <p className="text-[10px] text-emerald-700 font-bold mt-1">Issued: August 14, 2026</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-primary flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-xs text-on-surface">FinTech Machine Learning & Fraud AI</h3>
-                <p className="text-[11px] text-outline mt-0.5">Credential ID: NX-CERT-2026-0542</p>
-                <p className="text-[10px] text-emerald-700 font-bold mt-1">Issued: May 28, 2026</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
+        </div>
 
-        {/* 3. Payment History Section */}
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
+        {false && <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-4">
           <h2 className="text-base font-bold text-on-surface pb-3 border-b border-outline-variant">
             Payment History
           </h2>
@@ -196,10 +179,10 @@ export default function LearnerDetails() {
               </tbody>
             </table>
           </div>
-        </div>
+        </div>}
 
-        {/* 4. Recent Activity Log */}
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-3">
+        {/* Recent learner activity is intentionally omitted from this profile. */}
+        {false && <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 space-y-3">
           <h2 className="text-base font-bold text-on-surface pb-2 border-b border-outline-variant">
             Recent Student Activity
           </h2>
@@ -220,7 +203,7 @@ export default function LearnerDetails() {
               <span className="text-[10px] text-outline ml-auto">3 days ago</span>
             </div>
           </div>
-        </div>
+        </div>}
 
       </div>
     </OrgLayout>

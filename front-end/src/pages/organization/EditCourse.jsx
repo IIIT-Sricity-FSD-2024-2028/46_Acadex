@@ -99,19 +99,25 @@ export default function EditCourse() {
         const newAssignments = assignedInstructors.filter(
           (instructor) => !originalInstructorIds.has(instructor.id)
         );
-        await Promise.all(newAssignments.map((instructor) =>
-          sendCourseTeachingRequest({
-            instructorId: instructor.id,
-            courseId: course.id,
-            courseTitle: courseForm.title,
-            semester: 'Fall 2026',
-            creditHours: '',
-            proposedTerms: 'Departmental faculty honorarium + 70/30 course royalties',
-            message: 'The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.',
-            organizationId: info?.id || 'org-101',
-            organizationName: info?.name || 'NexusPay Enterprise Academy',
-          })
-        ));
+        try {
+          await Promise.all(newAssignments.map((instructor) =>
+            sendCourseTeachingRequest({
+              instructorId: instructor.id,
+              courseId: course.id,
+              courseTitle: courseForm.title,
+              semester: 'Fall 2026',
+              creditHours: '',
+              proposedTerms: 'Departmental faculty honorarium + 70/30 course royalties',
+              message: 'The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.',
+              organizationId: info?.id || 'org-1',
+              organizationName: info?.name || 'NexusPay Enterprise Academy',
+            })
+          ));
+        } catch (requestError) {
+          addToast('Course saved, but one or more faculty teaching requests could not be sent.', 'info');
+          navigate('/org/courses');
+          return;
+        }
 
         addToast(
           `Course "${courseForm.title}" updated successfully with ${assignedInstructors.length} instructors${newAssignments.length ? `; ${newAssignments.length} teaching request(s) sent.` : '!'} `,

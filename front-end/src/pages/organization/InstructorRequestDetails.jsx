@@ -53,8 +53,6 @@ export default function InstructorRequestDetails() {
     : [
         ['Type', 'Teaching invitation (sent by you)'],
         ['Course', request.courseTitle],
-        ['Semester', request.semester],
-        ['Credits', request.creditHours],
         ['Terms', request.proposedTerms],
         ['Sent', fmt(request.createdAt)],
         ['Last reminder', request.lastReminderAt ? fmt(request.lastReminderAt) : null],
@@ -75,13 +73,14 @@ export default function InstructorRequestDetails() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 space-y-5">
-            <div className="flex items-center gap-4 pb-5 border-b border-outline-variant">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-5 border-b border-outline-variant">
               <HumanAvatar name={request.name} size="lg" />
               <div>
                 <h1 className="text-xl font-bold text-on-surface">{request.name}</h1>
                 <p className="text-xs text-outline">{request.email}</p>
                 {request.specialization && <p className="text-xs text-primary font-bold">{request.specialization}</p>}
               </div>
+            </div>
 
               {/* Outreach Banner */}
               <div className="mt-6 p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-2">
@@ -110,10 +109,7 @@ export default function InstructorRequestDetails() {
                   <p className="text-xs text-on-surface-variant leading-relaxed">
                     {request.sampleSyllabus}
                   </p>
-                  <div className="flex items-center gap-4 text-xs font-semibold pt-1">
-                    <span className="text-primary">{request.creditHours || '4 Credits'}</span>
-                    <span className="text-emerald-700">{request.proposedTerms}</span>
-                  </div>
+                  {request.proposedTerms && <p className="text-xs font-semibold text-emerald-700 pt-1">{request.proposedTerms}</p>}
                 </div>
               </div>
 
@@ -123,7 +119,6 @@ export default function InstructorRequestDetails() {
                 <p className="text-xs text-on-surface leading-relaxed">{request.bio}</p>
               </div>
 
-            </div>
             <dl className="divide-y divide-outline-variant/40 text-sm">
               {rows
                 .filter(([, v]) => v)

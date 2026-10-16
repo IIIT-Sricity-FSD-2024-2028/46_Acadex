@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import {
   ChevronLeft,
   Edit,
@@ -11,18 +11,42 @@ import {
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
+import { api } from '../../services/api';
+
+const getLessonCount = (module) => {
+  if (Array.isArray(module?.lessons)) return module.lessons.length;
+  if (Array.isArray(module?.items)) return module.items.length;
+  return Number(module?.lessons ?? module?.lessonsCount ?? 0) || 0;
+};
 
 export default function CourseDetails() {
   const { id } = useParams();
+  const location = useLocation();
   const { courses, isLoading } = useOrg();
-  const course = courses.find((item) => item.id === id);
+  const [loadedCourse, setLoadedCourse] = useState(null);
+  const [isLoadingCourse, setIsLoadingCourse] = useState(false);
+  const course = location.state?.course || courses.find((item) => item.id === id) || loadedCourse;
+
+  useEffect(() => {
+    if (courses.some((item) => item.id === id)) return;
+
+    let active = true;
+    setIsLoadingCourse(true);
+    api.courses.get(id)
+      .then((result) => active && setLoadedCourse(result))
+      .catch(() => active && setLoadedCourse(null))
+      .finally(() => active && setIsLoadingCourse(false));
+
+    return () => { active = false; };
+  }, [courses, id]);
+  const grossRevenue = Number(course?.revenue) || (Number(course?.price) || 0) * (Number(course?.enrolledCount) || 0);
 
   if (!course) {
     return (
       <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/org/courses' }, { label: isLoading ? 'Loading' : 'Course Not Found' }]}>
         <div className="p-8 text-center">
-          <p className="text-sm font-bold text-on-surface">{isLoading ? 'Loading course…' : 'Course not found'}</p>
-          {!isLoading && (
+          <p className="text-sm font-bold text-on-surface">{isLoading || isLoadingCourse ? 'Loading course…' : 'Course not found'}</p>
+          {!isLoading && !isLoadingCourse && (
             <Link to="/org/courses" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">
               Return to Courses
             </Link>
@@ -106,7 +130,7 @@ export default function CourseDetails() {
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Gross Revenue</span>
-            <p className="text-xl font-bold text-on-surface mt-1">₹{(course.revenue || (course.price * (course.enrolledCount || 0))).toLocaleString()}</p>
+            <p className="text-xl font-bold text-on-surface mt-1">₹{grossRevenue.toLocaleString()}</p>
           </div>
         </div>
 
@@ -169,7 +193,7 @@ export default function CourseDetails() {
                   </div>
                   <div>
                     <h3 className="font-bold text-xs text-on-surface">{mod.title}</h3>
-                    <p className="text-[11px] text-outline">{mod.lessons || 3} Lessons • {mod.duration || '2h 30m'}</p>
+                    <p className="text-[11px] text-outline">{getLessonCount(mod)} Lessons • {mod.duration || '2h 30m'}</p>
                   </div>
                 </div>
                 <span className="px-3 py-1 rounded-xl bg-surface-container text-xs font-semibold text-on-surface-variant">

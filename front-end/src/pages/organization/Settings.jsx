@@ -9,7 +9,7 @@ import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
 
-export default function Settings() {
+export function OrganizationSettingsPanel() {
   const { settings, updateSettings, resetToDefault } = useOrg();
   const { addToast } = useToast();
 
@@ -35,13 +35,7 @@ export default function Settings() {
   };
 
   return (
-    <OrgLayout breadcrumbs={[{ label: 'Organization Settings' }]}>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-on-surface">Settings</h1>
-        </div>
-
-        <form onSubmit={handleSave} className="space-y-6">
+    <form onSubmit={handleSave} className="space-y-6">
           
           {/* Security & Authentication */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 space-y-4">
@@ -155,7 +149,18 @@ export default function Settings() {
               <span>Save & Apply Settings</span>
             </button>
           </div>
-        </form>
+    </form>
+  );
+}
+
+export default function Settings() {
+  return (
+    <OrgLayout breadcrumbs={[{ label: 'Organization Settings' }]}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-on-surface">Settings</h1>
+        </div>
+        <OrganizationSettingsPanel />
       </div>
     </OrgLayout>
   );

@@ -186,19 +186,15 @@ export default function Learners() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant text-outline font-bold uppercase tracking-wider">
-                  <th className="p-4">Student</th>
-                  <th className="p-4">Affiliation / Org</th>
-                  <th className="p-4">Type</th>
-                  <th className="p-4 text-center">Enrolled</th>
-                  <th className="p-4 text-center">Progress</th>
-                  <th className="p-4 text-center">Certificates</th>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Email</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/60">
                 {filteredLearners.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-outline">
+                    <td colSpan={3} className="p-8 text-center text-outline">
                       No learners match the selected search criteria.
                     </td>
                   </tr>
@@ -208,38 +204,10 @@ export default function Learners() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img src={l.avatar} alt={l.name} className="w-9 h-9 rounded-full object-cover border border-outline-variant" />
-                          <div>
-                            <span className="font-bold text-on-surface block">{l.name}</span>
-                            <span className="text-[11px] text-outline font-mono">{l.email}</span>
-                          </div>
+                          <span className="font-bold text-on-surface">{l.name}</span>
                         </div>
                       </td>
-
-                      <td className="p-4 font-semibold text-on-surface">
-                        {l.university || 'Independent Learner'}
-                      </td>
-
-                      <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          l.learnerType === 'Student' || l.orgMembershipStatus === 'Verified Student'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}>
-                          {l.orgMembershipStatus === 'Verified Student' ? 'Verified Student' : (l.learnerType || 'Learner')}
-                        </span>
-                      </td>
-
-                      <td className="p-4 text-center font-bold text-on-surface">
-                        {l.enrolledCourses || 0} Tracks
-                      </td>
-
-                      <td className="p-4 text-center">
-                        <span className="font-bold text-emerald-600">{l.overallProgress || 75}%</span>
-                      </td>
-
-                      <td className="p-4 text-center font-bold text-amber-600">
-                        {l.certificatesCount || l.certificatesEarned || 0}
-                      </td>
+                      <td className="p-4 text-outline font-mono">{l.email}</td>
 
                       <td className="p-4 text-right">
                         <Link

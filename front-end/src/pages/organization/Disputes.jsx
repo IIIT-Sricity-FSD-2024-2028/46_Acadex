@@ -24,6 +24,20 @@ import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
 
+const normalizeDisputeStatus = (status) => {
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+
+  if (normalizedStatus === 'resolved') return 'Resolved';
+  if (normalizedStatus === 'open' || normalizedStatus === 'pending') return 'Open';
+  return 'In Progress';
+};
+
+const disputeStatusClasses = {
+  Open: 'bg-rose-100 text-rose-800',
+  'In Progress': 'bg-amber-100 text-amber-900',
+  Resolved: 'bg-emerald-100 text-emerald-800'
+};
+
 export default function Disputes() {
   const { disputes, raiseDispute, updateDisputeStatus, resolveDispute, courses, instructors, learners, info } = useOrg();
   const { addToast } = useToast();
@@ -36,11 +50,11 @@ export default function Disputes() {
 
   // Form State for Raising Dispute
   const [newDisputeForm, setNewDisputeForm] = useState({
-    disputeType: 'Royalty Payout Discrepancy',
+    disputeType: '',
     subject: '',
     description: '',
-    courseId: courses[0]?.id || '',
-    priority: 'High',
+    courseId: '',
+    priority: '',
     raisedByRole: 'Organization',
     desiredResolution: ''
   });
@@ -57,7 +71,7 @@ export default function Disputes() {
   ];
 
   const filteredDisputes = (disputes || []).filter(d => {
-    const matchesFilter = filterStatus === 'All' || d.status === filterStatus;
+    const matchesFilter = filterStatus === 'All' || normalizeDisputeStatus(d.status) === filterStatus;
     const matchesSearch =
       d.id.toLowerCase().includes(search.toLowerCase()) ||
       d.subject.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,10 +81,9 @@ export default function Disputes() {
     return matchesFilter && matchesSearch;
   });
 
-  const openCount = (disputes || []).filter(d => d.status === 'Open').length;
-  const underReviewCount = (disputes || []).filter(d => d.status === 'Under Review').length;
-  const escalatedCount = (disputes || []).filter(d => d.status === 'Escalated').length;
-  const resolvedCount = (disputes || []).filter(d => d.status === 'Resolved').length;
+  const openCount = (disputes || []).filter(d => normalizeDisputeStatus(d.status) === 'Open').length;
+  const inProgressCount = (disputes || []).filter(d => normalizeDisputeStatus(d.status) === 'In Progress').length;
+  const resolvedCount = (disputes || []).filter(d => normalizeDisputeStatus(d.status) === 'Resolved').length;
 
   const handleCreateDispute = async (e) => {
     e.preventDefault();
@@ -80,6 +93,10 @@ export default function Disputes() {
     }
     if (!newDisputeForm.description.trim()) {
       addToast('Please provide a detailed description of the dispute', 'error');
+      return;
+    }
+    if (!newDisputeForm.disputeType || !newDisputeForm.priority || !newDisputeForm.courseId) {
+      addToast('Please choose a classification, priority level, and associated course', 'error');
       return;
     }
 
@@ -102,11 +119,11 @@ export default function Disputes() {
       addToast(`Dispute ticket ${created?.id || 'DSP'} submitted to Governance Council!`, 'success');
       setShowRaiseModal(false);
       setNewDisputeForm({
-        disputeType: 'Royalty Payout Discrepancy',
+        disputeType: '',
         subject: '',
         description: '',
-        courseId: courses[0]?.id || '',
-        priority: 'High',
+        courseId: '',
+        priority: '',
         raisedByRole: 'Organization',
         desiredResolution: ''
       });
@@ -126,21 +143,10 @@ export default function Disputes() {
     }
   };
 
-  const handleEscalate = async (d) => {
+  const handleStartProgress = async (d) => {
     try {
-      await updateDisputeStatus(d.id, 'Escalated', 'Escalated to NexusPay Global Compliance & Legal Council.');
-      addToast(`Dispute ${d.id} escalated to Platform Legal & Governance!`, 'info');
-      setSelectedDispute(null);
-      setAdminNoteInput('');
-    } catch (err) {
-      addToast(`Failed to escalate dispute: ${err.message || 'Server error'}`, 'error');
-    }
-  };
-
-  const handleUnderReview = async (d) => {
-    try {
-      await updateDisputeStatus(d.id, 'Under Review', 'Case accepted by Academic Dean for active investigation.');
-      addToast(`Dispute ${d.id} status updated to Under Review!`, 'info');
+      await updateDisputeStatus(d.id, 'In Progress', 'Case accepted for active investigation.');
+      addToast(`Dispute ${d.id} marked as In Progress!`, 'info');
       setSelectedDispute(null);
       setAdminNoteInput('');
     } catch (err) {
@@ -175,22 +181,17 @@ export default function Disputes() {
           </div>
         </div>
 
-        {/* 4 Summary Stat Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Summary Stat Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Open Disputes</span>
             <p className="text-2xl font-black text-rose-600 mt-1">{openCount}</p>
             <span className="text-[11px] text-outline mt-0.5 block">Requires attention</span>
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Under Investigation</span>
-            <p className="text-2xl font-black text-amber-600 mt-1">{underReviewCount}</p>
-            <span className="text-[11px] text-outline mt-0.5 block">Active dean review</span>
-          </div>
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm">
-            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Escalated Legal</span>
-            <p className="text-2xl font-black text-purple-600 mt-1">{escalatedCount}</p>
-            <span className="text-[11px] text-outline mt-0.5 block">Platform compliance</span>
+            <span className="text-[10px] text-outline uppercase font-bold tracking-wider">In Progress</span>
+            <p className="text-2xl font-black text-amber-600 mt-1">{inProgressCount}</p>
+            <span className="text-[11px] text-outline mt-0.5 block">Active investigation</span>
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Resolved</span>
@@ -202,7 +203,7 @@ export default function Disputes() {
         {/* Filter Pills & Search */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-4 shadow-elevation-1 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-            {['All', 'Open', 'Under Review', 'Escalated', 'Resolved'].map((tab) => (
+            {['All', 'Open', 'In Progress', 'Resolved'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setFilterStatus(tab)}
@@ -236,26 +237,20 @@ export default function Disputes() {
                 <tr className="text-outline uppercase text-[10px] tracking-wider border-b border-outline-variant">
                   <th className="pb-3 pr-4 font-bold">Dispute ID</th>
                   <th className="pb-3 px-4 font-bold">Dispute Type & Subject</th>
-                  <th className="pb-3 px-4 font-bold">Raised By</th>
                   <th className="pb-3 px-4 font-bold">Associated Course</th>
-                  <th className="pb-3 px-4 font-bold">Priority</th>
                   <th className="pb-3 px-4 font-bold">Status</th>
-                  <th className="pb-3 pl-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/40">
                 {filteredDisputes.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-outline">
+                    <td colSpan={4} className="py-12 text-center text-outline">
                       No disputes found in this filter category.
                     </td>
                   </tr>
                 ) : (
                   filteredDisputes.map((d) => {
-                    const isOpen = d.status === 'Open';
-                    const isReview = d.status === 'Under Review';
-                    const isEscalated = d.status === 'Escalated';
-                    const isResolved = d.status === 'Resolved';
+                    const displayStatus = normalizeDisputeStatus(d.status);
 
                     return (
                       <tr key={d.id} className="hover:bg-surface-container-low/50 transition-colors">
@@ -271,47 +266,13 @@ export default function Disputes() {
                             <p className="text-[11px] text-on-surface-variant line-clamp-1 mt-0.5">{d.description}</p>
                           </div>
                         </td>
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center text-[10px]">
-                              {d.raisedBy?.charAt(0) || 'U'}
-                            </span>
-                            <div>
-                              <p className="font-bold text-xs text-on-surface">{d.raisedBy}</p>
-                              <span className="text-[10px] text-outline">{d.raisedByRole || 'User'}</span>
-                            </div>
-                          </div>
-                        </td>
                         <td className="py-4 px-4 max-w-[200px] truncate text-on-surface font-medium">
                           {d.courseTitle || 'General Platform'}
                         </td>
                         <td className="py-4 px-4 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            d.priority === 'Urgent' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
-                            d.priority === 'High' ? 'bg-amber-100 text-amber-900 border border-amber-200' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
-                            {d.priority}
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${disputeStatusClasses[displayStatus]}`}>
+                            {displayStatus}
                           </span>
-                        </td>
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            isOpen ? 'bg-rose-100 text-rose-800' :
-                            isReview ? 'bg-amber-100 text-amber-900' :
-                            isEscalated ? 'bg-purple-100 text-purple-900' :
-                            'bg-emerald-100 text-emerald-800'
-                          }`}>
-                            {d.status}
-                          </span>
-                        </td>
-                        <td className="py-4 pl-4 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => setSelectedDispute(d)}
-                            className="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs inline-flex items-center gap-1 transition-colors border border-outline-variant"
-                          >
-                            <span>Manage Case</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
                         </td>
                       </tr>
                     );
@@ -349,10 +310,12 @@ export default function Disputes() {
                   <div>
                     <label className="text-xs font-bold text-on-surface block mb-1">Dispute Classification Type</label>
                     <select
+                      required
                       value={newDisputeForm.disputeType}
                       onChange={(e) => setNewDisputeForm({ ...newDisputeForm, disputeType: e.target.value })}
                       className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
                     >
+                      <option value="" disabled>Select a classification</option>
                       {disputeCategories.map((cat, i) => (
                         <option key={i} value={cat}>{cat}</option>
                       ))}
@@ -362,10 +325,12 @@ export default function Disputes() {
                   <div>
                     <label className="text-xs font-bold text-on-surface block mb-1">Priority Level</label>
                     <select
+                      required
                       value={newDisputeForm.priority}
                       onChange={(e) => setNewDisputeForm({ ...newDisputeForm, priority: e.target.value })}
                       className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
                     >
+                      <option value="" disabled>Select a priority level</option>
                       <option value="Urgent">Urgent (Immediate Review)</option>
                       <option value="High">High Priority</option>
                       <option value="Medium">Medium Priority</option>
@@ -377,10 +342,12 @@ export default function Disputes() {
                 <div>
                   <label className="text-xs font-bold text-on-surface block mb-1">Associated Course Catalog Track</label>
                   <select
+                    required
                     value={newDisputeForm.courseId}
                     onChange={(e) => setNewDisputeForm({ ...newDisputeForm, courseId: e.target.value })}
                     className="w-full px-3.5 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
                   >
+                    <option value="" disabled>Select an associated course</option>
                     {courses.map(c => (
                       <option key={c.id} value={c.id}>{c.title} ({c.category})</option>
                     ))}
@@ -453,13 +420,8 @@ export default function Disputes() {
                     <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary font-mono text-[11px] font-bold">
                       {selectedDispute.id}
                     </span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      selectedDispute.status === 'Open' ? 'bg-rose-100 text-rose-800' :
-                      selectedDispute.status === 'Under Review' ? 'bg-amber-100 text-amber-900' :
-                      selectedDispute.status === 'Escalated' ? 'bg-purple-100 text-purple-900' :
-                      'bg-emerald-100 text-emerald-800'
-                    }`}>
-                      {selectedDispute.status}
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${disputeStatusClasses[normalizeDisputeStatus(selectedDispute.status)]}`}>
+                      {normalizeDisputeStatus(selectedDispute.status)}
                     </span>
                   </div>
                   <h2 className="text-lg font-bold text-on-surface mt-1.5">{selectedDispute.subject}</h2>
@@ -517,20 +479,12 @@ export default function Disputes() {
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-outline-variant">
                 <div className="flex items-center gap-2">
-                  {selectedDispute.status !== 'Under Review' && selectedDispute.status !== 'Resolved' && (
+                  {normalizeDisputeStatus(selectedDispute.status) === 'Open' && (
                     <button
-                      onClick={() => handleUnderReview(selectedDispute)}
+                      onClick={() => handleStartProgress(selectedDispute)}
                       className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-colors"
                     >
-                      Investigate (Under Review)
-                    </button>
-                  )}
-                  {selectedDispute.status !== 'Escalated' && (
-                    <button
-                      onClick={() => handleEscalate(selectedDispute)}
-                      className="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-bold transition-colors"
-                    >
-                      Escalate to Legal
+                      Mark In Progress
                     </button>
                   )}
                 </div>
@@ -542,7 +496,7 @@ export default function Disputes() {
                   >
                     Close
                   </button>
-                  {selectedDispute.status !== 'Resolved' && (
+                  {normalizeDisputeStatus(selectedDispute.status) !== 'Resolved' && (
                     <button
                       onClick={() => handleResolve(selectedDispute)}
                       className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all"

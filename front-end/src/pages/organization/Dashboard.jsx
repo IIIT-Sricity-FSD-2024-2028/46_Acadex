@@ -12,38 +12,58 @@ import {
   Sparkles,
   ChevronRight,
   ShieldCheck,
-  Mail,
   Send,
   RotateCcw
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
+import OrgAnalytics from './Analytics';
 
 export default function OrgDashboard() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const { courses, enrollments, instructorRequests, stats, respondToTeachingRequest, info } = useOrg();
+  const [revenueRange, setRevenueRange] = React.useState('6m');
 
-  // Build 6 data points for the revenue trend graph from real org data
-  // Progressively ramp from ~45% of monthly up to the current monthlyRevenue
-  const monthlyRev = stats.monthlyRevenue || 0;
-  const revenueDataPoints = React.useMemo(() => [
-    { cx: 15,  cy: 108, pct: 0.43, month: 'May' },
-    { cx: 102, cy: 88,  pct: 0.55, month: 'Jun' },
-    { cx: 189, cy: 68,  pct: 0.68, month: 'Jul' },
-    { cx: 276, cy: 48,  pct: 0.80, month: 'Aug' },
-    { cx: 363, cy: 28,  pct: 0.91, month: 'Sep' },
-    { cx: 450, cy: 10,  pct: 1.00, month: 'Oct' },
-  ].map((pt) => ({
-    ...pt,
-    val: `₹${Math.round((monthlyRev * pt.pct) / 1000)}k`,
-  })), [monthlyRev]);
+  // Aggregate the JSON-backed enrollment records by month using each course's price.
+  const revenueDataPoints = React.useMemo(() => {
+    const monthCount = revenueRange === '1y' ? 12 : 6;
+    const now = new Date();
+    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const coursePrices = new Map(courses.map((course) => [course.id, Number(course.price) || 0]));
+    const months = Array.from({ length: monthCount }, (_, index) => ({
+      date: new Date(currentMonth.getFullYear(), currentMonth.getMonth() - (monthCount - 1 - index), 1),
+      amount: 0,
+    }));
 
-  // Y-axis scale: round up to nearest 15k
-  const yMax = Math.ceil(monthlyRev / 15000) * 15000 || 45000;
+    enrollments.forEach((enrollment) => {
+      const recordedAt = enrollment.enrolledAt || enrollment.enrolledDate || enrollment.createdAt;
+      const date = recordedAt ? new Date(recordedAt) : null;
+      if (!date || Number.isNaN(date.getTime())) return;
+
+      const monthIndex = (date.getFullYear() - months[0].date.getFullYear()) * 12 + date.getMonth() - months[0].date.getMonth();
+      if (monthIndex >= 0 && monthIndex < monthCount) {
+        months[monthIndex].amount += coursePrices.get(enrollment.courseId) || 0;
+      }
+    });
+
+    const maxAmount = Math.max(...months.map((month) => month.amount), 1);
+    return months.map((month, index) => ({
+      cx: 15 + (435 * index) / (monthCount - 1),
+      cy: 125 - (month.amount / maxAmount) * 116,
+      month: month.date.toLocaleString('en-US', { month: 'short' }),
+      amount: month.amount,
+    }));
+  }, [courses, enrollments, revenueRange]);
+
+  const selectedPeriodRevenue = revenueDataPoints.reduce((total, point) => total + point.amount, 0);
+  const currentMonthRevenue = revenueDataPoints.at(-1)?.amount || 0;
+  const yMax = Math.max(5000, Math.ceil(Math.max(...revenueDataPoints.map((point) => point.amount), 1) / 5000) * 5000);
   const yMid = Math.round(yMax * 0.67);
   const yLow = Math.round(yMax * 0.33);
+  const revenueLinePath = revenueDataPoints.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.cx},${point.cy}`).join(' ');
+  const revenueAreaPath = `${revenueLinePath} L ${revenueDataPoints.at(-1)?.cx || 450},125 L ${revenueDataPoints[0]?.cx || 15},125 Z`;
 
   const handleResendMail = (email) => {
     addToast(`Resent invitation request email to ${email}!`, 'info');
@@ -138,88 +158,57 @@ export default function OrgDashboard() {
                 </span>
               </Link>
 
-              <Link to="/org/payments" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
+              <div className="bg-white/10 rounded-2xl p-4 transition-all group">
                 <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Gross Revenue YTD</span>
                 <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">₹{stats.annualRevenue.toLocaleString()}</p>
                 <span className="text-[10px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" /> ₹{stats.monthlyRevenue.toLocaleString()} this month
                 </span>
+              </div>
+
+              <OrgAnalytics
+                showDetails={false}
+                showHeading={false}
+                dashboardStyle
+                inlineSummary
+              />
+
+              <Link to="/org/instructor-requests" className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-4 transition-all group">
+                <span className="text-[10px] text-white/70 uppercase font-bold tracking-wider block">Pending Faculty Requests</span>
+                <p className="text-2xl md:text-3xl font-black mt-1 group-hover:scale-105 transition-transform">{pendingInvitations.length}</p>
+                <span className="text-[10px] text-amber-300 font-semibold mt-1 flex items-center gap-1">
+                  <Send className="w-3 h-3" /> Awaiting a response
+                </span>
               </Link>
             </div>
         </section>
 
-        {/* Two-Column Grid: Recent Enrollments & Revenue Overview Graph */}
+        {/* Faculty teaching requests and revenue overview */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left: Recent Enrollments Table (7 cols) */}
-          <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1">
-            <div className="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
-              <div>
-                <h2 className="text-base font-bold text-on-surface">Recent Course Enrollments</h2>
-                <p className="text-xs text-on-surface-variant">{enrollments.length} Total active course seats</p>
-              </div>
-              <Link to="/org/enrollments" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
-                <span>View All</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="text-outline uppercase text-[10px] tracking-wider border-b border-outline-variant/60">
-                    <th className="pb-3 font-bold">Learner</th>
-                    <th className="pb-3 font-bold">Course Track</th>
-                    <th className="pb-3 font-bold">Date</th>
-                    <th className="pb-3 font-bold text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/40">
-                  {enrollments.slice(0, 5).map((enr) => (
-                    <tr key={enr.id} className="hover:bg-surface-container-low/50 transition-colors">
-                      <td className="py-3">
-                        <div className="flex items-center gap-2.5">
-                          <img src={enr.learnerAvatar} alt={enr.learnerName} className="w-7 h-7 rounded-full object-cover" />
-                          <span className="font-bold text-on-surface">{enr.learnerName}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-on-surface-variant font-medium max-w-[180px] truncate">{enr.courseTitle}</td>
-                      <td className="py-3 text-outline text-[11px]">{enr.enrolledDate}</td>
-                      <td className="py-3 text-right">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          enr.status === 'Completed' ? 'bg-blue-100 text-blue-900' :
-                          enr.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {enr.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
           {/* Right: Revenue Overview Interactive Line Graph (5 cols) */}
-          <div className="lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 flex flex-col justify-between">
+          <div className="lg:order-2 lg:col-span-5 lg:h-[460px] bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-outline-variant mb-4">
                 <div>
                   <h2 className="text-base font-bold text-on-surface">Revenue Overview</h2>
-                  <p className="text-xs text-on-surface-variant">Monthly settlement progression</p>
+                  <p className="text-xs text-on-surface-variant">Live enrollment revenue by month</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center p-0.5 rounded-lg bg-surface-container-low border border-outline-variant text-[10px] font-bold">
-                    <span className="px-2 py-0.5 rounded-md bg-primary text-white">6M</span>
-                    <span className="px-2 py-0.5 text-outline hover:text-on-surface cursor-pointer">1Y</span>
+                    <button type="button" onClick={() => setRevenueRange('6m')} className={`px-2 py-0.5 rounded-md transition-colors ${revenueRange === '6m' ? 'bg-primary text-white' : 'text-outline hover:text-on-surface'}`}>
+                      6M
+                    </button>
+                    <button type="button" onClick={() => setRevenueRange('1y')} className={`px-2 py-0.5 rounded-md transition-colors ${revenueRange === '1y' ? 'bg-primary text-white' : 'text-outline hover:text-on-surface'}`}>
+                      1Y
+                    </button>
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
                 <div>
-                  <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Monthly Net Inflow</span>
-                  <p className="text-2xl font-black text-on-surface">₹{stats.monthlyRevenue.toLocaleString()}</p>
+                  <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Current Month Revenue</span>
+                  <p className="text-2xl font-black text-on-surface">₹{currentMonthRevenue.toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] font-semibold text-outline">
                   <span className="flex items-center gap-1.5">
@@ -229,7 +218,7 @@ export default function OrgDashboard() {
                 </div>
               </div>
 
-              {/* Dynamic revenue graph driven by stats.monthlyRevenue from organizations.json */}
+              {/* Live revenue graph derived from enrollment records and course prices */}
               <div className="relative flex gap-3 h-44 pt-1">
                 <div className="flex flex-col justify-between text-[10px] font-semibold text-outline pb-5 select-none text-right w-10">
                   <span>₹{Math.round(yMax / 1000)}k</span>
@@ -255,13 +244,13 @@ export default function OrgDashboard() {
 
                     {/* Dynamic area fill */}
                     <path
-                      d={`M 15,${revenueDataPoints[0].cy} C 75,${revenueDataPoints[1].cy} 120,${revenueDataPoints[1].cy} 175,${revenueDataPoints[2].cy} C 230,${revenueDataPoints[2].cy} 285,${revenueDataPoints[3].cy} 340,${revenueDataPoints[3].cy} C 390,${revenueDataPoints[4].cy} 425,${revenueDataPoints[4].cy} 450,${revenueDataPoints[5].cy} L 450,125 L 15,125 Z`}
+                      d={revenueAreaPath}
                       fill="url(#revAreaGradDash)"
                     />
 
                     {/* Dynamic trend line */}
                     <path
-                      d={`M 15,${revenueDataPoints[0].cy} C 75,${revenueDataPoints[1].cy} 120,${revenueDataPoints[1].cy} 175,${revenueDataPoints[2].cy} C 230,${revenueDataPoints[2].cy} 285,${revenueDataPoints[3].cy} 340,${revenueDataPoints[3].cy} C 390,${revenueDataPoints[4].cy} 425,${revenueDataPoints[4].cy} 450,${revenueDataPoints[5].cy}`}
+                      d={revenueLinePath}
                       fill="none"
                       stroke="#4F46E5"
                       strokeWidth="3.5"
@@ -273,7 +262,7 @@ export default function OrgDashboard() {
                         <circle cx={pt.cx} cy={pt.cy} r="4.5" fill="#FFFFFF" stroke="#4F46E5" strokeWidth="3" className="transition-transform group-hover:scale-150" />
                         <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                           <rect x={pt.cx - 24} y={pt.cy - 28} width="48" height="18" rx="4" fill="#0F172A" />
-                          <text x={pt.cx} y={pt.cy - 16} fill="#FFFFFF" fontSize="9" fontWeight="700" textAnchor="middle">{pt.val}</text>
+                          <text x={pt.cx} y={pt.cy - 16} fill="#FFFFFF" fontSize="9" fontWeight="700" textAnchor="middle">₹{pt.amount.toLocaleString()}</text>
                         </g>
                       </g>
                     ))}
@@ -290,87 +279,83 @@ export default function OrgDashboard() {
 
             <div className="pt-4 border-t border-outline-variant/60 mt-4 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Total Net Settlement YTD</span>
-                <p className="text-xl font-black text-primary">₹{stats.annualRevenue.toLocaleString()}</p>
+                <span className="text-[10px] text-outline uppercase font-bold tracking-wider">{revenueRange === '6m' ? 'Revenue in the last 6 months' : 'Revenue in the last 12 months'}</span>
+                <p className="text-xl font-black text-primary">₹{selectedPeriodRevenue.toLocaleString()}</p>
               </div>
-              <Link
-                to="/org/payments"
-                className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors flex items-center gap-1"
-              >
-                <span>View Payments</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg">
+                Live from enrollments
+              </span>
             </div>
           </div>
 
-        </div>
-
-        {/* Outbound Faculty Invitations Sent by Organization */}
-        <section className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-elevation-1">
-          <div className="flex items-center justify-between pb-4 border-b border-outline-variant mb-6">
-            <div>
+          {/* Faculty Course Teaching Requests */}
+        <section className="lg:order-1 lg:col-span-7 lg:h-[460px] bg-surface-container-lowest border border-outline-variant rounded-3xl shadow-elevation-1 flex flex-col overflow-hidden">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-outline-variant">
+            <div className="min-w-0">
               <h2 className="text-base font-bold text-on-surface flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-primary" />
+                <span className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm">
+                  <GraduationCap className="w-4 h-4" />
+                </span>
                 <span>Faculty Course Teaching Requests</span>
-                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-xs font-bold">
+                <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold whitespace-nowrap">
                   {pendingInvitations.length} Awaiting Acceptance
                 </span>
               </h2>
-              <p className="text-xs text-on-surface-variant">Requests sent by mail to existing college faculty to teach specific courses</p>
+              <p className="text-xs text-on-surface-variant mt-1">Review faculty invitations and follow up on teaching assignments.</p>
             </div>
-            <Link to="/org/instructor-requests" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
-              <span>Manage All Teaching Requests</span>
+            <Link to="/org/instructor-requests" className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-outline-variant text-xs font-bold text-primary transition-colors whitespace-nowrap">
+              <span>Manage requests</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {pendingInvitations.slice(0, 3).map((inv) => (
-              <div key={inv.id} className="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/80 flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <img src={inv.avatar} alt={inv.name} className="w-12 h-12 rounded-2xl object-cover" />
-                    <div>
-                      <h3 className="font-bold text-sm text-on-surface">{inv.name}</h3>
-                      <p className="text-[11px] text-outline">{inv.email}</p>
-                      <span className="inline-block text-[10px] font-bold text-primary mt-0.5">{inv.specialization}</span>
-                    </div>
-                  </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 custom-scrollbar">
+            {pendingInvitations.map((inv) => (
+              <div key={inv.id} className="p-3.5 mb-2 last:mb-0 rounded-2xl border border-transparent hover:border-outline-variant hover:bg-surface-container-low transition-colors flex flex-col gap-4 sm:flex-row sm:items-center">
+                <img src={inv.avatar} alt={inv.name} className="w-11 h-11 rounded-xl object-cover flex-none ring-2 ring-primary/10" />
 
-                  <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/60 mb-2">
-                    <span className="text-[10px] font-bold text-blue-900 flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-primary" />
-                      <span>Sent request by mail</span>
-                    </span>
-                    <p className="text-[11px] text-blue-950 font-medium line-clamp-2 mt-0.5">
-                      {inv.description}
-                    </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <h3 className="font-bold text-sm text-on-surface">{inv.name}</h3>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{inv.specialization || 'Faculty'}</span>
                   </div>
-
-                  <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-                    {inv.bio}
-                  </p>
+                  <p className="text-[11px] text-outline truncate">{inv.email}</p>
+                  <p className="text-xs text-on-surface-variant mt-1 line-clamp-1">{inv.description || inv.bio || 'Teaching request awaiting a faculty response.'}</p>
                 </div>
 
-                <div className="pt-3 border-t border-outline-variant/60 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 sm:ml-auto">
                   <button
                     title="Resend teaching request email"
                     onClick={() => handleResendMail(inv.email)}
-                    className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary border border-outline-variant transition-colors"
+                    className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary border border-outline-variant transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                   </button>
                   <Link
                     to={`/org/instructor-requests/${inv.id}`}
-                    className="flex-1 py-2 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold text-center transition-colors border border-outline-variant/60"
+                    className="py-2.5 px-3 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold text-center transition-colors whitespace-nowrap"
                   >
-                    View Request Details
+                    View details
                   </Link>
                 </div>
               </div>
             ))}
+            {pendingInvitations.length === 0 && (
+              <div className="h-full min-h-44 flex flex-col items-center justify-center text-center p-6">
+                <div className="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-outline mb-3">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-bold text-on-surface">No pending faculty requests</p>
+                <p className="text-xs text-outline mt-1">New teaching invitations will appear here.</p>
+              </div>
+            )}
           </div>
         </section>
+
+        </div>
+
+        {/* Remaining organization analytics */}
+        <OrgAnalytics showSummary={false} showHeading={false} />
 
       </div>
     </OrgLayout>

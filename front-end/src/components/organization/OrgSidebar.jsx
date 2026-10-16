@@ -5,14 +5,10 @@ import {
   Users,
   GraduationCap,
   BookOpen,
-  CreditCard,
   Bell,
   FileText,
-  BarChart3,
-  Settings,
   Building2,
   Sparkles,
-  Layers,
   AlertCircle,
 } from 'lucide-react';
 import { useOrg } from '../../context/useOrg';
@@ -30,11 +26,7 @@ export default function OrgSidebar() {
     { name: 'Instructor Requests', path: '/org/instructor-requests', icon: BookOpen, badge: (stats.pendingRequests || 0) + (stats.pendingJoinRequests || 0) },
     { name: 'Learners', path: '/org/learners', icon: Users },
     { name: 'Courses', path: '/org/courses', icon: BookOpen },
-    { name: 'Enrollments', path: '/org/enrollments', icon: Layers },
-    { name: 'Payments', path: '/org/payments', icon: CreditCard },
-    { name: 'Analytics', path: '/org/analytics', icon: BarChart3 },
     { name: 'Disputes', path: '/org/disputes', icon: AlertCircle, badge: stats.openDisputes },
-    { name: 'Settings', path: '/org/settings', icon: Settings },
     { name: 'Profile', path: '/org/profile', icon: Building2 },
   ];
 
@@ -44,11 +36,7 @@ export default function OrgSidebar() {
     if (path === '/org/instructors' && (location.pathname === '/instructors' || location.pathname === '/org/instructors')) return true;
     if (path === '/org/instructor-requests' && (location.pathname === '/instructor-requests' || location.pathname === '/org/instructor-requests')) return true;
     if (path === '/org/learners' && (location.pathname === '/learners' || location.pathname === '/org/learners')) return true;
-    if (path === '/org/enrollments' && (location.pathname === '/enrollments' || location.pathname === '/org/enrollments')) return true;
-    if (path === '/org/payments' && (location.pathname === '/payments' || location.pathname === '/org/payments' || location.pathname === '/transactions' || location.pathname === '/org/transactions')) return true;
-    if (path === '/org/analytics' && (location.pathname === '/analytics' || location.pathname === '/org/analytics')) return true;
     if (path === '/org/disputes' && (location.pathname === '/disputes' || location.pathname === '/org/disputes' || location.pathname === '/org/raise-dispute' || location.pathname === '/raise-dispute')) return true;
-    if (path === '/org/settings' && (location.pathname === '/settings' || location.pathname === '/org/settings')) return true;
     if (path === '/org/profile' && (location.pathname === '/org/profile' || location.pathname === '/profile')) return true;
     return location.pathname.startsWith(path);
   };

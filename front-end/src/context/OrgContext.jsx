@@ -57,9 +57,9 @@ const belongsToOrganization = (recordOrganizationId, organizationId) =>
 
 const courseBelongsToOrganization = (course, organizationId, instructors) => {
   if (!organizationId) return true;
-  if (course?.organizationId === organizationId) return true;
+  if (belongsToOrganization(course?.organizationId, organizationId)) return true;
   const leadInstructor = instructors.find((instructor) => instructor.id === course?.instructorId);
-  return leadInstructor?.organizationId === organizationId;
+  return belongsToOrganization(leadInstructor?.organizationId, organizationId);
 };
 
 export function OrgProvider({ children }) {
@@ -153,6 +153,18 @@ export function OrgProvider({ children }) {
       const organizationLearners = allLearners.filter((learner) =>
         learner.organizationId === orgInfo?.id || organizationLearnerIds.has(learner.id),
       );
+      const alignedOrganizationEnrollments = organizationEnrollments.map((enrollment) => {
+        const learner = allLearners.find((item) => item.id === enrollment.learnerId);
+        const course = organizationCourses.find((item) => item.id === enrollment.courseId);
+
+        return {
+          ...enrollment,
+          learnerName: learner?.name || enrollment.learnerName || 'Unknown learner',
+          learnerEmail: learner?.email || enrollment.learnerEmail || '',
+          learnerAvatar: learner?.avatar || enrollment.learnerAvatar || '',
+          courseTitle: course?.title || enrollment.courseTitle || 'Course unavailable',
+        };
+      });
 
       // Store backend stats if available
       if (backendStatsRes.status === 'fulfilled' && backendStatsRes.value) {
@@ -166,7 +178,14 @@ export function OrgProvider({ children }) {
             course.instructorId === instructor.id || course.instructors?.some((item) => item.id === instructor.id),
           ),
         ),
-        instructorRequests: requestsRes.status === 'fulfilled' ? scopeInvitations(getItems(requestsRes.value), orgInfo?.id) : prev.instructorRequests,
+        instructorRequests: requestsRes.status === 'fulfilled'
+          ? scopeInvitations(getItems(requestsRes.value), orgInfo?.id).filter((request) =>
+              allInstructors.some((instructor) =>
+                instructor.id === request.instructorId &&
+                (!request.email || instructor.email?.toLowerCase() === request.email.toLowerCase()),
+              ),
+            )
+          : prev.instructorRequests,
         joinRequests: joinRequestsRes.status === 'fulfilled' ? getItems(joinRequestsRes.value) : prev.joinRequests,
         disputes: disputesRes.status === 'fulfilled'
           ? getItems(disputesRes.value).filter((dispute) =>
@@ -177,7 +196,7 @@ export function OrgProvider({ children }) {
           : prev.disputes,
         learners: organizationLearners,
         courses: organizationCourses,
-        enrollments: organizationEnrollments,
+        enrollments: alignedOrganizationEnrollments,
         transactions: transactionsRes.status === 'fulfilled'
           ? normalizeTransactions(getItems(transactionsRes.value)).filter((transaction) =>
               belongsToOrganization(transaction.organizationId, orgInfo?.id) ||
@@ -389,20 +408,17 @@ export function OrgProvider({ children }) {
 
   const deleteCourse = async (courseId) => {
     try {
-      await api.courses.delete(courseId);
+      const archived = await api.courses.update(courseId, { status: 'Archived' });
       setState((prev) => ({
         ...prev,
-        courses: prev.courses.filter((c) => c.id !== courseId),
+        courses: prev.courses.map((course) =>
+          course.id === courseId ? { ...course, ...archived, status: 'Archived' } : course,
+        ),
       }));
-      // Sync organizations.json so coursesCount, totalRevenue reflect the deletion
+      // Sync organizations.json so active-course counts and revenue stay current.
       await syncOrgCounts();
     } catch (err) {
-      console.error('Failed to delete course on backend:', err);
-      // Optimistic delete
-      setState((prev) => ({
-        ...prev,
-        courses: prev.courses.filter((c) => c.id !== courseId),
-      }));
+      console.error('Failed to archive course on backend:', err);
       throw err;
     }
   };
