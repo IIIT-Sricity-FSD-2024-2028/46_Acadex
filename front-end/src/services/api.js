@@ -11,8 +11,8 @@ async function request(endpoint, options = {}) {
   const token = localStorage.getItem('nexuspay_auth_token') || localStorage.getItem('nexuspay_student_token');
   const role = options.role || localStorage.getItem('nexuspay_active_role') || 'Student';
 
-  const userId = localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || 'usr-5';
-  const userEmail = localStorage.getItem('user_email') || localStorage.getItem('nexuspay_user_email') || 'arjun.sharma@email.com';
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || (role.toLowerCase() === 'student' ? 'usr-5' : '');
+  const userEmail = localStorage.getItem('user_email') || localStorage.getItem('nexuspay_user_email') || (role.toLowerCase() === 'student' ? 'arjun.sharma@email.com' : '');
 
   const headers = {
     'Content-Type': 'application/json',
@@ -141,6 +141,18 @@ export const api = {
     getCertificates: () => request('/student/certificates'),
     getPayments: () => request('/student/payments'),
     checkout: (payload) => request('/student/payments/checkout', { method: 'POST', body: payload }),
+    getMyReviews: () => request('/reviews/my'),
+    getMyDisputes: () => request('/disputes/my'),
+    createDispute: (data) => request('/disputes', { method: 'POST', body: data }),
+    addDisputeComment: (disputeId, message) =>
+      request(`/disputes/${disputeId}/comments`, {
+        method: 'POST',
+        body: {
+          author: localStorage.getItem('user_name') || 'Arjun Sharma',
+          message,
+          isAdmin: false,
+        },
+      }),
   },
 
   // 3. Courses, Modules, Lessons & Curriculum
@@ -154,8 +166,8 @@ export const api = {
     update: (id, data) => request(`/courses/${id}`, { method: 'PATCH', body: data }),
     delete: (id) => request(`/courses/${id}`, { method: 'DELETE' }),
     getReviews: (id) => request(`/reviews/course/${id}`),
-    addReview: (courseId, rating, comment, learnerName) =>
-      request('/reviews', { method: 'POST', body: { courseId, rating, comment, learnerName } }),
+    addReview: (courseId, rating, comment, learnerName, learnerId) =>
+      request('/reviews', { method: 'POST', body: { courseId, rating, comment, learnerName, learnerId } }),
     updateReview: (reviewId, rating, comment) =>
       request(`/reviews/${reviewId}`, { method: 'PATCH', body: { rating, comment } }),
     deleteReview: (reviewId) => request(`/reviews/${reviewId}`, { method: 'DELETE' }),

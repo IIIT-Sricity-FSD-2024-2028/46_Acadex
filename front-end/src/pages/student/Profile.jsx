@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, Calendar, Building2, CheckCircle2, Clock3, Award, BookOpen, X, Check } from 'lucide-react';
+import { Mail, MapPin, Calendar, Building2, CheckCircle2, Clock3, Award, BookOpen } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import HumanAvatar from '../../components/common/HumanAvatar';
 import { useToast } from '../../components/common/Toast';
@@ -19,12 +19,9 @@ export default function Profile() {
   const { student, enrollments, certificates, isLoading, refreshData, updateProfile } = useStudent();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [orgs, setOrgs] = useState([]);
-  const [showOrgModal, setShowOrgModal] = useState(false);
-  const [selectedOrg, setSelectedOrg] = useState(null);
 
   useEffect(() => {
-    document.title = 'Profile & Settings | NexusEdu';
+    document.title = 'Profile & Settings | Acadex';
     refreshData();
   }, [refreshData]);
 
@@ -40,11 +37,6 @@ export default function Profile() {
     }
   }, [student, form]);
 
-  const openOrgModal = () => {
-    setShowOrgModal(true);
-    api.student.getOrganizations().then((o) => setOrgs(Array.isArray(o) ? o : [])).catch(() => setOrgs([]));
-  };
-
   const save = async (e) => {
     e.preventDefault();
     if (form.name.trim().length < 2) return addToast('Name must be at least 2 characters', 'warning');
@@ -54,21 +46,6 @@ export default function Profile() {
       addToast('Profile saved', 'success');
     } catch (err) {
       addToast(err.message || 'Could not save profile', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const requestJoin = async () => {
-    if (!selectedOrg) return;
-    setSaving(true);
-    try {
-      await api.student.joinOrganization(selectedOrg.id, selectedOrg.name);
-      await refreshData();
-      setShowOrgModal(false);
-      addToast(`Request sent to ${selectedOrg.name}`, 'success');
-    } catch (err) {
-      addToast(err.message || 'Could not send request', 'error');
     } finally {
       setSaving(false);
     }
@@ -142,12 +119,7 @@ export default function Profile() {
                   <Clock3 className="w-3.5 h-3.5" /> Request pending with {student.requestedOrgName}
                 </p>
               ) : (
-                <>
-                  <p className="text-xs text-slate-500">You are an independent learner.</p>
-                  <button onClick={openOrgModal} className="w-full py-2 rounded-lg border border-[#0056D2] text-[#0056D2] text-xs font-bold hover:bg-blue-50">
-                    Request to join an organization
-                  </button>
-                </>
+                <p className="text-xs text-slate-500">Independent learner</p>
               )}
             </div>
           </aside>
@@ -224,46 +196,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
-      {showOrgModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-bold text-slate-900">Join an organization</h3>
-              <button onClick={() => setShowOrgModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
-            </div>
-            <p className="text-xs text-slate-500">The organization admin will review your request.</p>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {orgs.length === 0 ? (
-                <p className="text-xs text-slate-400 py-4 text-center">No organizations found.</p>
-              ) : (
-                orgs.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => setSelectedOrg(o)}
-                    className={`w-full p-3 rounded-xl border text-left text-sm flex justify-between items-center ${
-                      selectedOrg?.id === o.id ? 'border-[#0056D2] bg-blue-50' : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="font-semibold text-slate-800">{o.name}</span>
-                    {selectedOrg?.id === o.id && <Check className="w-4 h-4 text-[#0056D2]" />}
-                  </button>
-                ))
-              )}
-            </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button onClick={() => setShowOrgModal(false)} className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg">Cancel</button>
-              <button
-                onClick={requestJoin}
-                disabled={!selectedOrg || saving}
-                className="px-5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold disabled:opacity-50"
-              >
-                Send request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </PageLayout>
   );
 }

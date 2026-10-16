@@ -11,7 +11,7 @@ export default function Certificates() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    document.title = 'Certificates | NexusEdu';
+    document.title = 'Certificates | Acadex';
     refreshData();
   }, [refreshData]);
 

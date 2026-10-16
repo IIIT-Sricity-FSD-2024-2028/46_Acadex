@@ -140,7 +140,7 @@ export default function SuperAdminLogin() {
             to="/"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-200 text-xs font-semibold transition-colors"
           >
-            ← Back to EduSphere
+            ← Back to Acadex
           </Link>
         </div>
 
@@ -293,7 +293,7 @@ export default function SuperAdminLogin() {
 
         {/* Footer */}
         <p className="mt-6 text-center text-[11px] text-slate-600">
-          EduSphere Super Admin Console • Restricted Access • All sessions are audited
+          Acadex Super Admin Console • Restricted Access • All sessions are audited
         </p>
       </div>
     </div>

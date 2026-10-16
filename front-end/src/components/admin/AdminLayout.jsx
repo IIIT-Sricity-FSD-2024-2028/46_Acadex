@@ -77,7 +77,7 @@ export const AdminLayout = () => {
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#0056D2] border border-blue-200/80 text-xs font-bold">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#0056D2]" />
-                  <span>NexusEdu Admin Operations</span>
+                  <span>Acadex Admin Operations</span>
                 </span>
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -193,11 +193,11 @@ export const AdminLayout = () => {
                 <div className="w-6 h-6 rounded-lg bg-[#0056D2] flex items-center justify-center text-white">
                   <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
-                <span className="font-bold text-xs text-slate-800">NexusEdu Platform Administration</span>
+                <span className="font-bold text-xs text-slate-800">Acadex Platform Administration</span>
               </div>
               <span className="hidden sm:inline text-slate-300 text-xs">•</span>
               <p className="text-xs text-slate-500">
-                © 2026 NexusEdu Enterprise. Level 2 Operational Governance & Course Oversight.
+                © 2026 Acadex Enterprise. Level 2 Operational Governance & Course Oversight.
               </p>
             </div>
 

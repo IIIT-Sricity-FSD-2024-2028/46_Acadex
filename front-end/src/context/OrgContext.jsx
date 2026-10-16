@@ -171,7 +171,8 @@ export function OrgProvider({ children }) {
         disputes: disputesRes.status === 'fulfilled'
           ? getItems(disputesRes.value).filter((dispute) =>
               belongsToOrganization(dispute.organizationId, orgInfo?.id) ||
-              belongsToOrganization(dispute.raisedById, orgInfo?.id),
+              belongsToOrganization(dispute.raisedById, orgInfo?.id) ||
+              organizationCourseIds.has(dispute.courseId),
             )
           : prev.disputes,
         learners: organizationLearners,

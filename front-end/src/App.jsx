@@ -24,6 +24,8 @@ import StudentQuiz from './pages/student/Quiz';
 import StudentCertificates from './pages/student/Certificates';
 import StudentProfile from './pages/student/Profile';
 import StudentBilling from './pages/student/Billing';
+import StudentReviews from './pages/student/Reviews';
+import StudentDisputes from './pages/student/Disputes';
 import StudentGuard from './components/student/layout/StudentGuard';
 import StudentRouteMiddleware from './components/student/layout/StudentRouteMiddleware';
 
@@ -182,6 +184,8 @@ export default function App() {
         <Route path="/student/certificates" element={<StudentCertificates />} />
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/student/billing" element={<StudentBilling />} />
+        <Route path="/student/reviews" element={<StudentReviews />} />
+        <Route path="/student/disputes" element={<StudentDisputes />} />
 
         {/* Legacy URLs */}
         <Route path="/student/course-progress/:courseId" element={<LegacyLearnRedirect />} />
@@ -190,6 +194,8 @@ export default function App() {
         <Route path="/my-learning" element={<Navigate to="/student/my-learning" replace />} />
         <Route path="/certificates" element={<Navigate to="/student/certificates" replace />} />
         <Route path="/profile" element={<Navigate to="/student/profile" replace />} />
+        <Route path="/reviews" element={<Navigate to="/student/reviews" replace />} />
+        <Route path="/disputes" element={<Navigate to="/student/disputes" replace />} />
         <Route path="/course/:id" element={<LegacyCourseRedirect />} />
 
         {/* Student Catch-All 404 Route Redirect */}

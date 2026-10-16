@@ -97,7 +97,7 @@ export default function LearningPlayer() {
       .then(([enr, crs]) => {
         setEnrollment(enr);
         setCourse(crs);
-        document.title = `${crs?.title || 'Learning'} | NexusEdu`;
+        document.title = `${crs?.title || 'Learning'} | Acadex`;
       })
       .catch((err) => {
         console.warn('Failed to load course or enrollment:', err);

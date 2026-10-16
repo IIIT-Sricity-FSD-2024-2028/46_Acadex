@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DisputesService } from './disputes.service';
 import {
@@ -15,9 +15,15 @@ export class DisputesController {
 
   @Get()
   @ApiOperation({ summary: 'List all organization disputes with status, priority filters and search' })
-  @ApiResponse({ status: 200, description: 'Returns paginated disputes list' })
   async findAll(@Query() query: DisputeQueryDto) {
     return this.disputesService.findAll(query);
+  }
+
+  @Get('my')
+  @ApiOperation({ summary: 'Get all disputes raised by current learner' })
+  @ApiResponse({ status: 200, description: 'Returns learner dispute tickets' })
+  async findMy(@Headers('x-user-id') userId: string) {
+    return this.disputesService.findMy(userId);
   }
 
   @Get(':id')
@@ -35,6 +41,7 @@ export class DisputesController {
   }
 
   @Patch(':id/status')
+  @Post(':id/status')
   @ApiOperation({ summary: 'Update dispute workflow status (Open, Under Review, Escalated, Resolved)' })
   @ApiResponse({ status: 200, description: 'Dispute status updated successfully' })
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateDisputeStatusDto) {
@@ -42,10 +49,26 @@ export class DisputesController {
   }
 
   @Patch(':id/resolve')
+  @Post(':id/resolve')
   @ApiOperation({ summary: 'Resolve a dispute ticket with formal resolution rationale' })
   @ApiResponse({ status: 200, description: 'Dispute resolved successfully' })
-  async resolve(@Param('id') id: string, @Body() dto: ResolveDisputeDto) {
+  async resolve(@Param('id') id: string, @Body() dto: any) {
     return this.disputesService.resolve(id, dto);
+  }
+
+  @Patch(':id/reject')
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject a dispute ticket with formal reason' })
+  @ApiResponse({ status: 200, description: 'Dispute rejected successfully' })
+  async reject(@Param('id') id: string, @Body() dto: any) {
+    return this.disputesService.reject(id, dto);
+  }
+
+  @Post(':id/comments')
+  @ApiOperation({ summary: 'Add a comment / internal note to dispute' })
+  @ApiResponse({ status: 201, description: 'Comment added' })
+  async addComment(@Param('id') id: string, @Body() dto: any) {
+    return this.disputesService.addComment(id, dto);
   }
 
   @Delete(':id')

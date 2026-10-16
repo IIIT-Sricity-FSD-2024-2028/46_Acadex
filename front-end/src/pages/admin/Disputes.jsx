@@ -141,12 +141,15 @@ export const Disputes = () => {
   const filtered = useMemo(() => {
     let list = disputes.filter((d) => {
       const q = searchTerm.toLowerCase();
-      const matchSearch = !q || [d.id, d.subject, d.raisedBy, d.organization, d.type, d.course]
+      const matchSearch = !q || [d.id, d.subject, d.raisedBy, d.organization, d.organizationName, d.type, d.disputeType, d.category, d.course, d.courseTitle, d.description]
         .some((v) => v?.toLowerCase().includes(q));
       const matchStatus = !statusFilter || d.status === statusFilter;
-      const matchType = !typeFilter || d.type === typeFilter;
+      const disputeCategory = (d.type || d.disputeType || d.category || '').toLowerCase();
+      const matchType = !typeFilter || disputeCategory === typeFilter.toLowerCase();
       const matchPriority = !priorityFilter || d.priority === priorityFilter;
-      const matchRaisedBy = !raisedByFilter || d.raisedByType === raisedByFilter;
+      const role = (d.raisedByType || d.raisedByRole || '').toLowerCase();
+      const targetRole = raisedByFilter.toLowerCase();
+      const matchRaisedBy = !raisedByFilter || role === targetRole || ((targetRole === 'learner' || targetRole === 'student') && (role === 'learner' || role === 'student'));
       return matchSearch && matchStatus && matchType && matchPriority && matchRaisedBy;
     });
 

@@ -37,11 +37,11 @@ export const SuperAdminLayout = () => {
                 <div className="w-6 h-6 rounded-lg bg-[#0056D2] flex items-center justify-center text-white">
                   <Shield className="w-3.5 h-3.5" />
                 </div>
-                <span className="font-bold text-xs text-slate-800">NexusEdu Platform Super Administration</span>
+                <span className="font-bold text-xs text-slate-800">Acadex Platform Super Administration</span>
               </div>
               <span className="hidden sm:inline text-slate-300 text-xs">•</span>
               <p className="text-xs text-slate-500">
-                © 2026 NexusEdu Enterprise. Level 1 Platform Governance, 85/15 Commission & Tenant Management.
+                © 2026 Acadex Enterprise. Level 1 Platform Governance, 85/15 Commission & Tenant Management.
               </p>
             </div>
 

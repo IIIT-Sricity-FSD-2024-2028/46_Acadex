@@ -65,7 +65,7 @@ export default function Checkout() {
   }, [courseId]);
 
   useEffect(() => {
-    document.title = 'Checkout | NexusEdu';
+    document.title = 'Checkout | Acadex';
   }, []);
 
   if (!courseId) return <Navigate to="/student/explore" replace />;

@@ -68,7 +68,7 @@ export function InstructorSidebar({ isOpen, toggleSidebar, unreadNotifsCount = 0
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-lg text-slate-900 tracking-tight">
-                Nexus<span className="text-[#0056D2]">Edu</span>
+                Acadex
               </span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0056D2] border border-blue-200/80">
                 Instructor

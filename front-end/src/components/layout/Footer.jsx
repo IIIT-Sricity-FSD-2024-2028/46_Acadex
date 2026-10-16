@@ -14,12 +14,12 @@ export default function Footer() {
               <BookOpen className="w-3.5 h-3.5" />
             </div>
             <span className="font-bold text-sm text-on-surface">
-              NexusPay Learning
+              Acadex
             </span>
           </Link>
           <span className="hidden md:inline text-outline text-xs">•</span>
           <p className="text-xs text-on-surface-variant font-medium">
-            © 2024 NexusPay Learning Institute. Enterprise Grade Education & Verified Credentials.
+            © 2026 Acadex. Enterprise Grade Education & Verified Credentials.
           </p>
         </div>
 
@@ -33,6 +33,12 @@ export default function Footer() {
           </Link>
           <Link to="/certificates" className="hover:text-primary transition-colors">
             Certifications
+          </Link>
+          <Link to="/student/reviews" className="hover:text-primary transition-colors">
+            Reviews
+          </Link>
+          <Link to="/student/disputes" className="hover:text-primary transition-colors">
+            Disputes
           </Link>
           <Link to="/profile" className="hover:text-primary transition-colors">
             Profile & Settings

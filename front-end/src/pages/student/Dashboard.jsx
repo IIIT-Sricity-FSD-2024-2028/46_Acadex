@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, ArrowRight, BookOpen, Award, CheckCircle2, Clock3, Building2, Compass } from 'lucide-react';
+import { Play, ArrowRight, BookOpen, Award, CheckCircle2, Clock3, Building2, Compass, Star, ShieldAlert } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
 import api from '../../services/api';
@@ -26,7 +26,7 @@ export default function Dashboard() {
   const [catalogLoading, setCatalogLoading] = useState(true);
 
   useEffect(() => {
-    document.title = 'Dashboard | NexusEdu';
+    document.title = 'Dashboard | Acadex';
     refreshData();
     api.student
       .getCatalog()
@@ -86,12 +86,9 @@ export default function Dashboard() {
                 <CheckCircle2 className="w-3.5 h-3.5" /> Student • {student?.organizationName || student?.requestedOrgName}
               </span>
             ) : (
-              <Link
-                to="/student/profile"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:border-[#0056D2] hover:text-[#0056D2]"
-              >
-                <Building2 className="w-3.5 h-3.5" /> Independent learner — join an organization
-              </Link>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200">
+                <Building2 className="w-3.5 h-3.5 text-slate-400" /> Independent Learner
+              </span>
             )}
           </div>
         </section>
@@ -101,6 +98,40 @@ export default function Dashboard() {
           <StatTile icon={Play} label="In progress" value={inProgress.length} tone="bg-indigo-50 text-indigo-600" />
           <StatTile icon={CheckCircle2} label="Completed" value={completed.length} tone="bg-emerald-50 text-emerald-600" />
           <StatTile icon={Award} label="Certificates" value={certificates.length} tone="bg-amber-50 text-amber-600" />
+        </section>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link
+            to="/student/reviews"
+            className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between hover:border-[#0056D2] hover:shadow-xs transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                <Star className="w-5 h-5 fill-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900 group-hover:text-[#0056D2] transition-colors">My Reviews & Ratings</p>
+                <p className="text-xs text-slate-500">Edit comments and view instructor responses</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0056D2] group-hover:translate-x-0.5 transition-all" />
+          </Link>
+
+          <Link
+            to="/student/disputes"
+            className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between hover:border-[#0056D2] hover:shadow-xs transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900 group-hover:text-[#0056D2] transition-colors">Course Disputes & Support</p>
+                <p className="text-xs text-slate-500">Track bug tickets and academic resolutions</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0056D2] group-hover:translate-x-0.5 transition-all" />
+          </Link>
         </section>
 
         <section>

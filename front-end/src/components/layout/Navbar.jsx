@@ -12,6 +12,8 @@ import {
   LogOut,
   ChevronRight,
   Compass,
+  Star,
+  ShieldAlert,
 } from 'lucide-react';
 import api from '../../services/api';
 import HumanAvatar from '../common/HumanAvatar';
@@ -22,8 +24,10 @@ const studentNavItems = [
   { name: 'Browse Courses', href: '/student/explore', icon: Compass, match: ['/student/explore', '/student/course/'] },
   { name: 'My Learning', href: '/student/my-learning', icon: BookOpen, match: ['/student/my-learning', '/student/learn/'] },
   { name: 'Certificates', href: '/student/certificates', icon: Award, match: ['/student/certificates'] },
-  { name: 'Profile', href: '/student/profile', icon: User, match: ['/student/profile'] },
+  { name: 'My Reviews', href: '/student/reviews', icon: Star, match: ['/student/reviews'] },
+  { name: 'Disputes', href: '/student/disputes', icon: ShieldAlert, match: ['/student/disputes'] },
   { name: 'Billing', href: '/student/billing', icon: CreditCard, match: ['/student/billing', '/student/checkout', '/student/payment-success'] },
+  { name: 'Profile', href: '/student/profile', icon: User, match: ['/student/profile'] },
 ];
 
 function isItemActive(item, pathname) {
@@ -52,7 +56,7 @@ export function StudentSidebar({ isOpen, onClose }) {
               <BookOpen className="w-4 h-4" />
             </div>
             <span className="font-extrabold text-lg text-slate-900 tracking-tight">
-              Nexus<span className="text-[#0056D2]">Edu</span>
+              Acadex
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0056D2] border border-blue-200/80">
               Learner
@@ -249,14 +253,23 @@ export default function StudentTopbar({ onMenuClick }) {
           </button>
           {showMenu && (
             <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 text-sm">
-              <Link to="/student/profile" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
+              <Link to="/student/profile" onClick={() => setShowMenu(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
                 <User className="w-4 h-4 text-slate-500" /> Profile
               </Link>
-              <Link to="/student/billing" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
+              <Link to="/student/reviews" onClick={() => setShowMenu(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
+                <Star className="w-4 h-4 text-slate-500" /> My Reviews
+              </Link>
+              <Link to="/student/disputes" onClick={() => setShowMenu(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
+                <ShieldAlert className="w-4 h-4 text-slate-500" /> Disputes
+              </Link>
+              <Link to="/student/billing" onClick={() => setShowMenu(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium">
                 <CreditCard className="w-4 h-4 text-slate-500" /> Billing
               </Link>
               <button
-                onClick={() => signOutStudent(navigate)}
+                onClick={() => {
+                  setShowMenu(false);
+                  signOutStudent(navigate);
+                }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-medium text-left"
               >
                 <LogOut className="w-4 h-4" /> Sign out

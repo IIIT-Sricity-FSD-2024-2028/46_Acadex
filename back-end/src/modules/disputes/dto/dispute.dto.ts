@@ -7,68 +7,115 @@ export enum DisputePriority {
   MEDIUM = 'Medium',
   HIGH = 'High',
   URGENT = 'Urgent',
+  CRITICAL = 'Critical',
 }
 
 export enum DisputeStatus {
   OPEN = 'Open',
+  PENDING = 'Pending',
   UNDER_REVIEW = 'Under Review',
+  IN_PROGRESS = 'In Progress',
   ESCALATED = 'Escalated',
   RESOLVED = 'Resolved',
+  REJECTED = 'Rejected',
 }
 
 export enum DisputeRole {
   ORGANIZATION = 'Organization',
   EDUCATOR = 'Educator',
+  INSTRUCTOR = 'Instructor',
   LEARNER = 'Learner',
+  STUDENT = 'Student',
+  ADMIN = 'Admin',
 }
 
 export class CreateDisputeDto {
-  @ApiProperty({ example: 'Prof. James Wilson' })
+  @ApiProperty({ example: 'Arjun Sharma' })
   @IsNotEmpty()
   @IsString()
   raisedBy: string;
 
-  @ApiPropertyOptional({ example: 'inst-1' })
+  @ApiPropertyOptional({ example: 'usr-5' })
   @IsOptional()
   @IsString()
   raisedById?: string;
 
-  @ApiPropertyOptional({ enum: DisputeRole, example: DisputeRole.EDUCATOR })
+  @ApiPropertyOptional({ example: 'lrn-1' })
+  @IsOptional()
+  @IsString()
+  learnerId?: string;
+
+  @ApiPropertyOptional({ example: 'lrn-1' })
+  @IsOptional()
+  @IsString()
+  studentId?: string;
+
+  @ApiPropertyOptional({ example: 'usr-5' })
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @ApiPropertyOptional({ enum: DisputeRole, example: DisputeRole.STUDENT })
   @IsOptional()
   @IsEnum(DisputeRole)
   raisedByRole?: DisputeRole;
 
-  @ApiProperty({ example: 'Royalty Payout Discrepancy' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'Course Content' })
+  @IsOptional()
   @IsString()
-  disputeType: string;
+  category?: string;
 
-  @ApiProperty({ example: 'Q3 Co-instructor Royalty Split Discrepancy for AWS Module' })
+  @ApiPropertyOptional({ example: 'Course Content' })
+  @IsOptional()
+  @IsString()
+  disputeType?: string;
+
+  @ApiPropertyOptional({ example: 'Lesson player issue' })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiProperty({ example: 'Lesson 3.2 video player freezing' })
   @IsNotEmpty()
   @IsString()
   subject: string;
 
-  @ApiProperty({ example: 'Discrepancy in revenue royalty calculation for Advanced Enterprise Architecture course.' })
+  @ApiProperty({ example: 'Video stops playing at 04:12 with continuous buffer error.' })
   @IsNotEmpty()
   @IsString()
   description: string;
 
-  @ApiPropertyOptional({ example: 'Advanced Enterprise Architecture & Payment Systems' })
+  @ApiPropertyOptional({ example: 'Object Oriented Programming' })
+  @IsOptional()
+  @IsString()
+  course?: string;
+
+  @ApiPropertyOptional({ example: 'Object Oriented Programming' })
   @IsOptional()
   @IsString()
   courseTitle?: string;
 
-  @ApiPropertyOptional({ example: 'crs-1' })
+  @ApiPropertyOptional({ example: 'cou-fb5ac543' })
   @IsOptional()
   @IsString()
   courseId?: string;
 
-  @ApiPropertyOptional({ enum: DisputePriority, example: DisputePriority.HIGH })
+  @ApiPropertyOptional({ example: 'org-1' })
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @ApiPropertyOptional({ example: 'Meridian Tech Institute' })
+  @IsOptional()
+  @IsString()
+  organizationName?: string;
+
+  @ApiPropertyOptional({ enum: DisputePriority, example: DisputePriority.MEDIUM })
   @IsOptional()
   @IsEnum(DisputePriority)
   priority?: DisputePriority;
 
-  @ApiPropertyOptional({ example: 'Recalculate Q3 corporate cohort revenue and issue adjustment credit.' })
+  @ApiPropertyOptional({ example: 'Re-encode video or issue lesson credit' })
   @IsOptional()
   @IsString()
   desiredResolution?: string;

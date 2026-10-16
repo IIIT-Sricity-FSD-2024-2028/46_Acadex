@@ -15,7 +15,7 @@ export default function ExploreCourses() {
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
-    document.title = 'Browse Courses | NexusEdu';
+    document.title = 'Browse Courses | Acadex';
     api.student
       .getCatalog()
       .then((res) => setCourses(Array.isArray(res) ? res : []))

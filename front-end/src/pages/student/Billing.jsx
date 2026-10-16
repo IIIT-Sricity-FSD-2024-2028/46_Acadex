@@ -14,7 +14,7 @@ export default function Billing() {
   const [receipt, setReceipt] = useState(null);
 
   useEffect(() => {
-    document.title = 'Billing & Payments | NexusEdu';
+    document.title = 'Billing & Payments | Acadex';
     api.student
       .getPayments()
       .then((p) => setPayments(Array.isArray(p) ? p : []))

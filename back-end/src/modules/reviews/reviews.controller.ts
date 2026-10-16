@@ -13,6 +13,18 @@ export class ReviewsController {
     return this.reviewsService.findAll(instructorId);
   }
 
+  @Get('my')
+  @ApiOperation({ summary: 'Get all reviews by current learner' })
+  findMy(@Headers('x-user-id') userId: string) {
+    return this.reviewsService.findMy(userId);
+  }
+
+  @Get('learner/:learnerId')
+  @ApiOperation({ summary: 'Get all reviews by learner ID' })
+  findByLearner(@Param('learnerId') learnerId: string) {
+    return this.reviewsService.findByLearner(learnerId);
+  }
+
   @Get('course/:courseId')
   @ApiOperation({ summary: 'Get all reviews for a course' })
   findByCourse(@Param('courseId') courseId: string) {

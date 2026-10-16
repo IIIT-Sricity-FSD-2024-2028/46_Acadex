@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Search, Award, BookOpen, ArrowRight } from 'lucide-react';
+import { Play, Search, Award, BookOpen, ArrowRight, Star } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
 import { useStudent } from '../../context/StudentContext';
@@ -14,10 +14,9 @@ export default function MyLearning() {
   const { enrollments, isLoading, refreshData } = useStudent();
   const [tab, setTab] = useState('in-progress');
   const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
 
   useEffect(() => {
-    document.title = 'My Learning | NexusEdu';
+    document.title = 'My Learning | Acadex';
     refreshData();
   }, [refreshData]);
 
@@ -33,12 +32,8 @@ export default function MyLearning() {
     const q = query.trim().toLowerCase();
     return groups[tab]
       .filter((e) => !q || [e.courseTitle, e.category, e.instructorName].some((v) => v?.toLowerCase().includes(q)))
-      .sort((a, b) => {
-        if (sortBy === 'title') return a.courseTitle.localeCompare(b.courseTitle);
-        if (sortBy === 'progress') return b.progress - a.progress;
-        return String(b.lastAccessedAt || b.enrolledAt || '').localeCompare(String(a.lastAccessedAt || a.enrolledAt || ''));
-      });
-  }, [groups, tab, query, sortBy]);
+      .sort((a, b) => String(b.lastAccessedAt || b.enrolledAt || '').localeCompare(String(a.lastAccessedAt || a.enrolledAt || '')));
+  }, [groups, tab, query]);
 
   return (
     <PageLayout>
@@ -62,25 +57,14 @@ export default function MyLearning() {
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search my courses"
-              className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#0056D2]"
-            />
-          </div>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm text-slate-700 focus:outline-none focus:border-[#0056D2]"
-          >
-            <option value="recent">Recently active</option>
-            <option value="title">Title (A–Z)</option>
-            <option value="progress">Progress</option>
-          </select>
+        <div className="relative max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search my courses"
+            className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#0056D2]"
+          />
         </div>
 
         {isLoading ? (
@@ -144,7 +128,13 @@ export default function MyLearning() {
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E]"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
-                      {done ? 'Review' : e.progress === 0 ? 'Start' : 'Continue'}
+                      {done ? 'Replay' : e.progress === 0 ? 'Start' : 'Continue'}
+                    </Link>
+                    <Link
+                      to={`/student/course/${e.courseId}#reviews`}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold"
+                    >
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Write Review
                     </Link>
                     {done && (
                       <Link

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ChevronRight,
   Clock,
@@ -51,14 +51,25 @@ export default function CourseDetails() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-  const [editing, setEditing] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === '#reviews') {
+      setShowReviewForm(true);
+      const el = document.getElementById('reviews');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.hash]);
+
   const enrollment = enrollments.find((e) => e.courseId === id);
-  const myReview = student ? reviews.find((r) => r.learnerId === student.id) : null;
-  const otherReviews = reviews.filter((r) => r !== myReview);
+  const myReviews = student ? reviews.filter((r) => r.learnerId === student.id) : [];
+  const otherReviews = student ? reviews.filter((r) => r.learnerId !== student.id) : reviews;
 
   const loadCourse = useCallback(() => api.student.getCatalogCourse(id).then(setCourse), [id]);
   const loadReviews = useCallback(
@@ -72,7 +83,7 @@ export default function CourseDetails() {
   }, [loadCourse, loadReviews]);
 
   useEffect(() => {
-    if (course) document.title = `${course.title} | NexusEdu`;
+    if (course) document.title = `${course.title} | Acadex`;
   }, [course]);
 
   const handleEnroll = async () => {
@@ -102,13 +113,18 @@ export default function CourseDetails() {
     if (!comment.trim()) return addToast('Write a short comment', 'warning');
     setBusy(true);
     try {
-      if (myReview) await api.courses.updateReview(myReview.id, rating, comment.trim());
-      else await api.courses.addReview(id, rating, comment.trim(), student?.name);
+      if (editingReviewId) {
+        await api.courses.updateReview(editingReviewId, rating, comment.trim());
+        addToast('Review updated', 'success');
+      } else {
+        await api.courses.addReview(id, rating, comment.trim(), student?.name, student?.id);
+        addToast('Review submitted', 'success');
+      }
       await afterReviewChange();
-      setEditing(false);
-      setRating(0);
+      setEditingReviewId(null);
+      setShowReviewForm(false);
+      setRating(5);
       setComment('');
-      addToast(myReview ? 'Review updated' : 'Review submitted', 'success');
     } catch (err) {
       addToast(err.message || 'Could not save review', 'error');
     } finally {
@@ -116,11 +132,11 @@ export default function CourseDetails() {
     }
   };
 
-  const deleteReview = async () => {
-    if (!myReview || !window.confirm('Delete your review?')) return;
+  const deleteReview = async (reviewId) => {
+    if (!reviewId || !window.confirm('Delete this review?')) return;
     setBusy(true);
     try {
-      await api.courses.deleteReview(myReview.id);
+      await api.courses.deleteReview(reviewId);
       await afterReviewChange();
       addToast('Review deleted', 'info');
     } catch (err) {
@@ -267,64 +283,76 @@ export default function CourseDetails() {
             )}
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-base font-bold text-slate-900">
-              Reviews {reviews.length > 0 && <span className="text-xs font-normal text-slate-500">({reviews.length})</span>}
-            </h2>
+          <section id="reviews" className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-base font-bold text-slate-900">
+                Reviews & Comments {reviews.length > 0 && <span className="text-xs font-normal text-slate-500">({reviews.length})</span>}
+              </h2>
+              {enrollment && (
+                <button
+                  onClick={() => {
+                    setEditingReviewId(null);
+                    setRating(5);
+                    setComment('');
+                    setShowReviewForm((prev) => !prev);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold rounded-lg transition-colors w-fit"
+                >
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  {showReviewForm && !editingReviewId ? 'Close Form' : 'Write Review / Comment'}
+                </button>
+              )}
+            </div>
 
-            {myReview && !editing && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+            {showReviewForm && (
+              <div className="bg-white border-2 border-blue-100 rounded-xl p-5 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-900">Your review</span>
-                    <Stars value={myReview.rating} />
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => {
-                        setRating(myReview.rating);
-                        setComment(myReview.comment || '');
-                        setEditing(true);
-                      }}
-                      className="p-1.5 rounded-lg hover:bg-white text-slate-500"
-                      title="Edit"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={deleteReview} disabled={busy} className="p-1.5 rounded-lg hover:bg-white text-rose-500" title="Delete">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <p className="text-sm font-bold text-slate-900">
+                    {editingReviewId ? 'Edit your review' : 'Write a review or comment'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      setEditingReviewId(null);
+                      setComment('');
+                      setRating(5);
+                    }}
+                    className="text-xs text-slate-400 hover:text-slate-600"
+                  >
+                    Cancel
+                  </button>
                 </div>
-                {myReview.comment && <p className="text-xs text-slate-700">{myReview.comment}</p>}
-              </div>
-            )}
-
-            {showForm && (
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
-                <p className="text-xs font-bold text-slate-900">{editing ? 'Edit your review' : 'Rate this course'}</p>
-                <Stars value={rating} size="w-6 h-6" onPick={setRating} />
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-slate-600">Your Rating</span>
+                  <Stars value={rating} size="w-6 h-6" onPick={setRating} />
+                </div>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={3}
                   maxLength={1000}
-                  placeholder="What did you think of this course?"
-                  className="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056D2] resize-none"
+                  placeholder="Share your thoughts, feedback, questions, or comments about this course..."
+                  className="w-full text-sm px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056D2] resize-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={submitReview}
                     disabled={busy}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0056D2] text-white text-xs font-bold rounded-lg disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0056D2] text-white text-xs font-bold rounded-lg hover:bg-[#00419E] disabled:opacity-50 transition-colors"
                   >
-                    <Send className="w-3.5 h-3.5" /> {editing ? 'Save' : 'Submit review'}
+                    <Send className="w-3.5 h-3.5" /> {editingReviewId ? 'Save changes' : 'Submit review'}
                   </button>
-                  {editing && (
-                    <button onClick={() => setEditing(false)} className="px-4 py-2 border border-slate-200 text-xs font-bold rounded-lg">
-                      Cancel
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      setEditingReviewId(null);
+                      setComment('');
+                      setRating(5);
+                    }}
+                    className="px-4 py-2 border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 rounded-lg"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
@@ -333,10 +361,71 @@ export default function CourseDetails() {
               <p className="text-xs text-slate-500">Enroll in this course to leave a review.</p>
             )}
 
-            {otherReviews.length === 0 && !myReview ? (
-              <p className="text-xs text-slate-500 bg-white border border-slate-200 rounded-xl p-4">No reviews yet.</p>
-            ) : (
+            {/* Current user's reviews list with edit & delete on each */}
+            {myReviews.length > 0 && (
               <div className="space-y-3">
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Your Reviews & Comments ({myReviews.length})</p>
+                {myReviews.map((r) => (
+                  <div key={r.id} className="bg-blue-50/60 border border-blue-200 rounded-xl p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <HumanAvatar name={r.learnerName || student?.name || 'You'} size="sm" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-900">{r.learnerName || 'You'}</span>
+                            <span className="text-[10px] font-semibold bg-blue-100 text-[#0056D2] px-1.5 py-0.5 rounded">You</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <Stars value={r.rating} />
+                            {r.createdAt && (
+                              <span className="text-[11px] text-slate-400">
+                                {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingReviewId(r.id);
+                            setRating(r.rating || 5);
+                            setComment(r.comment || '');
+                            setShowReviewForm(true);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition-colors"
+                          title="Edit review"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteReview(r.id)}
+                          disabled={busy}
+                          className="p-1.5 rounded-lg hover:bg-white text-rose-500 transition-colors"
+                          title="Delete review"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    {r.comment && <p className="text-xs text-slate-700 leading-relaxed">{r.comment}</p>}
+                    {r.response && (
+                      <div className="ml-4 pl-3 border-l-2 border-[#0056D2]/30 mt-2">
+                        <p className="text-[11px] font-bold text-[#0056D2]">Instructor response</p>
+                        <p className="text-xs text-slate-600">{r.response}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Other reviews list */}
+            {otherReviews.length > 0 && (
+              <div className="space-y-3">
+                {myReviews.length > 0 && (
+                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Other Reviews</p>
+                )}
                 {otherReviews.map((r) => (
                   <div key={r.id} className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
                     <div className="flex items-center gap-2">
@@ -363,6 +452,12 @@ export default function CourseDetails() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {reviews.length === 0 && (
+              <p className="text-xs text-slate-500 bg-white border border-slate-200 rounded-xl p-4">
+                No reviews yet. Be the first to share your feedback!
+              </p>
             )}
           </section>
         </div>
