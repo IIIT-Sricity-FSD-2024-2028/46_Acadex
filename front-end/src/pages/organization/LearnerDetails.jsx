@@ -17,8 +17,24 @@ import { LinearProgressBar } from '../../components/common/ProgressBar';
 
 export default function LearnerDetails() {
   const { id } = useParams();
-  const { learners, courses, transactions } = useOrg();
-  const learner = learners.find(l => l.id === id) || learners[0];
+  const { learners, courses, transactions, isLoading } = useOrg();
+  const learner = learners.find((item) => item.id === id);
+
+  if (!learner) {
+    return (
+      <OrgLayout breadcrumbs={[{ label: 'Learners', path: '/org/learners' }, { label: isLoading ? 'Loading' : 'Learner Not Found' }]}>
+        <div className="p-8 text-center">
+          <p className="text-sm font-bold text-on-surface">{isLoading ? 'Loading learner profile…' : 'Learner not found'}</p>
+          {!isLoading && (
+            <Link to="/org/learners" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">
+              Return to Learners
+            </Link>
+          )}
+        </div>
+      </OrgLayout>
+    );
+  }
+
   const learnerTransactions = transactions.filter(t => t.payer === learner.name);
 
   return (
@@ -57,7 +73,7 @@ export default function LearnerDetails() {
           </div>
           <div className="text-center md:text-right">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider block">Total Spent</span>
-            <p className="text-2xl font-black text-primary">₹{learner.totalSpent.toFixed(2)}</p>
+            <p className="text-2xl font-black text-primary">₹{Number(learner.totalSpent || 0).toFixed(2)}</p>
           </div>
         </div>
 

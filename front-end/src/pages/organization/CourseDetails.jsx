@@ -14,17 +14,19 @@ import { useOrg } from '../../context/useOrg';
 
 export default function CourseDetails() {
   const { id } = useParams();
-  const { courses, instructors: allInstructors } = useOrg();
-  const course = courses.find(c => c.id === id) || courses[0];
+  const { courses, isLoading } = useOrg();
+  const course = courses.find((item) => item.id === id);
 
   if (!course) {
     return (
-      <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/org/courses' }, { label: 'Course Not Found' }]}>
+      <OrgLayout breadcrumbs={[{ label: 'Courses', path: '/org/courses' }, { label: isLoading ? 'Loading' : 'Course Not Found' }]}>
         <div className="p-8 text-center">
-          <p className="text-sm font-bold text-on-surface">Course not found</p>
-          <Link to="/org/courses" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">
-            Return to Courses
-          </Link>
+          <p className="text-sm font-bold text-on-surface">{isLoading ? 'Loading course…' : 'Course not found'}</p>
+          {!isLoading && (
+            <Link to="/org/courses" className="text-xs text-primary font-bold hover:underline mt-2 inline-block">
+              Return to Courses
+            </Link>
+          )}
         </div>
       </OrgLayout>
     );

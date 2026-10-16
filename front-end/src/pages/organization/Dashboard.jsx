@@ -102,7 +102,7 @@ export default function OrgDashboard() {
                 {info.name || 'Organization'} Dashboard
               </h1>
             </div>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <Link
                 to="/org/reports"
                 className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors border border-white/20 flex items-center gap-2"
@@ -110,7 +110,7 @@ export default function OrgDashboard() {
                 <span>Executive Reports</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
-            </div>
+            </div> */}
           </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/15">

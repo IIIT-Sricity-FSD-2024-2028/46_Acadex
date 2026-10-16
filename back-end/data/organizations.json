@@ -37,17 +37,17 @@
     "status": "Active",
     "verificationStatus": "Verified",
     "establishedYear": 2022,
-    "totalRevenue": 20594,
-    "monthlyRevenue": 6178,
+    "totalRevenue": 16596,
+    "monthlyRevenue": 4979,
     "currency": "USD",
     "instructorIds": [
       "inst-3",
       "inst-4"
     ],
-    "coursesCount": 7,
-    "learnersCount": 4,
+    "coursesCount": 6,
+    "learnersCount": 3,
     "logo": "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-02-01T08:00:00.000Z",
-    "updatedAt": "2026-10-16T14:00:52.969Z"
+    "updatedAt": "2026-10-16T16:09:18.034Z"
   }
 ]

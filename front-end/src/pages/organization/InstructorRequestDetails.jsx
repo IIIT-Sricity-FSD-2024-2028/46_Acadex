@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, RotateCcw, GraduationCap, Check, X } from 'lucide-react';
+import { ChevronLeft, RotateCcw, GraduationCap, Check, X, Mail } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import HumanAvatar from '../../components/common/HumanAvatar';
 import { useOrg } from '../../context/useOrg';
