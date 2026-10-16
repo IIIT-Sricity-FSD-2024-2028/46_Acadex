@@ -1,5 +1,18 @@
 [
   {
+    "title": "Teaching invitation sent to Test Instructor-1",
+    "desc": "Meridian Tech Institute invited Test Instructor-1 to teach \"General Course Assignment\".",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": false,
+    "color": "blue",
+    "organizationId": "org-1",
+    "instructorId": "inst-1791915010420",
+    "id": "not-72516796",
+    "createdAt": "2026-10-16T10:52:25.383Z",
+    "updatedAt": "2026-10-16T10:52:25.383Z"
+  },
+  {
     "id": "notif-1",
     "title": "New Teaching Application Submitted",
     "desc": "Dr. Elena Rostova submitted an accreditation application for 'Post-Quantum Cryptography'.",

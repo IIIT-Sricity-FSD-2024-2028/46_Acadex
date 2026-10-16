@@ -349,8 +349,8 @@
       }
     ],
     "price": 1999,
-    "enrolledCount": 0,
-    "revenue": 0,
+    "enrolledCount": 1,
+    "revenue": 1999,
     "rating": 0,
     "status": "Published",
     "thumbnail": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=600&auto=format&fit=crop&q=80",
@@ -390,7 +390,7 @@
     ],
     "completionRate": 0,
     "createdAt": "2026-09-10T10:00:00.000Z",
-    "updatedAt": "2026-10-16T09:58:36.564Z"
+    "updatedAt": "2026-10-16T11:07:53.195Z"
   },
   {
     "id": "crs-4",
