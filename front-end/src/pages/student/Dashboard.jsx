@@ -148,11 +148,11 @@ export default function Dashboard() {
                   <div>
                     <div className="flex justify-between text-xs font-semibold text-slate-600 mb-1.5">
                       <span>
-                        {continueCourse.completedLessons.length} of {continueCourse.totalLessons} lessons
+                        {(continueCourse.completedLessons || []).length} of {continueCourse.totalLessons || 0} lessons
                       </span>
-                      <span className="text-[#0056D2]">{continueCourse.progress}%</span>
+                      <span className="text-[#0056D2]">{continueCourse.progress || 0}%</span>
                     </div>
-                    <LinearProgressBar progress={continueCourse.progress} color="bg-[#0056D2]" />
+                    <LinearProgressBar progress={continueCourse.progress || 0} color="bg-[#0056D2]" />
                   </div>
                   <div className="flex justify-end">
                     <Link

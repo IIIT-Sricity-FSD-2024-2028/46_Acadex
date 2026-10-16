@@ -1,1 +1,69 @@
-[]
+[
+  {
+    "id": "cert-1792159072209",
+    "learnerId": "lrn-1",
+    "learnerName": "krjun Sharma",
+    "courseId": "crs-3",
+    "courseTitle": "Python Backend Development with FastAPI",
+    "institution": "Meridian Tech Institute",
+    "organizationId": "org-2",
+    "instructorName": "Priya Nair",
+    "category": "Backend Development",
+    "skills": [
+      "Python Fundamentals for Backend Engineers",
+      "Building APIs with FastAPI",
+      "Database Design with PostgreSQL & SQLAlchemy",
+      "Testing, Error Handling & Deployment"
+    ],
+    "issueDate": "October 2026",
+    "issuedAt": "2026-10-16T13:57:52.209Z",
+    "credentialId": "NX-CRS3-205189",
+    "status": "Verified",
+    "grade": "Completed",
+    "createdAt": "2026-10-16T13:57:52.217Z",
+    "updatedAt": "2026-10-16T13:57:52.217Z"
+  },
+  {
+    "id": "cert-1792158738908",
+    "learnerId": "lrn-1",
+    "learnerName": "krjun Sharma",
+    "courseId": "cou-fb5ac543",
+    "courseTitle": "Object Oriented Programming",
+    "institution": "",
+    "organizationId": null,
+    "instructorName": "Prof. Alan Turing",
+    "category": "Cloud Architecture",
+    "skills": [
+      "Intro to OOP"
+    ],
+    "issueDate": "October 2026",
+    "issuedAt": "2026-10-16T13:52:18.908Z",
+    "credentialId": "NX-COUFB5-887766",
+    "status": "Verified",
+    "grade": "Completed",
+    "createdAt": "2026-10-16T13:52:18.911Z",
+    "updatedAt": "2026-10-16T13:52:18.911Z"
+  },
+  {
+    "id": "cert-1792158460492",
+    "learnerId": "lrn-1",
+    "learnerName": "krjun Sharma",
+    "courseId": "cou-2238c587",
+    "courseTitle": "Backend Development - 2345",
+    "institution": "",
+    "organizationId": "org-1",
+    "instructorName": "Priya Nair",
+    "category": "Cloud Architecture",
+    "skills": [
+      "Module 1: Introduction to Reinforcement Learning",
+      "Module 2: Markov Decision Process"
+    ],
+    "issueDate": "October 2026",
+    "issuedAt": "2026-10-16T13:47:40.492Z",
+    "credentialId": "NX-COU223-621512",
+    "status": "Verified",
+    "grade": "Completed",
+    "createdAt": "2026-10-16T13:47:40.495Z",
+    "updatedAt": "2026-10-16T13:47:40.495Z"
+  }
+]

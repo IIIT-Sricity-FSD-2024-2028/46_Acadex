@@ -1,5 +1,41 @@
 [
   {
+    "title": "Course Completed",
+    "desc": "krjun Sharma completed \"Python Backend Development with FastAPI\" and received a certificate.",
+    "time": "Just now",
+    "category": "Certificate",
+    "read": false,
+    "color": "green",
+    "learnerId": "lrn-1",
+    "id": "not-06a794d8",
+    "createdAt": "2026-10-16T13:57:52.238Z",
+    "updatedAt": "2026-10-16T13:57:52.238Z"
+  },
+  {
+    "title": "Course Completed",
+    "desc": "krjun Sharma completed \"Object Oriented Programming\" and received a certificate.",
+    "time": "Just now",
+    "category": "Certificate",
+    "read": false,
+    "color": "green",
+    "learnerId": "lrn-1",
+    "id": "not-dde2f573",
+    "createdAt": "2026-10-16T13:52:18.961Z",
+    "updatedAt": "2026-10-16T13:52:18.961Z"
+  },
+  {
+    "title": "Course Completed",
+    "desc": "krjun Sharma completed \"Backend Development - 2345\" and received a certificate.",
+    "time": "Just now",
+    "category": "Certificate",
+    "read": false,
+    "color": "green",
+    "learnerId": "lrn-1",
+    "id": "not-21a1732e",
+    "createdAt": "2026-10-16T13:47:40.519Z",
+    "updatedAt": "2026-10-16T13:47:40.519Z"
+  },
+  {
     "title": "Teaching invitation sent to Test Instructor-1",
     "desc": "Meridian Tech Institute invited Test Instructor-1 to teach \"General Course Assignment\".",
     "time": "Just now",

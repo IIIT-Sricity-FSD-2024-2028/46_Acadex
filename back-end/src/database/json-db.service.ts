@@ -84,6 +84,17 @@ export class JsonDatabaseService implements OnModuleInit {
     if (!fs.existsSync(this.dataDir)) {
       fs.mkdirSync(this.dataDir, { recursive: true });
       this.logger.log(`Initialized JSON database directory at: ${this.dataDir}`);
+    } else {
+      try {
+        const files = fs.readdirSync(this.dataDir);
+        for (const file of files) {
+          if (file.endsWith('.tmp') || file.includes('.tmp.')) {
+            try {
+              fs.unlinkSync(path.join(this.dataDir, file));
+            } catch {}
+          }
+        }
+      } catch {}
     }
   }
 
@@ -169,26 +180,62 @@ export class JsonDatabaseService implements OnModuleInit {
     this.setInMemoryData(collection, data);
 
     const filePath = this.getCollectionFilePath(collection);
-    const tempPath = `${filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 8)}.tmp`;
+    const dir = path.dirname(filePath);
+    const base = path.basename(filePath);
+    const tempPath = path.join(dir, `.${base}.${Date.now()}.${Math.random().toString(36).substring(2, 8)}.tmp`);
 
-    // Wait on existing lock for this file if present
+    // Ensure previous lock completion without propagating prior errors to subsequent operations
     const currentLock = this.fileLocks.get(collection) || Promise.resolve();
+    const waitLock = currentLock.catch(() => {});
 
-    const writeOp = currentLock.then(async () => {
+    const writeOp = waitLock.then(async () => {
+      const serialized = JSON.stringify(data, null, 2);
       try {
-        const serialized = JSON.stringify(data, null, 2);
         await fs.promises.writeFile(tempPath, serialized, 'utf-8');
-        await fs.promises.rename(tempPath, filePath);
-      } catch (err) {
+
+        // On Windows and OneDrive sync folders, renaming over an existing file can throw EPERM/EACCES/EBUSY
+        // if another process (such as a concurrent read or cloud-sync filter) momentarily holds a handle.
+        let replaced = false;
+        let lastError: any = null;
+
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            await fs.promises.rename(tempPath, filePath);
+            replaced = true;
+            break;
+          } catch (err: any) {
+            lastError = err;
+            if ((err.code === 'EPERM' || err.code === 'EACCES' || err.code === 'EBUSY') && attempt < 4) {
+              await new Promise((resolve) => setTimeout(resolve, 25 * Math.pow(2, attempt)));
+            } else {
+              break;
+            }
+          }
+        }
+
+        // If rename failed (e.g. Windows file lock preventing DELETE access),
+        // fallback to copyFile which only requires GENERIC_WRITE permission.
+        if (!replaced) {
+          try {
+            await fs.promises.copyFile(tempPath, filePath);
+            replaced = true;
+          } catch (copyErr) {
+            // Direct file write fallback as final safeguard
+            await fs.promises.writeFile(filePath, serialized, 'utf-8');
+            replaced = true;
+          }
+        }
+      } catch (err: any) {
+        this.logger.error(`Atomic write failure on collection '${collection}': ${err.message}`, err.stack);
+        throw err;
+      } finally {
         if (fs.existsSync(tempPath)) {
           try {
             await fs.promises.unlink(tempPath);
           } catch {
-            // ignore cleanup failure
+            // ignore temp file cleanup error
           }
         }
-        this.logger.error(`Atomic write failure on collection '${collection}': ${err.message}`, err.stack);
-        throw err;
       }
     });
 

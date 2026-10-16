@@ -131,11 +131,11 @@ export default function MyLearning() {
                     <div>
                       <div className="flex justify-between text-xs text-slate-600 mb-1.5">
                         <span>
-                          {e.completedLessons.length} of {e.totalLessons} lessons
+                          {(e.completedLessons || []).length} of {e.totalLessons || 0} lessons
                         </span>
-                        <span className="font-bold">{e.progress}%</span>
+                        <span className="font-bold">{e.progress || 0}%</span>
                       </div>
-                      <LinearProgressBar progress={e.progress} color={done ? 'bg-emerald-600' : 'bg-[#0056D2]'} />
+                      <LinearProgressBar progress={e.progress || 0} color={done ? 'bg-emerald-600' : 'bg-[#0056D2]'} />
                     </div>
                   </div>
                   <div className="p-5 md:w-48 flex md:flex-col items-center justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-100">

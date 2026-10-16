@@ -1,5 +1,4 @@
-import React from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 
 
 // ──────────────────────────────────────────────────────────────
@@ -126,6 +125,12 @@ function LegacyCourseRedirect() {
   return <Navigate to={`/student/course/${id}`} replace />;
 }
 
+function LegacyPlayerRedirect() {
+  const location = useLocation();
+  const courseId = location.state?.courseId;
+  return <Navigate to={courseId ? `/student/learn/${courseId}` : '/student/my-learning'} replace />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -179,7 +184,7 @@ export default function App() {
 
         {/* Legacy URLs */}
         <Route path="/student/course-progress/:courseId" element={<LegacyLearnRedirect />} />
-        <Route path="/student/player" element={<Navigate to="/student/my-learning" replace />} />
+        <Route path="/student/player" element={<LegacyPlayerRedirect />} />
         <Route path="/explore" element={<Navigate to="/student/explore" replace />} />
         <Route path="/my-learning" element={<Navigate to="/student/my-learning" replace />} />
         <Route path="/certificates" element={<Navigate to="/student/certificates" replace />} />

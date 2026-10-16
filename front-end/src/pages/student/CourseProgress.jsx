@@ -324,8 +324,7 @@ export default function CourseProgress() {
               {/* Continue Learning CTA */}
               <div className="pt-2">
                 <Link
-                  to="/student/player"
-                  state={{ courseId: course?.id || targetCourseId }}
+                  to={`/student/learn/${course?.id || targetCourseId}`}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-xl text-sm font-bold shadow-md transition-all active:scale-[0.99] cursor-pointer"
                 >
                   <span>Continue Learning</span>
@@ -533,8 +532,7 @@ export default function CourseProgress() {
 
                                 {item.current && (
                                   <Link
-                                    to="/student/player"
-                                    state={{ courseId: course?.id || targetCourseId }}
+                                    to={`/student/learn/${course?.id || targetCourseId}`}
                                     className="px-3 py-1 bg-[#0056D2] hover:bg-[#00419E] text-white rounded-md text-xs font-bold shadow-xs transition-colors cursor-pointer"
                                   >
                                     Resume

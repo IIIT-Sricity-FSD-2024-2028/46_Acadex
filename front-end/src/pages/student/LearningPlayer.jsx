@@ -12,6 +12,7 @@ import {
   FileText,
   Clock,
   RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
@@ -25,11 +26,12 @@ function buildLessons(course) {
   if (!course || !course.modules || !Array.isArray(course.modules)) return [];
 
   return course.modules.flatMap((mod, mIdx) => {
+    const modId = mod.id || `mod-${mIdx + 1}`;
     // 1. Array of lesson objects (full curriculum schema)
     if (Array.isArray(mod.lessons)) {
       return mod.lessons.map((l, lIdx) => ({
-        id: l.id || `${mod.id}-l${lIdx + 1}`,
-        moduleId: mod.id,
+        id: l.id || `${modId}-l${lIdx + 1}`,
+        moduleId: modId,
         moduleIndex: mIdx,
         moduleTitle: mod.title || `Module ${mIdx + 1}`,
         number: l.order || lIdx + 1,
@@ -44,8 +46,8 @@ function buildLessons(course) {
     // 2. Array of item objects
     if (Array.isArray(mod.items)) {
       return mod.items.map((it, iIdx) => ({
-        id: it.id || `${mod.id}-l${iIdx + 1}`,
-        moduleId: mod.id,
+        id: it.id || `${modId}-l${iIdx + 1}`,
+        moduleId: modId,
         moduleIndex: mIdx,
         moduleTitle: mod.title || `Module ${mIdx + 1}`,
         number: it.order || iIdx + 1,
@@ -58,10 +60,10 @@ function buildLessons(course) {
     }
 
     // 3. Fallback count if lessons was stored as a numeric count
-    const count = Number(mod.lessons) || (typeof mod.lessonsCount === 'number' ? mod.lessonsCount : 1);
+    const count = Number(mod.lessons) || (typeof mod.lessonsCount === 'number' ? mod.lessonsCount : 0);
     return Array.from({ length: Math.max(1, count) }, (_, i) => ({
-      id: `${mod.id}-l${i + 1}`,
-      moduleId: mod.id,
+      id: `${modId}-l${i + 1}`,
+      moduleId: modId,
       moduleIndex: mIdx,
       moduleTitle: mod.title || `Module ${mIdx + 1}`,
       number: i + 1,
@@ -105,7 +107,7 @@ export default function LearningPlayer() {
   }, [courseId]);
 
   const lessons = useMemo(() => buildLessons(course), [course]);
-  const done = useMemo(() => new Set(enrollment?.completedLessons || []), [enrollment]);
+  const done = useMemo(() => new Set((enrollment?.completedLessons || []).map(String)), [enrollment]);
 
   useEffect(() => {
     if (lessons.length > 0) {
@@ -128,7 +130,7 @@ export default function LearningPlayer() {
   }, [currentId]);
 
   const toggleComplete = async (lesson, completed) => {
-    if (!lesson || !enrollment) return;
+    if (!lesson || !enrollment || saving) return;
     setSaving(true);
     try {
       const wasCompleted = enrollment.status === 'Completed';
@@ -136,11 +138,13 @@ export default function LearningPlayer() {
       setEnrollment(updated);
       if (updated.status === 'Completed' && !wasCompleted) {
         addToast('Course completed! Your certificate has been issued.', 'success');
+      } else {
+        addToast(completed ? 'Lesson marked as complete' : 'Lesson marked as incomplete', 'success');
       }
       if (completed && currentIndex < lessons.length - 1) {
         setCurrentId(lessons[currentIndex + 1].id);
       }
-      refreshData();
+      await refreshData();
     } catch (err) {
       addToast(err.message || 'Could not save progress', 'error');
     } finally {
@@ -177,7 +181,10 @@ export default function LearningPlayer() {
   }
 
   const isDone = current ? done.has(current.id) : false;
-  const completedCourse = enrollment.status === 'Completed';
+  const calculatedProgress = lessons.length > 0
+    ? Math.min(100, Math.max(0, Math.round((done.size / lessons.length) * 100)))
+    : (enrollment.progress || 0);
+  const completedCourse = enrollment.status === 'Completed' || (lessons.length > 0 && done.size === lessons.length);
 
   return (
     <PageLayout>
@@ -299,8 +306,12 @@ export default function LearningPlayer() {
                           : 'bg-[#0056D2] text-white hover:bg-[#00419E]'
                       }`}
                     >
-                      <CheckCircle2 className="w-4 h-4" />
-                      {isDone ? 'Completed — undo' : 'Mark as complete'}
+                      {saving ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      {saving ? 'Saving...' : (isDone ? 'Completed — undo' : 'Mark as complete')}
                     </button>
                     <button
                       disabled={currentIndex >= lessons.length - 1}
@@ -332,9 +343,9 @@ export default function LearningPlayer() {
                 <span>
                   {done.size} of {lessons.length} lessons completed
                 </span>
-                <span className="text-[#0056D2] font-bold">{enrollment.progress || 0}%</span>
+                <span className="text-[#0056D2] font-bold">{calculatedProgress}%</span>
               </div>
-              <LinearProgressBar progress={enrollment.progress || 0} color={completedCourse ? 'bg-emerald-600' : 'bg-[#0056D2]'} />
+              <LinearProgressBar progress={calculatedProgress} color={completedCourse ? 'bg-emerald-600' : 'bg-[#0056D2]'} />
             </div>
 
             <div className="max-h-[65vh] overflow-y-auto divide-y divide-slate-100">

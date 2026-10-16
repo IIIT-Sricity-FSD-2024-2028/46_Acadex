@@ -59,22 +59,24 @@ export class StudentService {
 
   private lessonIdsFor(course: any): string[] {
     const ids: string[] = [];
-    for (const mod of course?.modules || []) {
+    for (let mIdx = 0; mIdx < (course?.modules || []).length; mIdx++) {
+      const mod = course.modules[mIdx];
+      const modId = mod.id || `mod-${mIdx + 1}`;
       if (Array.isArray(mod.lessons)) {
         for (let i = 0; i < mod.lessons.length; i++) {
           const l = mod.lessons[i];
-          const id = typeof l === 'object' && l ? (l.id || `${mod.id}-l${i + 1}`) : `${mod.id}-l${i + 1}`;
+          const id = typeof l === 'object' && l ? (l.id || `${modId}-l${i + 1}`) : `${modId}-l${i + 1}`;
           ids.push(String(id));
         }
       } else if (Array.isArray(mod.items)) {
         for (let i = 0; i < mod.items.length; i++) {
           const it = mod.items[i];
-          const id = typeof it === 'object' && it ? (it.id || `${mod.id}-l${i + 1}`) : `${mod.id}-l${i + 1}`;
+          const id = typeof it === 'object' && it ? (it.id || `${modId}-l${i + 1}`) : `${modId}-l${i + 1}`;
           ids.push(String(id));
         }
       } else {
-        const count = Number(mod.lessons) || 0;
-        for (let i = 1; i <= count; i++) ids.push(`${mod.id}-l${i}`);
+        const count = Number(mod.lessons) || (typeof mod.lessonsCount === 'number' ? mod.lessonsCount : 0);
+        for (let i = 1; i <= count; i++) ids.push(`${modId}-l${i}`);
       }
     }
     return ids;
@@ -144,25 +146,52 @@ export class StudentService {
     const enrollments = await this.enrollmentsRepo.find({ where: { learnerId: learner.id } });
     const courses = await this.coursesRepo.find();
 
-    return enrollments
-      .map((enr) => {
-        const course = courses.find((c) => c.id === enr.courseId);
-        if (!course || !this.hasInstructor(course)) return null;
-        const totalLessons = this.lessonIdsFor(course).length;
-        return {
-          ...enr,
-          courseTitle: course.title,
-          category: course.category,
-          description: course.description,
-          thumbnail: course.thumbnail,
-          institution: course.organizationName || '',
-          instructorName: course.leadInstructorName || course.instructorName || '',
-          totalLessons,
-          completedLessons: enr.completedLessons || [],
-          progress: typeof enr.progress === 'number' ? enr.progress : 0,
-        };
-      })
-      .filter(Boolean);
+    const result = [];
+    for (const enr of enrollments) {
+      const course = courses.find((c) => c.id === enr.courseId);
+      if (!course || !this.hasInstructor(course)) continue;
+
+      const lessonIds = this.lessonIdsFor(course);
+      const totalLessons = lessonIds.length;
+      const completedLessons = Array.isArray(enr.completedLessons)
+        ? enr.completedLessons.map(String).filter((id: string) => lessonIds.includes(id))
+        : [];
+
+      // Required progress calculation:
+      // Progress = (Number of completed lessons / Total number of lessons) * 100
+      const calculatedProgress = totalLessons > 0
+        ? Math.min(100, Math.max(0, Math.round((completedLessons.length / totalLessons) * 100)))
+        : 0;
+      const calculatedStatus = calculatedProgress >= 100 ? 'Completed' : 'Active';
+
+      // Synchronize stored enrollment if it has stale/mismatched progress (e.g. seeded with 60% with 0 lessons)
+      if (enr.progress !== calculatedProgress || (enr.status === 'Completed' && calculatedProgress < 100)) {
+        await this.enrollmentsRepo.update(enr.id, {
+          progress: calculatedProgress,
+          completedLessons,
+          status: calculatedStatus,
+        });
+        enr.progress = calculatedProgress;
+        enr.completedLessons = completedLessons;
+        enr.status = calculatedStatus;
+      }
+
+      result.push({
+        ...enr,
+        courseTitle: course.title,
+        category: course.category,
+        description: course.description,
+        thumbnail: course.thumbnail,
+        institution: course.organizationName || '',
+        instructorName: course.leadInstructorName || course.instructorName || '',
+        totalLessons,
+        completedLessons,
+        progress: calculatedProgress,
+        status: calculatedStatus,
+      });
+    }
+
+    return result;
   }
 
   async getEnrollmentForCourse(userId: string, courseId: string) {
@@ -220,26 +249,40 @@ export class StudentService {
     if (enrollment.learnerId !== learner.id) throw new ForbiddenException('Not your enrollment');
 
     const course = await this.coursesRepo.findById(enrollment.courseId);
+    if (!course) throw new NotFoundException(`Course '${enrollment.courseId}' not found`);
+
     const lessonIds = this.lessonIdsFor(course);
-    if (!lessonIds.includes(lessonId)) throw new BadRequestException(`Unknown lesson '${lessonId}'`);
+    const targetLessonId = String(lessonId);
+    if (!lessonIds.includes(targetLessonId)) {
+      throw new BadRequestException(`Lesson '${lessonId}' does not belong to course '${course.title}'`);
+    }
 
-    const done = new Set<string>((enrollment.completedLessons || []).filter((id) => lessonIds.includes(id)));
-    if (completed) done.add(lessonId);
-    else done.delete(lessonId);
+    const done = new Set<string>(
+      (enrollment.completedLessons || []).map(String).filter((id: string) => lessonIds.includes(id))
+    );
+    if (completed) {
+      done.add(targetLessonId);
+    } else {
+      done.delete(targetLessonId);
+    }
 
-    const progress = lessonIds.length ? Math.round((done.size / lessonIds.length) * 100) : 0;
+    const completedLessons = Array.from(done);
+    const totalLessons = lessonIds.length;
+    const progress = totalLessons > 0 ? Math.min(100, Math.max(0, Math.round((completedLessons.length / totalLessons) * 100))) : 0;
     const nowCompleted = progress >= 100;
     const now = new Date().toISOString();
 
     await this.enrollmentsRepo.update(enrollmentId, {
-      completedLessons: Array.from(done),
+      completedLessons,
       progress,
       status: nowCompleted ? 'Completed' : 'Active',
       lastAccessedAt: now,
       ...(nowCompleted && enrollment.status !== 'Completed' ? { completedAt: now } : {}),
     });
 
-    if (nowCompleted) await this.issueCertificate(learner, enrollment, course);
+    if (nowCompleted) {
+      await this.issueCertificate(learner, enrollment, course);
+    }
 
     return this.getEnrollmentForCourse(userId, enrollment.courseId);
   }
