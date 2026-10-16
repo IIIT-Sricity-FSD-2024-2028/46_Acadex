@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, Calendar, Building2, CheckCircle2, Clock3, Award, BookOpen } from 'lucide-react';
+import { Mail, MapPin, Calendar, Award, BookOpen } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import HumanAvatar from '../../components/common/HumanAvatar';
 import { useToast } from '../../components/common/Toast';
@@ -8,10 +8,10 @@ import api from '../../services/api';
 import { useStudent } from '../../context/StudentContext';
 
 const FIELDS = [
-  { name: 'name', label: 'Full name', max: 80 },
+  { name: 'name', label: 'Full name', max: 80, placeholder: 'e.g. Arjun Sharma' },
   { name: 'title', label: 'Headline', max: 80, placeholder: 'e.g. Final-year CS student' },
-  { name: 'location', label: 'Location', max: 80 },
-  { name: 'phone', label: 'Phone', max: 20 },
+  { name: 'location', label: 'Location', max: 80, placeholder: 'e.g. Bengaluru, India' },
+  { name: 'phone', label: 'Phone', max: 20, placeholder: 'e.g. +91 98765 43210' },
 ];
 
 export default function Profile() {
@@ -62,7 +62,6 @@ export default function Profile() {
   }
 
   const completed = enrollments.filter((e) => e.status === 'Completed');
-  const membership = student.orgMembershipStatus || 'Independent Learner';
   const certByCourse = Object.fromEntries(certificates.map((c) => [c.courseId, c]));
 
   return (
@@ -108,20 +107,6 @@ export default function Profile() {
               ))}
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-              <p className="text-xs font-bold text-slate-900 flex items-center gap-2"><Building2 className="w-4 h-4 text-slate-400" /> Organization</p>
-              {membership === 'Verified Student' ? (
-                <p className="text-xs text-emerald-700 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Student of {student.organizationName || student.requestedOrgName}
-                </p>
-              ) : membership === 'Pending Organization Approval' ? (
-                <p className="text-xs text-amber-700 flex items-center gap-1.5">
-                  <Clock3 className="w-3.5 h-3.5" /> Request pending with {student.requestedOrgName}
-                </p>
-              ) : (
-                <p className="text-xs text-slate-500">Independent learner</p>
-              )}
-            </div>
           </aside>
 
           <div className="lg:col-span-8 space-y-6">
@@ -136,7 +121,7 @@ export default function Profile() {
                       maxLength={f.max}
                       placeholder={f.placeholder}
                       onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
-                      className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#0056D2]"
+                      className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0056D2]"
                     />
                   </div>
                 ))}
@@ -154,8 +139,9 @@ export default function Profile() {
                   rows={4}
                   maxLength={500}
                   value={form.bio}
+                  placeholder="A short introduction about your learning goals."
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#0056D2] resize-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0056D2] resize-none"
                 />
               </div>
               <button type="submit" disabled={saving} className="px-5 py-2 bg-[#0056D2] text-white rounded-lg text-xs font-bold disabled:opacity-50">

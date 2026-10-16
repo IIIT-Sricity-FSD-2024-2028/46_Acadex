@@ -198,7 +198,7 @@ export function MyCourses() {
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div className="relative w-full md:w-96 shrink-0">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

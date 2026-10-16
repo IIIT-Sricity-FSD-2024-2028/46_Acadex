@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, ArrowRight, BookOpen, Award, CheckCircle2, Clock3, Building2, Compass, Star, ShieldAlert } from 'lucide-react';
+import { Play, ArrowRight, BookOpen, Award, CheckCircle2, Compass, Star, ShieldAlert } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
 import api from '../../services/api';
@@ -50,7 +50,6 @@ export default function Dashboard() {
   }, [catalog, enrollments]);
 
   const firstName = (student?.name || localStorage.getItem('user_name') || '').split(' ')[0];
-  const membership = student?.orgMembershipStatus || 'Independent Learner';
 
   if (isLoading) {
     return (
@@ -74,21 +73,6 @@ export default function Dashboard() {
               <p className="text-sm text-slate-500 mt-1">
                 Browse courses to get started.
               </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            {membership === 'Pending Organization Approval' ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                <Clock3 className="w-3.5 h-3.5" /> Pending approval: {student?.requestedOrgName}
-              </span>
-            ) : membership === 'Verified Student' ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Student • {student?.organizationName || student?.requestedOrgName}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200">
-                <Building2 className="w-3.5 h-3.5 text-slate-400" /> Independent Learner
-              </span>
             )}
           </div>
         </section>

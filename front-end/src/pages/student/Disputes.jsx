@@ -7,39 +7,17 @@ import {
   AlertTriangle,
   Plus,
   Search,
-  ChevronDown,
   X,
   MessageSquare,
   Send,
   Calendar,
   ArrowRight,
-  Sparkles,
-  HelpCircle,
-  RefreshCw,
   FileText,
-  Filter,
-  Check
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { useStudent } from '../../context/StudentContext';
 import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
-
-const PRIORITIES = [
-  { value: 'Low', label: 'Low - General Question / Minor Display', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-  { value: 'Medium', label: 'Medium - Course Content / Audio Sync', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-  { value: 'High', label: 'High - Lab Compiler / Video Freeze', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  { value: 'Urgent', label: 'Urgent - Billing / Certificate Lockout', color: 'bg-rose-100 text-rose-700 border-rose-200' },
-];
-
-const CATEGORIES = [
-  { value: 'Course Content', label: 'Course Content (Video, Slides, Audio)' },
-  { value: 'Payment', label: 'Payment, Billing & Invoice Discrepancy' },
-  { value: 'Certificate', label: 'Certificate Generation & Verification' },
-  { value: 'Course Status', label: 'Course Enrollment & Access Status' },
-  { value: 'Instructor Conduct', label: 'Faculty Response & Academic Conduct' },
-  { value: 'Technical Lab', label: 'Coding Lab & Terminal Compiler Error' },
-];
 
 const TYPE_COLORS = {
   'Course Content': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -58,12 +36,11 @@ const STATUS_CONFIGS = {
 };
 
 export default function StudentDisputes() {
-  const { student, enrollments } = useStudent();
+  const { student } = useStudent();
   const { addToast } = useToast();
 
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -75,19 +52,13 @@ export default function StudentDisputes() {
   // New dispute modal
   const [showNewModal, setShowNewModal] = useState(false);
   const [form, setForm] = useState({
-    courseId: '',
-    category: 'Course Content',
-    priority: 'Medium',
     subject: '',
     description: '',
-    desiredResolution: '',
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const loadDisputes = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-
+  const loadDisputes = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await api.student.getMyDisputes();
       const list = Array.isArray(res) ? res : (res?.items || res?.data || []);
@@ -96,7 +67,6 @@ export default function StudentDisputes() {
       setDisputes([]);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
@@ -138,23 +108,10 @@ export default function StudentDisputes() {
     });
   }, [disputes, search, activeTab]);
 
-  const courseOptions = useMemo(() => {
-    if (enrollments && enrollments.length > 0) return enrollments;
-    return [
-      { courseId: 'cou-fb5ac543', courseTitle: 'Object Oriented Programming' },
-      { courseId: 'cou-b00839da', courseTitle: 'Distributed Systems' },
-      { courseId: 'general-support', courseTitle: 'General Platform / Billing Support' },
-    ];
-  }, [enrollments]);
-
   const handleOpenNewModal = () => {
     setForm({
-      courseId: courseOptions[0]?.courseId || '',
-      category: 'Course Content',
-      priority: 'Medium',
       subject: '',
       description: '',
-      desiredResolution: '',
     });
     setShowNewModal(true);
   };
@@ -164,7 +121,6 @@ export default function StudentDisputes() {
     if (!form.subject.trim()) return addToast('Please enter an issue subject', 'warning');
     if (!form.description.trim()) return addToast('Please provide a detailed description', 'warning');
 
-    const selectedCourse = courseOptions.find((en) => en.courseId === form.courseId);
     setSubmitting(true);
     try {
       await api.student.createDispute({
@@ -173,19 +129,12 @@ export default function StudentDisputes() {
         learnerId: student?.id || 'lrn-1',
         studentId: student?.id || 'lrn-1',
         raisedByRole: 'Student',
-        courseId: form.courseId === 'general-support' ? '' : form.courseId,
-        courseTitle: selectedCourse?.courseTitle || 'Platform Support',
-        disputeType: form.category,
-        category: form.category,
-        type: form.category,
         subject: form.subject.trim(),
         description: form.description.trim(),
-        priority: form.priority,
-        desiredResolution: form.desiredResolution.trim() || 'Prompt review and resolution by platform council.',
       });
       addToast('Dispute ticket submitted successfully! Operations has been notified.', 'success');
       setShowNewModal(false);
-      await loadDisputes(true);
+      await loadDisputes();
     } catch (err) {
       addToast(err.message || 'Failed to submit dispute ticket', 'error');
     } finally {
@@ -238,15 +187,6 @@ export default function StudentDisputes() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => loadDisputes(true)}
-              disabled={refreshing}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs transition-all hover:border-slate-300 disabled:opacity-50"
-              title="Refresh tickets"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${refreshing ? 'animate-spin text-[#0056D2]' : ''}`} />
-              Refresh
-            </button>
             <button
               onClick={handleOpenNewModal}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#0056D2] to-[#00419E] hover:from-[#004bb8] hover:to-[#003480] text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-blue-500/15 hover:shadow-lg active:scale-[0.98]"
@@ -330,7 +270,7 @@ export default function StudentDisputes() {
 
             {/* Search Input */}
             <div className="relative max-w-sm w-full">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={search}
@@ -398,7 +338,6 @@ export default function StudentDisputes() {
             {filtered.map((d) => {
               const statusCfg = STATUS_CONFIGS[d.status] || STATUS_CONFIGS.Pending;
               const StatusIcon = statusCfg.icon;
-              const priorityCfg = PRIORITIES.find(p => p.value === d.priority) || PRIORITIES[1];
 
               return (
                 <div
@@ -423,9 +362,6 @@ export default function StudentDisputes() {
                     <div className="flex items-center gap-2 self-start sm:self-auto">
                       <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${statusCfg.bg}`}>
                         <StatusIcon className="w-3.5 h-3.5" /> {statusCfg.label || d.status}
-                      </span>
-                      <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${priorityCfg.color}`}>
-                        {d.priority} Priority
                       </span>
                     </div>
                   </div>
@@ -480,7 +416,6 @@ export default function StudentDisputes() {
                 <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${STATUS_CONFIGS[selectedDispute.status]?.bg}`}>
                   {selectedDispute.status}
                 </span>
-                <span className="text-xs font-bold text-slate-500">• {selectedDispute.priority} Priority</span>
               </div>
               <button
                 onClick={() => setSelectedDispute(null)}
@@ -613,59 +548,6 @@ export default function StudentDisputes() {
 
             <form onSubmit={handleCreateDispute} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">Impacted Course or Service</label>
-                <div className="relative">
-                  <select
-                    value={form.courseId}
-                    onChange={(e) => setForm({ ...form, courseId: e.target.value })}
-                    className="w-full h-11 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl px-3.5 pr-9 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] appearance-none cursor-pointer transition-all"
-                    required
-                  >
-                    {courseOptions.map((en) => (
-                      <option key={en.courseId} value={en.courseId}>
-                        {en.courseTitle}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1.5">Issue Category</label>
-                  <div className="relative">
-                    <select
-                      value={form.category}
-                      onChange={(e) => setForm({ ...form, category: e.target.value })}
-                      className="w-full h-11 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl px-3 pr-8 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] appearance-none cursor-pointer transition-all"
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1.5">Priority Level</label>
-                  <div className="relative">
-                    <select
-                      value={form.priority}
-                      onChange={(e) => setForm({ ...form, priority: e.target.value })}
-                      className="w-full h-11 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl px-3 pr-8 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] appearance-none cursor-pointer transition-all"
-                    >
-                      {PRIORITIES.map((p) => (
-                        <option key={p.value} value={p.value}>{p.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1.5">Subject</label>
                 <input
                   type="text"
@@ -673,7 +555,7 @@ export default function StudentDisputes() {
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
                   placeholder="e.g. Lesson 3.2 video player freezing, duplicate invoice"
                   maxLength={120}
-                  className="w-full h-11 px-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] transition-all"
+                  className="w-full h-11 px-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] transition-all"
                   required
                 />
               </div>
@@ -683,22 +565,11 @@ export default function StudentDisputes() {
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  rows={3}
+                  rows={5}
                   maxLength={1000}
                   placeholder="Describe the issue, lesson number, browser environment, or steps to reproduce..."
-                  className="w-full p-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] resize-none transition-all"
+                  className="w-full p-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] resize-none transition-all"
                   required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">Desired Resolution</label>
-                <input
-                  type="text"
-                  value={form.desiredResolution}
-                  onChange={(e) => setForm({ ...form, desiredResolution: e.target.value })}
-                  placeholder="e.g. Update video stream, issue credit adjustment, regenerate certificate"
-                  className="w-full h-11 px-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] transition-all"
                 />
               </div>
 

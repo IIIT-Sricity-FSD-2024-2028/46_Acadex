@@ -6,6 +6,12 @@
   body {
     @apply bg-surface text-on-surface font-sans;
   }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+  }
 }
 
 /* Custom modern scrollbars */

@@ -10,7 +10,6 @@ import {
   ChevronDown,
   User,
   Building2,
-  RefreshCw,
   TrendingUp,
   ArrowUpDown,
   Plus,
@@ -195,20 +194,11 @@ export const Disputes = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <ShieldAlert className="w-7 h-7 text-indigo-500" />
-            Disputes
-          </h1>
-        </div>
-        <button
-          onClick={fetchDisputes}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </button>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+          <ShieldAlert className="w-7 h-7 text-indigo-500" />
+          Disputes
+        </h1>
       </div>
 
       {/* Stats Cards */}
@@ -258,7 +248,7 @@ export const Disputes = () => {
           <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center">
             {/* Search */}
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}

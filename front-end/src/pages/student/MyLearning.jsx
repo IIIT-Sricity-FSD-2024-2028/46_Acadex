@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Search, Award, BookOpen, ArrowRight, Star } from 'lucide-react';
+import { Play, Search, Award, BookOpen, ArrowRight, Star, X, Send, MessageSquare } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
 import { useStudent } from '../../context/StudentContext';
+import { useToast } from '../../components/common/Toast';
+import api from '../../services/api';
 
 const TABS = [
   { id: 'in-progress', label: 'In progress' },
@@ -11,9 +13,16 @@ const TABS = [
 ];
 
 export default function MyLearning() {
-  const { enrollments, isLoading, refreshData } = useStudent();
+  const { student, enrollments, isLoading, refreshData } = useStudent();
+  const { addToast } = useToast();
   const [tab, setTab] = useState('in-progress');
   const [query, setQuery] = useState('');
+
+  // Review modal state
+  const [reviewCourse, setReviewCourse] = useState(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     document.title = 'My Learning | Acadex';
@@ -58,12 +67,12 @@ export default function MyLearning() {
         </div>
 
         <div className="relative max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search my courses"
-            className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#0056D2]"
+            className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0056D2]"
           />
         </div>
 
@@ -130,12 +139,17 @@ export default function MyLearning() {
                       <Play className="w-3.5 h-3.5 fill-current" />
                       {done ? 'Replay' : e.progress === 0 ? 'Start' : 'Continue'}
                     </Link>
-                    <Link
-                      to={`/student/course/${e.courseId}#reviews`}
-                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReviewCourse(e);
+                        setReviewRating(5);
+                        setReviewComment('');
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Write Review
-                    </Link>
+                    </button>
                     {done && (
                       <Link
                         to="/student/certificates"
@@ -151,6 +165,120 @@ export default function MyLearning() {
           </div>
         )}
       </div>
+
+      {/* Write Review Modal */}
+      {reviewCourse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl border border-slate-100">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight">Write Course Review</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{reviewCourse.courseTitle}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewCourse(null)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (ev) => {
+                ev.preventDefault();
+                if (!reviewComment.trim()) return addToast('Please enter your review feedback', 'warning');
+                setSubmittingReview(true);
+                try {
+                  await api.courses.addReview(
+                    reviewCourse.courseId,
+                    reviewRating,
+                    reviewComment.trim(),
+                    student?.name || 'Arjun Sharma',
+                    student?.id || 'lrn-1'
+                  );
+                  addToast('Your review was published successfully!', 'success');
+                  setReviewCourse(null);
+                  setReviewComment('');
+                } catch (err) {
+                  addToast(err.message || 'Could not submit review', 'error');
+                } finally {
+                  setSubmittingReview(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">Rating</label>
+                <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        className="p-1 hover:scale-115 transition-transform focus:outline-none"
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            reviewRating >= star
+                              ? 'fill-amber-400 text-amber-400 filter drop-shadow-[0_1px_2px_rgba(251,191,36,0.3)]'
+                              : 'text-slate-200 fill-slate-50'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xs font-bold text-slate-600">{reviewRating} of 5 Stars</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">Your Feedback</label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(ev) => setReviewComment(ev.target.value)}
+                  rows={4}
+                  maxLength={1000}
+                  placeholder="Share details on curriculum quality, clarity, coding assignments, and instructor responsiveness..."
+                  className="w-full text-xs sm:text-sm p-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] resize-none transition-all"
+                  required
+                />
+                <div className="flex justify-between items-center text-[11px] text-slate-400 mt-1">
+                  <span>Reviews help other learners and guide instructors.</span>
+                  <span>{reviewComment.length}/1000</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <Link
+                  to="/student/reviews"
+                  onClick={() => setReviewCourse(null)}
+                  className="text-xs font-bold text-[#0056D2] hover:underline"
+                >
+                  Manage all reviews →
+                </Link>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReviewCourse(null)}
+                    className="px-4 py-2 border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="inline-flex items-center gap-1.5 px-5 py-2 bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-extrabold rounded-xl disabled:opacity-50 transition-all shadow-sm"
+                  >
+                    <Send className="w-3.5 h-3.5" /> {submittingReview ? 'Submitting...' : 'Post Review'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 }

@@ -71,7 +71,8 @@ export default function Profile() {
                 required
                 value={form.name || ''}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+                placeholder="e.g. NexusPay Academy"
+                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium placeholder:text-slate-400 focus:outline-none focus:border-primary"
               />
             </div>
             <div>
@@ -80,7 +81,8 @@ export default function Profile() {
                 type="text"
                 value={form.legalEntity || 'NexusPay Global Technologies Inc.'}
                 onChange={(e) => setForm({ ...form, legalEntity: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+                placeholder="e.g. NexusPay Global Technologies Inc."
+                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium placeholder:text-slate-400 focus:outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -93,7 +95,8 @@ export default function Profile() {
                 required
                 value={form.email || ''}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+                placeholder="e.g. admin@nexuspay.academy"
+                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium placeholder:text-slate-400 focus:outline-none focus:border-primary"
               />
             </div>
             <div>
@@ -102,7 +105,8 @@ export default function Profile() {
                 type="url"
                 value={form.website || ''}
                 onChange={(e) => setForm({ ...form, website: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+                placeholder="https://www.your-academy.edu"
+                className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium placeholder:text-slate-400 focus:outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -113,7 +117,8 @@ export default function Profile() {
               type="text"
               value={form.address || ''}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+              placeholder="e.g. Silicon Valley Innovation Hub, CA 94025"
+              className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium placeholder:text-slate-400 focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -123,7 +128,8 @@ export default function Profile() {
               rows={3}
               value={form.tagline || ''}
               onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-              className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium focus:outline-none focus:border-primary"
+              placeholder="A short mission statement students and faculty will see."
+              className="w-full px-3.5 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-xl text-on-surface font-medium placeholder:text-slate-400 focus:outline-none focus:border-primary"
             />
           </div>
 

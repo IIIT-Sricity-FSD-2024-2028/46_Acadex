@@ -47,7 +47,7 @@ export default function Certificates() {
 
         {certificates.length > 0 && (
           <div className="relative max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}

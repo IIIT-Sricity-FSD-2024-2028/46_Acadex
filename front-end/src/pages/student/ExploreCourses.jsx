@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, X, BookOpen, Star, Clock, CheckCircle2 } from 'lucide-react';
+import { Search, X, BookOpen, Star, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import api from '../../services/api';
 import { useStudent } from '../../context/StudentContext';
 
 export default function ExploreCourses() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { enrollments } = useStudent();
+  const { enrollments, refreshData } = useStudent();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,12 +16,13 @@ export default function ExploreCourses() {
 
   useEffect(() => {
     document.title = 'Browse Courses | Acadex';
+    if (typeof refreshData === 'function') refreshData();
     api.student
       .getCatalog()
       .then((res) => setCourses(Array.isArray(res) ? res : []))
       .catch((err) => setError(err.message || 'Could not load courses'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshData]);
 
   useEffect(() => {
     setQuery(searchParams.get('q') || '');
@@ -35,7 +36,10 @@ export default function ExploreCourses() {
     setSearchParams(params, { replace: true });
   };
 
-  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.courseId)), [enrollments]);
+  const enrolledIds = useMemo(
+    () => new Set(enrollments.map((e) => e.courseId || e.id)),
+    [enrollments]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -122,7 +126,7 @@ export default function ExploreCourses() {
               {filtered.map((c) => (
                 <Link
                   key={c.id}
-                  to={`/student/course/${c.id}`}
+                  to={enrolledIds.has(c.id) ? `/student/learn/${c.id}` : `/student/course/${c.id}`}
                   className="bg-white border border-slate-200/80 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow group"
                 >
                   <div className="relative h-40 bg-slate-100 overflow-hidden">
@@ -156,9 +160,17 @@ export default function ExploreCourses() {
                           <Clock className="w-3 h-3" /> {c.totalHours}
                         </span>
                       )}
-                      <span className="ml-auto text-sm font-bold text-slate-900">
-                        {Number(c.price) > 0 ? `₹${Number(c.price).toLocaleString('en-IN')}` : 'Free'}
-                      </span>
+                      <div className="ml-auto">
+                        {enrolledIds.has(c.id) ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#0056D2] text-white text-xs font-bold rounded-lg shadow-xs group-hover:bg-[#00419E] transition-colors">
+                            Go to Course <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          <span className="text-sm font-bold text-slate-900">
+                            {Number(c.price) > 0 ? `₹${Number(c.price).toLocaleString('en-IN')}` : 'Free'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Link>

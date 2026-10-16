@@ -356,7 +356,7 @@ export default function SuperAdminAdmins() {
           {/* Search, Filter & Action Bar */}
           <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search resolved work by ticket, admin, course, or keyword..."
@@ -534,7 +534,7 @@ export default function SuperAdminAdmins() {
         <div className="space-y-4 animate-in fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search operational admins by name or email..."
@@ -648,7 +648,7 @@ export default function SuperAdminAdmins() {
         <div className="space-y-4 animate-in fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search escalations by ticket, subject, or creator..."

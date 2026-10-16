@@ -1,20 +1,5 @@
 [
   {
-    "id": "usr-1791915010416",
-    "name": "Test Instructor-1",
-    "email": "testins@gmail.com",
-    "password": "Password123!",
-    "role": "Instructor",
-    "status": "Active",
-    "verificationStatus": "Verified",
-    "organizationId": "org-1",
-    "organizationName": "Meridian Tech Institute",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "createdAt": "2026-10-13T18:10:10.416Z",
-    "updatedAt": "2026-10-16T15:48:44.908Z",
-    "lastLogin": "2026-10-16T10:52:42.455Z"
-  },
-  {
     "id": "usr-1791912292823",
     "name": "Prof. Alan Turing",
     "email": "prof.turing@cambridge.edu",
@@ -56,8 +41,8 @@
     "organizationName": "Meridian Tech Institute",
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-03-10T09:00:00.000Z",
-    "updatedAt": "2026-10-16T17:42:42.660Z",
-    "lastLogin": "2026-10-16T17:42:42.657Z"
+    "updatedAt": "2026-10-16T18:36:35.027Z",
+    "lastLogin": "2026-10-16T18:36:35.027Z"
   },
   {
     "id": "usr-2",
@@ -114,8 +99,8 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2026-09-20T10:00:00.000Z",
-    "updatedAt": "2026-10-16T17:42:09.754Z",
-    "lastLogin": "2026-10-16T17:42:09.751Z"
+    "updatedAt": "2026-10-16T18:20:32.242Z",
+    "lastLogin": "2026-10-16T18:20:32.242Z"
   },
   {
     "id": "usr-6",
@@ -142,8 +127,8 @@
     "organizationName": "Meridian Tech Institute",
     "avatar": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-01-10T08:00:00.000Z",
-    "updatedAt": "2026-10-16T11:08:13.607Z",
-    "lastLogin": "2026-10-16T11:08:13.606Z"
+    "updatedAt": "2026-10-16T18:36:46.542Z",
+    "lastLogin": "2026-10-16T18:36:46.542Z"
   },
   {
     "id": "usr-8",
@@ -170,8 +155,8 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-16T05:32:11.706Z",
-    "lastLogin": "2026-10-16T05:32:11.705Z"
+    "updatedAt": "2026-10-16T18:37:07.829Z",
+    "lastLogin": "2026-10-16T18:37:07.829Z"
   },
   {
     "id": "usr-10",
@@ -183,7 +168,7 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-16T16:34:08.070Z",
-    "lastLogin": "2026-10-16T16:34:08.069Z"
+    "updatedAt": "2026-10-16T18:41:16.722Z",
+    "lastLogin": "2026-10-16T18:41:16.721Z"
   }
 ]

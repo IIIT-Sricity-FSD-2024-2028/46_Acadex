@@ -225,7 +225,7 @@ export default function SuperAdminLearners() {
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search learners by name, email, or university..."

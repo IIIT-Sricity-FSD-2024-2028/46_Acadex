@@ -289,7 +289,7 @@ export default function SuperAdminOrganizations() {
 
       {/* Search Bar */}
       <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+        <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
         <input
           type="text"
           placeholder="Search organizations by name, email, or city..."

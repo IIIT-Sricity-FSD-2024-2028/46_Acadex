@@ -75,7 +75,8 @@ export const Profile = () => {
                   type="text" 
                   value={profile.name} 
                   onChange={e => setProfile({ ...profile, name: e.target.value })} 
-                  className="w-full border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm" 
+                  placeholder="e.g. Admin User"
+                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" 
                 />
               </div>
               <div>
@@ -84,7 +85,8 @@ export const Profile = () => {
                   type="email" 
                   value={profile.email} 
                   onChange={e => setProfile({ ...profile, email: e.target.value })} 
-                  className="w-full border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm" 
+                  placeholder="e.g. admin@platform.com"
+                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" 
                 />
               </div>
             </div>

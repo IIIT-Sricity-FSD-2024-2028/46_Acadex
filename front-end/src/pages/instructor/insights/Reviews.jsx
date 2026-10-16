@@ -256,7 +256,7 @@ export function Reviews() {
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row gap-3 items-center justify-between">
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <Input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}

@@ -60,14 +60,23 @@ export default function CourseDetails() {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.hash === '#reviews') {
-      setShowReviewForm(true);
-      const el = document.getElementById('reviews');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [location.hash]);
+    if (location.hash !== '#reviews' || loading || !course) return;
+    setShowReviewForm(true);
+    const timer = window.setTimeout(() => {
+      document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [location.hash, loading, course]);
 
-  const enrollment = enrollments.find((e) => e.courseId === id);
+  useEffect(() => {
+    if (typeof refreshData === 'function') refreshData();
+  }, [refreshData]);
+
+  const enrollment = useMemo(
+    () => enrollments.find((e) => e.courseId === id || e.id === id || e.courseId === course?.id || e.id === course?.id),
+    [enrollments, id, course]
+  );
+  const isEnrolled = Boolean(enrollment);
   const myReviews = student ? reviews.filter((r) => r.learnerId === student.id) : [];
   const otherReviews = student ? reviews.filter((r) => r.learnerId !== student.id) : reviews;
 
@@ -87,17 +96,25 @@ export default function CourseDetails() {
   }, [course]);
 
   const handleEnroll = async () => {
-    if (Number(course.price) > 0) {
-      navigate(`/student/checkout?courseId=${course.id}`);
+    if (isEnrolled) {
+      navigate(`/student/learn/${course?.id || id}`);
+      return;
+    }
+    if (Number(course?.price) > 0) {
+      navigate(`/student/checkout?courseId=${course?.id || id}`);
       return;
     }
     setBusy(true);
     try {
-      await api.student.enrollFree(course.id);
+      await api.student.enrollFree(course?.id || id);
       await refreshData();
       addToast('Enrolled successfully', 'success');
-      navigate(`/student/learn/${course.id}`);
+      navigate(`/student/learn/${course?.id || id}`);
     } catch (err) {
+      if (err.message?.toLowerCase().includes('already enrolled')) {
+        navigate(`/student/learn/${course?.id || id}`);
+        return;
+      }
       addToast(err.message || 'Could not enroll', 'error');
     } finally {
       setBusy(false);
@@ -175,7 +192,6 @@ export default function CourseDetails() {
   const instructors = course.instructors?.length
     ? course.instructors
     : [{ id: course.instructorId, name: course.instructorName, role: 'Instructor' }];
-  const showForm = enrollment && (!myReview || editing);
 
   return (
     <PageLayout>
@@ -472,19 +488,19 @@ export default function CourseDetails() {
                 {Number(course.price) > 0 ? `₹${Number(course.price).toLocaleString('en-IN')}` : 'Free'}
               </p>
 
-              {enrollment ? (
+              {isEnrolled ? (
                 <Link
-                  to={`/student/learn/${course.id}`}
-                  className="w-full bg-[#0056D2] hover:bg-[#00419E] text-white text-sm font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+                  to={`/student/learn/${course.id || id}`}
+                  className="w-full bg-[#0056D2] hover:bg-[#00419E] text-white text-sm font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                 >
-                  {enrollment.status === 'Completed' ? 'Review course' : enrollment.progress > 0 ? `Continue (${enrollment.progress}%)` : 'Start course'}
+                  Go to Course
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (
                 <button
                   onClick={handleEnroll}
                   disabled={busy}
-                  className="w-full bg-[#0056D2] hover:bg-[#00419E] text-white text-sm font-bold py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full bg-[#0056D2] hover:bg-[#00419E] text-white text-sm font-bold py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                 >
                   {Number(course.price) > 0 ? 'Enroll now' : 'Enroll for free'}
                   <ArrowRight className="w-4 h-4" />

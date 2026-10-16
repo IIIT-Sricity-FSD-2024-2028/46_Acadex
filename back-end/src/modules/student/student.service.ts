@@ -92,7 +92,6 @@ export class StudentService {
 
     return {
       ...learner,
-      orgMembershipStatus: learner.orgMembershipStatus || 'Independent Learner',
       enrolledCourses: enrollments.length,
       inProgressCourses: enrollments.length - completed,
       completedCourses: completed,

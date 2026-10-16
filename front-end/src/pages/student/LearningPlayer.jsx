@@ -93,11 +93,31 @@ export default function LearningPlayer() {
   useEffect(() => {
     setLoading(true);
     setNotEnrolled(false);
-    Promise.all([api.student.getEnrollmentForCourse(courseId), api.courses.get(courseId)])
-      .then(([enr, crs]) => {
-        setEnrollment(enr);
-        setCourse(crs);
-        document.title = `${crs?.title || 'Learning'} | Acadex`;
+    Promise.allSettled([
+      api.student.getEnrollmentForCourse(courseId).catch(() => null),
+      api.courses.get(courseId).catch(() => null),
+      api.student.getCatalogCourse(courseId).catch(() => null),
+      api.student.getEnrollments().catch(() => []),
+    ])
+      .then(([enrRes, crsRes, catRes, allEnrRes]) => {
+        let enr = enrRes.status === 'fulfilled' ? enrRes.value : null;
+        let crs = crsRes.status === 'fulfilled' ? crsRes.value : null;
+        const cat = catRes.status === 'fulfilled' ? catRes.value : null;
+        const allEnrs = allEnrRes.status === 'fulfilled' && Array.isArray(allEnrRes.value) ? allEnrRes.value : [];
+
+        if (!crs && cat) crs = cat;
+        if (!enr && allEnrs.length > 0) {
+          enr = allEnrs.find((e) => e.courseId === courseId || e.id === courseId) || null;
+        }
+
+        if (!crs && !enr) {
+          setNotEnrolled(true);
+        } else {
+          setEnrollment(enr);
+          setCourse(crs);
+          if (crs?.title) document.title = `${crs.title} | Acadex`;
+          if (!enr) setNotEnrolled(true);
+        }
       })
       .catch((err) => {
         console.warn('Failed to load course or enrollment:', err);
@@ -350,13 +370,14 @@ export default function LearningPlayer() {
 
             <div className="max-h-[65vh] overflow-y-auto divide-y divide-slate-100">
               {(course.modules || []).map((mod, mIdx) => {
-                const modLessons = lessons.filter((l) => l.moduleId === mod.id);
+                const modId = mod?.id || `mod-${mIdx + 1}`;
+                const modLessons = lessons.filter((l) => l.moduleId === modId || l.moduleId === mod?.id);
                 const modDone = modLessons.filter((l) => done.has(l.id)).length;
                 return (
-                  <div key={mod.id || `mod-${mIdx}`} className="border-b border-slate-100 last:border-0">
+                  <div key={modId} className="border-b border-slate-100 last:border-0">
                     <div className="px-4 py-3 bg-slate-50 flex justify-between items-center sticky top-0 z-10 border-b border-slate-100">
                       <p className="text-xs font-bold text-slate-800 truncate">
-                        {mIdx + 1}. {mod.title}
+                        {mIdx + 1}. {mod?.title || `Module ${mIdx + 1}`}
                       </p>
                       <span className="text-[11px] text-slate-500 shrink-0 ml-2 font-mono">
                         {modDone}/{modLessons.length}

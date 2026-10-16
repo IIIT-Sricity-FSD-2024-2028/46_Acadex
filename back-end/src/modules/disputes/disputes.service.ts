@@ -95,7 +95,17 @@ export class DisputesService {
 
   async create(dto: CreateDisputeDto) {
     const year = new Date().getFullYear();
-    const newId = `DSP-${year}-${Math.floor(100 + Math.random() * 900)}`;
+    const existing = await this.disputesRepo.find();
+    const usedIds = new Set(existing.map((d) => d.id));
+    let nextSeq = existing.reduce((max, d) => {
+      const match = String(d.id || '').match(/DSP-\d+-(\d+)/);
+      return match ? Math.max(max, Number(match[1])) : max;
+    }, 100);
+    let newId = '';
+    do {
+      nextSeq += 1;
+      newId = `DSP-${year}-${String(nextSeq).padStart(3, '0')}`;
+    } while (usedIds.has(newId));
     const nowIso = new Date().toISOString();
 
     const raisedById = dto.raisedById || dto.learnerId || dto.studentId || dto.userId || 'usr-5';

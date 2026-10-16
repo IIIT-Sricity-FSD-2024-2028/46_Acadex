@@ -14,6 +14,7 @@ export function CreateLesson() {
   const [lessonType, setLessonType] = useState('video');
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(10);
+  const [readingContent, setReadingContent] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Track the actual uploaded file
@@ -54,6 +55,8 @@ export function CreateLesson() {
             fileName: uploadedFile ? uploadedFile.name : '',
             fileSize: uploadedFile ? formatBytes(uploadedFile.size) : '',
             url: '',
+            description: readingContent,
+            content: readingContent,
           };
           targetMod.items = [...(targetMod.items || []), newItem];
         }
@@ -159,6 +162,8 @@ export function CreateLesson() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Reading Content (Markdown)</label>
                   <textarea 
                     rows={6}
+                    value={readingContent}
+                    onChange={(e) => setReadingContent(e.target.value)}
                     className="w-full rounded-md border border-slate-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="Write your lesson text in markdown or upload a PDF..."
                   />

@@ -21,6 +21,12 @@ class StudentErrorBoundary extends Component {
     console.error('Student Portal caught an error:', error, errorInfo);
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.resetKey !== prevProps.resetKey && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   resetError = () => {
     this.setState({ hasError: false, error: null });
   };
@@ -81,7 +87,7 @@ export function StudentRouteMiddleware() {
   }, [location.pathname]);
 
   return (
-    <StudentErrorBoundary>
+    <StudentErrorBoundary resetKey={location.pathname}>
       <StudentProvider>
         <Outlet />
       </StudentProvider>

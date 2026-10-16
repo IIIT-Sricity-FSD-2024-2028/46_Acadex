@@ -59,7 +59,7 @@ export default function Enrollments() {
             ))}
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-outline absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-outline absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search enrollment ID, student..."
