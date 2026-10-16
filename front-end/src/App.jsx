@@ -31,10 +31,8 @@ import StudentRouteMiddleware from './components/student/layout/StudentRouteMidd
 // ──────────────────────────────────────────────────────────────
 // 2. INSTRUCTOR / EDUCATOR PAGES & LAYOUTS
 // ──────────────────────────────────────────────────────────────
-import { AuthLayout } from './components/instructor/layouts/AuthLayout';
 import { InstructorLayout } from './components/instructor/layouts/InstructorLayout';
 import { InstructorProvider } from './context/InstructorContext';
-import { Register as InstructorRegister } from './pages/instructor/auth/Register';
 import { Dashboard as InstructorDashboard } from './pages/instructor/instructor/Dashboard';
 import { Profile as InstructorProfile } from './pages/instructor/instructor/Profile';
 import { MyCourses } from './pages/instructor/courses/MyCourses';
@@ -195,10 +193,8 @@ export default function App() {
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 2. INSTRUCTOR / EDUCATOR ROUTES */}
       {/* ────────────────────────────────────────────────────────────── */}
-      <Route element={<AuthLayout />}>
-        <Route path="/instructor/login" element={<Navigate to="/signin?role=Instructor" replace />} />
-        <Route path="/instructor/register" element={<InstructorRegister />} />
-      </Route>
+      <Route path="/instructor/login" element={<Navigate to="/signin?role=Instructor" replace />} />
+      <Route path="/instructor/register" element={<Navigate to="/signup?role=Instructor" replace />} />
 
       <Route path="/instructor" element={<InstructorProvider><InstructorLayout /></InstructorProvider>}>
         <Route index element={<InstructorDashboard />} />

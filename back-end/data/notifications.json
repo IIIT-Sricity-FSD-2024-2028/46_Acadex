@@ -37,7 +37,7 @@
     "title": "New 5★ Rating on Object Oriented Programming",
     "desc": "Sofia Reyes gave a 5-star review: 'Brilliant explanation of SOLID principles and clean architecture.'",
     "time": "2 hours ago",
-    "read": false,
+    "read": true,
     "type": "Review",
     "category": "Review",
     "recipientId": "inst-1791912292835",
@@ -46,7 +46,7 @@
     "actionUrl": "/instructor/reviews",
     "color": "amber",
     "createdAt": "2026-10-15T14:30:00.000Z",
-    "updatedAt": "2026-10-15T15:43:59.205Z"
+    "updatedAt": "2026-10-16T09:54:34.313Z"
   },
   {
     "id": "notif-inst-2",
