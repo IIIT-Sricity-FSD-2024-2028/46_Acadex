@@ -1,3 +1,4 @@
+import HumanAvatar from '../../components/common/HumanAvatar';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -111,7 +112,7 @@ export default function Learners() {
               {pendingRequests.map((req) => (
                 <div key={req.id} className="bg-white border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img src={req.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80"} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <HumanAvatar name={req.name} className="w-10 h-10 rounded-full object-cover"/>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900">{req.name}</h4>
                       <p className="text-[11px] text-slate-500">{req.email}</p>
@@ -195,7 +196,7 @@ export default function Learners() {
                     <tr key={l.id} className="hover:bg-surface-container/40 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <img src={l.avatar} alt={l.name} className="w-9 h-9 rounded-full object-cover border border-outline-variant" />
+                          <HumanAvatar name={l.name} className="w-9 h-9 rounded-full object-cover border border-outline-variant"/>
                           <span className="font-bold text-on-surface">{l.name}</span>
                         </div>
                       </td>

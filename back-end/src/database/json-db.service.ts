@@ -1,3 +1,4 @@
+import {prepareWebSeed} from './web-seed';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -31,6 +32,7 @@ import { BaseEntity } from './interfaces/database.interface';
 export class JsonDatabaseService implements OnModuleInit {
   private readonly logger = new Logger(JsonDatabaseService.name);
   private readonly dataDir: string;
+  private readonly storageMode=process.env.DATA_STORAGE_MODE||(process.env.NODE_ENV==='test'?'file':'memory');
   private readonly memoryStore = new Map<string, BaseEntity[]>();
   private readonly fileLocks = new Map<string, Promise<void>>();
   private transactionLock: Promise<any> = Promise.resolve();
@@ -78,6 +80,16 @@ export class JsonDatabaseService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    if(this.storageMode==='memory'){
+      const snapshot:Record<string,any[]>={};
+      for(const [name,seed] of Object.entries(this.defaultSeedMap))snapshot[name]=JSON.parse(JSON.stringify(seed));
+      if(fs.existsSync(this.dataDir))for(const file of await fs.promises.readdir(this.dataDir)){
+        if(!file.endsWith('.json'))continue;
+        try{const rows=JSON.parse(await fs.promises.readFile(path.join(this.dataDir,file),'utf8'));if(Array.isArray(rows))snapshot[file.slice(0,-5)]=rows;}catch{}
+      }
+      for(const [name,rows]of Object.entries(prepareWebSeed(snapshot)))this.memoryStore.set(name,rows);
+      this.logger.log('Web data loaded into backend memory; seed JSON files are read-only.');return;
+    }
     this.ensureDataDirectory();
     await this.initializeCollections();
   }
@@ -137,6 +149,7 @@ export class JsonDatabaseService implements OnModuleInit {
   }
 
   public async getCollection<T extends BaseEntity>(collection: string): Promise<T[]> {
+    if(this.storageMode==='memory'){if(!this.memoryStore.has(collection))this.memoryStore.set(collection,[]);return JSON.parse(JSON.stringify(this.memoryStore.get(collection))) as T[];}
     const filePath = this.getCollectionFilePath(collection);
     if (fs.existsSync(filePath)) {
       try {
@@ -178,6 +191,7 @@ export class JsonDatabaseService implements OnModuleInit {
     collection: string,
     data: T[]
   ): Promise<void> {
+    if(this.storageMode==='memory'){this.memoryStore.set(collection,JSON.parse(JSON.stringify(data)));return;}
     this.ensureDataDirectory();
     this.setInMemoryData(collection, data);
 
@@ -253,6 +267,10 @@ export class JsonDatabaseService implements OnModuleInit {
     });
 
     await prevLock;
+    if(this.storageMode==='memory'){
+      const before=new Map([...this.memoryStore].map(([name,rows])=>[name,JSON.parse(JSON.stringify(rows))]));
+      try{return await action(this);}catch(error){this.memoryStore.clear();for(const [name,rows]of before)this.memoryStore.set(name,rows);throw error;}finally{resolveLock!();}
+    }
     const snapshot = new Map<string, any[]>();
     try {
       const files = await fs.promises.readdir(this.dataDir);
@@ -278,7 +296,7 @@ export class JsonDatabaseService implements OnModuleInit {
 
   public async exportDatabaseSnapshot(): Promise<Record<string, any[]>> {
     const snapshot: Record<string, any[]> = {};
-    for (const collection of Object.keys(this.defaultSeedMap)) {
+    for (const collection of new Set([...Object.keys(this.defaultSeedMap),...this.memoryStore.keys()])) {
       snapshot[collection] = await this.getCollection(collection);
     }
     return snapshot;

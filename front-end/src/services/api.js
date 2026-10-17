@@ -1,5 +1,5 @@
 /**
- * Unified Backend API Client Service for NexusPay Enterprise EdTech Platform
+ * Unified Backend API Client Service for Acadex education platform
  * Supports all 4 platform actors: Student, Instructor, Organization, Admin
  * Uses Vite's /api proxy in development, or VITE_API_URL when configured.
  */

@@ -84,7 +84,7 @@ export class CoursesService {
     const leadInstructor = instructorsList[0];
     if (!leadInstructor) throw new BadRequestException('Assign an existing instructor to the course.');
     if(organizationId&&instructorsList.some(i=>!i.id))throw new BadRequestException('Choose instructors from your organization.');
-    if(organizationId){const teachers=await this.instructorsRepo.find();if(instructorsList.some(i=>!teachers.some(t=>t.id===i.id&&t.organizationId===organizationId)))throw new BadRequestException('All instructors must belong to your organization.');}
+    if(organizationId){const teachers=await this.instructorsRepo.find();if(instructorsList.some(i=>!teachers.some(t=>t.id===i.id&&t.organizationId===organizationId&&t.status==='Active')))throw new BadRequestException('All instructors must belong to your organization.');}
     const modules = Array.isArray(dto.modules) ? dto.modules : [];
     const lessonsCount = modules.reduce((sum, m: any) => sum + (Array.isArray(m.items)?m.items.length:Array.isArray(m.lessons)?m.lessons.length:Number(m.lessons)||0), 0);
 
@@ -126,6 +126,7 @@ export class CoursesService {
 
     if (dto.instructorId || dto.coInstructorIds || dto.instructors) {
       updatedInstructors = await this.resolveInstructors(dto);
+      const eligible=await this.instructorsRepo.find();if(updatedInstructors.some(i=>!eligible.some(t=>t.id===i.id&&t.organizationId===existing.organizationId&&t.status==='Active')))throw new BadRequestException('Assign only active instructors from this course’s organization.');
     }
 
     const leadInst = updatedInstructors[0] || { id: existing.instructorId, name: existing.leadInstructorName };

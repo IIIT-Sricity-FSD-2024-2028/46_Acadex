@@ -92,7 +92,7 @@ export class OrganizationService {
 
     const synced = await Promise.all(orgs.map(async (org) => {
       const organizationCourses = courses.filter((course) => courseOrganizationIds.get(course.id) === org.id);
-      const coursesCount = organizationCourses.length;
+      const coursesCount = organizationCourses.filter(c=>c.status!=='Archived').length;
       const learnerIds = new Set(
         enrollments
           .filter((enrollment) => courseOrganizationIds.get(enrollment.courseId) === org.id)
@@ -193,7 +193,7 @@ export class OrganizationService {
       totalInstructors,
       totalLearners,
       activeCourses: courses.filter((course) => course.status === 'Published').length,
-      totalCourses: courses.length,
+      totalCourses: courses.filter(c=>c.status!=='Archived').length,
       totalEnrollments: enrollments.length,
       activeEnrollments,
       completedEnrollments,
@@ -283,20 +283,20 @@ export class OrganizationService {
       id: newId,
       name: dto.name || 'New University Partner',
       tagline: dto.tagline || 'Leading Academic Institution',
-      email: dto.email || `contact@${newId}.edu`,
-      phone: dto.phone || '+1 (555) 019-2831',
-      location: dto.location || 'Global Campus',
-      address: dto.address || 'Campus Quad, Academic Wing',
-      website: dto.website || `https://${newId}.edu`,
+      email: dto.email || null,
+      phone: dto.phone || null,
+      location: dto.location || null,
+      address: dto.address || null,
+      website: dto.website || null,
       status: dto.status || 'Active',
       establishedYear: dto.establishedYear || new Date().getFullYear(),
       totalRevenue: 0,
       monthlyRevenue: 0,
-      currency: dto.currency || 'USD',
+      currency: dto.currency || 'INR',
       instructorIds: dto.instructorIds || [],
-      coursesCount: dto.coursesCount || 2,
-      learnersCount: dto.learnersCount || 100,
-      logo: dto.logo || 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=200&auto=format&fit=crop&q=80',
+      coursesCount: 0,
+      learnersCount: 0,
+      logo: dto.logo || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

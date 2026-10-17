@@ -21,6 +21,9 @@ import { CourseQueryDto, CreateCourseDto, UpdateCourseDto } from './dto/course.d
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService, private readonly workflow:CourseWorkflowService, private readonly workspace:WorkspaceService) {}
 
+  @Get('organization/list') async organizationCourses(@Req() req:any,@Query() query:any){return this.workflow.organizationCourses(await this.workspace.identity(req.headers),query);}
+  @Post(':id/archive') async archive(@Param('id') id:string,@Req() req:any){return this.workflow.archive(id,await this.workspace.identity(req.headers));}
+  @Post(':id/restore') async restore(@Param('id') id:string,@Req() req:any){return this.workflow.restore(id,await this.workspace.identity(req.headers));}
   @Get('assignment-options') async assignmentOptions(@Req() req:any){return this.workflow.assignmentOptions(await this.workspace.identity(req.headers));}
   @Post('assignments') async assign(@Body() body:any,@Req() req:any){return this.workflow.assign(body,await this.workspace.identity(req.headers));}
   @Get(':id/organization') async organizationCourse(@Param('id') id:string,@Req() req:any){return this.workflow.organizationCourse(id,await this.workspace.identity(req.headers));}
@@ -84,11 +87,11 @@ export class CoursesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a course record' })
-  @ApiResponse({ status: 200, description: 'Course deleted successfully' })
+  @ApiOperation({ summary: 'Archive a course while preserving its history' })
+  @ApiResponse({ status: 200, description: 'Course archived successfully' })
   async delete(@Param('id') id: string,@Req() req:any) {
     this.workflow.assertOrganization(await this.workspace.identity(req.headers),await this.workflow.course(id));
-    return this.coursesService.delete(id);
+    return this.workflow.archive(id,await this.workspace.identity(req.headers));
   }
 
   // ──────────────────────────────────────────────────────────────

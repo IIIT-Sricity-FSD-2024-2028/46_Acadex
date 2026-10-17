@@ -47,6 +47,7 @@ export class AnalyticsService {
       instructors = instructors.filter(i => i.organizationId === organizationId);
       users = users.filter(u => u.organizationId === organizationId || learners.some(l => l.userId === u.id));
     }
+    courses=courses.filter(c=>c.status!=='Archived');
     const paid = transactions.filter(t => t.type==='Payment' && ['completed', 'paid', 'success', 'successful'].includes(String(t.status).toLowerCase()));
     const grossRevenue = paid.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 

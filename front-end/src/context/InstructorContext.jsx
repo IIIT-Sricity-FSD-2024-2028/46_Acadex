@@ -41,7 +41,8 @@ export function InstructorProvider({ children }) {
     fetchInstructorData();
     window.addEventListener('account-changed',fetchInstructorData);
     window.addEventListener('focus',fetchInstructorData);
-    return()=>{window.removeEventListener('account-changed',fetchInstructorData);window.removeEventListener('focus',fetchInstructorData);};
+    window.addEventListener('learning-data-changed',fetchInstructorData);
+    return()=>{window.removeEventListener('account-changed',fetchInstructorData);window.removeEventListener('focus',fetchInstructorData);window.removeEventListener('learning-data-changed',fetchInstructorData);};
   }, [fetchInstructorData]);
 
   const run = async (fn) => {

@@ -101,3 +101,5 @@ npm run test:cov --prefix back-end
 
 Coverage is written to `back-end/coverage`. Although the backend package defines a `test:e2e` script, its referenced `test/jest-e2e.json` configuration is not present in this checkout. The frontend has no automated test script configured; run `npm run frontend:build` and exercise the interface against the running API for a basic manual check.
 
+
+Web data storage: the backend defaults to `DATA_STORAGE_MODE=memory`. It reads the existing JSON files once as starting records, then shares website changes across actors in backend memory. Website changes do not modify those JSON files and reset when the backend restarts. File persistence remains available with `DATA_STORAGE_MODE=file`.

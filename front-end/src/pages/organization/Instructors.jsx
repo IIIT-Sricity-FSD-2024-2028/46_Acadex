@@ -1,3 +1,4 @@
+import HumanAvatar from '../../components/common/HumanAvatar';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -118,7 +119,7 @@ export default function Instructors() {
                 <div>
                   <div className="flex items-start justify-between mb-4">
                     <Link to={`/org/instructors/${inst.id}`} className="flex items-center gap-3 group">
-                      <img src={inst.avatar} alt={inst.name} className="w-14 h-14 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform" />
+                      <HumanAvatar name={inst.name} className="w-14 h-14 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform"/>
                       <div>
                         <h3 className="font-bold text-sm text-on-surface group-hover:text-primary transition-colors">{inst.name}</h3>
                         <p className="text-[11px] text-primary font-semibold">{inst.educatorType}</p>

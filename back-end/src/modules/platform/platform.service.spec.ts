@@ -30,7 +30,7 @@ describe('JSON-backed admin and public platform', () => {
     beforeEach(async () => {
         const fixtures = {
             users: [admin, { id: 'u', role: 'Student', name: 'Learner', email: 'learner@test.com', status: 'Active', password: 'Password123!' }, ...['Instructor', 'Organization', 'SuperAdmin'].map((role, i) => ({ id: `role-${i}`, role, name: role, email: `${role.toLowerCase()}@test.com`, status: 'Active', password: 'Password123!' }))],
-            learners: [{ id: 'l', userId: 'u', name: 'Real Learner', status: 'Active' }], organizations: [{ id: 'o', name: 'Real School' }], instructors: [{ id: 'i', name: 'Real Teacher', email: 'teacher@test.com' }],
+            learners: [{ id: 'l', userId: 'u', name: 'Real Learner', status: 'Active' }], organizations: [{ id: 'o', name: 'Real School' }], instructors: [{ id: 'i', name: 'Real Teacher', email: 'teacher@test.com', organizationId: 'o', status: 'Active' }],
             courses: [{ id: 'c', title: 'Actual Course', instructorId: 'i', organizationId: 'o', status: 'Pending Approval', rating: 5, enrolledCount: 99, modules: [{ title: 'Real module', lessons: 4 }], price: 10 }, { id: 'draft', title: 'Draft course', status: 'Draft' }, { id: 'published', title: 'Public course', status: 'Published', thumbnail: 'javascript:bad' }],
             enrollments: [{ id: 'e', learnerId: 'l', courseId: 'c', status: 'Active' }], reviews: [], admin_activity: [], certificates: [], module_requests: [],
             notifications: [{ id: 'n', recipientRole: 'admin', read: false }, { id: 'private', recipientRole: 'student', read: false }],

@@ -95,7 +95,7 @@ async function bootstrap() {
   logger.log(`===========================================================`);
   logger.log(`🚀 Unified NestJS Backend running at: http://localhost:${port}/${apiPrefix}`);
   logger.log(`📚 Swagger API Documentation:         http://localhost:${port}/${swaggerPath}`);
-  logger.log(`💾 JSON Database Directory:           ${process.env.DATA_DIR || './data'}`);
+  logger.log(`Backend storage: ${process.env.DATA_STORAGE_MODE||'memory'}; JSON seed directory: ${process.env.DATA_DIR||'./data'}`);
   logger.log(`===========================================================`);
 }
 

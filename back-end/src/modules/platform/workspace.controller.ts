@@ -3,6 +3,7 @@ import { WorkspaceService } from './workspace.service';
 @Controller('workspace')
 export class WorkspaceController {
   constructor(private readonly workspace:WorkspaceService) {}
+  @Get('organization/learners/:id') async organizationLearner(@Req() req:any,@Param('id') id:string){return this.workspace.organizationLearner(await this.workspace.identity(req.headers),id);}
   @Get('instructor') async instructor(@Req() req:any){return this.workspace.instructorWorkspace(await this.workspace.identity(req.headers));}
   @Get('instructor/learners/:id') async learner(@Req() req:any,@Param('id') id:string){return this.workspace.instructorLearner(await this.workspace.identity(req.headers),id);}
   @Get('instructor/reviews') async reviews(@Req() req:any){return this.workspace.instructorReviews(await this.workspace.identity(req.headers));}

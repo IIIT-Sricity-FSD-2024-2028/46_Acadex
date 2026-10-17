@@ -26,10 +26,9 @@ export default function InstructorDetails() {
       </OrgLayout>
     );
   }
-  const instructorCourses = courses.filter(c =>
+  const instructorCourses = courses.filter(c => c.status!=='Archived'&&(
     c.instructors?.some(courseInstructor => courseInstructor.id === instructor.id) ||
-    c.instructorId === instructor.id ||
-    c.instructorName === instructor.name
+    c.instructorId === instructor.id)
   );
 
   return (
@@ -56,7 +55,7 @@ export default function InstructorDetails() {
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 shadow-elevation-1 flex flex-col md:flex-row items-center gap-6">
           {instructor.avatar ? (
-            <img src={instructor.avatar} alt={instructor.name} className="w-24 h-24 rounded-3xl object-cover shadow-sm flex-shrink-0" />
+            <HumanAvatar name={instructor.name} className="w-24 h-24 rounded-3xl object-cover shadow-sm flex-shrink-0"/>
           ) : (
             <HumanAvatar name={instructor.name} size="3xl" className="rounded-3xl" />
           )}
@@ -81,7 +80,7 @@ export default function InstructorDetails() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Authored Tracks</span>
-            <p className="text-xl font-bold text-on-surface mt-1">{instructorCourses.length || instructor.coursesCount}</p>
+            <p className="text-xl font-bold text-on-surface mt-1">{instructor.coursesCount}</p>
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Enrolled Learners</span>
@@ -95,7 +94,7 @@ export default function InstructorDetails() {
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Gross Royalty</span>
-            <p className="text-xl font-bold text-emerald-700 mt-1">₹{instructor.revenueGenerated.toLocaleString()}</p>
+            <p className="text-xl font-bold text-emerald-700 mt-1">₹{Number(instructor.revenueGenerated||0).toLocaleString('en-IN')}</p>
           </div>
         </div>
 

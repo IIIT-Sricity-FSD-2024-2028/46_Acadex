@@ -15,10 +15,9 @@ export default function Landing() {
     const state = useRemoteData('/public/landing');
     const { data, loading, error } = state;
     const [menu, setMenu] = useState(false);
-    const [category, setCategory] = useState('All');
+    const [search,setSearch]=useState('');
     const navigate = useNavigate();
-    const categories = ['All', ...new Set(data?.courses?.map(c => c.category).filter(Boolean) || [])];
-    const courses = (data?.courses || []).filter(c => category === 'All' || c.category === category).slice(0, 6);
+    const courses = (data?.courses || []).filter(c=>`${c.title} ${c.instructor||''} ${c.organization||''}`.toLowerCase().includes(search.toLowerCase())).slice(0, 6);
     function explore(id) { navigate('/signin?role=Student', { state: { from: { pathname: `/student/course/${id}` } } }); }
     return <div className="academy-public academy-public-refined">
     <a className="academy-skip" href="#main">Skip to content</a>
@@ -76,7 +75,7 @@ export default function Landing() {
     <Link to="/signin?role=Student" className="academy-text-link">Explore all courses<ArrowUpRight size={16}/>
     </Link>
     </div>
-    <div className="academy-tabs" aria-label="Course categories">{categories.map(c => <button key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}</div>{loading ? <div className="academy-course-grid">{[1, 2, 3].map(i => <div className="academy-course academy-loading" key={i}>Loading courses…</div>)}</div> : error ? <div className="academy-empty" role="alert">We couldn’t load the course library. <button onClick={state.refresh}>Try again</button>
+    <label className="landing-course-search"><span>Search courses</span><input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search course or instructor…"/></label>{loading ? <div className="academy-course-grid">{[1, 2, 3].map(i => <div className="academy-course academy-loading" key={i}>Loading courses…</div>)}</div> : error ? <div className="academy-empty" role="alert">We couldn’t load the course library. <button onClick={state.refresh}>Try again</button>
         </div> : <div className="academy-course-grid">{courses.map((c, i) => <article className="academy-course" key={c.id}>
             <button onClick={() => explore(c.id)} className={`academy-course-art art-${i % 4}`} aria-label={`Explore ${c.title}`}>
             <span className="academy-course-art-icon">
@@ -102,7 +101,7 @@ export default function Landing() {
             </button>
             </div>
             </div>
-            </article>)}</div>}{!loading && !error && !courses.length && <div className="academy-empty">No published courses in this category yet.</div>}</section>
+            </article>)}</div>}{!loading && !error && !courses.length && <div className="academy-empty">No courses match your search.</div>}</section>
       <section id="features" className="academy-feature-section">
     <div className="academy-container">
     <div className="academy-section-heading">

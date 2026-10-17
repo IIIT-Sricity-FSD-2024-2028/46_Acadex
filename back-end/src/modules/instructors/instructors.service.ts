@@ -1,3 +1,5 @@
+import {JsonDatabaseService} from '../../database/json-db.service';
+import {assignedInstructorIds} from '../../common/courses/assignment';
 import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
@@ -7,6 +9,7 @@ import { QueryFilter } from '../../database/interfaces/database.interface';
 @Injectable()
 export class InstructorsService {
   constructor(
+    private readonly db:JsonDatabaseService,
     @Inject(REPOSITORY_TOKENS.INSTRUCTORS)
     private readonly instructorsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.COURSES)
@@ -39,34 +42,23 @@ export class InstructorsService {
       ];
     }
 
-    return this.instructorsRepo.findAndCount({
+    const result=await this.instructorsRepo.findAndCount({
       where,
       skip,
       limit,
       sort: { [sortBy]: sortOrder },
     });
+    return {...result,items:await Promise.all(result.items.map(i=>this.enrich(i)))};
   }
 
+  private async enrich(instructor:any){const [courses,enrollments,reviews,transactions]=await Promise.all(['courses','enrollments','reviews','transactions'].map(n=>this.db.getCollection<any>(n)));const taught=courses.filter(c=>c.organizationId===instructor.organizationId&&assignedInstructorIds(c).includes(instructor.id));const current=taught.filter(c=>c.status!=='Archived');const ids=new Set(current.map(c=>c.id));const historicalIds=new Set(taught.map(c=>c.id));const rows=enrollments.filter(e=>ids.has(e.courseId));const ratings=reviews.filter(r=>ids.has(r.courseId)&&Number(r.rating)>=1&&Number(r.rating)<=5);const paid=transactions.filter(t=>historicalIds.has(t.courseId)&&t.type==='Payment'&&['completed','paid','success','successful'].includes(String(t.status).toLowerCase()));return {...instructor,courses:current,coursesCount:current.length,enrolledStudents:new Set(rows.map(e=>e.learnerId)).size,avgRating:ratings.length?Math.round(ratings.reduce((s,r)=>s+Number(r.rating),0)/ratings.length*10)/10:null,revenueGenerated:paid.reduce((sum,p)=>sum+Number(p.amount||0),0)};}
   async findOne(id: string) {
     const instructor = await this.instructorsRepo.findById(id);
     if (!instructor) {
       throw new NotFoundException(`Instructor with ID '${id}' not found`);
     }
 
-    // Populate instructor courses
-    const courses = await this.coursesRepo.find({
-      where: {
-        $or: [
-          { instructorId: id },
-          { 'instructors.id': id },
-        ],
-      },
-    });
-
-    return {
-      ...instructor,
-      courses,
-    };
+    return this.enrich(instructor);
   }
 
   async create(dto: CreateInstructorDto) {
@@ -74,10 +66,10 @@ export class InstructorsService {
       ...dto,
       coursesCount: 0,
       enrolledStudents: 0,
-      avgRating: dto.avgRating || 5.0,
+      avgRating: null,
       revenueGenerated: 0,
       status: dto.status || 'Active',
-      avatar: dto.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
+      avatar: null,
       joinedDate: dto.joinedDate || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
     });
     return newInstructor;

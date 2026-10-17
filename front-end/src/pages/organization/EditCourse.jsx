@@ -1,3 +1,4 @@
+import HumanAvatar from '../../components/common/HumanAvatar';
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
@@ -10,33 +11,37 @@ import {
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useOrg } from '../../context/useOrg';
 import { useToast } from '../../components/common/Toast';
+import {useRemoteData} from '../../hooks/useRemoteData';
+import {AdminDataState,AdminEmpty} from '../../components/admin/AdminUI';
 
-export default function EditCourse() {
-  const { id } = useParams();
+export default function EditCourse(){
+  const {id}=useParams();const state=useRemoteData(`/courses/${id}/organization`);const org=useOrg();
+  if(state.loading||org.isLoading||state.error||org.error||!state.data)return <OrgLayout><div className="admin-page"><AdminDataState loading={state.loading||org.isLoading} error={state.error||org.error} refresh={state.refresh}/><Link className="admin-button" to="/org/courses">Back to courses</Link></div></OrgLayout>;
+  if(state.data.status==='Archived')return <OrgLayout><div className="admin-page"><AdminEmpty title="This course is archived" description="Restore it to draft from the course archive before editing."/><Link className="admin-button" to="/org/courses">Back to courses</Link></div></OrgLayout>;
+  return <CourseEditor key={id} course={state.data}/>;
+}
+function CourseEditor({course}) {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { courses, updateCourse, deleteCourse, instructors, sendCourseTeachingRequest, info } = useOrg();
+  const { updateCourse, deleteCourse, instructors: faculty } = useOrg();
+  const instructors=faculty.filter(i=>i.organizationId===course.organizationId&&i.status==='Active');
 
-  const course = courses.find(c => c.id === id) || courses[0];
   
   // Determine existing lead and co-instructor IDs
-  const initialLeadId = course?.instructors?.[0]?.id || course?.instructorId || instructors[0]?.id;
+  const initialLeadId = course.instructorId || course.instructors?.[0]?.id || '';
   const initialCoIds = (course?.instructors || [])
     .filter(i => i.role === 'Co-Instructor' || (i.id !== initialLeadId))
     .map(i => i.id);
 
   const [courseForm, setCourseForm] = useState({
     title: course?.title || '',
-    category: course?.category || 'Cloud Architecture',
-    level: course?.level || 'Advanced',
-    price: course?.price ? course.price.toString() : '89.99',
+    category: course?.category || '',
+    level: course?.level || '',
+    price: course.price == null ? '' : String(course.price),
     description: course?.description || '',
     leadInstructorId: initialLeadId,
     coInstructorIds: initialCoIds
   });
-  const [originalInstructorIds] = useState(
-    () => new Set((course?.instructors || []).map((instructor) => instructor.id).filter(Boolean))
-  );
 
   const toggleCoInstructor = (instId) => {
     if (instId === courseForm.leadInstructorId) return;
@@ -62,7 +67,8 @@ export default function EditCourse() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (course) {
-      const leadInst = instructors.find(i => i.id === courseForm.leadInstructorId) || instructors[0];
+      const leadInst = instructors.find(i => i.id === courseForm.leadInstructorId);
+      if(!leadInst){addToast('Choose an active instructor from your institute.', 'error');return;}
       const assignedInstructors = [
         {
           id: leadInst.id,
@@ -106,10 +112,10 @@ export default function EditCourse() {
     if (course) {
       try {
         await deleteCourse(course.id);
-        addToast(`Course archived and removed from active catalog`, 'error');
+        addToast('Course archived. Enrollment and payment history are preserved.', 'success');
         navigate('/org/courses');
       } catch (err) {
-        addToast(`Failed to delete course: ${err.message || 'Server error'}`, 'error');
+        addToast(`Failed to archive course: ${err.message || 'Server error'}`, 'error');
       }
     }
   };
@@ -169,17 +175,7 @@ export default function EditCourse() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-bold text-on-surface block mb-1.5">Category</label>
-              <select
-                value={courseForm.category}
-                onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })}
-                className="w-full px-4 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:border-primary text-on-surface font-medium"
-              >
-                <option>Cloud Architecture</option>
-                <option>Machine Learning</option>
-                <option>Cybersecurity</option>
-                <option>DevOps</option>
-                <option>Data Engineering</option>
-              </select>
+              <input value={courseForm.category} onChange={e=>setCourseForm({...courseForm,category:e.target.value})} className="admin-input" placeholder="Course category"/>
             </div>
             <div>
               <label className="text-xs font-bold text-on-surface block mb-1.5">Level</label>
@@ -188,7 +184,7 @@ export default function EditCourse() {
                 onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
                 className="w-full px-4 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:border-primary text-on-surface font-medium"
               >
-                <option>Beginner</option>
+                <option value="">Select level</option><option>Beginner</option>
                 <option>Intermediate</option>
                 <option>Advanced</option>
               </select>
@@ -198,6 +194,7 @@ export default function EditCourse() {
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 required
                 value={courseForm.price}
                 onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
@@ -211,7 +208,7 @@ export default function EditCourse() {
             <div className="flex items-center justify-between pb-2 border-b border-outline-variant/60">
               <h2 className="text-sm font-bold text-on-surface flex items-center gap-2">
                 <GraduationCap className="w-4 h-4 text-primary" />
-                <span>Assigned Teaching Team & Faculty Requests</span>
+                <span>Assigned teaching team</span>
               </h2>
               <span className="text-xs font-bold text-primary">
                 {1 + courseForm.coInstructorIds.length} Instructor(s)
@@ -229,7 +226,7 @@ export default function EditCourse() {
                 onChange={(e) => handleLeadChange(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs bg-white border border-outline-variant rounded-xl text-on-surface font-semibold focus:outline-none focus:border-primary"
               >
-                {instructors.map((inst) => (
+                <option value="">Choose an instructor</option>{instructors.map((inst) => (
                   <option key={inst.id} value={inst.id}>
                     {inst.name} — {inst.specialization}
                   </option>
@@ -260,7 +257,7 @@ export default function EditCourse() {
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <img src={inst.avatar} alt={inst.name} className="w-8 h-8 rounded-lg object-cover" />
+                        <HumanAvatar name={inst.name} className="w-8 h-8 rounded-lg object-cover"/>
                         <div>
                           <div className="flex items-center gap-1">
                             <h4 className="font-bold text-xs text-on-surface">{inst.name}</h4>

@@ -1,4 +1,5 @@
-import { Body, BadRequestException, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
+import {WorkspaceService} from '../platform/workspace.service';
+import { Body, ForbiddenException,BadRequestException, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { InstructorsService } from './instructors.service';
 import { CreateInstructorDto, InstructorQueryDto, UpdateInstructorDto } from './dto/instructor.dto';
@@ -6,7 +7,7 @@ import { CreateInstructorDto, InstructorQueryDto, UpdateInstructorDto } from './
 @ApiTags('Instructors')
 @Controller('instructors')
 export class InstructorsController {
-  constructor(private readonly instructorsService: InstructorsService) {}
+  constructor(private readonly instructorsService: InstructorsService,private readonly workspace:WorkspaceService) {}
 
   @Get()
   @ApiOperation({ summary: 'List all instructors with filtering, search, and pagination' })
@@ -32,9 +33,13 @@ export class InstructorsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update instructor details' })
   @ApiResponse({ status: 200, description: 'Instructor updated successfully' })
-  async update(@Param('id') id: string, @Body() dto: UpdateInstructorDto, @Headers('x-role') actor = 'admin') {
-    if (['admin','superadmin'].includes(actor.toLowerCase()) && dto.status) throw new BadRequestException('Instructor access is managed by the organization.');
-    return this.instructorsService.update(id, dto);
+  async update(@Param('id') id:string,@Body() dto:UpdateInstructorDto,@Headers('x-user-id') userId:string){
+    const actor=await this.workspace.identity({'x-user-id':userId});const instructor=await this.instructorsService.findOne(id);
+    if(actor.canonicalRole==='organization'){
+      if(instructor.organizationId!==actor.profileId||Object.keys(dto).some(key=>key!=='status'))throw new ForbiddenException('Organizations manage access only for their own instructors.');
+    }else if(actor.canonicalRole==='instructor'&&actor.profileId===id){if(Object.keys(dto).some(key=>!['name','phone','bio','specialization','department','website','expertise','qualification','experience','educatorType'].includes(key)))throw new ForbiddenException('Institute affiliation is managed through the organization workflow.');}
+    else throw new ForbiddenException('Only the instructor can edit their profile.');
+    return this.instructorsService.update(id,dto);
   }
 
   @Delete(':id')

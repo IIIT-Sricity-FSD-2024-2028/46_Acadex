@@ -824,6 +824,7 @@ export function CourseContent() {
   }
 
   if(!course)return <div className="admin-card"><p role="alert" className="workspace-error">{saveError||'Course not found.'}</p><Link className="admin-button mt-4" to="/instructor/courses">My courses</Link></div>;
+  if(course.status==='Archived')return <div className="admin-card"><h1 className="text-lg font-semibold">{course.title}</h1><p className="admin-muted mt-4">This course is archived. Its enrollment history is retained.</p><Link to="/instructor/courses" className="admin-button mt-5">My courses</Link></div>;
   return (
     <div className="max-w-5xl mx-auto pb-28" onClickCapture={async e=>{const link=e.target.closest('a');const href=link?.getAttribute('href');if(href?.includes('/instructor/courses/quiz/')){e.preventDefault();e.stopPropagation();setSaving(true);try{await api.put(`/courses/${id}/curriculum-draft`,{modules});navigate(href);}catch(err){setSaveError(err.message);}finally{setSaving(false);}}}}>
       {/* Page Header */}

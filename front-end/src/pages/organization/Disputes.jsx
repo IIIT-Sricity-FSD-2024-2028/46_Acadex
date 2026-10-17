@@ -109,7 +109,7 @@ export default function Disputes() {
         courseTitle: selectedCourse ? selectedCourse.title : 'Organization Platform Operations',
         courseId: newDisputeForm.courseId,
         priority: newDisputeForm.priority,
-        raisedBy: info.name || 'NexusPay Enterprise Academy',
+        raisedBy: info.name,
         raisedById: info.id || localStorage.getItem('user_organization_id') || 'org-1',
         raisedByRole: newDisputeForm.raisedByRole,
         desiredResolution: newDisputeForm.desiredResolution

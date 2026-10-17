@@ -171,11 +171,7 @@ export function OrgProvider({ children }) {
 
       setState((prev) => ({
         info: orgRes.status === 'fulfilled' && orgRes.value ? orgRes.value : prev.info,
-        instructors: allInstructors.filter((instructor) =>
-          belongsToOrganization(instructor.organizationId, orgInfo?.id) || organizationCourses.some((course) =>
-            course.instructorId === instructor.id || course.instructors?.some((item) => item.id === instructor.id),
-          ),
-        ),
+        instructors: allInstructors.filter(instructor=>belongsToOrganization(instructor.organizationId,orgInfo?.id)),
         instructorRequests: requestsRes.status === 'fulfilled'
           ? scopeInvitations(getItems(requestsRes.value), orgInfo?.id).filter((request) =>
               allInstructors.some((instructor) =>
@@ -326,7 +322,7 @@ export function OrgProvider({ children }) {
     try {
       const payload = {
         ...updatedData,
-        price: parseFloat(updatedData.price) || updatedData.price,
+        ...(updatedData.price===undefined?{}:{price:Number(updatedData.price)}),
       };
 
       const updated = await api.courses.update(courseId, payload);
@@ -348,7 +344,7 @@ export function OrgProvider({ children }) {
 
   const deleteCourse = async (courseId) => {
     try {
-      const archived = await api.courses.update(courseId, { status: 'Archived' });
+      const archived = await api.post(`/courses/${courseId}/archive`, {});
       setState((prev) => ({
         ...prev,
         courses: prev.courses.map((course) =>

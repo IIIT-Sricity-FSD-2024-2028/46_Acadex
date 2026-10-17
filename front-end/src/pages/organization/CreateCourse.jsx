@@ -1,3 +1,4 @@
+import HumanAvatar from '../../components/common/HumanAvatar';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -29,17 +30,14 @@ export default function CreateCourse() {
     coInstructorIds: [],
     price: '',
     description: '',
-    modules: [
-      // { id: 1, title: 'Module 1: Introduction to Architecture Patterns', lessons: 3, duration: '2h 15m' },
-      // { id: 2, title: 'Module 2: High Throughput Consensus & Failover', lessons: 4, duration: '3h 30m' }
-    ]
+    modules: []
   });
 
   const [facultySearch, setFacultySearch] = useState('');
 
-  const filteredFaculty = instructors.filter(i =>
+  const filteredFaculty = instructors.filter(i => i.status==='Active').filter(i =>
     i.name.toLowerCase().includes(facultySearch.toLowerCase()) ||
-    i.specialization.toLowerCase().includes(facultySearch.toLowerCase())
+    String(i.specialization||'').toLowerCase().includes(facultySearch.toLowerCase())
   );
 
   const toggleCoInstructor = (instId) => {
@@ -170,19 +168,7 @@ export default function CreateCourse() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-bold text-on-surface block mb-1.5">Category</label>
-                <select
-                  required
-                  value={courseForm.category}
-                  onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })}
-                  className="w-full px-4 py-2.5 text-xs bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:border-primary text-on-surface font-medium"
-                >
-                  <option value="" disabled>Select category</option>
-                  <option>Cloud Architecture</option>
-                  <option>Machine Learning</option>
-                  <option>Cybersecurity</option>
-                  <option>DevOps</option>
-                  <option>Data Engineering</option>
-                </select>
+                <input value={courseForm.category} onChange={e=>setCourseForm({...courseForm,category:e.target.value})} className="admin-input" placeholder="Course category"/>
               </div>
               <div>
                 <label className="text-xs font-bold text-on-surface block mb-1.5">Skill Level</label>
@@ -315,7 +301,7 @@ export default function CreateCourse() {
 
                         {/* Avatar with role badge */}
                         <div className="relative flex-shrink-0">
-                          <img src={inst.avatar} alt={inst.name} className="w-10 h-10 rounded-2xl object-cover" />
+                          <HumanAvatar name={inst.name} className="w-10 h-10 rounded-2xl object-cover"/>
                           {(isLead || isCo) && (
                             <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center ${isLead ? 'bg-primary' : 'bg-secondary'}`}>
                               <Check className="w-2 h-2 text-white stroke-[3]" />
@@ -381,7 +367,7 @@ export default function CreateCourse() {
                     const lead = instructors.find(i => i.id === courseForm.leadInstructorId);
                     return lead ? (
                       <div className="flex items-center gap-2 px-2.5 py-1.5 border border-primary/20 rounded-xl" style={{ background: 'color-mix(in srgb, var(--md-sys-color-primary, #2563eb) 8%, white)' }}>
-                        <img src={lead.avatar} alt={lead.name} className="w-6 h-6 rounded-lg object-cover" />
+                        <HumanAvatar name={lead.name} className="w-6 h-6 rounded-lg object-cover"/>
                         <div>
                           <p className="text-[10px] font-bold text-primary leading-tight">{lead.name}</p>
                           <p className="text-[9px] text-outline leading-tight">Lead Instructor</p>
@@ -393,7 +379,7 @@ export default function CreateCourse() {
                     const co = instructors.find(i => i.id === id);
                     return co ? (
                       <div key={id} className="flex items-center gap-2 px-2.5 py-1.5 border border-secondary/20 rounded-xl" style={{ background: 'color-mix(in srgb, var(--md-sys-color-secondary, #7c3aed) 8%, white)' }}>
-                        <img src={co.avatar} alt={co.name} className="w-6 h-6 rounded-lg object-cover" />
+                        <HumanAvatar name={co.name} className="w-6 h-6 rounded-lg object-cover"/>
                         <div>
                           <p className="text-[10px] font-bold text-secondary leading-tight">{co.name}</p>
                           <p className="text-[9px] text-outline leading-tight">Co-Instructor</p>

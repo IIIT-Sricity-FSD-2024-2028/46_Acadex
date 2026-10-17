@@ -81,7 +81,7 @@ export class StudentService {
     return {
       ...learner,
       enrolledCourses: enrollments.length,
-      inProgressCourses: enrollments.length - completed,
+      inProgressCourses: enrollments.filter(e=>e.status!=='Completed'&&e.courseStatus!=='Archived').length,
       completedCourses: completed,
       certificatesEarned: certificates.length,
     };

@@ -256,11 +256,7 @@ export default function InstructorRequests() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="relative">
-                        <img
-                          src={foundInstructor.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'}
-                          alt={foundInstructor.name}
-                          className="w-14 h-14 rounded-2xl object-cover ring-2 ring-emerald-400/50"
-                        />
+                        <HumanAvatar name={foundInstructor.name} className="w-14 h-14 rounded-2xl object-cover ring-2 ring-emerald-400/50"/>
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center">
                           <UserCheck className="w-2.5 h-2.5 text-white" />
                         </div>
@@ -565,7 +561,7 @@ export default function InstructorRequests() {
                         {/* Faculty Member */}
                         <td className="py-4">
                           <div className="flex items-center gap-3">
-                            <img src={req.avatar} alt={req.name} className="w-10 h-10 rounded-2xl object-cover" />
+                            <HumanAvatar name={req.name} className="w-10 h-10 rounded-2xl object-cover"/>
                             <div>
                               <p className="font-bold text-sm text-on-surface">{req.name}</p>
                               <span className="text-[11px] text-outline flex items-center gap-1">

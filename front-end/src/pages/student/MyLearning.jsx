@@ -11,6 +11,7 @@ import api from '../../services/api';
 const TABS = [
   { id: 'in-progress', label: 'In progress' },
   { id: 'completed', label: 'Completed' },
+  { id: 'archived', label: 'Archived' },
 ];
 
 export default function MyLearning() {
@@ -32,8 +33,9 @@ export default function MyLearning() {
 
   const groups = useMemo(
     () => ({
-      'in-progress': enrollments.filter((e) => e.status !== 'Completed'),
-      completed: enrollments.filter((e) => e.status === 'Completed'),
+      'in-progress': enrollments.filter((e) => e.status !== 'Completed'&&e.courseStatus!=='Archived'),
+      completed: enrollments.filter((e) => e.status === 'Completed'&&e.courseStatus!=='Archived'),
+      archived: enrollments.filter(e=>e.courseStatus==='Archived'),
     }),
     [enrollments]
   );

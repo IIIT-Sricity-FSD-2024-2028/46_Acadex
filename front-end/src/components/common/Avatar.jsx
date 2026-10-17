@@ -18,22 +18,7 @@ export function Avatar({
 
   return (
     <div className={cn('inline-flex items-center gap-2.5', className)} {...props}>
-      {src ? (
-        <img
-          src={src}
-          alt={displayName}
-          className={cn(
-            'rounded-full object-cover shrink-0',
-            size === 'xs' && 'w-6 h-6',
-            size === 'sm' && 'w-8 h-8',
-            size === 'md' && 'w-10 h-10',
-            size === 'lg' && 'w-12 h-12',
-            (size === 'xl' || size === '2xl') && 'w-16 h-16'
-          )}
-        />
-      ) : (
-        <HumanAvatar name={displayName} size={avatarSize} />
-      )}
+      <HumanAvatar name={displayName} size={avatarSize} />
 
       {(showDetails || role) && size !== 'xs' && size !== 'sm' && (
         <div className="flex flex-col text-left">
