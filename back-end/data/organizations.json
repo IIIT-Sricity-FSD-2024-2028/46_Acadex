@@ -11,8 +11,8 @@
     "status": "Active",
     "verificationStatus": "Verified",
     "establishedYear": 2021,
-    "totalRevenue": 25495,
-    "monthlyRevenue": 7649,
+    "totalRevenue": 30294,
+    "monthlyRevenue": 12448,
     "currency": "USD",
     "instructorIds": [
       "inst-1",
@@ -23,7 +23,7 @@
     "learnersCount": 2,
     "logo": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-01-10T08:00:00.000Z",
-    "updatedAt": "2026-10-16T15:48:44.923Z"
+    "updatedAt": "2026-10-17T07:29:07.493Z"
   },
   {
     "id": "org-2",

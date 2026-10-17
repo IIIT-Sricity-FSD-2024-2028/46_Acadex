@@ -1,3 +1,4 @@
+import { AdminDataState } from '../../components/admin/AdminUI';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Search, Award, BookOpen, ArrowRight, Star, X, Send, MessageSquare } from 'lucide-react';
@@ -13,7 +14,7 @@ const TABS = [
 ];
 
 export default function MyLearning() {
-  const { student, enrollments, isLoading, refreshData } = useStudent();
+  const { student, enrollments, isLoading, refreshData, error } = useStudent();
   const { addToast } = useToast();
   const [tab, setTab] = useState('in-progress');
   const [query, setQuery] = useState('');
@@ -46,6 +47,7 @@ export default function MyLearning() {
 
   return (
     <PageLayout>
+      {error&&<div className="learner-page"><AdminDataState error={error.message||String(error)} refresh={refreshData}/></div>}
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">My learning</h1>
@@ -113,9 +115,7 @@ export default function MyLearning() {
                       <p className="text-xs font-semibold text-[#0056D2]">
                         {[e.category, e.instructorName, e.institution].filter(Boolean).join(' • ')}
                       </p>
-                      <Link to={`/student/course/${e.courseId}`} className="text-base font-bold text-slate-900 hover:text-[#0056D2]">
-                        {e.courseTitle}
-                      </Link>
+                      <h2 className="text-base font-semibold text-slate-900">{e.courseTitle||'Course not recorded'}</h2>
                       <p className="text-xs text-slate-500 mt-1">
                         Enrolled {e.enrolledDate}
                         {done && e.completedAt ? ` • Completed ${new Date(e.completedAt).toLocaleDateString('en-IN')}` : ''}
@@ -124,7 +124,7 @@ export default function MyLearning() {
                     <div>
                       <div className="flex justify-between text-xs text-slate-600 mb-1.5">
                         <span>
-                          {(e.completedLessons || []).length} of {e.totalLessons || 0} lessons
+                          {e.contentAvailable===false?'Historical enrollment':e.completionTracked?`${(e.completedLessons||[]).length} of ${e.totalLessons} lessons`:`${e.totalLessons} published lessons`}
                         </span>
                         <span className="font-bold">{e.progress || 0}%</span>
                       </div>
@@ -132,14 +132,14 @@ export default function MyLearning() {
                     </div>
                   </div>
                   <div className="p-5 md:w-48 flex md:flex-col items-center justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-100">
-                    <Link
+                    {e.contentAvailable===false?<p className="learner-record-note">{e.availabilityReason}</p>:<Link
                       to={`/student/learn/${e.courseId}`}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#0056D2] text-white text-xs font-bold hover:bg-[#00419E]"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       {done ? 'Replay' : e.progress === 0 ? 'Start' : 'Continue'}
-                    </Link>
-                    <button
+                    </Link>}
+                    <button disabled={e.contentAvailable===false}
                       type="button"
                       onClick={() => {
                         setReviewCourse(e);

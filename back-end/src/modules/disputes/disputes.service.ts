@@ -289,7 +289,9 @@ export class DisputesService {
     return updated;
   }
 
-  async addComment(id: string, dto: any) {
+  async addComment(id: string, dto: any, actor?:any) {
+    if(actor)dto={...dto,author:actor.name,isAdmin:['admin','superadmin'].includes(String(actor.role||'').toLowerCase())};
+    if(!String(dto.message||dto.comment||'').trim())throw new BadRequestException('A comment message is required.');
     const dispute = await this.disputesRepo.findById(id);
     if (!dispute) {
       throw new NotFoundException(`Dispute ticket with ID '${id}' not found`);
@@ -314,7 +316,11 @@ export class DisputesService {
       timestamp: nowIso,
     });
 
-    return this.disputesRepo.update(id, { comments, timeline });
+    const updated=await this.disputesRepo.update(id, { comments, timeline });
+    const target=newComment.isAdmin?(dispute.learnerId||dispute.raisedById||dispute.organizationId):dispute.assignedTo;
+    const role=String(dispute.raisedByRole||'').toLowerCase();
+    await this.notifsRepo.create({title:`New reply: ${dispute.subject}`,desc:`${newComment.author}: ${newComment.message}`,category:'Dispute',...(target?{recipientId:target}:{recipientRole:'admin'}),disputeId:id,read:false,createdAt:nowIso,actionUrl:newComment.isAdmin?(role==='organization'?'/org/disputes':role==='instructor'?'/instructor/notifications':`/student/disputes/${id}`):'/admin/disputes',actionLabel:'View support request'});
+    return updated;
   }
 
   async delete(id: string) {

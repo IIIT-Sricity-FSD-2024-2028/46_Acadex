@@ -20,6 +20,8 @@ export class AccountAccessGuard implements CanActivate {
     const cleanPath=path.replace(/^\/api/,'').split('?')[0].replace(/\/$/,'');
     const createAccount=method==='POST'&&['/users','/learners','/organizations','/admin/accounts'].includes(cleanPath);
     if(createAccount)throw new ForbiddenException('Accounts are created through registration, not platform administration.');
+    const learnerLegacyRoute=/^\/quizzes(?:\/|$)/.test(cleanPath)||/^\/disputes(?:\/|$)/.test(cleanPath)&&cleanPath!=='/disputes/my';
+    if(learnerLegacyRoute){const legacyId=request.headers['x-user-id'];const actor=legacyId?await this.users.findById(legacyId):null;if(['student','learner'].includes(String(actor?.role||'').toLowerCase()))throw new ForbiddenException('Use your learner assessment and support endpoints to access your own records.');}
     const protectedInstructorCreate=method==='POST'&&cleanPath==='/instructors';
     const protectedProfileChange=['PATCH','PUT'].includes(method)&&/^\/(organizations|learners|instructors)\/[^/]+(?:\/verify)?$/.test(cleanPath);
     const protectedProfileDelete=method==='DELETE'&&/^\/(organizations|learners)\/[^/]+$/.test(cleanPath);

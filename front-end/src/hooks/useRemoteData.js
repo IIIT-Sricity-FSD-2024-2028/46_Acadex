@@ -4,7 +4,7 @@ export function useRemoteData(path) {
     const [state, setState] = useState({ data: null, loading: true, error: '' });
     const [revision, setRevision] = useState(0);
     const refresh = useCallback(() => setRevision(n => n + 1), []);
-    useEffect(() => { const changed=()=>refresh(); window.addEventListener('account-changed',changed); return ()=>window.removeEventListener('account-changed',changed); },[refresh]);
+    useEffect(() => { const changed=()=>refresh(); window.addEventListener('account-changed',changed);window.addEventListener('learning-data-changed',changed);window.addEventListener('focus',changed); return ()=>{window.removeEventListener('account-changed',changed);window.removeEventListener('learning-data-changed',changed);window.removeEventListener('focus',changed);}; },[refresh]);
     useEffect(() => {
         let active = true;
         setState(s => ({ ...s, loading: true, error: '' }));

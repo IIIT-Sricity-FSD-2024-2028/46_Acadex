@@ -95,19 +95,9 @@ export const api = {
     getPayments: () => request('/student/payments'),
     checkout: (payload) => request('/student/payments/checkout', { method: 'POST', body: payload }),
     getMyReviews: () => request('/reviews/my'),
-    getMyDisputes: () => request('/disputes/my'),
-    createDispute: (data) => request('/disputes', { method: 'POST', body: data }),
-    addDisputeComment: async (disputeId, message) => {
-      const identity=await request('/workspace/session');
-      return request(`/disputes/${disputeId}/comments`, {
-        method: 'POST',
-        body: {
-          author: identity.name,
-          message,
-          isAdmin: false,
-        },
-      });
-    },
+    getMyDisputes: () => request('/student/disputes'),
+    createDispute: (data) => request('/student/disputes', { method: 'POST', body: data }),
+    addDisputeComment: (disputeId,message) => request(`/student/disputes/${disputeId}/comments`,{method:'POST',body:{message}}),
   },
 
   // 3. Courses, Modules, Lessons & Curriculum

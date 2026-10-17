@@ -1,3 +1,6 @@
+import { Inject,UnauthorizedException } from '@nestjs/common';
+import { REPOSITORY_TOKENS } from '../../database/database.module';
+import { JsonRepository } from '../../database/json-repository';
 import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DisputesService } from './disputes.service';
@@ -11,7 +14,7 @@ import {
 @ApiTags('Disputes & Governance')
 @Controller('disputes')
 export class DisputesController {
-  constructor(private readonly disputesService: DisputesService) {}
+  constructor(private readonly disputesService: DisputesService,@Inject(REPOSITORY_TOKENS.USERS) private readonly users:JsonRepository<any>) {}
 
   @Get()
   @ApiOperation({ summary: 'List all organization disputes with status, priority filters and search' })
@@ -72,8 +75,9 @@ export class DisputesController {
   @Post(':id/comments')
   @ApiOperation({ summary: 'Add a comment / internal note to dispute' })
   @ApiResponse({ status: 201, description: 'Comment added' })
-  async addComment(@Param('id') id: string, @Body() dto: any) {
-    return this.disputesService.addComment(id, dto);
+  async addComment(@Param('id') id: string, @Body() dto: any,@Headers('x-user-id') userId:string) {
+    const actor=await this.users.findById(userId);if(!actor)throw new UnauthorizedException('Sign in to comment on a support request.');
+    return this.disputesService.addComment(id, dto,actor);
   }
 
   @Delete(':id')

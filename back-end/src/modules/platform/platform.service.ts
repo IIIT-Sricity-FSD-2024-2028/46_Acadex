@@ -1,3 +1,4 @@
+import { paymentRecords } from '../../common/payments/payment-records';
 import { AuthService } from '../auth/auth.service';
 import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JsonDatabaseService } from '../../database/json-db.service';
@@ -92,10 +93,7 @@ export class PlatformService {
             return this.course(id);
         });
     }
-    private async paymentRecords() {
-        const [rows, courses, learners] = await Promise.all(['transactions', 'courses', 'learners'].map(n => this.records(n)));
-        return rows.filter(t => String(t.type).toLowerCase() !== 'refund' && String(t.status).toLowerCase() !== 'refunded').map(t => ({ ...t, amount: number(t.amount), currency: currency(t), payer: t.payer || learners.find(l => l.id === t.payerId || l.userId === t.payerId)?.name || null, course: t.course || t.courseTitle || courses.find(c => c.id === t.courseId)?.title || null, method: t.method || t.paymentGateway || null })).sort((a, b) => time(b) - time(a));
-    }
+    private paymentRecords(){return paymentRecords(this.db);}
     private filterPayments(rows: any[], q: AdminQuery) { const term = String(q.search || '').trim().toLowerCase(); return rows.filter(t => (!q.status || t.status === q.status) && (!q.type || t.type === q.type) && (!term || [t.id, t.payer, t.course, t.method].some(v => String(v || '').toLowerCase().includes(term)))); }
     private totals(rows: any[]) {
         const groups = new Map<string, {

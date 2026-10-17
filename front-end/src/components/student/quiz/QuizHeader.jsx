@@ -19,10 +19,10 @@ export default function QuizHeader({ quizData, isSubmitted, onSubmitClick }) {
       <div>
         <div className="flex items-center gap-2 mb-1.5">
           <span className="px-2 py-0.5 rounded bg-blue-50 text-coursera text-xs font-bold border border-blue-100">
-            {quizData.institution || 'Stanford University'}
+            {quizData.institution || 'Course assessment'}
           </span>
           <span className="px-2 py-0.5 rounded bg-emerald-50 text-secondary text-xs font-bold border border-emerald-100">
-            Pass Mark: {quizData.passingScore || 80}%
+            Pass Mark: {quizData.passingScore}%
           </span>
         </div>
         <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">

@@ -18,14 +18,18 @@ export function StudentProvider({ children }) {
       api.student.getCertificates(),
     ]);
     if (profileRes.status === 'fulfilled') setStudent(profileRes.value);
-    else setError(profileRes.reason);
+    else {setStudent(null);setError(profileRes.reason);}
     if (enrollmentsRes.status === 'fulfilled') setEnrollments(Array.isArray(enrollmentsRes.value) ? enrollmentsRes.value : []);
+    else {setEnrollments([]);setError(enrollmentsRes.reason);}
     if (certsRes.status === 'fulfilled') setCertificates(Array.isArray(certsRes.value) ? certsRes.value : []);
+    else {setCertificates([]);setError(certsRes.reason);}
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     refreshData();
+    window.addEventListener('focus',refreshData);window.addEventListener('learning-data-changed',refreshData);
+    return ()=>{window.removeEventListener('focus',refreshData);window.removeEventListener('learning-data-changed',refreshData);};
   }, [refreshData]);
 
   const updateProfile = useCallback(async (updates) => {

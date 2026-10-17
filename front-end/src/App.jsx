@@ -26,6 +26,9 @@ const StudentLearningPlayer = lazy(() => import('./pages/student/LearningPlayer'
 const StudentQuiz = lazy(() => import('./pages/student/Quiz'));
 const StudentCertificates = lazy(() => import('./pages/student/Certificates'));
 const StudentProfile = lazy(() => import('./pages/student/Profile'));
+const StudentPaymentReceipt = lazy(() => import('./pages/student/PaymentReceipt'));
+const StudentSupportRequest = lazy(() => import('./pages/student/SupportRequest'));
+const StudentSupportDetails = lazy(() => import('./pages/student/SupportDetails'));
 const StudentBilling = lazy(() => import('./pages/student/Billing'));
 const StudentReviews = lazy(() => import('./pages/student/Reviews'));
 const StudentDisputes = lazy(() => import('./pages/student/Disputes'));
@@ -216,10 +219,10 @@ export default function App() {
             path="/student/certificates"
             element={<StudentCertificates />}
           />
-          <Route path="/student/notifications" element={<StudentPageLayout><NotificationsPage/></StudentPageLayout>}/><Route path="/student/profile" element={<StudentProfile />} />
-          <Route path="/student/billing" element={<StudentBilling />} />
+          <Route path="/student/notifications" element={<Navigate to="/student/profile?tab=notifications" replace/>}/><Route path="/student/settings" element={<Navigate to="/student/profile?tab=security" replace/>}/><Route path="/student/profile" element={<StudentProfile />} />
+          <Route path="/student/billing" element={<StudentBilling />} /><Route path="/student/billing/:paymentId" element={<StudentPaymentReceipt/>}/>
           <Route path="/student/reviews" element={<StudentReviews />} />
-          <Route path="/student/disputes" element={<StudentDisputes />} />
+          <Route path="/student/disputes" element={<StudentDisputes />} /><Route path="/student/disputes/new" element={<StudentSupportRequest/>}/><Route path="/student/disputes/:disputeId" element={<StudentSupportDetails/>}/>
 
           {/* Legacy URLs */}
           <Route
@@ -319,6 +322,7 @@ export default function App() {
 
           {/* Insights & Settings */}
           <Route path="reviews" element={<InstructorReviews />} />
+          <Route path="disputes" element={<Navigate to="/instructor/reviews" replace />} />
           <Route path="analytics" element={<InstructorAnalytics />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<InstructorSettings />} />

@@ -1,3 +1,4 @@
+import { enrollmentLearning } from '../../common/learning/learning-records';
 import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
@@ -87,7 +88,7 @@ export class UsersService {
     return { ...this.publicUser({ ...account, ...profile, id: account.id, status: account.status ?? profile?.status, role }),
       enrollments: ownEnrollments.map(e => {
         const course = courses.find(c => c.id === e.courseId);
-        return { ...e, course: course?.title || e.courseTitle || e.course,
+        return { ...enrollmentLearning(course,e), course: course?.title || e.courseTitle || e.course,
           organization: orgs.find(o => o.id === (course?.organizationId || e.organizationId))?.name || '',
           instructor: instructors.find(i => i.id === (course?.instructorId || e.instructorId))?.name || '' };
       }),

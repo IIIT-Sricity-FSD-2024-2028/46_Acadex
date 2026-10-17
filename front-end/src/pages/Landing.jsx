@@ -5,11 +5,11 @@ import { useRemoteData } from '../hooks/useRemoteData';
 import { Brand, LearningVisual } from '../components/brand/Brand';
 import '../styles/academy.css';
 const actors = [
-    ['Student', 'For learners', GraduationCap, 'Find your next skill.'],
-    ['Instructor', 'For instructors', BookOpen, 'Share what you know.'],
-    ['Organization', 'For organizations', Building2, 'Help your people grow.'],
-    ['Admin', 'Platform admin', ShieldCheck, 'Keep learning moving.'],
-    ['SuperAdmin', 'Super admin', Layers, 'Manage the bigger picture.'],
+    ['Student', 'For learners', GraduationCap, 'Courses, progress and certificates.'],
+    ['Instructor', 'For instructors', BookOpen, 'Assigned courses and learner reviews.'],
+    ['Organization', 'For organizations', Building2, 'Teaching teams and course submissions.'],
+    ['Admin', 'Platform admin', ShieldCheck, 'Course approvals and learner support.'],
+    ['SuperAdmin', 'Super admin', Layers, 'Accounts, payments and administrator activity.'],
 ];
 export default function Landing() {
     const state = useRemoteData('/public/landing');
@@ -20,7 +20,7 @@ export default function Landing() {
     const categories = ['All', ...new Set(data?.courses?.map(c => c.category).filter(Boolean) || [])];
     const courses = (data?.courses || []).filter(c => category === 'All' || c.category === category).slice(0, 6);
     function explore(id) { navigate('/signin?role=Student', { state: { from: { pathname: `/student/course/${id}` } } }); }
-    return <div className="academy-public">
+    return <div className="academy-public academy-public-refined">
     <a className="academy-skip" href="#main">Skip to content</a>
     <header className="academy-navbar">
     <div className="academy-container academy-nav-inner">
@@ -39,11 +39,11 @@ export default function Landing() {
     <div>
     <p className="academy-eyebrow">
     <span />ACADEX LEARNING PLATFORM</p>
-    <h1>Your learning platform.<br/><em>One connected workspace.</em>
+    <h1>Choose a course.<br/><em>Keep learning.</em>
     </h1>
-    <p className="academy-hero-copy">Manage courses, enrollments, assessments, and certificates with dedicated workspaces for every role.</p>
+    <p className="academy-hero-copy">Browse courses from participating institutes. Continue your lessons, take course assessments and access your certificates in Acadex.</p>
     <div className="academy-hero-actions">
-    <a href="#courses" className="academy-btn academy-btn-dark">Find your next course<ArrowUpRight size={16}/>
+    <a href="#courses" className="academy-btn academy-btn-dark">Browse courses<ArrowUpRight size={16}/>
     </a>
     <a href="#how-it-works" className="academy-text-link">See how it works<ArrowRight size={15}/>
     </a>
@@ -52,12 +52,12 @@ export default function Landing() {
     <span>
     <Check size={13}/>Learn at your pace</span>
     <span>
-    <Check size={13}/>Build real skills</span>
+    <Check size={13}/>View published lessons</span>
     <span>
     <Check size={13}/>Track your progress</span>
     </div>
     </div>
-    <section className="saas-landing-preview"><header><strong>Platform overview</strong></header><div className="preview-metrics">{[['Learners',data?.stats.learners],['Courses',data?.stats.courses],['Instructors',data?.stats.instructors]].map(([label,value])=><article key={label}><small>{label}</small><strong>{value??'—'}</strong></article>)}</div><div className="preview-courses">{(data?.courses||[]).slice(0,3).map(c=><div key={c.id}><BookOpen size={20}/><div><strong>{c.title}</strong><small>{c.instructor||c.organization}</small></div></div>)}</div></section>
+    <section className="landing-featured-course">{data?.courses?.[0]?<><div className="landing-featured-art"><BookOpen size={55}/>{data.courses[0].thumbnail&&<img src={data.courses[0].thumbnail} alt="" onError={e=>{e.currentTarget.hidden=true;}}/>}<span>From the course catalog</span></div><div className="landing-featured-body"><p>{data.courses[0].category}</p><h2>{data.courses[0].title}</h2><p>{data.courses[0].organization}</p><small>{data.courses[0].instructor}</small><button className="academy-btn academy-btn-dark" onClick={()=>explore(data.courses[0].id)}>View course<ArrowUpRight size={15}/></button></div></>:<div className="landing-featured-body"><BookOpen size={40}/><h2>{loading?'Loading course catalog…':'Explore the course catalog'}</h2>{error&&<button onClick={state.refresh}>Try again</button>}</div>}</section>
     </section>
       <section className="academy-container academy-stats" aria-label="Platform activity">{loading ? <p>Loading platform activity…</p> : error ? <div className="academy-data-error" role="alert">Platform activity is unavailable. <button onClick={state.refresh}>Try again</button>
         </div> : [['Learners', data?.stats.learners, Users], ['Published courses', data?.stats.courses, BookOpen], ['Instructors', data?.stats.instructors, GraduationCap], ['Course completions', data?.stats.completions, Award]].map(([label, value, Icon]) => <div key={label}>
@@ -68,8 +68,8 @@ export default function Landing() {
       <section id="courses" className="academy-section academy-container">
     <div className="academy-section-heading">
     <div>
-    <p className="academy-eyebrow">FOLLOW YOUR CURIOSITY</p>
-    <h2>Small steps. <em>Big possibilities.</em>
+    <p className="academy-eyebrow">COURSE CATALOG</p>
+    <h2>Courses you can <em>enroll in.</em>
     </h2>
     <p>Explore published courses from our learning community.</p>
     </div>
@@ -81,7 +81,7 @@ export default function Landing() {
             <button onClick={() => explore(c.id)} className={`academy-course-art art-${i % 4}`} aria-label={`Explore ${c.title}`}>
             <span className="academy-course-art-icon">
             <BookOpen size={64} strokeWidth={.8}/>
-            </span>{c.thumbnail && <img src={c.thumbnail} alt="" loading="lazy" onError={e => { e.currentTarget.hidden = true; }}/>}<small>{c.category || 'A NEW PERSPECTIVE'}</small>
+            </span>{c.thumbnail && <img src={c.thumbnail} alt="" loading="lazy" onError={e => { e.currentTarget.hidden = true; }}/>}<small>{c.category || 'Course'}</small>
             </button>
             <div className="academy-course-body">
             <div className="academy-course-category">
@@ -107,13 +107,13 @@ export default function Landing() {
     <div className="academy-container">
     <div className="academy-section-heading">
     <div>
-    <p className="academy-eyebrow">MADE FOR YOUR NEXT CHAPTER</p>
-    <h2>Learning that fits <em>your life.</em>
+    <p className="academy-eyebrow">YOUR LEARNING ACCOUNT</p>
+    <h2>Lessons, progress <em>and certificates.</em>
     </h2>
-    <p>Less friction. More room for the things you want to learn.</p>
+    <p>Keep your course records in one account.</p>
     </div>
     </div>
-    <div className="academy-feature-grid">{[[Compass, 'Your path, your pace', 'Choose a course that fits your interests and keep learning on your own schedule.'], [BookOpen, 'Learn by doing', 'Explore course lessons, quizzes, and assignments designed to move learning forward.'], [Award, 'See how far you’ve come', 'Track your progress and find your completed-course credentials in one place.']].map(([Icon, title, description]) => <article key={title}>
+    <div className="academy-feature-grid">{[[Compass, 'Course library', 'Choose a course that fits your interests and keep learning on your own schedule.'], [BookOpen, 'Lessons and assessments', 'Explore course lessons, quizzes, and assignments designed to move learning forward.'], [Award, 'Completion records', 'Track your progress and find your completed-course credentials in one place.']].map(([Icon, title, description]) => <article key={title}>
         <span>
         <Icon size={25} strokeWidth={1.4}/>
         </span>
@@ -125,12 +125,12 @@ export default function Landing() {
       <section id="how-it-works" className="academy-section academy-container">
     <div className="academy-section-heading">
     <div>
-    <p className="academy-eyebrow">GETTING STARTED IS SIMPLE</p>
-    <h2>From “what if” to <em>“I did.”</em>
+    <p className="academy-eyebrow">HOW IT WORKS</p>
+    <h2>Start with <em>a course.</em>
     </h2>
     </div>
     </div>
-    <div className="academy-step-grid">{[['01', 'Find your spark', 'Explore the course library and find something that makes you curious.'], ['02', 'Make it your own', 'Create your learner account and enroll in your chosen course.'], ['03', 'Keep growing', 'Work through lessons, track your progress, and complete your course.']].map(([n, title, description]) => <article key={n}>
+    <div className="academy-step-grid">{[['01', 'Browse the catalog', 'Explore the course library and find something that makes you curious.'], ['02', 'Create your account', 'Create your learner account and enroll in your chosen course.'], ['03', 'Continue your lessons', 'Work through lessons, track your progress, and complete your course.']].map(([n, title, description]) => <article key={n}>
         <span>{n}</span>
         <h3>{title}</h3>
         <p>{description}</p>
@@ -138,10 +138,10 @@ export default function Landing() {
     </section>
       <section id="about" className="academy-container academy-about">
     <div>
-    <p className="academy-eyebrow">ONE COMMUNITY. MANY POSSIBILITIES.</p>
-    <h2>A place for everyone<br />who believes in <em>growth.</em>
+    <p className="academy-eyebrow">WORKSPACES</p>
+    <h2>A workspace for<br/><em>each role.</em>
     </h2>
-    <p>Acadex brings learners, instructors, organizations, and platform teams together. Five connected workspaces, with one shared purpose: making learning work.</p>
+    <p>Learners access their courses. Instructors maintain curriculum. Organizations review teaching work, and platform teams handle approvals and support.</p>
     </div>
     <div className="academy-actors">{actors.map(([role, title, Icon, description]) => <Link key={role} to={`/signin?role=${role}`}>
         <span>
@@ -158,7 +158,7 @@ export default function Landing() {
     <div className="academy-section-heading">
     <div>
     <p className="academy-eyebrow">FROM THE LEARNING COMMUNITY</p>
-    <h2>Every learner has <em>a story.</em>
+    <h2>Recorded <em>course reviews.</em>
     </h2>
     <p>Course feedback recorded on the platform.</p>
     </div>
@@ -173,14 +173,14 @@ export default function Landing() {
         </div>}</section>
       <section id="contact" className="academy-container academy-final-cta">
     <div>
-    <p className="academy-eyebrow">YOUR NEXT CHAPTER IS WAITING</p>
-    <h2>Start with curiosity.<br />
-    <em>See where it takes you.</em>
+    <p className="academy-eyebrow">GET STARTED</p>
+    <h2>Find a course.<br/>
+    <em>Start your account.</em>
     </h2>
     <p>Join as a learner, teach what you know, or grow your organization.</p>
     </div>
     <div>
-    <Link to="/signup" className="academy-btn academy-btn-light">Find your place<ArrowUpRight size={16}/>
+    <Link to="/signup" className="academy-btn academy-btn-light">Create an account<ArrowUpRight size={16}/>
     </Link>
     <Link to="/signin?role=Organization" className="academy-cta-contact">Organization workspace<ArrowRight size={14}/>
     </Link>
@@ -191,7 +191,7 @@ export default function Landing() {
     <footer className="academy-container academy-footer">
     <div>
     <Brand />
-    <p>Stay curious. Keep growing.</p>
+    <p>Stay curious. Continue your lessons.</p>
     </div>
     <div>
     <h3>Explore</h3>

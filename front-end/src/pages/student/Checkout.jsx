@@ -68,6 +68,7 @@ export default function Checkout() {
     document.title = 'Checkout | Acadex';
   }, []);
 
+  if (course&&Number(course.price)===0) return <Navigate to={`/student/course/${courseId}`} replace/>;
   if (!courseId) return <Navigate to="/student/explore" replace />;
   if (!paidSuccess && enrollments.some((e) => e.courseId === courseId)) {
     return <Navigate to={`/student/learn/${courseId}`} replace />;
@@ -106,6 +107,8 @@ export default function Checkout() {
       const result = await api.student.checkout(payload);
       setPaidSuccess(true);
       await refreshData();
+      window.dispatchEvent(new Event('learning-data-changed'));
+      if(!result.transactionId){navigate(`/student/learn/${courseId}`,{replace:true});return;}
       navigate(`/student/payment-success?transactionId=${result.transactionId}&courseId=${courseId}`, {
         state: result,
         replace: true,

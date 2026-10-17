@@ -1,3 +1,4 @@
+import { ratingLabel } from '../../../utils/adminDisplay';
 import { Card, CardContent, Button, Input } from "../../../components/common";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../components/instructor/ui/Tabs";
 import { 
@@ -29,6 +30,7 @@ export function MyCourses() {
   } = useInstructor();
 
   const [courses, setCourses] = useState([]);
+  const [loadError,setLoadError]=useState('');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -37,28 +39,14 @@ export function MyCourses() {
   const [confirmDeclineId, setConfirmDeclineId] = useState(null);
 
   const fetchCourses = () => {
-    setLoading(true);
-    api.get('/courses', 'instructor')
+    setLoading(true);setLoadError('');
+    api.get('/workspace/instructor')
       .then(data => {
-        const list = Array.isArray(data) ? data : (data?.items || []);
-        if (instructor?.id) {
-          const myCourses = list.filter(course => {
-            const isDirect = course.instructorId === instructor.id;
-            const isInTeam = (course.instructors || []).some(
-              inst => inst.id === instructor.id ||
-                      (instructor.email && inst.email?.toLowerCase() === instructor.email.toLowerCase()) ||
-                      (instructor.name && inst.name?.toLowerCase() === instructor.name.toLowerCase())
-            );
-            return isDirect || isInTeam;
-          });
-          setCourses(myCourses);
-        } else {
-          setCourses([]);
-        }
+        setCourses(data.courses||[]);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error fetching courses:', err);
+        setLoadError(err.message||'Unable to load assigned courses.');
         setCourses([]);
         setLoading(false);
       });
@@ -130,6 +118,7 @@ export function MyCourses() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {loadError&&<div className="workspace-error" role="alert">{loadError}<button className="admin-button ml-3" onClick={fetchCourses}>Try again</button></div>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -389,7 +378,7 @@ export function MyCourses() {
                         <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-5">
                           <span className="flex items-center gap-1.5 text-amber-600">
                             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            {course.rating != null ? course.rating : "—"}
+                            {ratingLabel(course.rating)}
                           </span>
                           <span className="flex items-center gap-1.5 text-slate-600">
                             <Users className="w-4 h-4 text-slate-400" />

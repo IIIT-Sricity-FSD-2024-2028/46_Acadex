@@ -20,68 +20,16 @@ import { useToast } from '../../components/common/Toast';
 import api from '../../services/api';
 import { useStudent } from '../../context/StudentContext';
 
-const DEFAULT_VIDEO_URL = 'https://www.w3schools.com/html/mov_bbb.mp4';
-
-function buildLessons(course) {
-  if (!course || !course.modules || !Array.isArray(course.modules)) return [];
-
-  return course.modules.flatMap((mod, mIdx) => {
-    const modId = mod.id || `mod-${mIdx + 1}`;
-    // 1. Array of lesson objects (full curriculum schema)
-    if (Array.isArray(mod.lessons)) {
-      return mod.lessons.map((l, lIdx) => ({
-        id: l.id || `${modId}-l${lIdx + 1}`,
-        moduleId: modId,
-        moduleIndex: mIdx,
-        moduleTitle: mod.title || `Module ${mIdx + 1}`,
-        number: l.order || lIdx + 1,
-        title: l.title || `Lesson ${mIdx + 1}.${lIdx + 1}`,
-        duration: l.duration || '10:00',
-        videoUrl: l.videoUrl || course.previewVideoUrl || DEFAULT_VIDEO_URL,
-        type: l.type || 'video',
-        description: l.description || '',
-      }));
-    }
-
-    // 2. Array of item objects
-    if (Array.isArray(mod.items)) {
-      return mod.items.map((it, iIdx) => ({
-        id: it.id || `${modId}-l${iIdx + 1}`,
-        moduleId: modId,
-        moduleIndex: mIdx,
-        moduleTitle: mod.title || `Module ${mIdx + 1}`,
-        number: it.order || iIdx + 1,
-        title: it.title || `Lesson ${mIdx + 1}.${iIdx + 1}`,
-        duration: it.duration || '10:00',
-        videoUrl: it.videoUrl || course.previewVideoUrl || DEFAULT_VIDEO_URL,
-        type: it.type || 'video',
-        description: it.description || '',
-      }));
-    }
-
-    // 3. Fallback count if lessons was stored as a numeric count
-    const count = Number(mod.lessons) || (typeof mod.lessonsCount === 'number' ? mod.lessonsCount : 0);
-    return Array.from({ length: Math.max(1, count) }, (_, i) => ({
-      id: `${modId}-l${i + 1}`,
-      moduleId: modId,
-      moduleIndex: mIdx,
-      moduleTitle: mod.title || `Module ${mIdx + 1}`,
-      number: i + 1,
-      title: `Lesson ${mIdx + 1}.${i + 1}`,
-      duration: '10:00',
-      videoUrl: course.previewVideoUrl || DEFAULT_VIDEO_URL,
-      type: 'video',
-      description: '',
-    }));
-  });
-}
-
 export default function LearningPlayer() {
   const { courseId } = useParams();
   const { addToast } = useToast();
   const { refreshData } = useStudent();
   const videoRef = useRef(null);
 
+  const [assessment,setAssessment]=useState(null);
+  const [lessons,setLessons]=useState([]);
+  const [loadError,setLoadError]=useState('');
+  const [revision,setRevision]=useState(0);
   const [course, setCourse] = useState(null);
   const [enrollment, setEnrollment] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -90,43 +38,10 @@ export default function LearningPlayer() {
   const [saving, setSaving] = useState(false);
   const [videoError, setVideoError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setNotEnrolled(false);
-    Promise.allSettled([
-      api.student.getEnrollmentForCourse(courseId).catch(() => null),
-      api.courses.get(courseId).catch(() => null),
-      api.student.getCatalogCourse(courseId).catch(() => null),
-      api.student.getEnrollments().catch(() => []),
-    ])
-      .then(([enrRes, crsRes, catRes, allEnrRes]) => {
-        let enr = enrRes.status === 'fulfilled' ? enrRes.value : null;
-        let crs = crsRes.status === 'fulfilled' ? crsRes.value : null;
-        const cat = catRes.status === 'fulfilled' ? catRes.value : null;
-        const allEnrs = allEnrRes.status === 'fulfilled' && Array.isArray(allEnrRes.value) ? allEnrRes.value : [];
+  useEffect(()=>{let active=true;setLoading(true);setLoadError('');setNotEnrolled(false);
+    api.get(`/student/courses/${encodeURIComponent(courseId)}/content`).then(data=>{if(!active)return;setCourse(data.course);setEnrollment(data.enrollment);setLessons(data.lessons);setAssessment(data.assessment);if(data.course?.title)document.title=`${data.course.title} | Acadex`;}).catch(e=>{if(!active)return;setLoadError(e.message);setNotEnrolled(e.status===403||e.status===404);setCourse(null);setEnrollment(null);setLessons([]);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};
+  },[courseId,revision]);
 
-        if (!crs && cat) crs = cat;
-        if (!enr && allEnrs.length > 0) {
-          enr = allEnrs.find((e) => e.courseId === courseId || e.id === courseId) || null;
-        }
-
-        if (!crs && !enr) {
-          setNotEnrolled(true);
-        } else {
-          setEnrollment(enr);
-          setCourse(crs);
-          if (crs?.title) document.title = `${crs.title} | Acadex`;
-          if (!enr) setNotEnrolled(true);
-        }
-      })
-      .catch((err) => {
-        console.warn('Failed to load course or enrollment:', err);
-        setNotEnrolled(true);
-      })
-      .finally(() => setLoading(false));
-  }, [courseId]);
-
-  const lessons = useMemo(() => buildLessons(course), [course]);
   const done = useMemo(() => new Set((enrollment?.completedLessons || []).map(String)), [enrollment]);
 
   useEffect(() => {
@@ -148,6 +63,8 @@ export default function LearningPlayer() {
       videoRef.current.load();
     }
   }, [currentId]);
+
+  useEffect(()=>{if(!currentId||!enrollment||!current||!(current.videoUrl||current.description||current.resourceUrl))return;let seconds=0;const tick=setInterval(()=>{if(document.visibilityState!=='visible')return;const video=videoRef.current;if(current?.videoUrl&&(!video||video.paused||video.ended))return;seconds+=1;if(seconds===30){seconds=0;api.post(`/student/courses/${courseId}/activity`,{lessonId:currentId,seconds:30}).catch(e=>console.warn('Activity could not be recorded:',e.message));}},1000);return()=>clearInterval(tick);},[courseId,currentId,enrollment?.id,current?.videoUrl,current?.description,current?.resourceUrl]);
 
   const toggleComplete = async (lesson, completed) => {
     if (!lesson || !enrollment || saving) return;
@@ -182,6 +99,7 @@ export default function LearningPlayer() {
     );
   }
 
+  if(loadError&&!notEnrolled)return <PageLayout><div className="learner-page"><p role="alert" className="workspace-error">{loadError}</p><button className="admin-button mt-5" onClick={()=>setRevision(v=>v+1)}>Try again</button></div></PageLayout>;
   if (notEnrolled || !course || !enrollment) {
     return (
       <PageLayout>
@@ -235,6 +153,7 @@ export default function LearningPlayer() {
           </div>
         )}
 
+        {assessment&&<section className="admin-card flex flex-wrap items-center justify-between gap-4"><div><p className="learner-kicker">Published assessment</p><h2 className="text-sm font-semibold mt-2">{assessment.title}</h2></div><Link className="admin-button" to={`/student/quiz?courseId=${courseId}`}>Open assessment<ChevronRight size={14}/></Link></section>}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <section className="lg:col-span-8 space-y-4">
             {lessons.length === 0 || !current ? (
@@ -253,8 +172,9 @@ export default function LearningPlayer() {
                       <p className="text-xs uppercase tracking-widest text-slate-400">Reading Lesson</p>
                       <h2 className="text-xl font-bold mt-1 max-w-lg">{current.title}</h2>
                       <p className="text-xs text-slate-300 mt-3 max-w-md">
-                        {current.description || 'Study this lesson material and click "Mark as complete" when you are finished.'}
+                        {current.description || (current.resourceUrl?'Open the published lesson material below.':'Lesson material has not been published yet.')}
                       </p>
+                      {current.resourceUrl&&<a className="admin-button mt-5" href={current.resourceUrl} target="_blank" rel="noreferrer">Open lesson material</a>}
                     </div>
                   ) : videoError ? (
                     <div className="w-full h-full flex flex-col items-center justify-center text-white bg-slate-900 p-6 text-center">
@@ -265,13 +185,13 @@ export default function LearningPlayer() {
                         onClick={() => {
                           setVideoError(false);
                           if (videoRef.current) {
-                            videoRef.current.src = DEFAULT_VIDEO_URL;
+                            videoRef.current.src = current.videoUrl;
                             videoRef.current.load();
                           }
                         }}
                         className="mt-3 px-3 py-1.5 rounded bg-blue-600 text-xs font-semibold flex items-center gap-1.5 hover:bg-blue-700"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" /> Play backup stream
+                        <RotateCcw className="w-3.5 h-3.5" /> Retry video
                       </button>
                     </div>
                   ) : (
@@ -302,9 +222,9 @@ export default function LearningPlayer() {
                     <h1 className="text-lg font-bold text-slate-900 truncate mt-0.5">{current.title}</h1>
                     <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>{current.duration || '10:00'}</span>
+                      <span>{current.duration || 'Duration not recorded'}</span>
                       <span>•</span>
-                      <span className="capitalize">{current.type || 'video'} lesson</span>
+                      <span className="capitalize">{current.type || 'Course'} lesson</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

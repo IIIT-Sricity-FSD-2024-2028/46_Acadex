@@ -199,7 +199,7 @@ export class AuthService {
         email: newUser.email,
         avatar: newUser.avatar,
         learnerType: 'Undergraduate',
-        university: dto.university || 'General Open Enrollee',
+        university: dto.university || null,
         enrolledCourses: 0,
         overallProgress: 0,
         certificatesEarned: 0,
@@ -214,14 +214,14 @@ export class AuthService {
         email: newUser.email,
         avatar: newUser.avatar,
         educatorType: 'Faculty Instructor',
-        specialization: dto.expertise || 'Computer Science',
-        bio: 'Newly registered faculty educator on the platform.',
+        specialization: dto.expertise || null,
+        bio: null,
         status: 'Pending Affiliation',
         organizationId: null,
         organizationName: null,
         coursesCount: 0,
         enrolledStudents: 0,
-        avgRating: 5.0,
+        avgRating: null,
         revenueGenerated: 0,
         createdAt: new Date().toISOString(),
       });
@@ -233,10 +233,11 @@ export class AuthService {
       await this.usersRepo.update(newUser.id,{organizationId:org.id,organizationName:org.name});
     }
 
+    const {password: storedPassword,...publicUser}=newUser;
     return {
       token: `jwt-token-${newUser.id}-${Date.now()}`,
       user: {
-        ...newUser,
+        ...publicUser,
         instructorId,
         organizationId,
         organizationName: organizationId?newUser.name:null,

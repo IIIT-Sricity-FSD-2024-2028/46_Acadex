@@ -71,8 +71,8 @@ export function InstructorLayout() {
     window.location.href = '/signin?role=Instructor';
   };
 
-  const displayName = instructor?.name || localStorage.getItem('user_name') || '';
-  const displayEmail = instructor?.email || localStorage.getItem('user_email') || '';
+  const displayName = instructor?.name || '';
+  const displayEmail = instructor?.email || '';
   const displayOrg = isAffiliated
     ? instructor.organizationName
     : pendingJoinRequest

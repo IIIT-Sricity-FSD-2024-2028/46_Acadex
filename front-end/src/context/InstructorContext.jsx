@@ -16,33 +16,22 @@ export function InstructorProvider({ children }) {
   const fetchInstructorData = useCallback(async () => {
     setError(null);
     try {
-      const userId = localStorage.getItem('user_id');
-      const userEmail = (localStorage.getItem('user_email') || '').toLowerCase().trim();
-      const storedInstructorId = localStorage.getItem('nexuspay_instructor_id');
-
-      const list = itemsOf(await api.instructors.list({ limit: 1000 }));
-      const me =
-        list.find(
-          (i) =>
-            (userId && (i.userId === userId || i.id === userId)) ||
-            (userEmail && i.email?.toLowerCase() === userEmail) ||
-            (storedInstructorId && i.id === storedInstructorId)
-        );
-
-      if (!me) throw new Error('No instructor profile is linked to this account');
+      const workspace=await api.get('/workspace/instructor');
+      const me=workspace.instructor;
+      if(!me)throw new Error('No instructor profile is linked to this account');
       setInstructor(me);
       localStorage.setItem('nexuspay_instructor_id', me.id);
 
       const [invRes, joinRes, coursesRes] = await Promise.allSettled([
         api.instructorRequests.list({ instructorId: me.id, limit: 1000 }),
         api.instructorRequests.myJoinRequests(),
-        api.instructors.getCourses(me.id),
+        Promise.resolve(workspace.courses),
       ]);
       setInvitations(invRes.status === 'fulfilled' ? itemsOf(invRes.value) : []);
       setJoinRequests(joinRes.status === 'fulfilled' ? itemsOf(joinRes.value) : []);
-      setAssignedCourses(me.organizationId && coursesRes.status === 'fulfilled' ? itemsOf(coursesRes.value) : []);
+      setAssignedCourses(coursesRes.status === 'fulfilled' ? itemsOf(coursesRes.value) : []);
     } catch (err) {
-      setError(err.message);
+      setInstructor(null);setAssignedCourses([]);setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -50,6 +39,9 @@ export function InstructorProvider({ children }) {
 
   useEffect(() => {
     fetchInstructorData();
+    window.addEventListener('account-changed',fetchInstructorData);
+    window.addEventListener('focus',fetchInstructorData);
+    return()=>{window.removeEventListener('account-changed',fetchInstructorData);window.removeEventListener('focus',fetchInstructorData);};
   }, [fetchInstructorData]);
 
   const run = async (fn) => {

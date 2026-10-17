@@ -72,6 +72,7 @@ export default function StudentReviews() {
   const { student, enrollments } = useStudent();
   const { addToast } = useToast();
 
+  const [loadError,setLoadError]=useState('');
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,6 +93,7 @@ export default function StudentReviews() {
   const [submittingNew, setSubmittingNew] = useState(false);
 
   const loadReviews = useCallback(async (isRefresh = false) => {
+    setLoadError('');
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
@@ -100,7 +102,7 @@ export default function StudentReviews() {
       const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
       setReviews(list);
     } catch (err) {
-      setReviews([]);
+      setReviews([]);setLoadError(err.message||'Unable to load your reviews');
       addToast(err.message || 'Unable to load your reviews', 'error');
     } finally {
       setLoading(false);
@@ -200,18 +202,11 @@ export default function StudentReviews() {
     }
   };
 
-  // Enrolled course fallback list
-  const coursesToReview = useMemo(() => {
-    if (enrollments && enrollments.length > 0) return enrollments;
-    return [
-      { courseId: 'cou-fb5ac543', courseTitle: 'Object Oriented Programming' },
-      { courseId: 'cou-b00839da', courseTitle: 'Distributed Systems' },
-      { courseId: 'cou-139b4b01', courseTitle: 'Full-Stack Web Development' },
-    ];
-  }, [enrollments]);
+  const coursesToReview = enrollments || [];
 
   return (
     <PageLayout>
+      {loadError&&<div className="learner-page"><p role="alert" className="workspace-error">{loadError}</p><button className="admin-button mt-3" onClick={()=>loadReviews(true)}>Try again</button></div>}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Top Header with Breadcrumbs & Actions */}
@@ -271,7 +266,7 @@ export default function StudentReviews() {
               <span className="text-xs font-bold text-slate-400">/ 5.0</span>
             </div>
             <div className="mt-1 flex items-center gap-1.5">
-              <StarRating value={Math.round(Number(avgRating) || 5)} size="w-3.5 h-3.5" />
+              <StarRating value={Math.round(Number(avgRating) || 0)} size="w-3.5 h-3.5" />
               <span className="text-[11px] text-slate-400 font-medium">composite</span>
             </div>
           </div>
@@ -464,14 +459,14 @@ export default function StudentReviews() {
                         to={`/student/course/${r.courseId}`}
                         className="text-base font-extrabold text-slate-900 hover:text-[#0056D2] flex items-center gap-1.5 transition-colors group"
                       >
-                        <span>{r.courseTitle || 'Enrolled Course Masterclass'}</span>
+                        <span>{r.courseTitle || 'Course not recorded'}</span>
                         <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0056D2] transition-colors" />
                       </Link>
 
                       <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                        <StarRating value={Number(r.rating) || 5} />
+                        <StarRating value={Number(r.rating) || 0} />
                         <span className="text-xs font-bold text-slate-700">
-                          {Number(r.rating || 5).toFixed(1)} / 5.0
+                          {r.rating===undefined?'Not rated':Number(r.rating).toFixed(1)} / 5.0
                         </span>
                         <span className="text-xs text-slate-300">•</span>
                         <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">

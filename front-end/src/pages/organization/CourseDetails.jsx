@@ -1,3 +1,4 @@
+import { ratingLabel } from '../../utils/adminDisplay';
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import {
@@ -125,7 +126,7 @@ export default function CourseDetails() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">
             <span className="text-[10px] text-outline uppercase font-bold tracking-wider">Student Rating</span>
             <p className="text-xl font-bold text-amber-600 mt-1 flex items-center justify-center gap-1">
-              <Star className="w-4 h-4 fill-current" /> {course.rating || 5.0}
+              <Star className="w-4 h-4 fill-current" /> {ratingLabel(course.rating)}
             </p>
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-sm text-center">

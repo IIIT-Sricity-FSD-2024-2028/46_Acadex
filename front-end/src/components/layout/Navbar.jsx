@@ -91,7 +91,7 @@ export default function StudentTopbar({ onMenuClick }) {
     setShowResults(false);
   };
 
-  const name = student?.name || localStorage.getItem('user_name') || '';
+  const name = student?.name || '';
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90">
@@ -163,7 +163,7 @@ export default function StudentTopbar({ onMenuClick }) {
           )}
         </div>
 
-        <NotificationBell/>
+        <NotificationBell href="/student/profile?tab=notifications"/>
         <div ref={menuRef} className="relative ml-auto">
           <button
             onClick={() => setShowMenu((v) => !v)}

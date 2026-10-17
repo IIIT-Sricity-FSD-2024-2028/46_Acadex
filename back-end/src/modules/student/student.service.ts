@@ -1,3 +1,4 @@
+import { paymentRecords,completedPaymentStatus } from '../../common/payments/payment-records';
 import {
   BadRequestException,
   ConflictException,
@@ -6,6 +7,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { publishedLessons,enrollmentLearning } from '../../common/learning/learning-records';
+import { JsonDatabaseService } from '../../database/json-db.service';
+import { DisputesService } from '../disputes/disputes.service';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { UpdateStudentProfileDto, StudentCheckoutDto } from './dto/student.dto';
@@ -16,6 +20,8 @@ const PAYMENT_METHODS = ['card', 'upi'];
 @Injectable()
 export class StudentService {
   constructor(
+    private readonly db:JsonDatabaseService,
+    private readonly disputes:DisputesService,
     @Inject(REPOSITORY_TOKENS.LEARNERS)
     private readonly learnersRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.ENROLLMENTS)
@@ -55,35 +61,19 @@ export class StudentService {
     return course && course.status === 'Published' && this.hasInstructor(course);
   }
 
-  private lessonIdsFor(course: any): string[] {
-    const ids: string[] = [];
-    for (let mIdx = 0; mIdx < (course?.modules || []).length; mIdx++) {
-      const mod = course.modules[mIdx];
-      const modId = mod.id || `mod-${mIdx + 1}`;
-      if (Array.isArray(mod.lessons)) {
-        for (let i = 0; i < mod.lessons.length; i++) {
-          const l = mod.lessons[i];
-          const id = typeof l === 'object' && l ? (l.id || `${modId}-l${i + 1}`) : `${modId}-l${i + 1}`;
-          ids.push(String(id));
-        }
-      } else if (Array.isArray(mod.items)) {
-        for (let i = 0; i < mod.items.length; i++) {
-          const it = mod.items[i];
-          const id = typeof it === 'object' && it ? (it.id || `${modId}-l${i + 1}`) : `${modId}-l${i + 1}`;
-          ids.push(String(id));
-        }
-      } else {
-        const count = Number(mod.lessons) || (typeof mod.lessonsCount === 'number' ? mod.lessonsCount : 0);
-        for (let i = 1; i <= count; i++) ids.push(`${modId}-l${i}`);
-      }
-    }
-    return ids;
+  private lessonsFor(course:any){return publishedLessons(course);}
+  private lessonIdsFor(course:any):string[]{return this.lessonsFor(course).map(l=>l.id);}
+  private async enrichedCourses(){
+    const [courses,orgs,instructors,reviews,enrollments]=await Promise.all(['courses','organizations','instructors','reviews','enrollments'].map(name=>this.db.getCollection<any>(name)));
+    return courses.map(c=>{const teacherIds=[c.instructorId,...(Array.isArray(c.instructors)?c.instructors:[]).map(i=>typeof i==='string'?i:i?.id)].filter(Boolean);const teachers=instructors.filter(i=>teacherIds.includes(i.id));const ratings=reviews.filter(r=>r.courseId===c.id&&Number(r.rating)>=1&&Number(r.rating)<=5);const lessons=this.lessonsFor(c);
+      return {...c,organizationName:orgs.find(o=>o.id===c.organizationId)?.name||null,instructorName:teachers.map(i=>i.name).join(', '),leadInstructorName:teachers.find(i=>i.id===c.instructorId)?.name||null,instructors:teachers.map(i=>({id:i.id,name:i.name,specialization:i.specialization||null})),rating:ratings.length?ratings.reduce((sum,r)=>sum+Number(r.rating),0)/ratings.length:null,reviewsCount:ratings.length,enrolledCount:enrollments.filter(e=>e.courseId===c.id).length,lessonsCount:lessons.length,modules:(Array.isArray(c.modules)?c.modules:[]).filter(Boolean).map((m,i)=>({id:m.id||`mod-${i+1}`,title:m.title||null,description:m.description||'',lessonsCount:lessons.filter(l=>l.moduleIndex===i).length,lessons:lessons.filter(l=>l.moduleIndex===i).map(l=>({id:l.id,title:l.title,type:l.type,duration:l.duration}))}))};
+    });
   }
 
   async getProfile(userId: string) {
     const learner = await this.resolveLearner(userId);
     const [enrollments, certificates] = await Promise.all([
-      this.enrollmentsRepo.find({ where: { learnerId: learner.id } }),
+      this.getEnrollments(userId),
       this.certificatesRepo.find({ where: { learnerId: learner.id } }),
     ]);
     const completed = enrollments.filter((e) => e.status === 'Completed').length;
@@ -106,7 +96,10 @@ export class StudentService {
     if (allowed.name !== undefined && allowed.name.length < 2) {
       throw new BadRequestException('Name must be at least 2 characters');
     }
-    await this.learnersRepo.update(learner.id, { ...allowed, updatedAt: new Date().toISOString() });
+    await this.db.runTransaction(async()=>{
+      await this.learnersRepo.update(learner.id, { ...allowed, updatedAt: new Date().toISOString() });
+      const users=new JsonRepository<any>('users',this.db);const account=(await users.find()).find(u=>u.id===learner.userId||u.id===userId);if(account&&allowed.name!==undefined)await users.update(account.id,{name:allowed.name});
+    });
     return this.getProfile(userId);
   }
 
@@ -128,63 +121,48 @@ export class StudentService {
   }
 
   async getCatalog() {
-    const courses = await this.coursesRepo.find();
-    return courses.filter((c) => this.isAvailable(c));
+    const courses = await this.enrichedCourses();
+    return courses.filter((c) => this.isAvailable(c)&&c.instructors.length>0);
+  }
+
+  async browse(userId:string,query:any={}){
+    const learner=await this.resolveLearner(userId);const courses=await this.getCatalog();const enrollments=await this.enrollmentsRepo.find({where:{learnerId:learner.id}});
+    const term=String(query.search||'').trim().toLowerCase();
+    const all=courses.map(c=>({...c,isEnrolled:enrollments.some(e=>e.courseId===c.id&&!['Dropped','Cancelled'].includes(e.status))}));
+    let rows=all.filter(c=>(!term||[c.title,c.category,c.description,c.instructorName,c.organizationName].some(v=>String(v||'').toLowerCase().includes(term)))&&(!query.category||c.category===query.category)&&(!query.level||c.level===query.level)&&(!query.organizationId||c.organizationId===query.organizationId)&&(!query.price||query.price==='free'&&c.price===0||query.price==='paid'&&Number(c.price)>0)&&(!query.enrollment||query.enrollment==='enrolled'&&c.isEnrolled||query.enrollment==='available'&&!c.isEnrolled));
+    const sorts={newest:(a:any,b:any)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0),'price-low':(a:any,b:any)=>(a.price??Infinity)-(b.price??Infinity),'price-high':(a:any,b:any)=>(b.price??-Infinity)-(a.price??-Infinity),rating:(a:any,b:any)=>(b.rating??-1)-(a.rating??-1),popular:(a:any,b:any)=>b.enrolledCount-a.enrolledCount};
+    rows.sort(sorts[query.sort]||sorts.newest);const limit=Math.min(48,Math.max(1,Number(query.limit)||9));const totalPages=Math.max(1,Math.ceil(rows.length/limit));const page=Math.min(totalPages,Math.max(1,Number(query.page)||1));
+    return {items:rows.slice((page-1)*limit,page*limit),total:rows.length,availableCourses:all.length,page,totalPages,facets:{categories:[...new Set(all.map(c=>c.category).filter(Boolean))].sort(),levels:[...new Set(all.map(c=>c.level).filter(Boolean))].sort(),organizations:[...new Map(all.filter(c=>c.organizationId&&c.organizationName).map(c=>[c.organizationId,{id:c.organizationId,name:c.organizationName}])).values()]}};
   }
 
   async getCatalogCourse(courseId: string) {
-    const course = await this.coursesRepo.findById(courseId);
-    if (!this.isAvailable(course)) throw new NotFoundException(`Course '${courseId}' is not available`);
+    const course = (await this.enrichedCourses()).find(c=>c.id===courseId);
+    if (!this.isAvailable(course)||!course?.instructors?.length) throw new NotFoundException(`Course '${courseId}' is not available`);
     return course;
   }
 
   async getEnrollments(userId: string) {
     const learner = await this.resolveLearner(userId);
     const enrollments = await this.enrollmentsRepo.find({ where: { learnerId: learner.id } });
-    const courses = await this.coursesRepo.find();
+    const courses = await this.enrichedCourses();
 
     const result = [];
     for (const enr of enrollments) {
       const course = courses.find((c) => c.id === enr.courseId);
-      if (!course || !this.hasInstructor(course)) continue;
+      if(!course){result.push({...enr,completionTracked:Array.isArray(enr.completedLessons),courseTitle:enr.courseTitle||enr.course||null,contentAvailable:false,availabilityReason:'This course is no longer available. Your enrollment and payment history are retained.',courseStatus:null,totalLessons:null});continue;}
+      if (!this.hasInstructor(course)) {result.push({...enr,courseTitle:course.title,contentAvailable:false,availabilityReason:'Course content is currently unavailable.',courseStatus:course.status,totalLessons:null});continue;}
 
-      const lessonIds = this.lessonIdsFor(course);
-      const totalLessons = lessonIds.length;
-      const completedLessons = Array.isArray(enr.completedLessons)
-        ? enr.completedLessons.map(String).filter((id: string) => lessonIds.includes(id))
-        : [];
-
-      // Required progress calculation:
-      // Progress = (Number of completed lessons / Total number of lessons) * 100
-      const calculatedProgress = totalLessons > 0
-        ? Math.min(100, Math.max(0, Math.round((completedLessons.length / totalLessons) * 100)))
-        : 0;
-      const calculatedStatus = calculatedProgress >= 100 ? 'Completed' : 'Active';
-
-      // Synchronize stored enrollment if it has stale/mismatched progress (e.g. seeded with 60% with 0 lessons)
-      if (enr.progress !== calculatedProgress || (enr.status === 'Completed' && calculatedProgress < 100)) {
-        await this.enrollmentsRepo.update(enr.id, {
-          progress: calculatedProgress,
-          completedLessons,
-          status: calculatedStatus,
-        });
-        enr.progress = calculatedProgress;
-        enr.completedLessons = completedLessons;
-        enr.status = calculatedStatus;
-      }
-
+      const normalized=enrollmentLearning(course,enr);
       result.push({
-        ...enr,
+        ...normalized,
+        contentAvailable:true,
+        courseStatus:course.status,
         courseTitle: course.title,
         category: course.category,
         description: course.description,
         thumbnail: course.thumbnail,
         institution: course.organizationName || '',
         instructorName: course.leadInstructorName || course.instructorName || '',
-        totalLessons,
-        completedLessons,
-        progress: calculatedProgress,
-        status: calculatedStatus,
       });
     }
 
@@ -217,10 +195,8 @@ export class StudentService {
       lastAccessedAt: null,
     });
 
-    await this.coursesRepo.update(course.id, {
-      enrolledCount: (course.enrolledCount || 0) + 1,
-    });
-    await this.organizationService.addEnrollmentRevenue(course);
+    await this.coursesRepo.update(course.id, {enrolledCount:await this.enrollmentsRepo.count({courseId:course.id})});
+    if((await this.orgsRepo.find()).length)await this.organizationService.syncCounts();
     return enrollment;
   }
 
@@ -230,6 +206,7 @@ export class StudentService {
   }
 
   async enrollCourse(userId: string, courseId: string) {
+    return this.db.runTransaction(async()=>{
     const learner = await this.resolveLearner(userId);
     const course = await this.getCatalogCourse(courseId);
     if (Number(course.price) > 0) {
@@ -237,9 +214,11 @@ export class StudentService {
     }
     await this.assertNotEnrolled(learner.id, course.id);
     return this.createEnrollment(learner, course);
+    });
   }
 
   async updateProgress(userId: string, enrollmentId: string, lessonId: string, completed: boolean) {
+    return this.db.runTransaction(async()=>{
     const learner = await this.resolveLearner(userId);
     const enrollment = await this.enrollmentsRepo.findById(enrollmentId);
     if (!enrollment) throw new NotFoundException(`Enrollment '${enrollmentId}' not found`);
@@ -282,6 +261,7 @@ export class StudentService {
     }
 
     return this.getEnrollmentForCourse(userId, enrollment.courseId);
+    });
   }
 
   private async issueCertificate(learner: any, enrollment: any, course: any) {
@@ -323,36 +303,47 @@ export class StudentService {
     return cert;
   }
 
-  async getCertificates(userId: string) {
-    const learner = await this.resolveLearner(userId);
-    return this.certificatesRepo.find({ where: { learnerId: learner.id } });
-  }
+  async getCertificates(userId:string){const learner=await this.resolveLearner(userId);const [certs,courses,orgs,teachers]=await Promise.all(['certificates','courses','organizations','instructors'].map(n=>this.db.getCollection<any>(n)));const aliases=[learner.id,learner.userId,userId].filter(Boolean);return certs.filter(c=>aliases.includes(c.learnerId)).map(c=>{const course=courses.find(course=>course.id===c.courseId);return {...c,learnerName:learner.name,learnerEmail:learner.email,courseTitle:course?.title||c.courseTitle,institution:orgs.find(o=>o.id===(course?.organizationId||c.organizationId))?.name||c.institution||null,instructorName:teachers.find(i=>i.id===course?.instructorId)?.name||c.instructorName||null};});}
 
-  async getPayments(userId: string) {
-    const learner = await this.resolveLearner(userId);
-    const txs = await this.transactionsRepo.find({ where: { payerId: learner.id, type: { $ne: 'Refund' }, status: { $ne: 'Refunded' } } });
-    return txs.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  async getPayments(userId:string){const learner=await this.resolveLearner(userId);const aliases=[learner.id,learner.userId,userId].filter(Boolean);return (await paymentRecords(this.db)).filter(t=>t.type==='Payment'&&(aliases.includes(t.payerId)||aliases.includes(t.learnerId)||aliases.includes(t.userId)||t.payerEmail&&t.payerEmail.toLowerCase()===learner.email?.toLowerCase()));}
+  async billing(userId:string,query:any={}){
+    const all=await this.getPayments(userId);const completed=all.filter(p=>completedPaymentStatus(p.status));const term=String(query.search||'').trim().toLowerCase();
+    const rows=all.filter(p=>(!term||[p.id,p.reference,p.course,p.organizationName,p.method].some(v=>String(v||'').toLowerCase().includes(term)))&&(!query.status||p.status===query.status)&&(!query.organizationId||p.organizationId===query.organizationId)&&(!query.year||String(new Date(p.createdAt||p.date).getFullYear())===String(query.year)));
+    const totals=[...new Set(completed.map(p=>p.currency))].map(currency=>({currency,amount:Math.round(completed.filter(p=>p.currency===currency).reduce((sum,p)=>sum+(p.amount||0),0)*100)/100}));
+    const limit=Math.min(48,Math.max(1,Number(query.limit)||12));const totalPages=Math.max(1,Math.ceil(rows.length/limit));const page=Math.min(totalPages,Math.max(1,Number(query.page)||1));
+    return {items:rows.slice((page-1)*limit,page*limit),total:rows.length,page,totalPages,facets:{statuses:[...new Set(all.map(p=>p.status).filter(Boolean))].sort(),organizations:[...new Map(all.filter(p=>p.organizationId&&p.organizationName).map(p=>[p.organizationId,{id:p.organizationId,name:p.organizationName}])).values()],years:[...new Set(all.map(p=>new Date(p.createdAt||p.date).getFullYear()).filter(Number.isFinite))].sort((a,b)=>b-a)},summary:{totalPaid:totals.length<=1?totals[0]?.amount||0:null,totals,completedPayments:completed.length,pendingPayments:all.filter(p=>String(p.status).toLowerCase()==='pending').length,transactions:all.length,currency:totals.length===1?totals[0].currency:'INR'}};
   }
+  async receipt(userId:string,id:string){const rows=await this.getPayments(userId);const payment=rows.find(p=>p.id===id);if(!payment)throw new NotFoundException('Payment record not found in your account.');return payment;}
+  async content(userId:string,courseId:string){const enrollment=await this.getEnrollmentForCourse(userId,courseId);const course=await this.coursesRepo.findById(courseId);if(!course)throw new NotFoundException('This course is no longer available. Your enrollment and payment history are retained.');const quizzes=await this.db.getCollection<any>('quizzes');const assessment=quizzes.filter(q=>q.courseId===courseId&&q.status==='Published').sort((a,b)=>(Date.parse(b.updatedAt||b.createdAt)||0)-(Date.parse(a.updatedAt||a.createdAt)||0))[0];return {course:{...course,...(await this.enrichedCourses()).find(c=>c.id===courseId)},enrollment,lessons:this.lessonsFor(course),assessment:assessment?{id:assessment.id,title:assessment.title}:null};}
+  async myDisputes(userId:string){await this.resolveLearner(userId);return this.disputes.findMy(userId);}
+  async dispute(userId:string,id:string){const found=(await this.myDisputes(userId)).find(d=>d.id===id);if(!found)throw new NotFoundException('Support request not found in your account.');return found;}
+  disputeCategories(){return ['Course content','Course access','Payment','Certificate','Technical issue','Account','Other'];}
+  async createDispute(userId:string,body:any){const learner=await this.resolveLearner(userId);if(!String(body.subject||'').trim()||!String(body.description||'').trim())throw new BadRequestException('Subject and description are required.');const category=body.category||'Other';if(!this.disputeCategories().includes(category))throw new BadRequestException('Choose a valid issue category.');if(body.courseId)await this.getEnrollmentForCourse(userId,body.courseId);return this.disputes.create({category,disputeType:category,subject:String(body.subject).trim(),description:String(body.description).trim(),courseId:body.courseId||undefined,raisedBy:learner.name,raisedById:learner.id,learnerId:learner.id,raisedByRole:'Student'} as any);}
+  async comment(userId:string,id:string,body:any){const learner=await this.resolveLearner(userId);await this.dispute(userId,id);const message=String(body.message||'').trim();if(!message)throw new BadRequestException('Enter a message.');return this.disputes.addComment(id,{author:learner.name,message,isAdmin:false});}
+  async recordEngagement(userId:string,courseId:string,body:any){const learner=await this.resolveLearner(userId);const enrollment=await this.getEnrollmentForCourse(userId,courseId);const course=await this.coursesRepo.findById(courseId);if(!course||!this.lessonIdsFor(course).includes(String(body.lessonId)))throw new BadRequestException('Choose a published course lesson.');const seconds=Number(body.seconds);if(!Number.isInteger(seconds)||seconds<1||seconds>30)throw new BadRequestException('Activity duration must be between 1 and 30 seconds.');await new JsonRepository<any>('learning_activity',this.db).create({learnerId:learner.id,enrollmentId:enrollment.id,courseId,lessonId:body.lessonId,seconds,createdAt:new Date().toISOString()});return {recorded:true};}
+  private async quizRecord(userId:string,courseId:string){
+    await this.getEnrollmentForCourse(userId,courseId);
+    const [quizzes,questions]=await Promise.all(['quizzes','quiz_questions'].map(n=>this.db.getCollection<any>(n)));
+    const quiz=quizzes.filter(q=>q.courseId===courseId&&q.status==='Published').sort((a,b)=>(Date.parse(b.updatedAt||b.createdAt)||0)-(Date.parse(a.updatedAt||a.createdAt)||0))[0];
+    if(!quiz)throw new NotFoundException('No published assessment is available for this course.');
+    const rows=questions.filter(q=>q.quizId===quiz.id).sort((a,b)=>(a.sequenceNumber||0)-(b.sequenceNumber||0));
+    if(!rows.length)throw new NotFoundException('This assessment does not have any published questions yet.');
+    if(!Number.isFinite(Number(quiz.passingScore)))throw new BadRequestException('The assessment passing score has not been configured.');
+    return {quiz,questions:rows};
+  }
+  async assessment(userId:string,courseId:string){const {quiz,questions}=await this.quizRecord(userId,courseId);const course=await this.coursesRepo.findById(courseId);return {id:quiz.id,courseId,title:quiz.title,description:quiz.description||null,courseTitle:course?.title||null,durationMinutes:quiz.durationMinutes??null,passingScore:quiz.passingScore,questions:questions.map(q=>({id:q.id,text:q.questionText||q.text||q.question,options:Array.isArray(q.options)?q.options.map(o=>typeof o==='string'?o:o.text||o.title):[q.optionA,q.optionB,q.optionC,q.optionD].filter(v=>v!==undefined&&v!==null&&v!=='')}))};}
+  async submitAssessment(userId:string,courseId:string,body:any){const learner=await this.resolveLearner(userId);const {quiz,questions}=await this.quizRecord(userId,courseId);if(body.quizId!==quiz.id)throw new ConflictException('The assessment has changed. Reload it before submitting.');if(!body.answers||typeof body.answers!=='object'||Array.isArray(body.answers))throw new BadRequestException('Assessment answers are required.');let correct=0;const feedback=questions.map(q=>{const options=Array.isArray(q.options)?q.options:[];const correctIndex=Number.isInteger(q.correctAnswer)?q.correctAnswer:options.some(o=>o&&o.isCorrect)?options.findIndex(o=>o.isCorrect):'ABCD'.indexOf(String(q.correctOption||'').toUpperCase());if(correctIndex<0)throw new BadRequestException('The assessment answer key is incomplete.');const selected=body.answers[q.id];const isCorrect=Number.isInteger(selected)&&selected===correctIndex;if(isCorrect)correct++;return {questionId:q.id,selected:selected??null,correctIndex,isCorrect,...(quiz.showExplanations?{explanation:q.explanation||null}:{})};});const score=Math.round(correct/questions.length*100);const attempt=await new JsonRepository<any>('quiz_attempts',this.db).create({quizId:quiz.id,courseId,learnerId:learner.id,answers:body.answers,score,passed:score>=Number(quiz.passingScore),correctCount:correct,totalQuestions:questions.length,submittedAt:new Date().toISOString()});return {id:attempt.id,score:attempt.score,passed:attempt.passed,correctCount:correct,totalQuestions:questions.length,passingScore:quiz.passingScore,submittedAt:attempt.submittedAt,feedback};}
 
   async checkout(userId: string, dto: StudentCheckoutDto) {
+    return this.db.runTransaction(async()=>{
     const learner = await this.resolveLearner(userId);
     const course = await this.getCatalogCourse(dto.courseId);
 
-    // Idempotent checkout: if already enrolled, return existing enrollment & receipt details
-    const existing = await this.enrollmentsRepo.findOne({ learnerId: learner.id, courseId: course.id });
-    if (existing) {
-      const existingTxn = await this.transactionsRepo.findOne({ payerId: learner.id, courseId: course.id });
-      return {
-        success: true,
-        alreadyEnrolled: true,
-        transactionId: existingTxn?.id || `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
-        enrollmentId: existing.id,
-        courseId: course.id,
-        courseTitle: course.title,
-        amount: existingTxn?.amount || Number(course.price) || 0,
-        method: existingTxn?.method || 'Card •••• 4242',
-        date: existing.enrolledAt || new Date().toISOString(),
-      };
+    const existing=await this.enrollmentsRepo.findOne({learnerId:learner.id,courseId:course.id});
+    const priorPayment=(await this.getPayments(userId)).find(p=>p.courseId===course.id&&completedPaymentStatus(p.status));
+    if(existing||priorPayment){
+      const enrollment=existing||await this.createEnrollment(learner,course);
+      return {success:true,alreadyEnrolled:!!existing,restoredAccess:!existing,transactionId:priorPayment?.id||null,enrollmentId:enrollment.id,courseId:course.id,courseTitle:course.title,amount:priorPayment?.amount??null,method:priorPayment?.method||null,date:priorPayment?.createdAt||priorPayment?.date||null};
     }
 
     const method = String(dto.paymentMethod || '').toLowerCase();
@@ -403,5 +394,6 @@ export class StudentService {
       method: methodLabel,
       date: now,
     };
+    });
   }
 }

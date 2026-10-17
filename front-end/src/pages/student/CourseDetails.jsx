@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { ratingLabel,coursePriceLabel } from '../../utils/adminDisplay';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ChevronRight,
@@ -47,6 +48,8 @@ export default function CourseDetails() {
   const { addToast } = useToast();
   const { student, enrollments, refreshData } = useStudent();
 
+  const [loadError,setLoadError]=useState('');
+  const [revision,setRevision]=useState(0);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState([]);
@@ -80,16 +83,16 @@ export default function CourseDetails() {
   const myReviews = student ? reviews.filter((r) => r.learnerId === student.id) : [];
   const otherReviews = student ? reviews.filter((r) => r.learnerId !== student.id) : reviews;
 
-  const loadCourse = useCallback(() => api.student.getCatalogCourse(id).then(setCourse), [id]);
+  const loadCourse = useCallback(() => api.student.getCatalogCourse(id).then(setCourse).catch(e=>{setCourse(null);setLoadError(e.message);throw e;}), [id]);
   const loadReviews = useCallback(
     () => api.courses.getReviews(id).then((r) => setReviews(Array.isArray(r) ? r : [])),
     [id]
   );
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true);setLoadError('');
     Promise.allSettled([loadCourse(), loadReviews()]).finally(() => setLoading(false));
-  }, [loadCourse, loadReviews]);
+  }, [loadCourse, loadReviews,revision]);
 
   useEffect(() => {
     if (course) document.title = `${course.title} | Acadex`;
@@ -178,8 +181,8 @@ export default function CourseDetails() {
       <PageLayout>
         <div className="max-w-xl mx-auto py-20 text-center">
           <h2 className="text-xl font-bold text-slate-800">Course not available</h2>
-          <p className="text-xs text-slate-500 mt-2 mb-4">This course does not exist or is not open for enrollment.</p>
-          <Link to="/student/explore" className="px-4 py-2 bg-[#0056D2] text-white text-xs font-bold rounded-lg">
+          <p className="text-xs text-slate-500 mt-2 mb-4">{loadError||'This course does not exist or is not open for enrollment.'}</p>
+          <button className="admin-button mr-3" onClick={()=>setRevision(v=>v+1)}>Try again</button><Link to="/student/explore" className="px-4 py-2 bg-[#0056D2] text-white text-xs font-bold rounded-lg">
             Browse courses
           </Link>
         </div>
@@ -188,10 +191,8 @@ export default function CourseDetails() {
   }
 
   const modules = Array.isArray(course.modules) ? course.modules : [];
-  const lessonCount = modules.reduce((n, m) => n + (Number(m.lessons) || 0), 0);
-  const instructors = course.instructors?.length
-    ? course.instructors
-    : [{ id: course.instructorId, name: course.instructorName, role: 'Instructor' }];
+  const lessonCount = course.lessonsCount;
+  const instructors=course.instructors||[];
 
   return (
     <PageLayout>
@@ -217,7 +218,7 @@ export default function CourseDetails() {
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 {course.reviewsCount > 0 ? (
                   <>
-                    <b className="text-slate-900">{course.rating}</b> ({course.reviewsCount} review{course.reviewsCount === 1 ? '' : 's'})
+                    <b className="text-slate-900">{ratingLabel(course.rating)}</b> ({course.reviewsCount} review{course.reviewsCount === 1 ? '' : 's'})
                   </>
                 ) : (
                   'No ratings yet'
@@ -267,7 +268,8 @@ export default function CourseDetails() {
               <div className="space-y-2">
                 {modules.map((mod, idx) => {
                   const open = expanded.includes(mod.id);
-                  const count = Number(mod.lessons) || 0;
+                  const lessons=Array.isArray(mod.lessons)?mod.lessons:[];
+                  const count=mod.lessonsCount;
                   return (
                     <div key={mod.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                       <button
@@ -285,9 +287,9 @@ export default function CourseDetails() {
                       </button>
                       {open && (
                         <ul className="px-4 pb-3 border-t border-slate-100 text-xs text-slate-600 divide-y divide-slate-100">
-                          {Array.from({ length: count }, (_, i) => (
-                            <li key={i} className="py-2 flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#0056D2]" /> Lesson {i + 1}
+                          {lessons.map((lesson, i) => (
+                            <li key={lesson.id||i} className="py-2 flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#0056D2]" /> {lesson.title||'Untitled lesson'}{lesson.duration?` · ${lesson.duration}`:''}
                             </li>
                           ))}
                         </ul>
@@ -485,7 +487,7 @@ export default function CourseDetails() {
             </div>
             <div className="p-5 space-y-4">
               <p className="text-2xl font-extrabold text-slate-900">
-                {Number(course.price) > 0 ? `₹${Number(course.price).toLocaleString('en-IN')}` : 'Free'}
+                {coursePriceLabel(course)}
               </p>
 
               {isEnrolled ? (

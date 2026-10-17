@@ -1,3 +1,4 @@
+import { AdminDataState } from '../../components/admin/AdminUI';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, ExternalLink, Search, CheckCircle } from 'lucide-react';
@@ -6,7 +7,7 @@ import CertificateModal from '../../components/common/CertificateModal';
 import { useStudent } from '../../context/StudentContext';
 
 export default function Certificates() {
-  const { certificates, enrollments, isLoading, refreshData } = useStudent();
+  const { certificates, enrollments, isLoading, refreshData, error } = useStudent();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
 
@@ -27,6 +28,7 @@ export default function Certificates() {
 
   return (
     <PageLayout>
+      {error&&<div className="learner-page"><AdminDataState error={error.message||String(error)} refresh={refreshData}/></div>}
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 space-y-6">
         <header>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Certificates</h1>
