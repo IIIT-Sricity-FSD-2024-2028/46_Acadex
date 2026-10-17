@@ -7,7 +7,7 @@ export const Reports = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/reports')
+    api.get('/reports?limit=1000')
       .then(data => {
         setReports(Array.isArray(data) ? data : (data?.items || []));
         setLoading(false);

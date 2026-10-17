@@ -20,7 +20,7 @@ export const Refunds = () => {
   }, []);
 
   const fetchRefunds = () => {
-    api.get('/refunds')
+    api.get('/refunds?limit=1000')
       .then(data => {
         setRefunds(Array.isArray(data) ? data : (data?.items || []));
         setLoading(false);

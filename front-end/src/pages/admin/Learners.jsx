@@ -20,7 +20,7 @@ export const Learners = () => {
   const [learnerToDelete, setLearnerToDelete] = useState(null);
 
   useEffect(() => {
-    api.get('/learners', 'admin')
+    api.get('/learners?limit=1000', 'admin')
       .then(data => { setLearners(Array.isArray(data) ? data : (data?.items || [])); setLoading(false); })
       .catch(err => { console.error('Error fetching learners:', err); setLearners([]); setLoading(false); });
   }, []);

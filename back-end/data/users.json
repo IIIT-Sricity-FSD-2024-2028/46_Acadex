@@ -127,8 +127,8 @@
     "organizationName": "Meridian Tech Institute",
     "avatar": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-01-10T08:00:00.000Z",
-    "updatedAt": "2026-10-16T19:34:50.159Z",
-    "lastLogin": "2026-10-16T19:34:50.157Z"
+    "updatedAt": "2026-10-17T02:33:20.703Z",
+    "lastLogin": "2026-10-17T02:33:20.702Z"
   },
   {
     "id": "usr-8",
@@ -155,20 +155,20 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-16T18:37:07.829Z",
-    "lastLogin": "2026-10-16T18:37:07.829Z"
+    "updatedAt": "2026-10-17T02:45:22.590Z",
+    "lastLogin": "2026-10-17T02:45:22.588Z"
   },
   {
     "id": "usr-10",
     "name": "Platform Super Admin",
     "email": "superadmin@platform.io",
     "password": "Password123!",
-    "role": "Admin",
+    "role": "SuperAdmin",
     "status": "Active",
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-16T18:41:16.722Z",
-    "lastLogin": "2026-10-16T18:41:16.721Z"
+    "updatedAt": "2026-10-17T02:32:03.002Z",
+    "lastLogin": "2026-10-17T02:32:03.002Z"
   }
 ]

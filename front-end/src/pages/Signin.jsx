@@ -50,7 +50,9 @@ function getDashboardForRole(role) {
 }
 
 function persistSession({ token, user = {}, fallbackRole, fallbackName, fallbackEmail }) {
-  const role = user.role || fallbackRole;
+  const rawRole = user.role || fallbackRole;
+  const normalized = String(rawRole || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+  const role = normalized === 'superadmin' ? 'SuperAdmin' : (normalized === 'admin' ? 'Admin' : rawRole);
 
   localStorage.setItem('auth_token', token);
   localStorage.setItem('nexuspay_auth_token', token);
@@ -322,11 +324,18 @@ export default function SignIn() {
       const res = await api.auth.login(email.trim(), password, selectedRole);
 
       if (res && res.token) {
+        const resolvedRole = (selectedRole === 'SuperAdmin' || String(res.user?.role || '').toLowerCase().replace(/[\s_-]+/g, '') === 'superadmin')
+          ? 'SuperAdmin'
+          : (res.user?.role || selectedRole);
+
         const dashboard = persistSession({
           token: res.token,
-          user: res.user,
-          fallbackRole: selectedRole,
-          fallbackName: demoAccounts[selectedRole].name,
+          user: {
+            ...res.user,
+            role: resolvedRole,
+          },
+          fallbackRole: resolvedRole,
+          fallbackName: demoAccounts[selectedRole]?.name,
           fallbackEmail: email,
         });
 
@@ -335,7 +344,18 @@ export default function SignIn() {
         }
 
         const fromPath = location.state?.from?.pathname ? `${location.state.from.pathname}${location.state.from.search || ''}` : null;
-        const targetPath = fromPath || dashboard;
+        let targetPath = dashboard;
+        if (fromPath) {
+          const isSuperAdmin = resolvedRole === 'SuperAdmin';
+          const isAdmin = resolvedRole === 'Admin';
+          if (isSuperAdmin && !fromPath.startsWith('/admin')) {
+            targetPath = fromPath;
+          } else if (isAdmin && !fromPath.startsWith('/super-admin')) {
+            targetPath = fromPath;
+          } else if (!isSuperAdmin && !isAdmin) {
+            targetPath = fromPath;
+          }
+        }
         setSuccessMsg(`Welcome back, ${res.user?.name || email}! Redirecting to your portal...`);
 
         setTimeout(() => {

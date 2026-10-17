@@ -692,11 +692,11 @@ export default function SignUp() {
             <div className="mt-6 pt-6 border-t border-[#F2ECE4] text-center text-xs text-slate-500">
               Already registered?{' '}
               <Link
-                to={`/signin?role=${role === 'Admin' ? 'Admin' : role}`}
+                to={`/signin?role=${role}`}
                 state={{ role }}
                 className="text-blue-700 hover:text-blue-800 font-bold"
               >
-                Sign in to {role === 'Admin' ? 'Super Admin' : role} portal
+                Sign in to {role === 'SuperAdmin' ? 'Super Admin' : role === 'Admin' ? 'Platform Admin' : role} portal
               </Link>
             </div>
           </div>

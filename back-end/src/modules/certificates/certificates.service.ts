@@ -6,11 +6,15 @@ import { JsonRepository } from '../../database/json-repository';
 export class CertificatesService {
   constructor(
     @Inject(REPOSITORY_TOKENS.CERTIFICATES)
-    private readonly certificatesRepo: JsonRepository<any>
+    private readonly certificatesRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.LEARNERS) private readonly learnersRepo: JsonRepository<any>
   ) {}
 
   async findAll() {
-    return this.certificatesRepo.find();
+    const [certs, learners] = await Promise.all([this.certificatesRepo.find(), this.learnersRepo.find()]);
+    return certs.map(c => ({ ...c, learner: learners.find(l => l.id === c.learnerId)?.name || c.learnerName || c.learner,
+      learnerEmail: learners.find(l => l.id === c.learnerId)?.email || c.learnerEmail,
+      course: c.courseTitle || c.course, issuedDate: c.issuedAt?.slice(0, 10) || c.issueDate }));
   }
 
   async findOne(id: string) {

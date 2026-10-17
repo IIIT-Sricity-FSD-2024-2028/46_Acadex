@@ -11,6 +11,7 @@ export function Analytics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!instructor?.id) return;
     const q = instructor?.id ? `?instructorId=${instructor.id}` : '';
     api.get(`/analytics/instructor${q}`, 'instructor')
       .then(data => {

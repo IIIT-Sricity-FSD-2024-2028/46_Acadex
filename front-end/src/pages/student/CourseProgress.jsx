@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import api from '../../services/api';
-import { jsonDataClient } from '../../services/jsonDataClient';
 
 export default function CourseProgress() {
   const location = useLocation();
@@ -33,23 +32,17 @@ export default function CourseProgress() {
   const [loading, setLoading] = useState(true);
 
   // Determine course ID to inspect
-  const targetCourseId = courseId || location.state?.courseId || 'crs-1';
+  const targetCourseId = courseId || location.state?.courseId;
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
-    const userId = localStorage.getItem('user_id') || 'lrn-1';
+    const userId = localStorage.getItem('user_id') || '';
 
     // Fetch Course & Enrollments in parallel with resilient fallbacks
     Promise.all([
-      api.courses.get(targetCourseId).catch(() => {
-        const fallbackCourses = jsonDataClient.getCourses();
-        return (
-          fallbackCourses.find((c) => c.id === targetCourseId || String(c.id) === String(targetCourseId)) ||
-          fallbackCourses[0]
-        );
-      }),
+      api.courses.get(targetCourseId),
       api.student.getEnrollments(userId).catch(() => []),
     ])
       .then(([courseRes, enrRes]) => {

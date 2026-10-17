@@ -42,10 +42,6 @@ export class StudentService {
       }
       if (learner) return learner;
     }
-    const allLearners = await this.learnersRepo.find();
-    if (allLearners.length > 0) {
-      return allLearners.find((l) => l.userId === 'usr-5' || l.id === 'lrn-1') || allLearners[0];
-    }
     throw new NotFoundException(`Learner '${userId || 'default'}' not found`);
   }
 

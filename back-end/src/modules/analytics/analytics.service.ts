@@ -25,8 +25,8 @@ export class AnalyticsService {
     private readonly reviewsRepo: JsonRepository<any>
   ) {}
 
-  async getOverview() {
-    const [courses, learners, enrollments, transactions, instructors, users] = await Promise.all([
+  async getOverview(organizationId?: string) {
+    let [courses, learners, enrollments, transactions, instructors, users] = await Promise.all([
       this.coursesRepo.find(),
       this.learnersRepo.find(),
       this.enrollmentsRepo.find(),
@@ -35,10 +35,18 @@ export class AnalyticsService {
       this.usersRepo.find(),
     ]);
 
-    const grossRevenue = courses.reduce(
-      (sum, c) => sum + (c.revenue || (c.price || 0) * (c.enrolledCount || 10)),
-      0
-    );
+    if (organizationId) {
+      courses = courses.filter(c => c.organizationId === organizationId);
+      const ids = new Set(courses.map(c => c.id));
+      enrollments = enrollments.filter(e => ids.has(e.courseId));
+      const learnerIds = new Set(enrollments.map(e => e.learnerId));
+      learners = learners.filter(l => learnerIds.has(l.id) || l.organizationId === organizationId);
+      transactions = transactions.filter(t => t.organizationId === organizationId || ids.has(t.courseId));
+      instructors = instructors.filter(i => i.organizationId === organizationId);
+      users = users.filter(u => u.organizationId === organizationId || learners.some(l => l.userId === u.id));
+    }
+    const paid = transactions.filter(t => ['completed', 'paid', 'success', 'successful'].includes(String(t.status).toLowerCase()));
+    const grossRevenue = paid.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
     const categoryRevenueMap: Record<string, { count: number; revenue: number; seats: number }> = {};
     for (const c of courses) {
@@ -47,7 +55,7 @@ export class AnalyticsService {
         categoryRevenueMap[cat] = { count: 0, revenue: 0, seats: 0 };
       }
       categoryRevenueMap[cat].count += 1;
-      categoryRevenueMap[cat].revenue += c.revenue || (c.price || 0) * (c.enrolledCount || 10);
+      categoryRevenueMap[cat].revenue += paid.filter(t => t.courseId === c.id || (!t.courseId && (t.courseTitle || t.course) === c.title)).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
       categoryRevenueMap[cat].seats += c.enrolledCount || 0;
     }
 
@@ -59,12 +67,22 @@ export class AnalyticsService {
       percentageOfTotal: grossRevenue > 0 ? Math.round((stats.revenue / grossRevenue) * 100) : 0,
     }));
 
-    const monthlyTrend = [
-      { name: 'May', learners: 340, revenue: 24800 },
-      { name: 'Jun', learners: 410, revenue: 28900 },
-      { name: 'Jul', learners: 520, revenue: 35400 },
-      { name: 'Aug', learners: 680, revenue: 42580 },
-    ];
+    const now = new Date();
+    const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+      const start = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+      const inMonth = (value: any) => { const d = new Date(value); return d >= start && d < end; };
+      return { name: start.toLocaleString('en-US', { month: 'short' }),
+        learners: learners.filter(l => inMonth(l.createdAt)).length,
+        revenue: paid.filter(t => inMonth(t.createdAt || t.date)).reduce((sum,t) => sum + (Number(t.amount) || 0), 0) };
+    });
+    const weeklyActiveUsers = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6 + i);
+      const next = new Date(date); next.setDate(next.getDate() + 1);
+      return { name: date.toLocaleString('en-US', { weekday: 'short' }), active: users.filter(u => {
+        const login = new Date(u.lastLogin); return login >= date && login < next;
+      }).length };
+    });
 
     const completed = enrollments.filter((e) => e.status === 'Completed' || e.progress === 100).length;
     const active = enrollments.filter((e) => e.status === 'Active' && e.progress < 100).length;
@@ -89,15 +107,7 @@ export class AnalyticsService {
       },
       userGrowth: monthlyTrend,
       revenueData: monthlyTrend,
-      weeklyActiveUsers: [
-        { name: 'Mon', active: 340 },
-        { name: 'Tue', active: 460 },
-        { name: 'Wed', active: 580 },
-        { name: 'Thu', active: 620 },
-        { name: 'Fri', active: 750 },
-        { name: 'Sat', active: 430 },
-        { name: 'Sun', active: 390 },
-      ],
+      weeklyActiveUsers,
       categoryData: categoryBreakdown.map((c) => ({
         name: c.category,
         value: c.coursesCount,
@@ -106,16 +116,16 @@ export class AnalyticsService {
       })),
       kpis: {
         totalRevenue: grossRevenue,
-        monthlyRevenue: Math.round(grossRevenue * 0.3),
+        monthlyRevenue: monthlyTrend[monthlyTrend.length - 1].revenue,
         totalEnrollments: enrollments.length,
         activeLearners: learners.length,
-        completionRate: enrollments.length > 0 ? Math.round((completed / enrollments.length) * 100) : 72,
-        retentionRate: 94.2,
+        completionRate: enrollments.length > 0 ? Math.round((completed / enrollments.length) * 100) : 0,
+        retentionRate: enrollments.length ? Math.round((enrollments.length - dropped) / enrollments.length * 100) : 0,
       },
       categoryBreakdown,
       monthlyTrend,
       enrollmentStatusDistribution: { completed, active, dropped },
-      learnerDemographics: { students: studentCount, professionals: learners.length - studentCount },
+      learnerDemographics: { students: studentCount, professionals: learners.filter(l => l.learnerType === 'Professional').length },
       topInstructorsByRevenue: instructors
         .sort((a, b) => (b.revenueGenerated || 0) - (a.revenueGenerated || 0))
         .slice(0, 5)
@@ -138,7 +148,7 @@ export class AnalyticsService {
       this.disputesRepo.find(),
     ]);
 
-    const totalGrossRevenue = overview.kpis?.totalRevenue || 429480;
+    const totalGrossRevenue = overview.kpis?.totalRevenue ?? 0;
     const orgShare85 = Math.round(totalGrossRevenue * 0.85);
     const superAdminShare15 = Math.round(totalGrossRevenue * 0.15);
 

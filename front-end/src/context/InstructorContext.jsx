@@ -27,7 +27,7 @@ export function InstructorProvider({ children }) {
             (userId && (i.userId === userId || i.id === userId)) ||
             (userEmail && i.email?.toLowerCase() === userEmail) ||
             (storedInstructorId && i.id === storedInstructorId)
-        ) || list[0];
+        );
 
       if (!me) throw new Error('No instructor profile is linked to this account');
       setInstructor(me);

@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-do
 // 0. LANDING & GATEWAY
 // ──────────────────────────────────────────────────────────────
 import Landing from './pages/Landing';
+import UnavailablePage from './pages/UnavailablePage';
 import SignIn from './pages/Signin';
 import SignUp from './pages/Signup';
 import ForgotPassword from './pages/Forgot_Password';
@@ -55,6 +56,7 @@ import { Settings as InstructorSettings } from './pages/instructor/insights/Sett
 // ──────────────────────────────────────────────────────────────
 // 3. ORGANIZATION ADMIN PAGES
 // ──────────────────────────────────────────────────────────────
+import OrgLayout from './components/organization/OrgLayout';
 import OrgDashboard from './pages/organization/Dashboard';
 import OrgProfile from './pages/organization/Profile';
 import OrgInstructorRequests from './pages/organization/InstructorRequests';
@@ -78,25 +80,13 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
 import { Users as AdminUsers } from './pages/admin/Users';
 import { UserDetails as AdminUserDetails } from './pages/admin/UserDetails';
-import { Learners as AdminLearners } from './pages/admin/Learners';
-import { LearnerDetails as AdminLearnerDetails } from './pages/admin/LearnerDetails';
-import { Instructors as AdminInstructors } from './pages/admin/Instructors';
-import { InstructorDetails as AdminInstructorDetails } from './pages/admin/InstructorDetails';
-import { Organizations as AdminOrganizations } from './pages/admin/Organizations';
-import { OrganizationDetails as AdminOrganizationDetails } from './pages/admin/OrganizationDetails';
-import { OrganizationVerification as AdminOrgVerification } from './pages/admin/OrganizationVerification';
 import { Courses as AdminCourses } from './pages/admin/Courses';
 import { CourseDetails as AdminCourseDetails } from './pages/admin/CourseDetails';
 import { CourseApproval as AdminCourseApproval } from './pages/admin/CourseApproval';
-import { Enrollments as AdminEnrollments } from './pages/admin/Enrollments';
 import { Payments as AdminPayments } from './pages/admin/Payments';
 import { Transactions as AdminTransactions } from './pages/admin/Transactions';
-import { Refunds as AdminRefunds } from './pages/admin/Refunds';
 import { Certificates as AdminCertificates } from './pages/admin/Certificates';
 import { Disputes as AdminDisputes } from './pages/admin/Disputes';
-import { Analytics as AdminAnalytics } from './pages/admin/Analytics';
-import { Reports as AdminReports } from './pages/admin/Reports';
-import { Notifications as AdminNotifications } from './pages/admin/Notifications';
 import { Profile as AdminProfile } from './pages/admin/Profile';
 import { Settings as AdminSettings } from './pages/admin/Settings';
 
@@ -164,7 +154,7 @@ export default function App() {
 
       <Route
         path="/organization"
-        element={<Navigate to="/signin?role=Organization" replace />}
+        element={<Navigate to="/org/dashboard" replace />}
       />
       <Route
         path="/organization/landing"
@@ -174,6 +164,9 @@ export default function App() {
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/terms" element={<UnavailablePage />} />
+      <Route path="/privacy" element={<UnavailablePage />} />
+      <Route path="/honor-code" element={<UnavailablePage />} />
 
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 1. STUDENT / LEARNER ROUTES (Protected by Route Middleware) */}
@@ -420,11 +413,11 @@ export default function App() {
         />
         <Route
           path="/org/analytics"
-          element={<Navigate to="/org/dashboard" replace />}
+          element={<OrgLayout><OrgAnalytics /></OrgLayout>}
         />
         <Route
           path="/organization/analytics"
-          element={<Navigate to="/org/dashboard" replace />}
+          element={<OrgLayout><OrgAnalytics /></OrgLayout>}
         />
         <Route
           path="/organization/settings"
@@ -445,43 +438,34 @@ export default function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:userId" element={<AdminUserDetails />} />
 
-          <Route path="learners" element={<AdminLearners />} />
-          <Route
-            path="learners/:learnerId"
-            element={<AdminLearnerDetails />}
-          />
-
-          <Route path="instructors" element={<AdminInstructors />} />
-          <Route
-            path="instructors/:instructorId"
-            element={<AdminInstructorDetails />}
-          />
-
-          <Route path="organizations" element={<AdminOrganizations />} />
-          <Route
-            path="organizations/:organizationId"
-            element={<AdminOrganizationDetails />}
-          />
-          <Route
-            path="organizations/verification"
-            element={<AdminOrgVerification />}
-          />
+          {/* Consolidated into Users directory */}
+          <Route path="learners" element={<Navigate to="/admin/users?role=Learner" replace />} />
+          <Route path="learners/:learnerId" element={<Navigate to="/admin/users" replace />} />
+          <Route path="instructors" element={<Navigate to="/admin/users?role=Instructor" replace />} />
+          <Route path="instructors/:instructorId" element={<Navigate to="/admin/users" replace />} />
+          <Route path="organizations" element={<Navigate to="/admin/users?role=Organization" replace />} />
+          <Route path="organizations/:organizationId" element={<Navigate to="/admin/users" replace />} />
+          <Route path="organizations/verification" element={<Navigate to="/admin/users?role=Organization" replace />} />
+          <Route path="enrollments" element={<Navigate to="/admin/users?role=Learner" replace />} />
 
           <Route path="courses" element={<AdminCourses />} />
           <Route path="courses/:courseId" element={<AdminCourseDetails />} />
           <Route path="courses/approval" element={<AdminCourseApproval />} />
 
-          <Route path="enrollments" element={<AdminEnrollments />} />
           <Route path="disputes" element={<AdminDisputes />} />
 
           <Route path="payments" element={<AdminPayments />} />
           <Route path="transactions" element={<AdminTransactions />} />
-          <Route path="refunds" element={<AdminRefunds />} />
+          <Route path="refunds" element={<Navigate to="/admin/payments" replace />} />
 
           <Route path="certificates" element={<AdminCertificates />} />
-          <Route path="analytics" element={<AdminAnalytics />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="notifications" element={<AdminNotifications />} />
+          
+          {/* Analytics & Reports consolidated in Dashboard */}
+          <Route path="analytics" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="reports" element={<Navigate to="/admin/dashboard" replace />} />
+          
+          {/* Notifications merged into Settings */}
+          <Route path="notifications" element={<Navigate to="/admin/settings?tab=notifications" replace />} />
 
           <Route path="profile" element={<AdminProfile />} />
           <Route path="settings" element={<AdminSettings />} />
@@ -489,7 +473,7 @@ export default function App() {
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<UnavailablePage />} />
     </Routes>
   );
 }

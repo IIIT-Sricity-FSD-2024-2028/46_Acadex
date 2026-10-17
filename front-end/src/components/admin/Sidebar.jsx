@@ -30,19 +30,11 @@ const adminNavItems = [
   { name: 'Courses', href: '/admin/courses', icon: FolderOpen },
   { name: 'Course Approvals', href: '/admin/courses/approval', icon: CheckCircle2 },
   { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Learners', href: '/admin/learners', icon: GraduationCap },
-  { name: 'Instructors', href: '/admin/instructors', icon: UserCheck },
-  { name: 'Organizations', href: '/admin/organizations', icon: Building2 },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard },
   { name: 'Transactions', href: '/admin/transactions', icon: Receipt },
-  { name: 'Refunds', href: '/admin/refunds', icon: RotateCcw },
-  { name: 'Enrollments', href: '/admin/enrollments', icon: Layers },
   { name: 'Disputes', href: '/admin/disputes', icon: ShieldAlert },
   { name: 'Certificates', href: '/admin/certificates', icon: Award },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Reports', href: '/admin/reports', icon: FileText },
-  { name: 'Notifications', href: '/admin/notifications', icon: Bell },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Settings & Alerts', href: '/admin/settings', icon: Settings },
 ];
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {

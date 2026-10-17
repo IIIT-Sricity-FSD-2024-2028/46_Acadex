@@ -17,7 +17,7 @@ export const Instructors = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/instructors', 'admin')
+    api.get('/instructors?limit=1000', 'admin')
       .then(data => {
         setInstructors(Array.isArray(data) ? data : (data?.items || []));
         setLoading(false);

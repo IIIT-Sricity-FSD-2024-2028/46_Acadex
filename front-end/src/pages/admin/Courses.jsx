@@ -16,7 +16,7 @@ export const Courses = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/courses', 'admin')
+    api.get('/courses?limit=1000', 'admin')
       .then(data => {
         setCourses(Array.isArray(data) ? data : (data?.items || []));
         setLoading(false);

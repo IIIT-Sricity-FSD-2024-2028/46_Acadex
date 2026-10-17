@@ -31,7 +31,7 @@ export function Dashboard() {
     try {
       setAcceptingId(requestId);
       await acceptCourseRequest(requestId);
-      const c = await api.get('/courses', 'instructor');
+      const c = await api.get('/courses?limit=1000', 'instructor');
       const allCourses = Array.isArray(c) ? c : (c?.items || []);
       if (instructor?.id) {
         const myCourses = allCourses.filter(course => {
@@ -53,10 +53,11 @@ export function Dashboard() {
   };
 
   useEffect(() => {
+    if (!instructor?.id) return;
     const q = instructor?.id ? `?instructorId=${instructor.id}` : '';
     Promise.all([
       api.get(`/analytics/instructor${q}`, 'instructor'),
-      api.get('/courses', 'instructor'),
+      api.get('/courses?limit=1000', 'instructor'),
     ])
       .then(([a, c]) => {
         setAnalytics(a);

@@ -5,14 +5,13 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-import { jsonDataClient } from './jsonDataClient';
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('nexuspay_auth_token') || localStorage.getItem('nexuspay_student_token');
-  const role = options.role || localStorage.getItem('nexuspay_active_role') || 'Student';
+  const role = options.role || localStorage.getItem('nexuspay_active_role') || localStorage.getItem('user_role') || 'Student';
 
-  const userId = localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || (role.toLowerCase() === 'student' ? 'usr-5' : '');
-  const userEmail = localStorage.getItem('user_email') || localStorage.getItem('nexuspay_user_email') || (role.toLowerCase() === 'student' ? 'arjun.sharma@email.com' : '');
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || '';
+  const userEmail = localStorage.getItem('user_email') || localStorage.getItem('nexuspay_user_email') || '';
 
   const headers = {
     'Content-Type': 'application/json',
@@ -20,6 +19,7 @@ async function request(endpoint, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(userId ? { 'x-user-id': userId } : {}),
     ...(userEmail ? { 'x-user-email': userEmail } : {}),
+    ...(localStorage.getItem('user_organization_id') ? { 'x-organization-id': localStorage.getItem('user_organization_id') } : {}),
     ...(options.headers || {}),
   };
 
@@ -157,7 +157,7 @@ export const api = {
 
   // 3. Courses, Modules, Lessons & Curriculum
   courses: {
-    list: (params = {}) => {
+    list: (params = { limit: 1000 }) => {
       const query = new URLSearchParams(params).toString();
       return request(`/courses${query ? `?${query}` : ''}`);
     },
@@ -282,7 +282,7 @@ export const api = {
 
   // 10. Financial Settlements, Payments & Refunds
   payments: {
-    listTransactions: (params = {}) => {
+    listTransactions: (params = { limit: 1000 }) => {
       const query = new URLSearchParams(params).toString();
       return request(`/payments/transactions${query ? `?${query}` : ''}`);
     },
@@ -293,7 +293,7 @@ export const api = {
 
   // 11. Disputes & Governance
   disputes: {
-    list: () => request('/disputes'),
+    list: () => request('/disputes?limit=1000'),
     get: (id) => request(`/disputes/${id}`),
     raise: (data) => request('/disputes', { method: 'POST', body: data }),
     create: (data) => request('/disputes', { method: 'POST', body: data }),
@@ -307,10 +307,10 @@ export const api = {
   reports: {
     list: () => request('/reports'),
     generate: (data) => request('/reports/generate', { method: 'POST', body: data }),
-    exportCsv: (collection) => request(`/reports/export/${collection}`),
+    exportCsv: (id) => request(`/reports/${id}/export`),
   },
   analytics: {
-    getOverview: () => request('/analytics/overview'),
+    getOverview: () => request((localStorage.getItem('nexuspay_active_role') || '').toLowerCase() === 'organization' ? '/analytics/organization' : '/analytics/overview'),
     getSuperAdmin: () => request('/analytics/super-admin'),
     getInstructor: () => request('/analytics/instructor'),
     getTimeframe: (tf) => request(`/analytics/timeframe/${tf}`),
@@ -318,7 +318,7 @@ export const api = {
 
   // 13. Notifications & System Settings
   notifications: {
-    list: () => request('/notifications'),
+    list: (params = {}) => request(`/notifications?${new URLSearchParams({ limit: 1000, ...params })}`),
     markRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
     markAllRead: () => request('/notifications/mark-all-read', { method: 'PATCH' }),
   },
@@ -328,123 +328,39 @@ export const api = {
     resetDatabase: () => request('/settings/reset-database', { method: 'POST' }),
   },
 
-  // 14. Super Admin Governance (Level 1 Master Control - JSON backed with direct fallback)
+  // All actors read and write the backend JSON database.
   superAdmin: {
-    getAnalytics: () =>
-      request('/analytics/super-admin').catch(() => jsonDataClient.getSuperAdminAnalytics()),
-    getAdmins: () =>
-      request('/users?role=Admin').catch(() => jsonDataClient.getAdmins()),
-    createAdmin: (data) =>
-      request('/users', { method: 'POST', body: { ...data, role: 'Admin' } }).catch(() =>
-        jsonDataClient.createAdmin(data)
-      ),
-    updateAdmin: (id, data) =>
-      request(`/users/${id}`, { method: 'PATCH', body: data }).catch(() =>
-        jsonDataClient.updateAdmin(id, data)
-      ),
-    deleteAdmin: (id) =>
-      request(`/users/${id}`, { method: 'DELETE' }).catch(() =>
-        jsonDataClient.deleteAdmin(id)
-      ),
-
-    getEscalations: (params = {}) => {
-      const query = new URLSearchParams(params).toString();
-      return request(`/disputes${query ? `?${query}` : ''}`).catch(() => {
-        const items = jsonDataClient.getEscalations();
-        return Array.isArray(items) ? items : items.items || [];
-      });
+    getAnalytics: () => request('/analytics/super-admin'),
+    getAdmins: () => request('/users?role=Admin'),
+    createAdmin: (data) => request('/users', { method: 'POST', body: { ...data, role: 'Admin' } }),
+    updateAdmin: (id, data) => request(`/users/${id}`, { method: 'PATCH', body: data }),
+    deleteAdmin: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+    getEscalations: (params = {}) => request(`/disputes?${new URLSearchParams({ limit: 1000, ...params })}`),
+    updateEscalationStatus: (id, status, notes) => request(`/disputes/${id}/status`, { method: 'PATCH', body: { status, adminNote: notes } }),
+    resolveEscalation: (id, resolutionNotes) => request(`/disputes/${id}/resolve`, { method: 'PATCH', body: { resolutionNote: resolutionNotes } }),
+    deleteEscalation: (id) => request(`/disputes/${id}`, { method: 'DELETE' }),
+    getOrganizations: () => request('/organizations'),
+    getOrganization: (id) => request(`/organizations/${id}`),
+    createOrganization: (data) => request('/organizations', { method: 'POST', body: data }),
+    updateOrganization: (id, data) => request(`/organizations/${id}`, { method: 'PATCH', body: data }),
+    deleteOrganization: (id) => request(`/organizations/${id}`, { method: 'DELETE' }),
+    getLearners: (params = {}) => request(`/learners?${new URLSearchParams({ limit: 1000, ...params })}`),
+    updateLearner: (id, data) => request(`/learners/${id}`, { method: 'PATCH', body: data }),
+    deleteLearner: (id) => request(`/learners/${id}`, { method: 'DELETE' }),
+    suspendLearner: async (id) => {
+      const learner = await request(`/learners/${id}`);
+      return request(`/learners/${id}`, { method: 'PATCH', body: { status: learner.status === 'Suspended' ? 'Active' : 'Suspended' } });
     },
-    updateEscalationStatus: (id, status, notes) =>
-      request(`/disputes/${id}/status`, { method: 'PATCH', body: { status, adminNote: notes } }).catch(() =>
-        jsonDataClient.updateEscalationStatus(id, status, notes)
-      ),
-    resolveEscalation: (id, resolutionNotes) =>
-      request(`/disputes/${id}/resolve`, { method: 'PATCH', body: { resolutionNote: resolutionNotes } }).catch(() =>
-        jsonDataClient.resolveEscalation(id, resolutionNotes)
-      ),
-    deleteEscalation: (id) =>
-      request(`/disputes/${id}`, { method: 'DELETE' }).catch(() => {
-        const disputes = jsonDataClient.getEscalations();
-        const updated = disputes.filter((d) => d.id !== id);
-        localStorage.setItem('nexuspay_json_db_disputes', JSON.stringify(updated));
-        return { success: true };
-      }),
-
-    getOrganizations: () =>
-      request('/organizations').catch(() => jsonDataClient.getOrganizations()),
-    getOrganization: (id) =>
-      request(`/organizations/${id}`).catch(() => {
-        const orgs = jsonDataClient.getOrganizations();
-        return orgs.find((o) => o.id === id);
-      }),
-    createOrganization: (data) =>
-      request('/organizations', { method: 'POST', body: data }).catch(() =>
-        jsonDataClient.createOrganization(data)
-      ),
-    updateOrganization: (id, data) =>
-      request(`/organizations/${id}`, { method: 'PATCH', body: data }).catch(() =>
-        jsonDataClient.updateOrganization(id, data)
-      ),
-    deleteOrganization: (id) =>
-      request(`/organizations/${id}`, { method: 'DELETE' }).catch(() =>
-        jsonDataClient.deleteOrganization(id)
-      ),
-
-    getLearners: (params = { limit: 1000 }) => {
-      const query = new URLSearchParams(params).toString();
-      return request(`/learners${query ? `?${query}` : ''}`).catch(() => {
-        const learners = jsonDataClient.getLearners();
-        return Array.isArray(learners) ? learners : learners.items || [];
-      });
-    },
-    updateLearner: (id, data) =>
-      request(`/learners/${id}`, { method: 'PATCH', body: data }).catch(() =>
-        jsonDataClient.updateLearner(id, data)
-      ),
-    deleteLearner: (id) =>
-      request(`/learners/${id}`, { method: 'DELETE' }).catch(() =>
-        jsonDataClient.deleteLearner(id)
-      ),
-    suspendLearner: (id, reason) =>
-      request(`/learners/${id}/suspend`, { method: 'POST', body: { reason } }).catch(() =>
-        jsonDataClient.suspendLearner(id, reason)
-      ),
-    createLearner: (data) =>
-      request('/learners', { method: 'POST', body: data }).catch(() =>
-        jsonDataClient.createLearner(data)
-      ),
-
-    getInstructors: () =>
-      request('/instructors').catch(() => jsonDataClient.getInstructors()),
-    createInstructor: (data) =>
-      request('/instructors', { method: 'POST', body: data }).catch(() =>
-        jsonDataClient.createInstructor(data)
-      ),
-    updateInstructor: (id, data) =>
-      request(`/instructors/${id}`, { method: 'PATCH', body: data }).catch(() =>
-        jsonDataClient.updateInstructor(id, data)
-      ),
-    deleteInstructor: (id) =>
-      request(`/instructors/${id}`, { method: 'DELETE' }).catch(() =>
-        jsonDataClient.deleteInstructor(id)
-      ),
-    getCourses: () =>
-      request('/courses').catch(() => jsonDataClient.getCourses()),
-    getSystemLogs: () =>
-      request('/analytics/super-admin').catch(() => jsonDataClient.getSuperAdminAnalytics()),
-    getTransactions: (params = {}) => {
-      const query = new URLSearchParams(params).toString();
-      return request(`/payments/transactions${query ? `?${query}` : ''}`).catch(() => {
-        const txs = jsonDataClient.getTransactions();
-        return Array.isArray(txs) ? txs : (txs?.items || []);
-      });
-    },
-    getAdminResolutions: () => {
-      return Promise.resolve(jsonDataClient.getAdminResolutions());
-    },
-    recordAdminResolution: (data) => {
-      return Promise.resolve(jsonDataClient.recordAdminResolution(data));
-    },
+    createLearner: (data) => request('/learners', { method: 'POST', body: data }),
+    getInstructors: () => request('/instructors?limit=1000'),
+    createInstructor: (data) => request('/instructors', { method: 'POST', body: data }),
+    updateInstructor: (id, data) => request(`/instructors/${id}`, { method: 'PATCH', body: data }),
+    deleteInstructor: (id) => request(`/instructors/${id}`, { method: 'DELETE' }),
+    getCourses: () => request('/courses?limit=1000'),
+    getSystemLogs: () => request('/analytics/super-admin'),
+    getTransactions: (params = {}) => request(`/payments/transactions?${new URLSearchParams({ limit: 1000, ...params })}`),
+    getAdminResolutions: () => request('/users/activity'),
+    recordAdminResolution: (data) => request('/users/activity', { method: 'POST', body: data }),
   },
 
   // 15. Generic HTTP Methods (Backward-compatible with src/utils/api.js)

@@ -21,12 +21,6 @@ import { api } from '../../utils/api';
 
 const PAGE_SIZE = 8;
 
-const PRIORITY_COLORS = {
-  High: 'bg-rose-100 text-rose-700 border-rose-200',
-  Medium: 'bg-amber-100 text-amber-700 border-amber-200',
-  Low: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-};
-
 const TYPE_COLORS = {
   'Course Content': 'bg-blue-50 text-blue-700',
   Payment: 'bg-violet-50 text-violet-700',
@@ -82,7 +76,6 @@ export const Disputes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [raisedByFilter, setRaisedByFilter] = useState('');
   const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState('date');
@@ -145,11 +138,10 @@ export const Disputes = () => {
       const matchStatus = !statusFilter || d.status === statusFilter;
       const disputeCategory = (d.type || d.disputeType || d.category || '').toLowerCase();
       const matchType = !typeFilter || disputeCategory === typeFilter.toLowerCase();
-      const matchPriority = !priorityFilter || d.priority === priorityFilter;
       const role = (d.raisedByType || d.raisedByRole || '').toLowerCase();
       const targetRole = raisedByFilter.toLowerCase();
       const matchRaisedBy = !raisedByFilter || role === targetRole || ((targetRole === 'learner' || targetRole === 'student') && (role === 'learner' || role === 'student'));
-      return matchSearch && matchStatus && matchType && matchPriority && matchRaisedBy;
+      return matchSearch && matchStatus && matchType && matchRaisedBy;
     });
 
     list = [...list].sort((a, b) => {
@@ -169,18 +161,17 @@ export const Disputes = () => {
     });
 
     return list;
-  }, [disputes, searchTerm, statusFilter, typeFilter, priorityFilter, raisedByFilter, sortField, sortDir]);
+  }, [disputes, searchTerm, statusFilter, typeFilter, raisedByFilter, sortField, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const hasFilters = searchTerm || statusFilter || typeFilter || priorityFilter || raisedByFilter;
+  const hasFilters = searchTerm || statusFilter || typeFilter || raisedByFilter;
 
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
     setTypeFilter('');
-    setPriorityFilter('');
     setRaisedByFilter('');
     setPage(1);
   };
@@ -282,16 +273,6 @@ export const Disputes = () => {
                 placeholder="All Categories"
               />
               <FilterSelect
-                value={priorityFilter}
-                onChange={(v) => { setPriorityFilter(v); setPage(1); }}
-                options={[
-                  { label: 'High', value: 'High' },
-                  { label: 'Medium', value: 'Medium' },
-                  { label: 'Low', value: 'Low' },
-                ]}
-                placeholder="All Priorities"
-              />
-              <FilterSelect
                 value={statusFilter}
                 onChange={(v) => { setStatusFilter(v); setPage(1); }}
                 options={[
@@ -360,7 +341,6 @@ export const Disputes = () => {
                     { label: 'Dispute ID', field: 'id' },
                     { label: 'Raised By', field: 'raisedBy' },
                     { label: 'Subject & Category', field: 'subject' },
-                    { label: 'Priority', field: 'priority' },
                     { label: 'Date', field: 'createdAt' },
                     { label: 'Status', field: 'status' },
                     { label: 'Actions', field: null },
@@ -422,12 +402,6 @@ export const Disputes = () => {
                       </div>
                     </td>
 
-                    {/* Priority */}
-                    <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${PRIORITY_COLORS[row.priority] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                        {row.priority}
-                      </span>
-                    </td>
 
                     {/* Date */}
                     <td className="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">

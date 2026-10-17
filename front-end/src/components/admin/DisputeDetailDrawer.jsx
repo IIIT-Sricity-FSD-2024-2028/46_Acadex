@@ -23,13 +23,6 @@ const timelineIconMap = {
   resolved: { icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600' },
   rejected: { icon: XCircle, color: 'bg-rose-100 text-rose-600' },
   comment: { icon: MessageSquare, color: 'bg-purple-100 text-purple-600' },
-  priority: { icon: Tag, color: 'bg-amber-100 text-amber-600' },
-};
-
-const priorityColors = {
-  High: 'bg-rose-100 text-rose-700 border-rose-200',
-  Medium: 'bg-amber-100 text-amber-700 border-amber-200',
-  Low: 'bg-emerald-100 text-emerald-700 border-emerald-200',
 };
 
 const typeIcons = {
@@ -61,7 +54,6 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
   const [loading, setLoading] = useState(false);
 
   const [actionError, setActionError] = useState(null);
-  const [updatingPriority, setUpdatingPriority] = useState(false);
 
   if (!dispute) return null;
 
@@ -93,7 +85,7 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
     setLoading(true);
     setActionError(null);
     try {
-      const updated = await api.post(`/disputes/${dispute.id}/resolve`, {
+      const updated = await api.patch(`/disputes/${dispute.id}/resolve`, {
         resolutionNote: resolveNote.trim(),
         resolvedBy: 'Admin User',
       });
@@ -113,7 +105,7 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
     setLoading(true);
     setActionError(null);
     try {
-      const updated = await api.post(`/disputes/${dispute.id}/reject`, {
+      const updated = await api.patch(`/disputes/${dispute.id}/reject`, {
         rejectionReason: rejectReason.trim(),
         resolvedBy: 'Admin User',
       });
@@ -125,23 +117,6 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
       setActionError(err.message || 'Failed to reject dispute');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePriorityChange = async (newPriority) => {
-    if (newPriority === dispute.priority || updatingPriority) return;
-    setUpdatingPriority(true);
-    setActionError(null);
-    try {
-      const updated = await api.patch(`/disputes/${dispute.id}/priority`, {
-        priority: newPriority,
-      });
-      onUpdated(updated);
-    } catch (err) {
-      console.error('Error updating priority:', err);
-      setActionError(err.message || 'Failed to update priority');
-    } finally {
-      setUpdatingPriority(false);
     }
   };
 
@@ -167,20 +142,6 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
                   {dispute.id}
                 </span>
                 <StatusBadge status={dispute.status} />
-                <div className="relative inline-flex items-center">
-                  <select
-                    value={dispute.priority || 'Medium'}
-                    disabled={updatingPriority}
-                    onChange={(e) => handlePriorityChange(e.target.value)}
-                    className={`text-xs font-semibold rounded-full border px-2.5 py-0.5 appearance-none pr-5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-300 ${priorityColors[dispute.priority] || 'bg-slate-100 text-slate-600 border-slate-200'}`}
-                    title="Click to change priority"
-                  >
-                    <option value="High">High Priority</option>
-                    <option value="Medium">Medium Priority</option>
-                    <option value="Low">Low Priority</option>
-                  </select>
-                  <ChevronRight className="w-3 h-3 rotate-90 absolute right-1.5 pointer-events-none opacity-60" />
-                </div>
               </div>
               <h2 className="text-lg font-bold text-slate-800 leading-snug max-w-md">
                 {dispute.subject}

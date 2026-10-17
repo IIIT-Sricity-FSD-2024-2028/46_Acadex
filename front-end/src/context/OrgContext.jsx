@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 import OrgContext from './orgContextInstance';
+import { useLocation } from 'react-router-dom';
 
 
 
@@ -51,18 +52,22 @@ const legacyOrganizationIds = {
 };
 
 const belongsToOrganization = (recordOrganizationId, organizationId) =>
-  !organizationId ||
+  Boolean(organizationId) && (
   recordOrganizationId === organizationId ||
-  legacyOrganizationIds[recordOrganizationId] === organizationId;
+  legacyOrganizationIds[recordOrganizationId] === organizationId);
 
 const courseBelongsToOrganization = (course, organizationId, instructors) => {
-  if (!organizationId) return true;
+  if (!organizationId) return false;
+  if (course?.organizationId) return course.organizationId === organizationId;
   if (belongsToOrganization(course?.organizationId, organizationId)) return true;
   const leadInstructor = instructors.find((instructor) => instructor.id === course?.instructorId);
   return belongsToOrganization(leadInstructor?.organizationId, organizationId);
 };
 
 export function OrgProvider({ children }) {
+  const { pathname } = useLocation();
+  const inOrgPortal = pathname === '/org' || pathname.startsWith('/org/') || pathname.startsWith('/organization/');
+  const accountId = localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [backendStats, setBackendStats] = useState(null);
@@ -102,6 +107,7 @@ export function OrgProvider({ children }) {
 
   // Fetch all collections from the backend JSON database
   const refreshData = useCallback(async () => {
+    if (!inOrgPortal || !accountId) { setIsLoading(false); return; }
     try {
       setIsLoading(true);
       setError(null);
@@ -134,6 +140,7 @@ export function OrgProvider({ children }) {
         api?.disputes?.list ? api.disputes.list() : Promise.resolve([]),
       ]);
 
+      if (orgRes.status === 'rejected') throw orgRes.reason;
       const orgInfo = orgRes.status === 'fulfilled' && orgRes.value ? orgRes.value : state.info;
       const allInstructors = instructorsRes.status === 'fulfilled' ? getItems(instructorsRes.value) : state.instructors;
       const allCourses = coursesRes.status === 'fulfilled' ? getItems(coursesRes.value) : state.courses;
@@ -217,10 +224,11 @@ export function OrgProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [inOrgPortal, accountId]);
 
   // Initial load from backend on mount — refresh all data then sync org counts into organizations.json
   useEffect(() => {
+    if (!inOrgPortal || !accountId) return;
     refreshData().then(() => {
       // After initial data is loaded, sync organizations.json counts so state.info is accurate
       api.organization.syncCounts()
@@ -234,7 +242,7 @@ export function OrgProvider({ children }) {
         })
         .catch((err) => console.warn('Initial syncCounts failed (non-critical):', err.message));
     });
-  }, [refreshData]);
+  }, [refreshData, inOrgPortal, accountId]);
 
   // ─── Stats: state.info is the single source of truth for organizations.json fields ───
   // After every mutation, syncOrgCounts() writes back to organizations.json via the backend

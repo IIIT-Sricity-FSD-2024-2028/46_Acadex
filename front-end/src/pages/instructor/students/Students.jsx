@@ -16,10 +16,11 @@ export function Students() {
   const [selectedStatus, setSelectedStatus] = useState("All");
 
   useEffect(() => {
+    if (!instructor?.id) return;
     Promise.all([
-      api.get('/learners', 'instructor'),
-      api.get('/enrollments', 'instructor'),
-      api.get('/courses', 'instructor'),
+      api.get('/learners?limit=1000', 'instructor'),
+      api.get('/enrollments?limit=1000', 'instructor'),
+      api.get('/courses?limit=1000', 'instructor'),
     ])
       .then(([l, e, c]) => {
         const learnersArray = Array.isArray(l) ? l : (l?.items || []);

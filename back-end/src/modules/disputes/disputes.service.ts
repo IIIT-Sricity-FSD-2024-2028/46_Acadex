@@ -194,6 +194,13 @@ export class DisputesService {
     return dispute;
   }
 
+  async updatePriority(id: string, priority: string) {
+    if (!['High', 'Medium', 'Low'].includes(priority)) throw new BadRequestException('Invalid dispute priority');
+    const dispute = await this.disputesRepo.findById(id);
+    if (!dispute) throw new NotFoundException(`Dispute '${id}' not found`);
+    return this.disputesRepo.update(id, { priority });
+  }
+
   async updateStatus(id: string, dto: UpdateDisputeStatusDto) {
     const dispute = await this.disputesRepo.findById(id);
     if (!dispute) {

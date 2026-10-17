@@ -15,6 +15,12 @@ export class UsersController {
     return this.usersService.findAll(role);
   }
 
+  @Get('activity')
+  getActivity() { return this.usersService.getActivity(); }
+
+  @Post('activity')
+  recordActivity(@Body() data: any) { return this.usersService.recordActivity(data); }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   findOne(@Param('id') id: string) {

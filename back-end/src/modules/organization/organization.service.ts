@@ -19,7 +19,8 @@ export class OrganizationService {
     @Inject(REPOSITORY_TOKENS.INSTRUCTOR_REQUESTS)
     private readonly requestsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
-    private readonly notifsRepo: JsonRepository<any>
+    private readonly notifsRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.USERS) private readonly usersRepo: JsonRepository<any>
   ) { }
 
   private async resolveOrg(userId?: string, userEmail?: string) {
@@ -30,6 +31,10 @@ export class OrganizationService {
       if (match) return match;
     }
     if (userId) {
+      const account = await this.usersRepo.findById(userId);
+      const org = orgs.find(o => o.id === account?.organizationId || o.id === userId ||
+        (!!account?.email && o.email?.toLowerCase() === account.email.toLowerCase()));
+      if (org) return org;
       const allInstructors = await this.instructorsRepo.find();
       const inst = allInstructors.find((i) => i.userId === userId);
       if (inst?.organizationId) {
@@ -37,7 +42,7 @@ export class OrganizationService {
         if (match) return match;
       }
     }
-    return orgs[0];
+    throw new NotFoundException('No organization is linked to the signed-in account');
   }
 
   async getProfile(userId?: string, userEmail?: string) {
@@ -253,7 +258,7 @@ export class OrganizationService {
     }
     const allInstructors = await this.instructorsRepo.find();
     const associatedInstructors = allInstructors.filter((inst) =>
-      org.instructorIds?.includes(inst.id)
+      inst.organizationId === org.id || org.instructorIds?.includes(inst.id)
     );
     const grossRevenue = Number(org.totalRevenue) || 0;
     return {

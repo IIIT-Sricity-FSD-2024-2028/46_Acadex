@@ -18,7 +18,7 @@ export const CourseApproval = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/courses', 'admin')
+    api.get('/courses?limit=1000', 'admin')
       .then(data => { setCourses(Array.isArray(data) ? data : (data?.items || [])); setLoading(false); })
       .catch(err => { console.error('Error fetching courses:', err); setCourses([]); setLoading(false); });
   }, []);

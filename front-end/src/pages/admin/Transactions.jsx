@@ -15,7 +15,7 @@ export const Transactions = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/payments/transactions', 'admin')
+    api.get('/payments/transactions?limit=1000', 'admin')
       .then(data => {
         const list = Array.isArray(data) ? data : (data?.items || []);
         setTransactions(list);

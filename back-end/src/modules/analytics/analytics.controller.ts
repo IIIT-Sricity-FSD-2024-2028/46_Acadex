@@ -1,11 +1,12 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Headers } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { OrganizationService } from '../organization/organization.service';
 import { AnalyticsService } from './analytics.service';
 
 @ApiTags('Analytics & Telemetry')
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(private readonly analyticsService: AnalyticsService, private readonly organizationService: OrganizationService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get institutional analytics overview' })
@@ -33,8 +34,9 @@ export class AnalyticsController {
 
   @Get('organization')
   @ApiOperation({ summary: 'Get Organization analytics overview' })
-  async getOrganization() {
-    return this.analyticsService.getOverview();
+  async getOrganization(@Headers('x-user-id') userId?: string, @Headers('x-user-email') email?: string) {
+    const org = await this.organizationService.getProfile(userId, email);
+    return this.analyticsService.getOverview(org.id);
   }
 
   @Get('revenue')

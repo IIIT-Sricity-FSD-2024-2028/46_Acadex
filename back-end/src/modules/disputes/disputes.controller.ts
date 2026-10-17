@@ -40,6 +40,11 @@ export class DisputesController {
     return this.disputesService.create(dto);
   }
 
+  @Patch(':id/priority')
+  updatePriority(@Param('id') id: string, @Body() body: { priority: string }) {
+    return this.disputesService.updatePriority(id, body.priority);
+  }
+
   @Patch(':id/status')
   @Post(':id/status')
   @ApiOperation({ summary: 'Update dispute workflow status (Open, Under Review, Escalated, Resolved)' })

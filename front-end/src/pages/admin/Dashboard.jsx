@@ -55,8 +55,8 @@ export const Dashboard = () => {
   useEffect(() => {
     Promise.all([
       api.get('/users'),
-      api.get('/courses'),
-      api.get('/payments/transactions'),
+      api.get('/courses?limit=1000'),
+      api.get('/payments/transactions?limit=1000'),
       api.get('/analytics/overview'),
     ])
       .then(([u, c, t, a]) => {

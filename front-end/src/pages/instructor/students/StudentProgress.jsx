@@ -12,12 +12,12 @@ export function StudentProgress() {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/learners/${id || 1}`, 'instructor'),
-      api.get('/enrollments', 'instructor'),
+      api.get(`/learners/${id}`, 'instructor'),
+      api.get(`/learners/${id}/enrollments`, 'instructor'),
     ])
       .then(([l, e]) => {
         setStudent(l);
-        const learnerEnrollments = (e || []).filter(
+        const learnerEnrollments = (Array.isArray(e) ? e : e?.items || []).filter(
           (en) => en.learnerId === id || en.learnerId === Number(id) || en.learner === l?.name || en.learnerName === l?.name
         );
         setEnrollments(learnerEnrollments);

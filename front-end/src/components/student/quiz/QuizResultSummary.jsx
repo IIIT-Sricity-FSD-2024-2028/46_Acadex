@@ -23,7 +23,7 @@ export default function QuizResultSummary({
   passingScore = 80,
   questionsList = [],
   selectedAnswers = {},
-  targetCourseId = 'crs-1',
+  targetCourseId,
   onRetake
 }) {
   const [showExplanations, setShowExplanations] = useState(false);
@@ -91,7 +91,7 @@ export default function QuizResultSummary({
             </Link>
           )}
           <Link
-            to="/student/course-progress"
+            to={targetCourseId ? `/student/course-progress/${targetCourseId}` : "/student/my-learning"}
             state={{ courseId: targetCourseId }}
             className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
           >

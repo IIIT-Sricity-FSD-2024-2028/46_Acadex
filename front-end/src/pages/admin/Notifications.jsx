@@ -7,7 +7,7 @@ export const Notifications = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/notifications', 'admin')
+    api.get('/notifications?limit=1000', 'admin')
       .then(data => { setNotifications(Array.isArray(data) ? data : (data?.items || [])); setLoading(false); })
       .catch(err => { console.error('Error fetching notifications:', err); setNotifications([]); setLoading(false); });
   }, []);

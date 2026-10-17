@@ -17,7 +17,7 @@ export const Enrollments = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/enrollments', 'admin')
+    api.get('/enrollments?limit=1000', 'admin')
       .then(data => {
         const list = Array.isArray(data) ? data : (data?.items || []);
         setEnrollments(list);

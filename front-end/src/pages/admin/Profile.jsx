@@ -13,7 +13,7 @@ export const Profile = () => {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api.get('/users/11')
+    api.get(`/users/${localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || ''}`)
       .then(user => {
         if (user) {
           setProfile({
@@ -29,7 +29,7 @@ export const Profile = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    api.patch('/users/11', { name: profile.name, email: profile.email })
+    api.patch(`/users/${localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || ''}`, { name: profile.name, email: profile.email })
       .then(() => {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
