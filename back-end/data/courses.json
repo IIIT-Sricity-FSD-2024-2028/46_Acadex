@@ -4,20 +4,20 @@
     "category": "Data Engineering",
     "level": "Beginner",
     "instructorId": "inst-1791911606628",
-    "instructorName": "Prof. Arthur Pendelton, Priya Nair",
-    "leadInstructorName": "Prof. Arthur Pendelton",
-    "organizationId": "org-101",
+    "instructorName": "Shivamani, Shameer Basha Shaik",
+    "leadInstructorName": "Shivamani",
+    "organizationId": "org-1",
     "instructors": [
       {
         "id": "inst-1791911606628",
-        "name": "Prof. Arthur Pendelton",
+        "name": "Shivamani",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
         "specialization": "Computer Science & AI"
       },
       {
         "id": "inst-1",
-        "name": "Priya Nair",
+        "name": "Shameer Basha Shaik",
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
         "specialization": "Full Stack Development & Python"
@@ -53,26 +53,27 @@
     "updatedAt": "2026-10-16T19:13:19.394Z",
     "coInstructorIds": [
       "inst-1"
-    ]
+    ],
+    "currency": "INR"
   },
   {
     "title": "Object Oriented Programming",
     "category": "Cloud Architecture",
     "level": "Intermediate",
     "instructorId": "inst-1791912292835",
-    "instructorName": "Prof. Alan Turing, Prof. Arthur Pendelton",
-    "leadInstructorName": "Prof. Alan Turing",
+    "instructorName": "Shameer Basha Shaik, Shivamani",
+    "leadInstructorName": "Shameer Basha Shaik",
     "instructors": [
       {
         "id": "inst-1791912292835",
-        "name": "Prof. Alan Turing",
+        "name": "Shameer Basha Shaik",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
         "specialization": "Computer Science & AI"
       },
       {
         "id": "inst-1791911606628",
-        "name": "Prof. Arthur Pendelton",
+        "name": "Shivamani",
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
         "specialization": "Computer Science & AI"
@@ -172,7 +173,9 @@
     "updatedAt": "2026-10-15T06:41:57.199Z",
     "coInstructorIds": [
       "inst-1791911606628"
-    ]
+    ],
+    "organizationId": "org-2",
+    "currency": "INR"
   },
   {
     "title": "Backend Development - 2345",
@@ -380,14 +383,15 @@
     "id": "cou-2238c587",
     "createdAt": "2026-09-03T06:25:51.044Z",
     "updatedAt": "2026-10-16T17:54:06.798Z",
-    "organizationId": "org-1"
+    "organizationId": "org-1",
+    "currency": "INR"
   },
   {
     "title": "Distributed Systems",
     "category": "Cloud Architecture",
     "level": "Beginner",
     "instructorId": "inst-6",
-    "instructorName": "Amara Patel, Elena Rostova, Prof. Arthur Pendelton",
+    "instructorName": "Amara Patel, Elena Rostova, Shivamani",
     "leadInstructorName": "Amara Patel",
     "instructors": [
       {
@@ -399,7 +403,7 @@
       },
       {
         "id": "inst-1791911606628",
-        "name": "Prof. Arthur Pendelton",
+        "name": "Shivamani",
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
         "specialization": "Computer Science & AI"
@@ -595,7 +599,8 @@
     ],
     "id": "cou-b00839da",
     "createdAt": "2026-09-03T06:10:44.700Z",
-    "updatedAt": "2026-10-14T18:17:38.058Z"
+    "updatedAt": "2026-10-14T18:17:38.058Z",
+    "currency": "INR"
   },
   {
     "title": "Theory of Computation",
@@ -809,28 +814,29 @@
     "id": "cou-55f52a5b",
     "createdAt": "2026-08-31T07:39:58.234Z",
     "updatedAt": "2026-10-16T12:08:00.528Z",
-    "organizationId": "org-2"
+    "organizationId": "org-2",
+    "currency": "INR"
   },
   {
     "id": "crs-1",
     "organizationId": "org-1",
-    "organizationName": "Meridian Tech Institute",
+    "organizationName": "IIIT SRICITY",
     "title": "Full Stack Web Development with React & Node.js",
     "category": "Web Development",
     "instructorId": "inst-1",
-    "instructorName": "Priya Nair",
-    "leadInstructorName": "Priya Nair",
+    "instructorName": "Shameer Basha Shaik",
+    "leadInstructorName": "Shameer Basha Shaik",
     "instructors": [
       {
         "id": "inst-1",
-        "name": "Priya Nair",
+        "name": "Shameer Basha Shaik",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
         "specialization": "Full Stack Development & Python"
       },
       {
         "id": "inst-2",
-        "name": "Daniel Osei",
+        "name": "Shivamani",
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
         "specialization": "Cloud Infrastructure & DevOps"
@@ -1518,22 +1524,23 @@
     "completionRate": 0,
     "createdAt": "2026-08-15T10:00:00.000Z",
     "updatedAt": "2026-10-16T12:18:04.081Z",
-    "revenue": 4999
+    "revenue": 4999,
+    "currency": "INR"
   },
   {
     "id": "crs-2",
     "organizationId": "org-1",
-    "organizationName": "Meridian Tech Institute",
+    "organizationName": "IIIT SRICITY",
     "title": "Cloud Infrastructure & DevOps with AWS",
     "category": "DevOps",
     "level": "Intermediate",
     "instructorId": "inst-2",
-    "instructorName": "Daniel Osei",
-    "leadInstructorName": "Daniel Osei",
+    "instructorName": "Shivamani",
+    "leadInstructorName": "Shivamani",
     "instructors": [
       {
         "id": "inst-2",
-        "name": "Daniel Osei",
+        "name": "Shivamani",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
         "specialization": "Cloud Infrastructure & DevOps"
@@ -2076,22 +2083,23 @@
     ],
     "completionRate": 0,
     "createdAt": "2026-09-01T10:00:00.000Z",
-    "updatedAt": "2026-10-16T17:42:22.158Z"
+    "updatedAt": "2026-10-16T17:42:22.158Z",
+    "currency": "INR"
   },
   {
     "id": "crs-4",
     "organizationId": "org-2",
-    "organizationName": "QuantLearn Academy",
+    "organizationName": "IISC BANGALORE",
     "title": "Machine Learning Fundamentals",
     "category": "Machine Learning",
     "level": "Beginner",
     "instructorId": "inst-3",
-    "instructorName": "Elena Vasquez",
-    "leadInstructorName": "Elena Vasquez",
+    "instructorName": "Raghuveer",
+    "leadInstructorName": "Raghuveer",
     "instructors": [
       {
         "id": "inst-3",
-        "name": "Elena Vasquez",
+        "name": "Raghuveer",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
         "specialization": "Machine Learning & Data Science"
@@ -2688,7 +2696,8 @@
       }
     ],
     "createdAt": "2026-02-15T10:00:00.000Z",
-    "updatedAt": "2026-10-15T13:09:29.729Z"
+    "updatedAt": "2026-10-15T13:09:29.729Z",
+    "currency": "INR"
   },
   {
     "id": "crs-301",
@@ -3120,7 +3129,8 @@
     ],
     "createdAt": "2026-03-01T10:00:00.000Z",
     "updatedAt": "2026-10-15T13:13:55.104Z",
-    "organizationId": "org-2"
+    "organizationId": "org-2",
+    "currency": "INR"
   },
   {
     "id": "crs-401",
@@ -3523,29 +3533,30 @@
     ],
     "createdAt": "2026-04-10T10:00:00.000Z",
     "updatedAt": "2026-10-15T13:13:55.105Z",
-    "organizationId": "org-2"
+    "organizationId": "org-2",
+    "currency": "INR"
   },
   {
     "id": "crs-5",
     "organizationId": "org-2",
-    "organizationName": "QuantLearn Academy",
+    "organizationName": "IISC BANGALORE",
     "title": "Applied Data Science with Python",
     "category": "Data Science",
     "level": "Intermediate",
     "instructorId": "inst-3",
-    "instructorName": "Elena Vasquez",
-    "leadInstructorName": "Elena Vasquez",
+    "instructorName": "Raghuveer",
+    "leadInstructorName": "Raghuveer",
     "instructors": [
       {
         "id": "inst-3",
-        "name": "Elena Vasquez",
+        "name": "Raghuveer",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
         "specialization": "Machine Learning & Data Science"
       },
       {
         "id": "inst-4",
-        "name": "James Holloway",
+        "name": "Raghuveer",
         "role": "Co-Instructor",
         "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
         "specialization": "Cybersecurity & Network Security"
@@ -4045,22 +4056,23 @@
     ],
     "completionRate": 0,
     "createdAt": "2026-08-05T10:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
+    "updatedAt": "2026-10-15T08:00:00.000Z",
+    "currency": "INR"
   },
   {
     "id": "crs-6",
     "organizationId": "org-2",
-    "organizationName": "QuantLearn Academy",
+    "organizationName": "IISC BANGALORE",
     "title": "Zero Trust Network Security Architecture",
     "category": "Cybersecurity",
     "level": "Intermediate",
     "instructorId": "inst-4",
-    "instructorName": "James Holloway",
-    "leadInstructorName": "James Holloway",
+    "instructorName": "Raghuveer",
+    "leadInstructorName": "Raghuveer",
     "instructors": [
       {
         "id": "inst-4",
-        "name": "James Holloway",
+        "name": "Raghuveer",
         "role": "Lead Instructor",
         "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
         "specialization": "Cybersecurity & Network Security"
@@ -4560,6 +4572,37 @@
     ],
     "completionRate": 0,
     "createdAt": "2026-09-15T10:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
+    "updatedAt": "2026-10-15T08:00:00.000Z",
+    "currency": "INR"
+  },
+  {
+    "id": "submission-data-engineering",
+    "title": "Data Engineering Foundations",
+    "category": "Computer Science",
+    "level": "Intermediate",
+    "organizationId": "org-1",
+    "instructorId": "inst-1",
+    "status": "Pending Approval",
+    "description": "Course submission awaiting administrator review.",
+    "modules": [],
+    "price": 0,
+    "currency": "INR",
+    "createdAt": "2026-10-17T05:43:40.167867+00:00",
+    "submittedAt": "2026-10-17T05:43:40.167867+00:00"
+  },
+  {
+    "id": "submission-secure-systems",
+    "title": "Secure Systems Design",
+    "category": "Computer Science",
+    "level": "Intermediate",
+    "organizationId": "org-2",
+    "instructorId": "inst-3",
+    "status": "Pending Approval",
+    "description": "Course submission awaiting administrator review.",
+    "modules": [],
+    "price": 0,
+    "currency": "INR",
+    "createdAt": "2026-10-17T05:43:40.167867+00:00",
+    "submittedAt": "2026-10-17T05:43:40.167867+00:00"
   }
 ]

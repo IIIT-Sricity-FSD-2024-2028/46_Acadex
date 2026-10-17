@@ -22,6 +22,7 @@ import {
   Shield
 } from 'lucide-react';
 import { api } from '../services/api';
+import { Brand, LearningVisual } from '../components/brand/Brand';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -168,7 +169,7 @@ export default function SignUp() {
           localStorage.removeItem('user_organization_name');
         }
 
-        setSuccessMsg(`Welcome to EduSphere, ${name}! Your ${role} account has been created.`);
+        setSuccessMsg(`Welcome to Acadex, ${name}! Your ${role} account has been created.`);
 
         setTimeout(() => {
           if (role === 'Student') navigate('/student/dashboard');
@@ -194,19 +195,12 @@ export default function SignUp() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-slate-900 selection:bg-blue-600 selection:text-white flex flex-col justify-between font-sans">
+    <div className="academy-auth min-h-screen bg-[#FAF7F2] text-slate-900 selection:bg-blue-600 selection:text-white flex flex-col justify-between font-sans">
       
       {/* Top Header */}
       <header className="border-b border-[#E5DDD2] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-blue-900 flex items-center justify-center font-black text-white text-base shadow-sm group-hover:scale-105 transition-transform">
-              E
-            </div>
-            <span className="font-extrabold text-base tracking-tight text-slate-900">
-              Edu<span className="text-blue-600">Sphere</span>
-            </span>
-          </Link>
+          <Brand />
 
           {/* Role-Aware Top-Right Sign In Link */}
           <div className="flex items-center gap-3 text-xs sm:text-sm">
@@ -240,16 +234,16 @@ export default function SignUp() {
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
-                {role === 'Student' && 'Join 120,000+ ambitious learners & scholars'}
+                {role === 'Student' && 'Your next chapter starts here'}
                 {role === 'Instructor' && 'Publish courses & mentor global students'}
                 {role === 'Organization' && 'Upskill and govern your enterprise workforce'}
                 {role === 'Admin' && 'Operations Moderation & Course Approvals'}
                 {role === 'SuperAdmin' && 'Global Operations & System Approvals'}
               </h2>
               <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-                {role === 'Student' && 'Gain verified certificates, learn from top university faculty, and accelerate your career.'}
-                {role === 'Instructor' && 'Earn revenue, build interactive syllabi, assess quizzes, and issue accredited certificates.'}
-                {role === 'Organization' && 'Assign seat licenses, monitor completion telemetry, and orchestrate custom academies.'}
+                {role === 'Student' && 'Explore courses, track your progress, and build skills at your own pace.'}
+                {role === 'Instructor' && 'Organize course content, create assessments, and support your learners.'}
+                {role === 'Organization' && 'Manage your teaching teams, courses, and learner enrollments.'}
                 {role === 'Admin' && 'Platform administrator privileges are managed under operations governance.'}
                 {role === 'SuperAdmin' && 'Platform super administrator privileges are managed under restricted institutional governance.'}
               </p>
@@ -257,9 +251,9 @@ export default function SignUp() {
 
             <div className="space-y-4 my-6">
               {[
-                { title: 'World-Class Curriculum', desc: 'Accredited courses taught by Stanford, MIT, and leading industry faculty.' },
+                { title: 'A place to keep growing', desc: 'Explore courses published by instructors and organizations on the platform.' },
                 { title: 'Hands-on Projects & Quizzes', desc: 'Real-world coding exercises, graded assessments, and portfolio items.' },
-                { title: 'Shareable Verified Credentials', desc: 'Direct 1-click LinkedIn credential badges and verified digital certificates.' },
+                { title: 'Your achievements, together', desc: 'View completed-course certificates and their verification links.' },
                 { title: 'Role-Based Architecture', desc: 'Dedicated studios for Students, Educators, and Organization Admins.' }
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-3 text-xs">
@@ -275,8 +269,8 @@ export default function SignUp() {
             </div>
 
             <div className="p-4 rounded-2xl bg-[#F4EFE6] border border-[#E5DDD2] text-xs text-slate-600">
-              <span className="font-bold text-slate-800 block mb-1">100% Free & Open To Join</span>
-              Audit hundreds of courses with zero fees, or upgrade anytime for certificates and masterclasses.
+              <span className="font-bold text-slate-800 block mb-1">Find your learning community</span>
+              Browse published courses after signing in. Enrollment and access depend on the course you choose.
             </div>
           </div>
 
@@ -680,7 +674,7 @@ export default function SignUp() {
                       </>
                     ) : (
                       <>
-                        <span>Join EduSphere as {role === 'Organization' ? 'Organization Admin' : role}</span>
+                        <span>Join Acadex as {role === 'Organization' ? 'Organization Admin' : role}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -706,7 +700,7 @@ export default function SignUp() {
       {/* Footer */}
       <footer className="border-t border-[#E5DDD2] bg-[#FAF7F2] py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© 2026 EduSphere Global Inc. All rights reserved.</p>
+          <p>© 2026 Acadex Global Inc. All rights reserved.</p>
           <div className="flex items-center gap-4 text-slate-600">
             <Link to="/" className="hover:text-blue-600 transition-colors">Home</Link>
             <Link to="/student/explore" className="hover:text-blue-600 transition-colors">Course Catalog</Link>

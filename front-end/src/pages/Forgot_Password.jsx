@@ -16,6 +16,7 @@ import {
   Send
 } from 'lucide-react';
 import { api } from '../services/api';
+import { Brand, LearningVisual } from '../components/brand/Brand';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -132,19 +133,12 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-slate-900 selection:bg-blue-600 selection:text-white flex flex-col justify-between font-sans">
+    <div className="academy-auth min-h-screen bg-[#FAF7F2] text-slate-900 selection:bg-blue-600 selection:text-white flex flex-col justify-between font-sans">
       
       {/* Header */}
       <header className="border-b border-[#E5DDD2] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-blue-900 text-white flex items-center justify-center font-black text-sm shadow-xs group-hover:scale-105 transition-transform">
-              E
-            </div>
-            <span className="font-extrabold text-base tracking-tight text-slate-900">
-              Edu<span className="text-blue-600">Sphere</span>
-            </span>
-          </Link>
+          <Brand />
 
           <Link
             to="/signin"
@@ -173,7 +167,7 @@ export default function ForgotPassword() {
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1.5">
               {step === 1 && 'Enter your verified account email to receive a recovery code.'}
-              {step === 2 && `We have dispatched a 6-digit code to ${email}.`}
+              {step === 2 && `A recovery code has been requested for ${email}. Follow the instructions below.`}
               {step === 3 && 'Choose a strong new password meeting all complexity criteria.'}
               {step === 4 && 'You can now sign in with your updated credentials.'}
             </p>
@@ -234,7 +228,7 @@ export default function ForgotPassword() {
 
               <div className="p-3.5 bg-[#FAF7F2] border border-[#E5DDD2] rounded-xl text-xs text-slate-600">
                 <span className="font-bold text-slate-800 block mb-0.5">Account recovery</span>
-                Enter the email address associated with your EduSphere account. In local development, use the reset code configured by your backend.
+                Enter the email address associated with your Acadex account. In local development, use the reset code configured by your backend.
               </div>
 
               <button
@@ -462,7 +456,7 @@ export default function ForgotPassword() {
 
       {/* Footer */}
       <footer className="border-t border-[#E5DDD2] bg-[#FAF7F2] py-6 text-center text-xs text-slate-500">
-        <p>© 2026 EduSphere Global Inc. All rights reserved.</p>
+        <p>© 2026 Acadex Global Inc. All rights reserved.</p>
       </footer>
     </div>
   );

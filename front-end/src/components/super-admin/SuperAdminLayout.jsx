@@ -12,7 +12,7 @@ export const SuperAdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="academy-portal min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       
       {/* ───────────────────────────────────────────────────────────── */}
       {/* 1. LEFT SIDEBAR (Student & Coursera Design System)             */}
@@ -29,36 +29,7 @@ export const SuperAdminLayout = () => {
           <Outlet />
         </main>
 
-        {/* Academic Footer matching Student, Instructor & Admin */}
-        <footer className="bg-white border-t border-slate-200/90 mt-auto w-full">
-          <div className="w-full max-w-[1560px] mx-auto px-4 md:px-8 lg:px-10 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#0056D2] flex items-center justify-center text-white">
-                  <Shield className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-bold text-xs text-slate-800">Acadex Platform Super Administration</span>
-              </div>
-              <span className="hidden sm:inline text-slate-300 text-xs">•</span>
-              <p className="text-xs text-slate-500">
-                © 2026 Acadex Enterprise. Level 1 Platform Governance, 85/15 Commission & Tenant Management.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-6 text-xs text-slate-500 font-medium">
-              <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Root Governance Active
-              </span>
-              <Link to="/super-admin/payments" className="hover:text-slate-900 transition-colors">
-                Treasury
-              </Link>
-              <Link to="/super-admin/settings" className="hover:text-slate-900 transition-colors">
-                Settings
-              </Link>
-            </div>
-          </div>
-        </footer>
+        <footer className="admin-footer"><span>Acadex / Platform administration</span><Link to="/super-admin/settings">Settings</Link></footer>
       </div>
     </div>
   );

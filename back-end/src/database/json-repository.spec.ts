@@ -8,14 +8,17 @@ describe('JsonRepository', () => {
   let repo: JsonRepository<any>;
   const testDataDir = path.resolve(process.cwd(), './test-repo-spec');
 
+  const previousDataDir=process.env.DATA_DIR;
   beforeAll(async () => {
     process.env.DATA_DIR = './test-repo-spec';
     dbService = new JsonDatabaseService();
     await dbService.onModuleInit();
+    await dbService.setCollection('courses',[{id:'cloud',title:'Cloud Architecture',category:'Cloud Architecture',price:85,status:'Published'},{id:'systems',title:'Systems',category:'Engineering',price:100,status:'Draft'}]);
     repo = new JsonRepository('courses', dbService);
   });
 
   afterAll(async () => {
+    if(previousDataDir===undefined) delete process.env.DATA_DIR; else process.env.DATA_DIR=previousDataDir;
     if (fs.existsSync(testDataDir)) {
       await fs.promises.rm(testDataDir, { recursive: true, force: true });
     }

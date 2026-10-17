@@ -4,7 +4,7 @@
   "private": true,
   "description": "Unified Enterprise EdTech Platform (4 Actors: Student, Instructor, Organization, Admin)",
   "scripts": {
-    "dev": "npm run dev --prefix front-end",
+    "dev": "node scripts/dev.mjs",
     "build": "npm run build --prefix back-end && npm run build --prefix front-end",
     "backend:dev": "npm run start:dev --prefix back-end",
     "backend:build": "npm run build --prefix back-end",

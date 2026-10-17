@@ -41,18 +41,7 @@ export function Analytics() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Studio Performance & Analytics</h1>
         </div>
-        <div className="flex gap-3">
-          <select className="border border-slate-200 rounded-xl text-xs font-semibold px-3 py-2 bg-white focus:ring-2 focus:ring-[#0056D2]/20 focus:border-[#0056D2] outline-none transition-all shadow-2xs text-slate-700">
-            <option>Last 30 Days</option>
-            <option>Last 6 Months</option>
-            <option>Last Year</option>
-            <option>All Time</option>
-          </select>
-          <Button variant="outline" size="sm" className="shadow-2xs bg-white hover:bg-slate-50 font-semibold">
-            <Download className="w-4 h-4 mr-2" /> 
-            Export Report
-          </Button>
-        </div>
+
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">

@@ -1,100 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DataTable } from '../../components/admin/DataTable';
-import { SearchBar } from '../../components/admin/SearchBar';
-import { FilterBar } from '../../components/admin/FilterBar';
+import React, { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { BookOpen, Building2, Users, ArrowUpRight, RefreshCw } from 'lucide-react';
 import { Pagination } from '../../components/admin/Pagination';
 import { StatusBadge } from '../../components/admin/StatusBadge';
-import { api } from '../../utils/api';
-
+import { AdminHeader, AdminEmpty, AdminSearch, AdminDataState } from '../../components/admin/AdminUI';
+import { useRemoteData } from '../../hooks/useRemoteData';
+import { money, currencyLabel } from '../../utils/adminDisplay';
 export const Courses = () => {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get('/courses?limit=1000', 'admin')
-      .then(data => {
-        setCourses(Array.isArray(data) ? data : (data?.items || []));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching courses:', err);
-        setCourses([]);
-        setLoading(false);
-      });
-  }, []);
-
-  const filteredCourses = (courses || []).filter(course => {
-    const matchesSearch = course.title?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter ? course.status === statusFilter : true;
-    return matchesSearch && matchesStatus;
-  });
-
-  const columns = [
-    { header: 'Course', accessor: 'title' },
-    { header: 'Organization', accessor: 'organization' },
-    { header: 'Category', accessor: 'category' },
-    { header: 'Price', cell: (row) => `$${row.price}` },
-    { header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
-    { 
-      header: 'Actions', 
-      cell: (row) => (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/admin/courses/${row.id}`);
-          }}
-          className="text-[#0056D2] hover:text-[#00419E] font-semibold text-xs"
-        >
-          View
-        </button>
-      )
-    },
-  ];
-
-  const statusOptions = [
-    { label: 'Published', value: 'Published' },
-    { label: 'Pending Approval', value: 'Pending Approval' },
-    { label: 'Draft', value: 'Draft' },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Courses</h1>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/80">
-          <SearchBar placeholder="Search courses..." value={searchTerm} onChange={setSearchTerm} />
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <FilterBar 
-              options={statusOptions} 
-              value={statusFilter} 
-              onChange={setStatusFilter} 
-              placeholder="All Statuses" 
-            />
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading courses...</div>
-        ) : (
-          <DataTable 
-            columns={columns} 
-            data={filteredCourses} 
-            onRowClick={(row) => navigate(`/admin/courses/${row.id}`)}
-          />
-        )}
-        
-        <Pagination currentPage={page} totalPages={1} onPageChange={setPage} />
-      </div>
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [params, setParams] = useSearchParams();
+    const status = params.get('status') || '';
+    const state = useRemoteData(`/admin/courses?${new URLSearchParams({ search, status, page, limit: 12 })}`);
+    return <div className="admin-page">
+    <AdminHeader eyebrow="Learning management" title="Course library" description="Every course, its teaching team, and its progress in one place.">
+    <Link to="/admin/courses/approval" className="admin-button admin-button-primary">Review submissions<ArrowUpRight size={14}/>
+    </Link>
+    </AdminHeader>
+    <div className="admin-toolbar">
+    <AdminSearch value={search} onChange={v => { setSearch(v); setPage(1); }} label="Search courses" placeholder="Search courses, organizations or instructors…"/>
+    <select aria-label="Course status" value={status} onChange={e => { setParams(e.target.value ? { status: e.target.value } : {}); setPage(1); }}>
+    <option value="">All statuses</option>{[...new Set([status, ...(state.data?.statuses || [])].filter(Boolean))].map(s => <option key={s}>{s}</option>)}</select>
+    <button className="admin-icon-button" aria-label="Refresh courses" disabled={state.loading} onClick={state.refresh}>
+    <RefreshCw size={16}/>
+    </button>
     </div>
-  );
+    <AdminDataState {...state}/>{!state.loading && !state.error && <>
+        <p className="admin-count-label">
+        <b>{state.data?.total || 0}</b> courses found</p>
+        <div className="admin-grid">{state.data?.items?.map(c => <article key={c.id} className="admin-card admin-record admin-card-link">
+            <div className="admin-record-top">
+            <span className="admin-icon-tile admin-icon-green">
+            <BookOpen size={20}/>
+            </span>
+            <StatusBadge status={c.status || 'Not recorded'}/>
+            </div>
+            <p className="admin-record-category">{c.category || 'Uncategorized'}</p>
+            <h2 className="text-sm font-semibold leading-6 mt-2">{c.title}</h2>
+            <p className="admin-record-meta">
+            <Building2 size={13} className="shrink-0"/>{c.organizationName || 'Organization not recorded'}</p>
+            <p className="admin-record-meta">
+            <Users size={13} className="shrink-0"/>{c.instructors?.map(i => i.name).join(', ') || 'No instructors assigned'}</p>
+            <dl className="admin-record-info">
+            <div>
+            <dt>Enrollments</dt>
+            <dd>{c.enrolledCount}</dd>
+            </div>
+            <div>
+            <dt>Curriculum</dt>
+            <dd>{c.modulesCount} modules · {c.lessonsCount} lessons</dd>
+            </div>
+            </dl>
+            <div className="admin-record-footer">
+            <div>
+            <strong className="font-medium">{money(c.price, c.currency)}</strong>
+            <small className="block text-[9px] text-[#95a18e] mt-1">{currencyLabel(c.currency)}</small>
+            </div>
+            <Link to={`/admin/courses/${c.id}`}>View course<ArrowUpRight size={15}/>
+            </Link>
+            </div>
+            </article>)}</div>{!state.data?.items?.length && <AdminEmpty icon={BookOpen} title="No courses found" description="Try a different search or select another course status."/>}<Pagination currentPage={page} totalPages={state.data?.totalPages || 1} onPageChange={setPage}/>
+        </>}</div>;
 };

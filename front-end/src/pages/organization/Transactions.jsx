@@ -44,15 +44,7 @@ export default function Transactions() {
   return (
     <OrgLayout
       breadcrumbs={[{ label: 'Transactions' }]}
-      actions={
-        <button
-          onClick={handleExportCSV}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold transition-all border border-outline-variant"
-        >
-          <Download className="w-4 h-4 text-primary" />
-          <span>Export Ledger CSV</span>
-        </button>
-      }
+
     >
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

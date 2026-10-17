@@ -8,7 +8,7 @@ import api from '../../services/api';
 import { useStudent } from '../../context/StudentContext';
 
 const FIELDS = [
-  { name: 'name', label: 'Full name', max: 80, placeholder: 'e.g. Arjun Sharma' },
+  { name: 'name', label: 'Full name', max: 80, placeholder: 'Your full name' },
   { name: 'title', label: 'Headline', max: 80, placeholder: 'e.g. Final-year CS student' },
   { name: 'location', label: 'Location', max: 80, placeholder: 'e.g. Bengaluru, India' },
   { name: 'phone', label: 'Phone', max: 20, placeholder: 'e.g. +91 98765 43210' },

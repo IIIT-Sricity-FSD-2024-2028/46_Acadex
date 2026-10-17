@@ -56,58 +56,10 @@ async function request(endpoint, options = {}) {
   }
 }
 
-// ── Mock credential store (mirrors users.json) ──────────────────
-const MOCK_CREDENTIALS = [
-  { email: 'arjun.sharma@email.com',       password: 'Password123!', role: 'Student',      name: 'Arjun Sharma',            id: 'usr-5' },
-  { email: 'sofia.reyes@email.com',        password: 'Password123!', role: 'Student',      name: 'Sofia Reyes',             id: 'usr-6' },
-  { email: 'priya.nair@meridiantech.io',   password: 'Password123!', role: 'Instructor',   name: 'Priya Nair',              id: 'usr-1', instructorId: 'inst-1', organizationId: 'org-1', organizationName: 'Meridian Tech Institute' },
-  { email: 'daniel.osei@meridiantech.io',  password: 'Password123!', role: 'Instructor',   name: 'Daniel Osei',             id: 'usr-2', instructorId: 'inst-2', organizationId: 'org-1', organizationName: 'Meridian Tech Institute' },
-  { email: 'elena.vasquez@quantlearn.io',  password: 'Password123!', role: 'Instructor',   name: 'Elena Vasquez',           id: 'usr-3', instructorId: 'inst-3', organizationId: 'org-2', organizationName: 'QuantLearn Academy' },
-  { email: 'james.holloway@quantlearn.io', password: 'Password123!', role: 'Instructor',   name: 'James Holloway',          id: 'usr-4', instructorId: 'inst-4', organizationId: 'org-2', organizationName: 'QuantLearn Academy' },
-  { email: 'admin@meridiantech.io',        password: 'Password123!', role: 'Organization', name: 'Meridian Tech Institute', id: 'usr-7', organizationId: 'org-1', organizationName: 'Meridian Tech Institute' },
-  { email: 'admin@quantlearn.io',          password: 'Password123!', role: 'Organization', name: 'QuantLearn Academy',      id: 'usr-8', organizationId: 'org-2', organizationName: 'QuantLearn Academy' },
-  { email: 'admin@platform.io',            password: 'Password123!', role: 'Admin',        name: 'Platform Admin',          id: 'usr-9' },
-  { email: 'superadmin@platform.io',       password: 'Password123!', role: 'SuperAdmin',   name: 'Platform Super Admin',    id: 'usr-10' },
-];
-
-function mockLogin(email, password, role) {
-  const normRole = (r) => String(r || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
-  const targetRole = normRole(role);
-
-  const match = MOCK_CREDENTIALS.find(
-    (c) =>
-      c.email.toLowerCase() === email.toLowerCase() &&
-      c.password === password &&
-      (normRole(c.role) === targetRole || (normRole(c.role) === 'superadmin' && targetRole === 'admin'))
-  );
-  if (!match) {
-    const err = new Error('Invalid credentials. Please check your email and password.');
-    err.status = 401;
-    throw err;
-  }
-  const resolvedRole = targetRole === 'superadmin' ? 'SuperAdmin' : match.role;
-  return {
-    token: `jwt-mock-${resolvedRole.toLowerCase()}-${Date.now()}`,
-    user: {
-      id: match.id,
-      email: match.email,
-      name: match.name,
-      role: resolvedRole,
-      ...(match.instructorId ? { instructorId: match.instructorId } : {}),
-      ...(match.organizationId ? { organizationId: match.organizationId } : {}),
-      ...(match.organizationName ? { organizationName: match.organizationName } : {}),
-    },
-  };
-}
-
 export const api = {
   // 1. Authentication & Session
   auth: {
-    login: (email, password, role) =>
-      request('/auth/login', { method: 'POST', body: { email, password, role } }).catch(error => {
-        if (error.status) throw error;
-        return mockLogin(email, password, role);
-      }),
+    login: (email,password,role) => request('/auth/login',{method:'POST',body:{email,password,role}}),
     register: (data) => request('/auth/register', { method: 'POST', body: data }),
     getMe: (userId) => request('/auth/me', { headers: { 'x-user-id': userId } }),
     changePassword: (currentPassword, newPassword, userId) =>
@@ -145,15 +97,17 @@ export const api = {
     getMyReviews: () => request('/reviews/my'),
     getMyDisputes: () => request('/disputes/my'),
     createDispute: (data) => request('/disputes', { method: 'POST', body: data }),
-    addDisputeComment: (disputeId, message) =>
-      request(`/disputes/${disputeId}/comments`, {
+    addDisputeComment: async (disputeId, message) => {
+      const identity=await request('/workspace/session');
+      return request(`/disputes/${disputeId}/comments`, {
         method: 'POST',
         body: {
-          author: localStorage.getItem('user_name') || 'Arjun Sharma',
+          author: identity.name,
           message,
           isAdmin: false,
         },
-      }),
+      });
+    },
   },
 
   // 3. Courses, Modules, Lessons & Curriculum

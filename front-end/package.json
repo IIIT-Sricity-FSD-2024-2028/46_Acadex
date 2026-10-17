@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:signin": "node scripts/check-signin.cjs",
-    "test:routes": "node scripts/check-routes.cjs"
+    "test:routes": "node scripts/check-routes.cjs",
+    "test:public": "node scripts/check-public-pages.cjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

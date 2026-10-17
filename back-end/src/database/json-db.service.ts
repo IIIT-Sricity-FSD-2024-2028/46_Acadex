@@ -251,9 +251,24 @@ export class JsonDatabaseService implements OnModuleInit {
     });
 
     await prevLock;
+    const snapshot = new Map<string, any[]>();
     try {
-      const result = await action(this);
-      return result;
+      const files = await fs.promises.readdir(this.dataDir);
+      for (const file of files.filter(file => file.endsWith('.json'))) {
+        const name = file.slice(0, -5);
+        snapshot.set(name, await this.getCollection(name));
+      }
+      try {
+        return await action(this);
+      } catch (error) {
+        for (const [name, rows] of snapshot) await this.setCollection(name, rows);
+        const currentFiles = await fs.promises.readdir(this.dataDir);
+        for (const file of currentFiles.filter(file => file.endsWith('.json') && !snapshot.has(file.slice(0, -5)))) {
+          await fs.promises.unlink(path.join(this.dataDir, file));
+          this.memoryStore.delete(file.slice(0, -5));
+        }
+        throw error;
+      }
     } finally {
       resolveLock!();
     }

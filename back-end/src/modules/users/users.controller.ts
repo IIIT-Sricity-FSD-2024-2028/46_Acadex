@@ -18,8 +18,6 @@ export class UsersController {
   @Get('activity')
   getActivity() { return this.usersService.getActivity(); }
 
-  @Post('activity')
-  recordActivity(@Body() data: any) { return this.usersService.recordActivity(data); }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })

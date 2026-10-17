@@ -118,16 +118,17 @@ export default function StudentDisputes() {
 
   const handleCreateDispute = async (e) => {
     e.preventDefault();
+    if (!student?.id) return addToast('Your profile is still loading. Please retry.', 'warning');
     if (!form.subject.trim()) return addToast('Please enter an issue subject', 'warning');
     if (!form.description.trim()) return addToast('Please provide a detailed description', 'warning');
 
     setSubmitting(true);
     try {
       await api.student.createDispute({
-        raisedBy: student?.name || 'Arjun Sharma',
-        raisedById: student?.id || 'lrn-1',
-        learnerId: student?.id || 'lrn-1',
-        studentId: student?.id || 'lrn-1',
+        raisedBy: student.name,
+        raisedById: student.id,
+        learnerId: student.id,
+        studentId: student.id,
         raisedByRole: 'Student',
         subject: form.subject.trim(),
         description: form.description.trim(),

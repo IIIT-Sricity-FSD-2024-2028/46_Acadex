@@ -20,7 +20,8 @@ export class OrganizationService {
     private readonly requestsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
     private readonly notifsRepo: JsonRepository<any>,
-    @Inject(REPOSITORY_TOKENS.USERS) private readonly usersRepo: JsonRepository<any>
+    @Inject(REPOSITORY_TOKENS.USERS) private readonly usersRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.TRANSACTIONS) private readonly transactionsRepo: JsonRepository<any>
   ) { }
 
   private async resolveOrg(userId?: string, userEmail?: string) {
@@ -102,12 +103,10 @@ export class OrganizationService {
       // Revenue is always calculated from the number of learners and the price
       // of the course they enrolled in; the old course/organization revenue
       // values are deliberately not used as an input.
-      const totalRevenue = Math.round(organizationCourses.reduce(
-        (sum: number, course: any) =>
-          sum + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
-        0,
-      ));
-      const monthlyRevenue = Math.round(totalRevenue * 0.3);
+      const payments=(await this.transactionsRepo.find()).filter(t=>t.type==='Payment'&&['Completed','Paid','Successful'].includes(t.status)&&organizationCourses.some(c=>c.id===t.courseId));
+      const totalRevenue=payments.reduce((sum,t)=>sum+(Number(t.amount)||0),0);
+      const now=new Date();
+      const monthlyRevenue=payments.filter(t=>{const d=new Date(t.createdAt||t.date);return d.getUTCFullYear()===now.getUTCFullYear()&&d.getUTCMonth()===now.getUTCMonth();}).reduce((sum,t)=>sum+(Number(t.amount)||0),0);
       if (
         org.coursesCount === coursesCount &&
         org.learnersCount === learnerIds.size &&
@@ -184,10 +183,10 @@ export class OrganizationService {
     const activeEnrollments = enrollments.filter(
       (enrollment) => enrollment.status === 'Active' && (enrollment.progress || 0) < 100,
     ).length;
-    const annualRevenue = Math.round(courses.reduce(
-      (sum, course) => sum + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
-      0,
-    ));
+    const payments=(await this.transactionsRepo.find()).filter(t=>t.type==='Payment'&&['Completed','Paid','Successful'].includes(t.status)&&courseIds.has(t.courseId));
+    const annualRevenue=payments.reduce((sum,t)=>sum+(Number(t.amount)||0),0);
+    const now=new Date();
+    const monthlyRevenue=payments.filter(t=>{const d=new Date(t.createdAt||t.date);return d.getUTCFullYear()===now.getUTCFullYear()&&d.getUTCMonth()===now.getUTCMonth();}).reduce((sum,t)=>sum+(Number(t.amount)||0),0);
     const ratedCourses = courses.filter((course) => Number(course.rating) > 0);
 
     return {
@@ -201,12 +200,12 @@ export class OrganizationService {
       pendingRequests,
       unreadNotifications: unreadNotifs,
       annualRevenue,
-      monthlyRevenue: Math.round(annualRevenue * 0.3),
+      monthlyRevenue,
       completionRate: enrollments.length ? Math.round((completedEnrollments / enrollments.length) * 100) : null,
       averageRating: ratedCourses.length
         ? Number((ratedCourses.reduce((sum, course) => sum + Number(course.rating), 0) / ratedCourses.length).toFixed(1))
         : null,
-      currency: 'USD',
+      currency: org.currency || null,
     };
   }
 

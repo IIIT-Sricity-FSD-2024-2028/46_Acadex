@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
+import { JsonDatabaseService } from '../../database/json-db.service';
 
 @Injectable()
 export class AnalyticsService {
   constructor(
+    private readonly db: JsonDatabaseService,
     @Inject(REPOSITORY_TOKENS.COURSES)
     private readonly coursesRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.LEARNERS)
@@ -45,7 +47,7 @@ export class AnalyticsService {
       instructors = instructors.filter(i => i.organizationId === organizationId);
       users = users.filter(u => u.organizationId === organizationId || learners.some(l => l.userId === u.id));
     }
-    const paid = transactions.filter(t => ['completed', 'paid', 'success', 'successful'].includes(String(t.status).toLowerCase()));
+    const paid = transactions.filter(t => t.type==='Payment' && ['completed', 'paid', 'success', 'successful'].includes(String(t.status).toLowerCase()));
     const grossRevenue = paid.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
     const categoryRevenueMap: Record<string, { count: number; revenue: number; seats: number }> = {};
@@ -56,7 +58,7 @@ export class AnalyticsService {
       }
       categoryRevenueMap[cat].count += 1;
       categoryRevenueMap[cat].revenue += paid.filter(t => t.courseId === c.id || (!t.courseId && (t.courseTitle || t.course) === c.title)).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-      categoryRevenueMap[cat].seats += c.enrolledCount || 0;
+      categoryRevenueMap[cat].seats += enrollments.filter(e=>e.courseId===c.id).length;
     }
 
     const categoryBreakdown = Object.entries(categoryRevenueMap).map(([category, stats]) => ({
@@ -93,7 +95,9 @@ export class AnalyticsService {
     const orgCount = users.filter((u) => u.role === 'Organization').length;
     const adminCount = users.filter((u) => u.role === 'Admin' || u.role === 'Super Admin').length;
 
+    const revenueTotals=[...new Set(paid.map(t=>t.currency||null))].map(currency=>({currency,amount:paid.filter(t=>(t.currency||null)===currency).reduce((sum,t)=>sum+(Number(t.amount)||0),0)}));
     return {
+      revenueTotals,
       stats: {
         totalUsers: users.length.toString(),
         totalLearners: studentCount.toString(),
@@ -102,7 +106,7 @@ export class AnalyticsService {
         adminsCount: adminCount.toString(),
         courses: courses.length.toString(),
         enrollments: enrollments.length.toString(),
-        totalRevenue: `₹${grossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        totalRevenue: revenueTotals.length===1?`${revenueTotals[0].currency||'Currency not recorded'} ${revenueTotals[0].amount.toFixed(2)}`:null,
         pendingApprovals: courses.filter((c) => c.status === 'Pending Approval' || c.status === 'Draft').length.toString(),
       },
       userGrowth: monthlyTrend,
@@ -134,7 +138,7 @@ export class AnalyticsService {
           name: inst.name,
           specialization: inst.specialization,
           revenueGenerated: inst.revenueGenerated || 0,
-          avgRating: inst.avgRating || 4.8,
+          avgRating: inst.avgRating ?? null,
           enrolledStudents: inst.enrolledStudents || 0,
         })),
     };
@@ -144,59 +148,12 @@ export class AnalyticsService {
     const [overview, users, orgs, disputes] = await Promise.all([
       this.getOverview(),
       this.usersRepo.find(),
-      this.orgRepo.find(),
+      this.db.getCollection<any>('organizations'),
       this.disputesRepo.find(),
     ]);
 
-    const totalGrossRevenue = overview.kpis?.totalRevenue ?? 0;
-    const orgShare85 = Math.round(totalGrossRevenue * 0.85);
-    const superAdminShare15 = Math.round(totalGrossRevenue * 0.15);
-
-    const escalations = disputes.filter(
-      (d) => d.status === 'Escalated' || d.status === 'Under Review' || d.priority === 'Urgent'
-    );
-
-    return {
-      ...overview,
-      systemHealth: {
-        status: 'Optimal',
-        uptime: '99.98%',
-        activeDatabase: 'JSON DB Simulation Engine',
-        version: '2.4.0',
-        activeCollections: 13,
-        persistencePath: './data/*.json',
-      },
-      revenueSplit: {
-        totalGrossRevenue,
-        orgShare85,
-        superAdminShare15,
-        orgPercentage: 85,
-        superAdminPercentage: 15,
-        formattedGross: `₹${totalGrossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        formattedOrgShare: `₹${orgShare85.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        formattedSuperAdminShare: `₹${superAdminShare15.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      },
-      rolesBreakdown: {
-        superAdmins: users.filter((u) => u.role === 'Super Admin').length,
-        admins: users.filter((u) => u.role === 'Admin').length,
-        organizations: orgs.length || users.filter((u) => u.role === 'Organization').length,
-        instructors: users.filter((u) => u.role === 'Instructor').length,
-        students: users.filter((u) => u.role === 'Student' || u.role === 'Learner').length,
-      },
-      escalationsSummary: {
-        total: escalations.length,
-        urgentCount: escalations.filter((e) => e.priority === 'Urgent').length,
-        highCount: escalations.filter((e) => e.priority === 'High').length,
-        items: escalations.slice(0, 5),
-      },
-      auditLogs: [
-        { id: 'log-1', action: 'Global system backup', user: 'Platform Super Admin', timestamp: '10 mins ago', status: 'Success' },
-        { id: 'log-2', action: 'Revenue split settlement finalized (85% Org / 15% Platform)', user: 'Platform Super Admin', timestamp: '35 mins ago', status: 'Success' },
-        { id: 'log-3', action: 'New Admin role assigned to operational supervisor', user: 'Platform Super Admin', timestamp: '1 hour ago', status: 'Success' },
-        { id: 'log-4', action: 'Organization verification approved for MIT', user: 'Operational Admin', timestamp: '3 hours ago', status: 'Success' },
-        { id: 'log-5', action: 'Escalation ticket DSP-2026-068 reviewed', user: 'Platform Super Admin', timestamp: '5 hours ago', status: 'Under Review' },
-      ],
-    };
+    const activity=await this.db.getCollection<any>('admin_activity');
+    return {...overview, rolesBreakdown:{superAdmins:users.filter(u=>String(u.role).toLowerCase().replace(/\s/g,'')==='superadmin').length,admins:users.filter(u=>u.role==='Admin').length,organizations:orgs.length,instructors:users.filter(u=>u.role==='Instructor').length,students:users.filter(u=>['Student','Learner'].includes(u.role)).length},openDisputes:disputes.filter(d=>!['Resolved','Rejected'].includes(d.status)).length,auditLogs:activity.sort((a,b)=>(Date.parse(b.createdAt||b.resolvedAt)||0)-(Date.parse(a.createdAt||a.resolvedAt)||0))};
   }
 
   async getInstructorAnalytics(instructorId?: string) {
@@ -246,11 +203,11 @@ export class AnalyticsService {
 
     // Real total earnings from transactions
     const totalEarningsNum = transactions
-      .filter((t) => (t.status === 'Paid' || t.status === 'Completed' || t.type === 'enrollment') && Number(t.amount) > 0)
+      .filter((t) => t.type==='Payment' && ['paid','completed','success','successful'].includes(String(t.status).toLowerCase()) && Number(t.amount) > 0)
       .reduce((sum, t) => sum + Number(t.amount), 0);
-    const totalEarnings = totalEarningsNum > 0
-      ? `₹${totalEarningsNum.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-      : null;
+    const earningPayments=transactions.filter(t=>t.type==='Payment'&&['paid','completed','success','successful'].includes(String(t.status).toLowerCase()));
+    const earningCurrencies=[...new Set(earningPayments.map(t=>t.currency||null))];
+    const totalEarnings=totalEarningsNum>0&&earningCurrencies.length===1?`${earningCurrencies[0]||'Currency not recorded'} ${totalEarningsNum.toFixed(2)}`:null;
 
     // Real daily distribution (Mon - Sun) from enrollments
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -268,7 +225,7 @@ export class AnalyticsService {
       name: day,
       count: dayMap[day],
       enrollments: dayMap[day],
-      active: Math.round(dayMap[day] * 0.75),
+      active: enrollments.filter(e=>e.status==='Active'&&dayNames[new Date(e.enrolledAt||e.createdAt).getDay()]===day).length,
     }));
 
     // Real enrollment monthly trend
@@ -305,9 +262,9 @@ export class AnalyticsService {
     // Real course performance
     const coursePerformance = courses.slice(0, 5).map((c) => ({
       name: c.title?.length > 20 ? c.title.substring(0, 20) + '...' : c.title,
-      students: c.enrolledCount || 0,
-      rating: c.rating != null ? c.rating : null,
-      completionRate: c.completionRate || 0,
+      students: enrollments.filter(e=>e.courseId===c.id).length,
+      rating: reviews.filter(r=>r.courseId===c.id).length?reviews.filter(r=>r.courseId===c.id).reduce((sum,r)=>sum+Number(r.rating||0),0)/reviews.filter(r=>r.courseId===c.id).length:null,
+      completionRate: enrollments.some(e=>e.courseId===c.id)?Math.round(enrollments.filter(e=>e.courseId===c.id&&(e.status==='Completed'||e.progress===100)).length/enrollments.filter(e=>e.courseId===c.id).length*100):0,
     }));
 
     // Real recent activities from enrollments & reviews
@@ -352,12 +309,8 @@ export class AnalyticsService {
 
   async getRevenueAnalytics() {
     const transactions = await this.transactionsRepo.find();
-    return {
-      monthlyRunRate: 42580,
-      annualProjection: 142580 * 1.25,
-      royaltyPayoutRatio: '70/30',
-      payoutLiability: 3200.0,
-      transactionsLogged: transactions.length,
-    };
+    const completed=transactions.filter(t=>['completed','paid','success','successful'].includes(String(t.status).toLowerCase()));
+    const currencies=[...new Set(completed.map(t=>t.currency||null))];
+    return {transactionsLogged:transactions.length,totals:currencies.map(currency=>({currency,received:completed.filter(t=>t.type==='Payment'&&(t.currency||null)===currency).reduce((sum,t)=>sum+Number(t.amount||0),0),paidOut:completed.filter(t=>t.type==='Payout'&&(t.currency||null)===currency).reduce((sum,t)=>sum+Number(t.amount||0),0)}))};
   }
 }

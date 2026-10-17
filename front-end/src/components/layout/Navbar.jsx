@@ -1,3 +1,5 @@
+import { WorkspaceSidebar } from '../workspace/WorkspaceSidebar';
+import NotificationBell from '../workspace/NotificationBell';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -40,89 +42,7 @@ export function signOutStudent(navigate) {
   navigate('/signin?role=Student');
 }
 
-export function StudentSidebar({ isOpen, onClose }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { student } = useStudent();
-  const name = student?.name || localStorage.getItem('user_name') || '';
-  const email = student?.email || localStorage.getItem('user_email') || '';
-
-  const content = (
-    <div className="h-full w-64 flex flex-col justify-between bg-white border-r border-slate-200/90 select-none">
-      <div className="min-h-0 flex flex-col">
-        <div className="h-16 px-5 border-b border-slate-200/90 flex items-center justify-between shrink-0">
-          <Link to="/student/dashboard" onClick={onClose} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#0056D2] flex items-center justify-center text-white">
-              <BookOpen className="w-4 h-4" />
-            </div>
-            <span className="font-extrabold text-lg text-slate-900 tracking-tight">
-              Acadex
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0056D2] border border-blue-200/80">
-              Learner
-            </span>
-          </Link>
-          <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:bg-slate-100" aria-label="Close menu">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <nav className="p-3 space-y-1 overflow-y-auto">
-          {studentNavItems.map((item) => {
-            const active = isItemActive(item, location.pathname);
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                onClick={onClose}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150 ${
-                  active
-                    ? 'bg-blue-50 text-[#0056D2] font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
-                }`}
-              >
-                <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-[#0056D2]' : 'text-slate-400'}`} />
-                <span>{item.name}</span>
-              </NavLink>
-            );
-          })}
-        </nav>
-      </div>
-
-      <div className="p-3 border-t border-slate-200/90 bg-slate-50/50 shrink-0">
-        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80">
-          <HumanAvatar name={name || 'Learner'} size="sm" />
-          <div className="flex-1 min-w-0 leading-tight">
-            <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
-            <p className="text-[10px] text-slate-500 truncate">{email}</p>
-          </div>
-          <button
-            onClick={() => signOutStudent(navigate)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      <aside className="hidden lg:flex shrink-0 h-screen sticky top-0 z-30">{content}</aside>
-      {isOpen && <div className="fixed inset-0 bg-slate-950/50 z-40 lg:hidden" onClick={onClose} />}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 lg:hidden transition-transform duration-200 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {content}
-      </aside>
-    </>
-  );
-}
+export function StudentSidebar({isOpen,onClose}) { return <WorkspaceSidebar role="Student" isOpen={isOpen} onClose={onClose}/>; }
 
 export default function StudentTopbar({ onMenuClick }) {
   const navigate = useNavigate();
@@ -243,6 +163,7 @@ export default function StudentTopbar({ onMenuClick }) {
           )}
         </div>
 
+        <NotificationBell/>
         <div ref={menuRef} className="relative ml-auto">
           <button
             onClick={() => setShowMenu((v) => !v)}

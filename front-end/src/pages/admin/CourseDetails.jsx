@@ -1,122 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Users, Star, DollarSign, Calendar, CheckCircle } from 'lucide-react';
+import CourseActions from '../../components/admin/CourseActions';
+import React from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { BookOpen, Users, Layers, GraduationCap, ArrowLeft, ArrowUpRight } from 'lucide-react';
+import { useRemoteData } from '../../hooks/useRemoteData';
+import { AdminHeader, AdminMetric, AdminSectionHeader, AdminDataState } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
-import { api } from '../../utils/api';
-
+import { money, currencyLabel, dateLabel } from '../../utils/adminDisplay';
 export const CourseDetails = () => {
-  const { courseId } = useParams();
-  const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get(`/courses/${courseId}`)
-      .then(data => {
-        setCourse(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching course:', err);
-        setLoading(false);
-      });
-  }, [courseId]);
-
-  if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading course details...</div>;
-  }
-
-  if (!course) {
-    return <div className="p-8 text-center text-slate-500">Course not found</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={() => navigate('/admin/courses')}
-          className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{course.title}</h1>
-          <p className="text-sm text-slate-500">Course ID: #{course.id}</p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded bg-blue-100 text-blue-700">
-                  {course.category}
-                </span>
-                <h2 className="text-xl font-bold text-slate-800 mt-2">{course.title}</h2>
-                {course.subtitle && <p className="text-sm text-slate-600 mt-1">{course.subtitle}</p>}
-              </div>
-              <StatusBadge status={course.status} />
-            </div>
-
-            {course.description && (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-1">Course Description</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{course.description}</p>
-              </div>
-            )}
-
-            {course.modules && course.modules.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">Curriculum Structure ({course.modules.length} Modules)</h3>
-                <div className="space-y-3">
-                  {course.modules.map((m, idx) => (
-                    <div key={m.id || idx} className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <div className="font-semibold text-sm text-slate-800">Module {idx + 1}: {m.title}</div>
-                      <div className="text-xs text-slate-500 mt-1">{m.items?.length || 0} Lessons & Assessments</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-            <h3 className="font-bold text-slate-800 border-b border-slate-100 pb-3">Course Overview</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Instructor:</span>
-                <span className="font-medium text-slate-800">{course.instructor}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Organization:</span>
-                <span className="font-medium text-slate-800">{course.organization}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Price:</span>
-                <span className="font-semibold text-slate-800">₹{course.price}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Students:</span>
-                <span className="font-medium text-slate-800">{(course.students || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Rating:</span>
-                <span className="font-medium text-amber-600 flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  {course.rating} / 5.0
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Created Date:</span>
-                <span className="font-medium text-slate-800">{course.createdDate}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    const { courseId } = useParams();
+    const state = useRemoteData(`/admin/courses/${courseId}`);
+    if (state.loading || state.error)
+        return <div className="admin-page">
+        <Link className="admin-count-label" to="/admin/courses">
+        <ArrowLeft size={14}/>Back to courses</Link>
+        <AdminDataState {...state}/>
+        </div>;
+    const c = state.data;
+    return <div className="admin-page">
+    <Link className="admin-count-label" to="/admin/courses">
+    <ArrowLeft size={14}/>Back to courses</Link>
+    <AdminHeader eyebrow={c.category || 'Course details'} title={c.title} description={c.organizationName || 'Organization not recorded'}>
+    <StatusBadge status={c.status}/><CourseActions course={c} onUpdated={state.refresh}/>{c.status === 'Pending Approval' && <Link className="admin-button admin-button-primary" to="/admin/courses/approval">Review course<ArrowUpRight size={14}/>
+        </Link>}</AdminHeader>
+    <div className="admin-stats-grid">
+    <AdminMetric icon={Users} label="Enrollments" value={c.enrolledCount}/>
+    <AdminMetric icon={GraduationCap} label="Completed" value={c.completedCount} accent="blue"/>
+    <AdminMetric icon={Layers} label="Modules" value={c.modulesCount} accent="amber"/>
+    <AdminMetric icon={BookOpen} label="Lessons" value={c.lessonsCount}/>
     </div>
-  );
+    <div className="admin-dashboard-columns">
+    <div className="grid gap-5 content-start">
+    <section className="admin-card">
+    <AdminSectionHeader title="About this course"/>
+    <p className="admin-muted whitespace-pre-wrap">{c.description || 'No course description recorded.'}</p>
+    </section>
+    <section className="admin-card">
+    <AdminSectionHeader title="Curriculum" description={`${c.modulesCount} modules · ${c.lessonsCount} lessons`}/>
+    <div className="grid gap-3">{c.modules?.length ? c.modules.map((m, i) => <article className="border border-[#e7eddf] rounded-xl p-4 flex gap-4 items-center" key={m.id || i}>
+        <span className="admin-icon-tile admin-icon-green text-xs">{String(i + 1).padStart(2, '0')}</span>
+        <div>
+        <h3 className="text-xs font-semibold">{m.title || `Module ${i + 1}`}</h3>
+        <p className="admin-muted !text-[10px] mt-1">{m.lessonCount} lessons{m.duration ? ` · ${m.duration}` : ''}</p>
+        </div>
+        </article>) : <p className="admin-muted">No curriculum recorded.</p>}</div>
+    </section>{c.reviewNote && <section className="admin-card">
+        <AdminSectionHeader title="Review note"/>
+        <p className="admin-muted whitespace-pre-wrap">{c.reviewNote}</p>
+        </section>}</div>
+    <div className="grid gap-5 content-start">
+    <section className="admin-card">
+    <AdminSectionHeader title="Course information"/>
+    <dl className="grid gap-5">{[['Level', c.level || 'Not recorded'], ['Price', money(c.price, c.currency)], ['Currency', currencyLabel(c.currency)], ['Learner rating', c.reviewCount ? `${Number(c.rating).toFixed(1)} / 5 · ${c.reviewCount} reviews` : 'No learner reviews'], ['Created', dateLabel(c.createdAt)]].map(([label, value]) => <div key={label} className="flex justify-between gap-4 text-xs">
+        <dt className="text-[#7c8b74]">{label}</dt>
+        <dd className="text-right text-[#53694b]">{value}</dd>
+        </div>)}</dl>
+    </section>
+    <section className="admin-card">
+    <AdminSectionHeader title="Teaching team" description="Assigned instructors"/>{c.instructors?.length ? c.instructors.map(i => <article className="admin-user-row" key={i.id}>
+        <span className="admin-avatar">{i.name?.charAt(0) || '?'}</span>
+        <div>
+        <strong>{i.name}</strong>
+        <small>{i.email || 'Email not recorded'}</small>
+        </div>
+        </article>) : <p className="admin-muted">No instructors assigned.</p>}</section>
+    </div>
+    </div>
+    </div>;
 };

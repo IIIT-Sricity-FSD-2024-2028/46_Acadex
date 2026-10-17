@@ -714,6 +714,7 @@ export function CourseContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [saveError,setSaveError]=useState('');
 
   useEffect(() => {
     api.get(`/courses/${id || 1}`, "instructor")
@@ -763,15 +764,15 @@ export function CourseContent() {
   };
 
   const handleSaveToBackend = () => {
-    setSaving(true);
-    api.patch(`/courses/${id || 1}`, { modules }, "instructor")
+    setSaving(true);setSaveError('');
+    api.post(`/courses/${id}/module-requests`, { modules }, "instructor")
       .then(() => {
         setSaving(false);
         setSavedSuccess(true);
         setTimeout(() => setSavedSuccess(false), 3000);
       })
       .catch((err) => {
-        console.error("Error saving modules:", err);
+        setSaveError(err.message||"Unable to submit curriculum changes.");
         setSaving(false);
       });
   };
@@ -938,13 +939,14 @@ export function CourseContent() {
           <span className="hidden sm:inline text-sm text-slate-500">{modules.length} modules · {totalItems} items · {formatDuration(totalDuration)}</span>
         </div>
         <div className="flex items-center gap-3">
+          {saveError&&<p role="alert" className="workspace-error">{saveError}</p>}
           {savedSuccess && (
             <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
-              Saved successfully!
+              Submitted for organization review
             </span>
           )}
           <Button onClick={handleSaveToBackend} disabled={saving} size="sm" className="shadow-sm">
-            <Save className="w-4 h-4 mr-1.5" /> {saving ? "Saving..." : "Save Changes"}
+            <Save className="w-4 h-4 mr-1.5" /> {saving ? "Submitting..." : "Submit for review"}
           </Button>
         </div>
       </div>

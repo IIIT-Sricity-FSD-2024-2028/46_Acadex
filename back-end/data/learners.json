@@ -2,8 +2,8 @@
   {
     "id": "lrn-1",
     "userId": "usr-5",
-    "name": "Arjun Sharma",
-    "email": "arjun.sharma@email.com",
+    "name": "Nishanth",
+    "email": "nishanth@gmail.com",
     "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
     "learnerType": "Professional",
     "enrolledCourses": 0,
@@ -20,8 +20,8 @@
   {
     "id": "lrn-2",
     "userId": "usr-6",
-    "name": "Sofia Reyes",
-    "email": "sofia.reyes@email.com",
+    "name": "Puneeth",
+    "email": "puneeth@gmail.com",
     "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
     "learnerType": "Professional",
     "enrolledCourses": 0,
@@ -30,5 +30,13 @@
     "status": "Active",
     "createdAt": "2026-10-01T10:00:00.000Z",
     "updatedAt": "2026-10-15T09:45:00.000Z"
+  },
+  {
+    "id": "lrn-ruvan",
+    "userId": "usr-ruvan",
+    "name": "Ruvan",
+    "email": "ruvan@gmail.com",
+    "status": "Active",
+    "createdAt": "2026-10-17T05:43:40.167867+00:00"
   }
 ]

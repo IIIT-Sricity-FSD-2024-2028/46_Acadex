@@ -2,7 +2,7 @@
   {
     "id": "rev-1",
     "learnerId": "lrn-1",
-    "learnerName": "Arjun Sharma",
+    "learnerName": "Nishanth",
     "learnerAvatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
     "courseId": "cou-fb5ac543",
     "courseTitle": "Object Oriented Programming",
@@ -16,7 +16,7 @@
   {
     "id": "rev-2",
     "learnerId": "lrn-2",
-    "learnerName": "Sofia Reyes",
+    "learnerName": "Puneeth",
     "learnerAvatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
     "courseId": "cou-fb5ac543",
     "courseTitle": "Object Oriented Programming",
@@ -44,7 +44,7 @@
   {
     "id": "rev-4",
     "learnerId": "lrn-1",
-    "learnerName": "Arjun Sharma",
+    "learnerName": "Nishanth",
     "learnerAvatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
     "courseId": "cou-b00839da",
     "courseTitle": "Distributed Systems",
@@ -72,7 +72,7 @@
   {
     "id": "rev-6",
     "learnerId": "lrn-2",
-    "learnerName": "Sofia Reyes",
+    "learnerName": "Puneeth",
     "learnerAvatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
     "courseId": "cou-2238c587",
     "courseTitle": "Backend Development - 2345",

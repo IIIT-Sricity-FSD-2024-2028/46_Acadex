@@ -1,96 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DataTable } from '../../components/admin/DataTable';
-import { SearchBar } from '../../components/admin/SearchBar';
-import { Pagination } from '../../components/admin/Pagination';
-import { StatusBadge } from '../../components/admin/StatusBadge';
-import { ApprovalModal, RejectModal } from '../../components/admin/Modals';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { BookOpen, Building2, ArrowUpRight, Check, X, Clock3 } from 'lucide-react';
 import { api } from '../../utils/api';
-
+import { useRemoteData } from '../../hooks/useRemoteData';
+import { AdminHeader, AdminSearch, AdminEmpty, AdminDataState } from '../../components/admin/AdminUI';
+import { Pagination } from '../../components/admin/Pagination';
+import { dateLabel } from '../../utils/adminDisplay';
 export const CourseApproval = () => {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get('/courses?limit=1000', 'admin')
-      .then(data => { setCourses(Array.isArray(data) ? data : (data?.items || [])); setLoading(false); })
-      .catch(err => { console.error('Error fetching courses:', err); setCourses([]); setLoading(false); });
-  }, []);
-
-  const pendingCourses = courses.filter(course => course.status === 'Pending Approval');
-
-  const columns = [
-    { header: 'Course', accessor: 'title' },
-    { header: 'Organization', accessor: 'organization' },
-    { header: 'Submitted Date', accessor: 'createdDate' },
-    { header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
-    { 
-      header: 'Actions', 
-      cell: (row) => (
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={(e) => { e.stopPropagation(); setSelectedCourse(row); setIsApproveModalOpen(true); }}
-            className="text-emerald-600 hover:text-emerald-700 font-medium"
-          >
-            Approve
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setSelectedCourse(row); setIsRejectModalOpen(true); }}
-            className="text-rose-600 hover:text-rose-700 font-medium"
-          >
-            Reject
-          </button>
-        </div>
-      )
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Course Approval</h1>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/80">
-          <SearchBar placeholder="Search pending courses..." value={searchTerm} onChange={setSearchTerm} />
-        </div>
-
-        <DataTable 
-          columns={columns} 
-          data={pendingCourses} 
-          onRowClick={(row) => navigate(`/admin/courses/${row.id}`)}
-        />
-        
-        <Pagination currentPage={page} totalPages={1} onPageChange={setPage} />
-      </div>
-
-      {selectedCourse && (
-        <>
-          <ApprovalModal
-            isOpen={isApproveModalOpen}
-            onClose={() => { setIsApproveModalOpen(false); setSelectedCourse(null); }}
-            onApprove={() => console.log('Approved', selectedCourse.id)}
-            title="Approve Course"
-            itemName={selectedCourse.title}
-          />
-          <RejectModal
-            isOpen={isRejectModalOpen}
-            onClose={() => { setIsRejectModalOpen(false); setSelectedCourse(null); }}
-            onReject={(reason) => console.log('Rejected', selectedCourse.id, reason)}
-            title="Reject Course"
-            itemName={selectedCourse.title}
-          />
-        </>
-      )}
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [selection, setSelection] = useState(null);
+    const [reason, setReason] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+    const state = useRemoteData(`/admin/courses?${new URLSearchParams({ search, status: 'Pending Approval', page, limit: 12 })}`);
+    function open(course, decision) { setSelection({ course, decision }); setReason(''); setError(''); setMessage(''); }
+    async function submit(e) { e.preventDefault(); if (busy)
+        return; setBusy(true); setError(''); try {
+        await api.post(`/admin/courses/${selection.course.id}/review`, { decision: selection.decision, ...(selection.decision === 'reject' ? { reason } : {}) }, 'admin');
+        setMessage(selection.decision === 'approve' ? 'Course approved and published.' : 'Course rejected.');
+        setSelection(null);
+        setPage(1);
+        state.refresh();
+    }
+    catch (e) {
+        setError(e.message);
+    }
+    finally {
+        setBusy(false);
+    } }
+    return <div className="admin-page">
+    <AdminHeader eyebrow="Learning management" title="Course approvals" description="Review the next learning experiences before they go live."/>{message && <p role="status" className="admin-success">{message}</p>}<div className="admin-toolbar">
+    <AdminSearch value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Search course submissions…" label="Search pending courses"/>
+    <span className="admin-count-label">
+    <Clock3 size={14}/>Awaiting review</span>
     </div>
-  );
+    <AdminDataState {...state}/>{!state.loading && !state.error && <>
+        <div className="admin-grid">{state.data?.items?.map(c => <article className="admin-card admin-record" key={c.id}>
+            <div className="admin-record-top">
+            <span className="admin-icon-tile admin-icon-amber">
+            <BookOpen size={20}/>
+            </span>
+            <Link to={`/admin/courses/${c.id}`} className="admin-button !p-2" aria-label={`View ${c.title}`}>
+            <ArrowUpRight size={16}/>
+            </Link>
+            </div>
+            <p className="admin-record-category">Submitted {dateLabel(c.updatedAt || c.createdAt)}</p>
+            <h2 className="text-sm font-semibold mt-2 leading-6">{c.title}</h2>
+            <p className="admin-record-meta">
+            <Building2 size={13}/>{c.organizationName || 'Organization not recorded'}</p>
+            <p className="admin-record-meta">{c.instructors?.map(i => i.name).join(', ') || 'Instructor not assigned'}</p>
+            <div className="admin-record-footer mt-5">
+            <button className="admin-button admin-button-primary flex-1" onClick={() => open(c, 'approve')}>
+            <Check size={14}/>Approve</button>
+            <button className="admin-button admin-button-danger flex-1" onClick={() => open(c, 'reject')}>
+            <X size={14}/>Reject</button>
+            </div>
+            </article>)}</div>{!state.data?.items?.length && <AdminEmpty icon={Check} title="You’re all caught up" description="New course submissions will appear here when they’re ready for your review."/>}<Pagination currentPage={page} totalPages={state.data?.totalPages || 1} onPageChange={setPage}/>
+        </>}{selection && <div className="admin-modal-backdrop">
+        <form onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="review-title" className="admin-modal space-y-5">
+        <span className="admin-icon-tile admin-icon-green">
+        <BookOpen size={22}/>
+        </span>
+        <h2 id="review-title" className="text-xl font-semibold">{selection.decision === 'approve' ? 'Approve' : 'Reject'} this course?</h2>
+        <p className="admin-muted">{selection.course.title}</p>
+        <p className="admin-muted">{selection.decision === 'approve' ? 'This course will be published and made available to learners.' : 'Include a clear reason for the teaching team.'}</p>{selection.decision === 'reject' && <label className="block text-sm">Reason<textarea autoFocus required maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} className="admin-input mt-2" rows={4}/>
+            </label>}{error && <p role="alert" className="admin-alert">{error}</p>}<div className="flex justify-end gap-3">
+        <button type="button" className="admin-button" disabled={busy} onClick={() => setSelection(null)}>Cancel</button>
+        <button autoFocus={selection.decision === 'approve'} disabled={busy} className="admin-button admin-button-primary">{busy ? 'Saving…' : 'Confirm decision'}</button>
+        </div>
+        </form>
+        </div>}</div>;
 };

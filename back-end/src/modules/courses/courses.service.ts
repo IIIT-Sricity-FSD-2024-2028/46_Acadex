@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { CourseQueryDto, CreateCourseDto, UpdateCourseDto } from './dto/course.dto';
@@ -79,42 +79,36 @@ export class CoursesService {
     };
   }
 
-  async create(dto: CreateCourseDto) {
+  async create(dto: CreateCourseDto, organizationId?:string) {
     const instructorsList = await this.resolveInstructors(dto);
-    const leadInstructor = instructorsList[0] || {
-      id: 'inst-1',
-      name: 'Prof. James Wilson',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-      specialization: 'Cloud Architecture & AWS',
-    };
-
-    const modules = dto.modules || [
-      { id: 'mod-1', title: 'Module 1: Architecture Foundations', lessons: 4, duration: '3h 15m' },
-      { id: 'mod-2', title: 'Module 2: High Throughput Replication', lessons: 5, duration: '4h 00m' },
-    ];
-
-    const lessonsCount = modules.reduce((sum, m) => sum + (m.lessons || 3), 0);
+    const leadInstructor = instructorsList[0];
+    if (!leadInstructor) throw new BadRequestException('Assign an existing instructor to the course.');
+    if(organizationId&&instructorsList.some(i=>!i.id))throw new BadRequestException('Choose instructors from your organization.');
+    if(organizationId){const teachers=await this.instructorsRepo.find();if(instructorsList.some(i=>!teachers.some(t=>t.id===i.id&&t.organizationId===organizationId)))throw new BadRequestException('All instructors must belong to your organization.');}
+    const modules = Array.isArray(dto.modules) ? dto.modules : [];
+    const lessonsCount = modules.reduce((sum, m: any) => sum + (Array.isArray(m.items)?m.items.length:Array.isArray(m.lessons)?m.lessons.length:Number(m.lessons)||0), 0);
 
     const newCourse = await this.coursesRepo.create({
       title: dto.title,
-      category: dto.category || 'Cloud Architecture',
-      level: dto.level || 'Advanced',
+      category: dto.category || '',
+      level: dto.level || 'Beginner',
       instructorId: leadInstructor.id,
       instructorName: instructorsList.map((i) => i.name).join(', '),
       leadInstructorName: leadInstructor.name,
       organizationId: (await this.instructorsRepo.findById(leadInstructor.id))?.organizationId,
       instructors: instructorsList,
       enrolledCount: 0,
-      price: typeof dto.price === 'number' ? dto.price : 89.99,
+      price: typeof dto.price === 'number' ? dto.price : 0,
+      currency: 'INR',
       revenue: 0,
-      rating: 5.0,
-      completionRate: 75,
-      totalHours: '18h 30m',
+      rating: null,
+      completionRate: null,
+      totalHours: null,
       lessonsCount,
       modulesCount: modules.length,
-      status: dto.status || 'Published',
-      thumbnail: dto.thumbnail || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500',
-      description: dto.description || 'Newly authored masterclass curriculum.',
+      status: dto.status || 'Draft',
+      thumbnail: dto.thumbnail || null,
+      description: dto.description || '',
       modules,
     });
 
@@ -136,7 +130,7 @@ export class CoursesService {
     const leadInst = updatedInstructors[0] || { id: existing.instructorId, name: existing.leadInstructorName };
 
     const modules = dto.modules || existing.modules || [];
-    const lessonsCount = modules.reduce((sum: number, m: any) => sum + (m.lessons || 3), 0);
+    const lessonsCount = modules.reduce((sum: number, m: any) => sum + (Array.isArray(m.items)?m.items.length:Array.isArray(m.lessons)?m.lessons.length:Number(m.lessons)||0), 0);
 
     return this.coursesRepo.update(id, {
       ...dto,
@@ -165,7 +159,8 @@ export class CoursesService {
     }
 
     const allInstructors = await this.instructorsRepo.find();
-    const lead = allInstructors.find((i) => i.id === dto.instructorId) || allInstructors[0];
+    const lead = allInstructors.find((i) => i.id === dto.instructorId);
+    if (!lead) throw new BadRequestException('Choose an existing lead instructor.');
 
     const result = [
       {

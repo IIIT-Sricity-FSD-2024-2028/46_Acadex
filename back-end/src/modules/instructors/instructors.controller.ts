@@ -33,7 +33,7 @@ export class InstructorsController {
   @ApiOperation({ summary: 'Update instructor details' })
   @ApiResponse({ status: 200, description: 'Instructor updated successfully' })
   async update(@Param('id') id: string, @Body() dto: UpdateInstructorDto, @Headers('x-role') actor = 'admin') {
-    if (actor.toLowerCase() === 'admin' && dto.status) throw new BadRequestException('Instructor access is managed by the organization.');
+    if (['admin','superadmin'].includes(actor.toLowerCase()) && dto.status) throw new BadRequestException('Instructor access is managed by the organization.');
     return this.instructorsService.update(id, dto);
   }
 
@@ -41,7 +41,7 @@ export class InstructorsController {
   @ApiOperation({ summary: 'Delete an instructor record' })
   @ApiResponse({ status: 200, description: 'Instructor deleted successfully' })
   async delete(@Param('id') id: string, @Headers('x-role') actor = 'admin') {
-    if (actor.toLowerCase() === 'admin') throw new BadRequestException('Instructors cannot be removed by Platform Admin.');
+    if (['admin','superadmin'].includes(actor.toLowerCase())) throw new BadRequestException('Instructors cannot be removed by Platform Admin.');
     return this.instructorsService.delete(id);
   }
 

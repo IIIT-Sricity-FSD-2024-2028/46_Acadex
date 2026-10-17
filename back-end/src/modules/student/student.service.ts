@@ -30,6 +30,7 @@ export class StudentService {
     private readonly orgsRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.NOTIFICATIONS)
     private readonly notifsRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.SETTINGS) private readonly settingsRepo: JsonRepository<any>,
     private readonly organizationService: OrganizationService,
   ) {}
 
@@ -379,6 +380,7 @@ export class StudentService {
       organizationId: course.organizationId || null,
       organizationName: course.organizationName || null,
       amount: Number(course.price) || 0,
+      currency: course.currency || (await this.settingsRepo.find())[0]?.defaultCurrency || null,
       method: methodLabel,
       date: now,
       status: 'Completed',

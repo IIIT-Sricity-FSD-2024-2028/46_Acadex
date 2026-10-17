@@ -85,15 +85,7 @@ export default function Learners() {
   return (
     <OrgLayout
       breadcrumbs={[{ label: 'Learners & Student Roster' }]}
-      actions={
-        <button
-          onClick={handleExportCSV}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold transition-all border border-outline-variant"
-        >
-          <Download className="w-4 h-4 text-primary" />
-          <span>Export Student CSV</span>
-        </button>
-      }
+
     >
       <div className="space-y-6 max-w-[1560px] mx-auto">
         

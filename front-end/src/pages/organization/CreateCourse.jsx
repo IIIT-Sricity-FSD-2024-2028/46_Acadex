@@ -120,11 +120,12 @@ export default function CreateCourse() {
     try {
       const created = await addCourse({
         ...courseForm,
+        status: 'Pending Approval',
         instructorId: leadInst.id,
         instructors: assignedInstructors
       });
 
-      addToast(`Course "${created?.title || courseForm.title}" authored with ${assignedInstructors.length} faculty instructors!`, 'success');
+      addToast(`Course "${created?.title || courseForm.title}" submitted for Admin approval.`, 'success');
       navigate('/org/courses');
     } catch (err) {
       addToast(`Failed to author course: ${err.message || 'Server error'}`, 'error');
@@ -466,7 +467,7 @@ export default function CreateCourse() {
               className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-xs shadow-sm flex items-center gap-2 transition-all"
             >
               <Save className="w-4 h-4" />
-              <span>Publish Course to Catalog</span>
+              <span>Submit course for review</span>
             </button>
           </div>
 

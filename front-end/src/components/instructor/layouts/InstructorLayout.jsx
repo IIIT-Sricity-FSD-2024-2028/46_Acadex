@@ -1,3 +1,4 @@
+import NotificationBell from '../../workspace/NotificationBell';
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
@@ -79,7 +80,7 @@ export function InstructorLayout() {
     : 'No organization';
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="academy-portal min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       
       {/* ───────────────────────────────────────────────────────────── */}
       {/* 1. LEFT SIDEBAR                                               */}
@@ -125,18 +126,7 @@ export function InstructorLayout() {
             <div className="flex items-center gap-3">
               
               {/* Notifications Button */}
-              <Link
-                to="/instructor/notifications"
-                className="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                title="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadNotifsCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-[#0056D2] text-[10px] font-bold text-white ring-2 ring-white animate-in zoom-in-50">
-                    {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
-                  </span>
-                )}
-              </Link>
+              <NotificationBell/>
 
               {/* Settings Shortcut */}
               <Link

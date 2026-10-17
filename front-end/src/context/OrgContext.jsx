@@ -22,12 +22,12 @@ const normalizeTransaction = (transaction) => {
     completed: 'Completed',
     pending: 'Pending',
     failed: 'Failed',
-  }[status] || transaction?.status || 'Completed';
+  }[status] || transaction?.status || 'Not recorded';
 
   return {
     ...transaction,
-    id: normalizeTransactionId(transaction?.id),
-    type: transaction?.type || 'Payment',
+    id: transaction?.id,
+    type: transaction?.type || 'Not recorded',
     payer: transaction?.payer || transaction?.payerName || transaction?.learnerName || 'Unknown payer',
     payerId: transaction?.payerId || transaction?.learnerId,
     course: transaction?.course || transaction?.courseTitle || 'Course unavailable',
@@ -82,15 +82,7 @@ export function OrgProvider({ children }) {
     enrollments: [],
     transactions: [],
     notifications: [],
-    settings: {
-      autoApproveEnrollments: true,
-      emailAlerts: true,
-      royaltyAlerts: true,
-      weeklyDigest: false,
-      requireTwoFactor: true,
-      defaultCurrency: 'INR',
-      defaultAccessType: 'Paid Masterclass'
-    }
+    settings: {}
   });
   // Helper to extract items from paginated or raw backend responses
   const getItems = (res) => {
@@ -250,14 +242,8 @@ export function OrgProvider({ children }) {
     // From organizations.json (persisted and kept in sync via syncCounts endpoint)
     totalLearners: state.learners.length,
     activeCourses: state.courses.filter((course) => course.status === 'Published').length,
-    annualRevenue: state.courses.reduce(
-      (total, course) => total + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
-      0,
-    ),
-    monthlyRevenue: Math.round(state.courses.reduce(
-      (total, course) => total + (Number(course.enrolledCount) || 0) * (Number(course.price) || 0),
-      0,
-    ) * 0.3),
+    annualRevenue: backendStats?.annualRevenue ?? 0,
+    monthlyRevenue: backendStats?.monthlyRevenue ?? 0,
     // Live-computed from loaded arrays (always accurate in real time)
     totalInstructors: state.instructors.length,
     totalEnrollments: state.enrollments.length,
@@ -272,8 +258,8 @@ export function OrgProvider({ children }) {
     openDisputes: (state.disputes || []).filter((d) => d.status !== 'Resolved').length,
     unreadNotifications: state.notifications.filter((n) => !n.read).length,
     // Extended: from backendStats (computed by the stats endpoint) or sensible defaults
-    completionRate:         backendStats?.completionRate         ?? 72,
-    averageRating:          backendStats?.averageRating          ?? 4.8,
+    completionRate:         backendStats?.completionRate         ?? null,
+    averageRating:          backendStats?.averageRating          ?? null,
     activeEnrollments:      backendStats?.activeEnrollments      ?? 0,
     completedEnrollments:   backendStats?.completedEnrollments   ?? 0,
   };
@@ -309,8 +295,6 @@ export function OrgProvider({ children }) {
       return updated;
     } catch (err) {
       console.error('Failed to update organization profile:', err);
-      // Optimistic local update as fallback
-      setState((prev) => ({ ...prev, info: { ...prev.info, ...newInfo } }));
       throw err;
     }
   };
@@ -318,60 +302,7 @@ export function OrgProvider({ children }) {
   // 2. Course Management
   const addCourse = async (courseData) => {
     try {
-      // Resolve assigned instructors
-      let assignedInstructors = [];
-      if (courseData.instructors && Array.isArray(courseData.instructors) && courseData.instructors.length > 0) {
-        assignedInstructors = courseData.instructors;
-      } else {
-        const lead = state.instructors.find((i) => i.id === courseData.instructorId || i.id === courseData.leadInstructorId) || state.instructors[0];
-        assignedInstructors = [
-          {
-            id: lead.id,
-            name: lead.name,
-            role: 'Lead Instructor',
-            avatar: lead.avatar,
-            specialization: lead.specialization,
-          },
-        ];
-        if (Array.isArray(courseData.coInstructorIds)) {
-          courseData.coInstructorIds.forEach((cId) => {
-            if (cId !== lead.id) {
-              const co = state.instructors.find((i) => i.id === cId);
-              if (co) {
-                assignedInstructors.push({
-                  id: co.id,
-                  name: co.name,
-                  role: 'Co-Instructor',
-                  avatar: co.avatar,
-                  specialization: co.specialization,
-                });
-              }
-            }
-          });
-        }
-      }
-
-      const leadInstructor = assignedInstructors[0] || state.instructors[0];
-
-      const payload = {
-        title: courseData.title,
-        category: courseData.category || 'Cloud Architecture',
-        level: courseData.level || 'Advanced',
-        instructorId: leadInstructor.id,
-        coInstructorIds: courseData.coInstructorIds || [],
-        instructors: assignedInstructors,
-        organizationId: state.info.id || courseData.organizationId,
-        organizationName: state.info.name || courseData.organizationName,
-        price: parseFloat(courseData.price) || 89.99,
-        status: courseData.status || 'Published',
-        thumbnail: courseData.thumbnail || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=80',
-        description: courseData.description || 'Newly authored curriculum track on enterprise architecture.',
-        modules: courseData.modules || [
-          { id: 'mod-1', title: 'Module 1: Architecture Foundations', lessons: 4, duration: '3h 15m' },
-          { id: 'mod-2', title: 'Module 2: High Throughput Replication', lessons: 5, duration: '4h 00m' },
-        ],
-      };
-
+      const payload = { ...courseData, organizationId: state.info.id, organizationName: state.info.name };
       const created = await api.courses.create(payload);
 
       setState((prev) => ({

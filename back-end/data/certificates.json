@@ -2,12 +2,12 @@
   {
     "id": "cert-1792159072209",
     "learnerId": "lrn-1",
-    "learnerName": "krjun Sharma",
+    "learnerName": "Nishanth",
     "courseId": "crs-3",
     "courseTitle": "Python Backend Development with FastAPI",
-    "institution": "Meridian Tech Institute",
+    "institution": "IIIT SRICITY",
     "organizationId": "org-2",
-    "instructorName": "Priya Nair",
+    "instructorName": "Shameer Basha Shaik",
     "category": "Backend Development",
     "skills": [
       "Python Fundamentals for Backend Engineers",
@@ -26,12 +26,12 @@
   {
     "id": "cert-1792158738908",
     "learnerId": "lrn-1",
-    "learnerName": "krjun Sharma",
+    "learnerName": "Nishanth",
     "courseId": "cou-fb5ac543",
     "courseTitle": "Object Oriented Programming",
     "institution": "",
     "organizationId": null,
-    "instructorName": "Prof. Alan Turing",
+    "instructorName": "Shameer Basha Shaik",
     "category": "Cloud Architecture",
     "skills": [
       "Intro to OOP"
@@ -47,12 +47,12 @@
   {
     "id": "cert-1792158460492",
     "learnerId": "lrn-1",
-    "learnerName": "krjun Sharma",
+    "learnerName": "Nishanth",
     "courseId": "cou-2238c587",
     "courseTitle": "Backend Development - 2345",
     "institution": "",
     "organizationId": "org-1",
-    "instructorName": "Priya Nair",
+    "instructorName": "Shameer Basha Shaik",
     "category": "Cloud Architecture",
     "skills": [
       "Module 1: Introduction to Reinforcement Learning",

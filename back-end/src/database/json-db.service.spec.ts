@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JsonDatabaseService } from './json-db.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { initialOrganizationData, initialInstructorsData } from './seeds/initial-data';
 
 describe('JsonDatabaseService', () => {
   let service: JsonDatabaseService;
   const testDataDir = path.resolve(process.cwd(), './test-data-spec');
 
+  const previousDataDir=process.env.DATA_DIR;
   beforeAll(async () => {
     process.env.DATA_DIR = './test-data-spec';
     const module: TestingModule = await Test.createTestingModule({
@@ -18,6 +20,7 @@ describe('JsonDatabaseService', () => {
   });
 
   afterAll(async () => {
+    if(previousDataDir===undefined) delete process.env.DATA_DIR; else process.env.DATA_DIR=previousDataDir;
     if (fs.existsSync(testDataDir)) {
       await fs.promises.rm(testDataDir, { recursive: true, force: true });
     }
@@ -27,7 +30,7 @@ describe('JsonDatabaseService', () => {
     expect(service).toBeDefined();
     const orgs = await service.getCollection('organizations');
     expect(orgs.length).toBeGreaterThan(0);
-    expect(orgs[0].name).toBe('NexusPay Enterprise Academy');
+    expect(orgs).toEqual(initialOrganizationData);
   });
 
   it('should perform atomic write and read correctly', async () => {
@@ -64,6 +67,6 @@ describe('JsonDatabaseService', () => {
   it('should reset all collections to initial seeds', async () => {
     await service.resetAllCollections();
     const instructors = await service.getCollection('instructors');
-    expect(instructors.length).toBeGreaterThanOrEqual(6);
+    expect(instructors).toEqual(initialInstructorsData);
   });
 });

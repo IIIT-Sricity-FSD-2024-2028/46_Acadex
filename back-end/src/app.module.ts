@@ -10,6 +10,7 @@ import { ErrorHandlerMiddleware } from './common/middleware/error-handler.middle
 import { SecurityMiddleware }     from './common/middleware/security.middleware';
 // ─────────────────────────────────────────────────────────────────
 
+import { PlatformModule } from './modules/platform/platform.module';
 import { AuthModule }               from './modules/auth/auth.module';
 import { UsersModule }              from './modules/users/users.module';
 import { StudentModule }            from './modules/student/student.module';
@@ -40,6 +41,7 @@ import { SettingsModule }           from './modules/settings/settings.module';
     }),
     DatabaseModule,
     AuthModule,
+    PlatformModule,
     UsersModule,
     StudentModule,
     OrganizationModule,

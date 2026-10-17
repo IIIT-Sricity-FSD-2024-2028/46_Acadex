@@ -126,10 +126,11 @@ export class UsersService {
 
   async update(id: string, dto: UpdateUserDto, actor = 'admin') {
     const { detail, account, profile, repo } = await this.accountRecords(id);
-    if (actor.toLowerCase() === 'admin') {
+    if (['admin','superadmin'].includes(actor.toLowerCase())) {
+      if(Object.keys(dto).some(key=>key!=='status'))throw new BadRequestException('Account owners manage their own details. Platform administrators can only change access.');
       if (detail.role === 'Instructor') throw new BadRequestException('Instructors are managed by their organization.');
       if (dto.role) throw new BadRequestException('Account type cannot be changed here.');
-      if (dto.status && !['Learner', 'Organization'].includes(detail.role)) {
+      if (dto.status && !['Learner', 'Organization', ...(actor.toLowerCase()==='superadmin'?['Admin']:[])].includes(detail.role)) {
         throw new BadRequestException('Only learners and organizations can be suspended here.');
       }
     }

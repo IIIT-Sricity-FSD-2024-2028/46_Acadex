@@ -1,3 +1,6 @@
+import StudentPageLayout from './components/layout/PageLayout';
+import NotificationsPage from './components/workspace/NotificationsPage';
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 
 // ──────────────────────────────────────────────────────────────
@@ -13,19 +16,19 @@ import ForgotPassword from './pages/Forgot_Password';
 // ──────────────────────────────────────────────────────────────
 // 1. STUDENT / LEARNER PAGES
 // ──────────────────────────────────────────────────────────────
-import StudentDashboard from './pages/student/Dashboard';
-import StudentExplore from './pages/student/ExploreCourses';
-import StudentCourseDetails from './pages/student/CourseDetails';
-import StudentCheckout from './pages/student/Checkout';
-import StudentPaymentSuccess from './pages/student/PaymentSuccess';
-import StudentMyLearning from './pages/student/MyLearning';
-import StudentLearningPlayer from './pages/student/LearningPlayer';
-import StudentQuiz from './pages/student/Quiz';
-import StudentCertificates from './pages/student/Certificates';
-import StudentProfile from './pages/student/Profile';
-import StudentBilling from './pages/student/Billing';
-import StudentReviews from './pages/student/Reviews';
-import StudentDisputes from './pages/student/Disputes';
+const StudentDashboard = lazy(() => import('./pages/student/Dashboard'));
+const StudentExplore = lazy(() => import('./pages/student/ExploreCourses'));
+const StudentCourseDetails = lazy(() => import('./pages/student/CourseDetails'));
+const StudentCheckout = lazy(() => import('./pages/student/Checkout'));
+const StudentPaymentSuccess = lazy(() => import('./pages/student/PaymentSuccess'));
+const StudentMyLearning = lazy(() => import('./pages/student/MyLearning'));
+const StudentLearningPlayer = lazy(() => import('./pages/student/LearningPlayer'));
+const StudentQuiz = lazy(() => import('./pages/student/Quiz'));
+const StudentCertificates = lazy(() => import('./pages/student/Certificates'));
+const StudentProfile = lazy(() => import('./pages/student/Profile'));
+const StudentBilling = lazy(() => import('./pages/student/Billing'));
+const StudentReviews = lazy(() => import('./pages/student/Reviews'));
+const StudentDisputes = lazy(() => import('./pages/student/Disputes'));
 import StudentRouteMiddleware from './components/student/layout/StudentRouteMiddleware';
 import RoleGuard from './components/auth/RoleGuard';
 
@@ -34,75 +37,78 @@ import RoleGuard from './components/auth/RoleGuard';
 // ──────────────────────────────────────────────────────────────
 import { InstructorLayout } from './components/instructor/layouts/InstructorLayout';
 import { InstructorProvider } from './context/InstructorContext';
-import { Dashboard as InstructorDashboard } from './pages/instructor/instructor/Dashboard';
-import { Profile as InstructorProfile } from './pages/instructor/instructor/Profile';
-import { MyCourses } from './pages/instructor/courses/MyCourses';
-import { CourseContent as InstructorCourseContent } from './pages/instructor/courses/CourseContent';
+const InstructorDashboard = lazy(() => import('./pages/instructor/instructor/Dashboard').then(module => ({ default: module.Dashboard })));
+const InstructorProfile = lazy(() => import('./pages/instructor/instructor/Profile').then(module => ({ default: module.Profile })));
+const MyCourses = lazy(() => import('./pages/instructor/courses/MyCourses').then(module => ({ default: module.MyCourses })));
+const InstructorCourseContent = lazy(() => import('./pages/instructor/courses/CourseContent').then(module => ({ default: module.CourseContent })));
 
 function InstructorEditCourseRedirect() {
   const { id } = useParams();
   return <Navigate to={`/instructor/courses/${id}/content`} replace />;
 }
 
-import { CreateModule } from './pages/instructor/courses/CreateModule';
-import { CreateLesson } from './pages/instructor/courses/CreateLesson';
-import { CreateQuiz as InstructorCreateQuiz } from './pages/instructor/courses/CreateQuiz';
-import { Students as InstructorStudents } from './pages/instructor/students/Students';
-import { StudentProgress } from './pages/instructor/students/StudentProgress';
-import { Reviews as InstructorReviews } from './pages/instructor/insights/Reviews';
-import { Analytics as InstructorAnalytics } from './pages/instructor/insights/Analytics';
-import { Notifications as InstructorNotifications } from './pages/instructor/insights/Notifications';
-import { Settings as InstructorSettings } from './pages/instructor/insights/Settings';
+const CreateModule = lazy(() => import('./pages/instructor/courses/CreateModule').then(module => ({ default: module.CreateModule })));
+const CreateLesson = lazy(() => import('./pages/instructor/courses/CreateLesson').then(module => ({ default: module.CreateLesson })));
+const InstructorCreateQuiz = lazy(() => import('./pages/instructor/courses/CreateQuiz').then(module => ({ default: module.CreateQuiz })));
+const InstructorStudents = lazy(() => import('./pages/instructor/students/Students').then(module => ({ default: module.Students })));
+const StudentProgress = lazy(() => import('./pages/instructor/students/StudentProgress').then(module => ({ default: module.StudentProgress })));
+const InstructorReviews = lazy(() => import('./pages/instructor/insights/Reviews').then(module => ({ default: module.Reviews })));
+const InstructorAnalytics = lazy(() => import('./pages/instructor/insights/Analytics').then(module => ({ default: module.Analytics })));
+const InstructorNotifications = lazy(() => import('./pages/instructor/insights/Notifications').then(module => ({ default: module.Notifications })));
+const InstructorSettings = lazy(() => import('./pages/instructor/insights/Settings').then(module => ({ default: module.Settings })));
 
 // ──────────────────────────────────────────────────────────────
 // 3. ORGANIZATION ADMIN PAGES
 // ──────────────────────────────────────────────────────────────
 import OrgLayout from './components/organization/OrgLayout';
-import OrgDashboard from './pages/organization/Dashboard';
-import OrgProfile from './pages/organization/Profile';
-import OrgInstructorRequests from './pages/organization/InstructorRequests';
-import OrgInstructorRequestDetails from './pages/organization/InstructorRequestDetails';
-import OrgInstructors from './pages/organization/Instructors';
-import OrgInstructorDetails from './pages/organization/InstructorDetails';
-import OrgLearners from './pages/organization/Learners';
-import OrgLearnerDetails from './pages/organization/LearnerDetails';
-import OrgCourses from './pages/organization/Courses';
-import OrgCourseDetails from './pages/organization/CourseDetails';
-import OrgCreateCourse from './pages/organization/CreateCourse';
-import OrgEditCourse from './pages/organization/EditCourse';
-import OrgAssignCourses from './pages/organization/AssignCourses';
-import OrgDisputes from './pages/organization/Disputes';
-import OrgAnalytics from './pages/organization/Analytics';
+const OrgDashboard = lazy(() => import('./pages/organization/Dashboard'));
+const OrgProfile = lazy(() => import('./pages/organization/Profile'));
+const OrgInstructorRequests = lazy(() => import('./pages/organization/InstructorRequests'));
+const OrgInstructorRequestDetails = lazy(() => import('./pages/organization/InstructorRequestDetails'));
+const OrgInstructors = lazy(() => import('./pages/organization/Instructors'));
+const OrgInstructorDetails = lazy(() => import('./pages/organization/InstructorDetails'));
+const OrgLearners = lazy(() => import('./pages/organization/Learners'));
+const OrgLearnerDetails = lazy(() => import('./pages/organization/LearnerDetails'));
+const ModuleRequests = lazy(() => import('./components/workspace/ModuleRequests'));
+const OrgCourses = lazy(() => import('./pages/organization/Courses'));
+const OrgCourseDetails = lazy(() => import('./pages/organization/CourseDetails'));
+const OrgCreateCourse = lazy(() => import('./pages/organization/CreateCourse'));
+const OrgEditCourse = lazy(() => import('./pages/organization/EditCourse'));
+const OrgAssignCourses = lazy(() => import('./pages/organization/AssignCourses'));
+const OrgDisputes = lazy(() => import('./pages/organization/Disputes'));
+const OrgAnalytics = lazy(() => import('./pages/organization/Analytics'));
 
 // ──────────────────────────────────────────────────────────────
 // 4. PLATFORM ADMIN PAGES & LAYOUT
 // ──────────────────────────────────────────────────────────────
 import { AdminLayout } from './components/admin/AdminLayout';
-import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
-import { Users as AdminUsers } from './pages/admin/Users';
-import { UserDetails as AdminUserDetails } from './pages/admin/UserDetails';
-import { Courses as AdminCourses } from './pages/admin/Courses';
-import { CourseDetails as AdminCourseDetails } from './pages/admin/CourseDetails';
-import { CourseApproval as AdminCourseApproval } from './pages/admin/CourseApproval';
-import { Payments as AdminPayments } from './pages/admin/Payments';
-import { Transactions as AdminTransactions } from './pages/admin/Transactions';
-import { Certificates as AdminCertificates } from './pages/admin/Certificates';
-import { Disputes as AdminDisputes } from './pages/admin/Disputes';
-import { Profile as AdminProfile } from './pages/admin/Profile';
-import { Settings as AdminSettings } from './pages/admin/Settings';
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.Dashboard })));
+const AdminUsers = lazy(() => import('./pages/admin/Users').then(module => ({ default: module.Users })));
+const AdminUserDetails = lazy(() => import('./pages/admin/UserDetails').then(module => ({ default: module.UserDetails })));
+const AdminCourses = lazy(() => import('./pages/admin/Courses').then(module => ({ default: module.Courses })));
+const AdminCourseDetails = lazy(() => import('./pages/admin/CourseDetails').then(module => ({ default: module.CourseDetails })));
+const AdminCourseApproval = lazy(() => import('./pages/admin/CourseApproval').then(module => ({ default: module.CourseApproval })));
+const AdminPayments = lazy(() => import('./pages/admin/Payments').then(module => ({ default: module.Payments })));
+const AdminTransactions = lazy(() => import('./pages/admin/Transactions').then(module => ({ default: module.Transactions })));
+const AdminCertificates = lazy(() => import('./pages/admin/Certificates').then(module => ({ default: module.Certificates })));
+const AdminDisputes = lazy(() => import('./pages/admin/Disputes').then(module => ({ default: module.Disputes })));
+const AdminProfile = lazy(() => import('./pages/admin/Profile').then(module => ({ default: module.Profile })));
+const AdminSettings = lazy(() => import('./pages/admin/Settings').then(module => ({ default: module.Settings })));
 
 // ──────────────────────────────────────────────────────────────
 // 5. SUPER ADMIN PLATFORM GOVERNANCE PAGES & LAYOUT
 // ──────────────────────────────────────────────────────────────
 import { SuperAdminLayout } from './components/super-admin/SuperAdminLayout';
 import { SuperAdminGuard } from './components/super-admin/SuperAdminGuard';
-import SuperAdminLogin from './pages/super-admin/Login';
-import SuperAdminDashboard from './pages/super-admin/Dashboard';
-import SuperAdminPayments from './pages/super-admin/Payments';
-import SuperAdminAdmins from './pages/super-admin/Admins';
-import SuperAdminOrganizations from './pages/super-admin/Organizations';
-import SuperAdminLearners from './pages/super-admin/Learners';
-import SuperAdminSettings from './pages/super-admin/Settings';
+const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
+const SuperAdminPayments = lazy(() => import('./pages/super-admin/Payments'));
+const SuperAdminAdmins = lazy(() => import('./pages/super-admin/Admins'));
+const SuperAdminOrganizations = lazy(() => import('./pages/super-admin/Organizations'));
+const SuperAdminLearners = lazy(() => import('./pages/super-admin/Learners'));
+const AccountDetails = lazy(() => import('./components/workspace/AccountDetails'));
+const AdministratorHistory = lazy(() => import('./components/workspace/AdministratorHistory'));
+const SuperAdminSettings = lazy(() => import('./pages/super-admin/Settings'));
 
 function LegacyAdminUserRedirect() {
   const { learnerId, organizationId } = useParams();
@@ -132,7 +138,7 @@ function LegacyPlayerRedirect() {
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={<main className="academy-route-loading" role="status"><span />Loading your workspace…</main>}><Routes>
       {/* ────────────────────────────────────────────────────────────── */}
       {/* 0. CENTRAL LANDING GATEWAY & SUPER ADMIN (LEVEL 1) */}
       {/* ────────────────────────────────────────────────────────────── */}
@@ -155,7 +161,11 @@ export default function App() {
         <Route path="admins" element={<SuperAdminAdmins />} />
         <Route path="organizations" element={<SuperAdminOrganizations />} />
         <Route path="learners" element={<SuperAdminLearners />} />
-        <Route path="settings" element={<SuperAdminSettings />} />
+        <Route path="organizations/:userId" element={<AccountDetails superAdmin/>}/>
+        <Route path="learners/:userId" element={<AccountDetails superAdmin/>}/>
+        <Route path="admins/:userId" element={<AccountDetails superAdmin/>}/>
+        <Route path="history" element={<AdministratorHistory/>}/>
+        <Route path="notifications" element={<NotificationsPage/>}/><Route path="settings" element={<SuperAdminSettings />} />
       </Route>
 
       <Route
@@ -206,7 +216,7 @@ export default function App() {
             path="/student/certificates"
             element={<StudentCertificates />}
           />
-          <Route path="/student/profile" element={<StudentProfile />} />
+          <Route path="/student/notifications" element={<StudentPageLayout><NotificationsPage/></StudentPageLayout>}/><Route path="/student/profile" element={<StudentProfile />} />
           <Route path="/student/billing" element={<StudentBilling />} />
           <Route path="/student/reviews" element={<StudentReviews />} />
           <Route path="/student/disputes" element={<StudentDisputes />} />
@@ -310,7 +320,7 @@ export default function App() {
           {/* Insights & Settings */}
           <Route path="reviews" element={<InstructorReviews />} />
           <Route path="analytics" element={<InstructorAnalytics />} />
-          <Route path="notifications" element={<InstructorNotifications />} />
+          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<InstructorSettings />} />
         </Route>
       </Route>
@@ -330,7 +340,7 @@ export default function App() {
         <Route path="/org/dashboard" element={<OrgDashboard />} />
         <Route path="/organization/dashboard" element={<OrgDashboard />} />
 
-        <Route path="/org/profile" element={<OrgProfile />} />
+        <Route path="/org/module-requests" element={<OrgLayout><ModuleRequests/></OrgLayout>}/><Route path="/org/notifications" element={<OrgLayout><NotificationsPage/></OrgLayout>}/><Route path="/org/profile" element={<OrgProfile />} />
         <Route path="/organization/profile" element={<OrgProfile />} />
 
         <Route
@@ -462,15 +472,15 @@ export default function App() {
           <Route path="disputes" element={<AdminDisputes />} />
 
           <Route path="payments" element={<AdminPayments />} />
-          <Route path="transactions" element={<AdminTransactions />} />
+          <Route path="transactions" element={<Navigate to="/admin/payments" replace/>} />
           <Route path="refunds" element={<Navigate to="/admin/payments" replace />} />
 
           <Route path="certificates" element={<AdminCertificates />} />
-          
+
           {/* Analytics & Reports consolidated in Dashboard */}
           <Route path="analytics" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="reports" element={<Navigate to="/admin/dashboard" replace />} />
-          
+
           {/* Notifications merged into Settings */}
           <Route path="notifications" element={<Navigate to="/admin/settings?tab=notifications" replace />} />
 
@@ -481,6 +491,6 @@ export default function App() {
 
       {/* Fallback */}
       <Route path="*" element={<UnavailablePage />} />
-    </Routes>
+    </Routes></Suspense>
   );
 }

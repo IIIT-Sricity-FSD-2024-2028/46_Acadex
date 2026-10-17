@@ -60,7 +60,8 @@ export class DisputesService {
   }
 
   async findMy(userId?: string) {
-    const target = userId || 'usr-5';
+    if (!userId) throw new BadRequestException('Sign in to view your disputes.');
+    const target = userId;
     let learnerId = target;
     try {
       const allLearners = await this.learnersRepo.find();
@@ -79,8 +80,7 @@ export class DisputesService {
           d.learnerId === learnerId ||
           d.learnerId === target ||
           d.studentId === learnerId ||
-          d.studentId === target ||
-          (target === 'usr-5' && (d.raisedBy === 'Arjun Sharma' || d.raisedById === 'lrn-1'))
+          d.studentId === target
       )
       .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
   }
@@ -108,8 +108,9 @@ export class DisputesService {
     } while (usedIds.has(newId));
     const nowIso = new Date().toISOString();
 
-    const raisedById = dto.raisedById || dto.learnerId || dto.studentId || dto.userId || 'usr-5';
-    const raisedBy = dto.raisedBy || 'Arjun Sharma';
+    const raisedById = dto.raisedById || dto.learnerId || dto.studentId || dto.userId;
+    if (!raisedById || !dto.raisedBy?.trim()) throw new BadRequestException('An account identity and name are required to open a dispute.');
+    const raisedBy = dto.raisedBy.trim();
     const disputeType = dto.disputeType || dto.category || (dto as any).type || 'Course Content';
     let courseTitle = dto.courseTitle || dto.course || '';
     let instructorId = '';

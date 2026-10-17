@@ -5,6 +5,8 @@ import App from './App.jsx';
 import { OrgProvider } from './context/OrgContext.jsx';
 import { ToastProvider } from './components/common/Toast.jsx';
 import './index.css';
+import './styles/academy.css';
+import './styles/workspace.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

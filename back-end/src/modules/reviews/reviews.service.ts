@@ -18,10 +18,11 @@ export class ReviewsService {
   ) {}
 
   async learnerIdFor(userId?: string) {
-    if (!userId) return 'lrn-1';
+    if (!userId) throw new ForbiddenException('Sign in with a learner account.');
     const learners = await this.learnersRepo.find();
     const learner = learners.find((l) => l.id === userId || l.userId === userId || l.email === userId);
-    return learner?.id || (userId.startsWith('lrn-') ? userId : 'lrn-1');
+    if (!learner) throw new ForbiddenException('A learner profile is required.');
+    return learner.id;
   }
 
   async findAll(instructorId?: string) {
@@ -65,27 +66,15 @@ export class ReviewsService {
     const course = await this.coursesRepo.findById(courseId);
     if (!course) throw new NotFoundException(`Course '${courseId}' not found`);
 
-    let enrollment = await this.enrollmentsRepo.findOne({ learnerId, courseId });
-    if (!enrollment) {
-      const allLearners = await this.learnersRepo.find();
-      const learner = allLearners.find((l) => l.id === learnerId);
-      enrollment = await this.enrollmentsRepo.create({
-        learnerId,
-        learnerName: data?.learnerName || learner?.name || 'Arjun Sharma',
-        courseId,
-        courseTitle: course?.title || '',
-        enrolledDate: new Date().toISOString().split('T')[0],
-        progress: 10,
-        status: 'Active',
-      });
-    }
-
+    const enrollment = await this.enrollmentsRepo.findOne({ learnerId, courseId });
+    if (!enrollment) throw new ForbiddenException('Enroll in this course before reviewing it.');
+    const learner=await this.learnersRepo.findById(learnerId);
     const rating = Math.min(5, Math.max(1, Math.round(Number(data?.rating) || 5)));
     const comment = (data?.comment || data?.content || data?.review || '').trim();
 
     const review = await this.reviewsRepo.create({
       learnerId,
-      learnerName: data?.learnerName || enrollment?.learnerName || 'Learner',
+      learnerName: learner.name,
       learnerAvatar: data?.learnerAvatar || data?.avatar || enrollment?.learnerAvatar || '',
       courseId,
       courseTitle: course?.title || '',
@@ -123,7 +112,7 @@ export class ReviewsService {
     if (!review) throw new NotFoundException(`Review '${id}' not found`);
 
     const callerId = await this.learnerIdFor(userId);
-    if (userId && callerId && review.learnerId && review.learnerId !== callerId && callerId !== 'lrn-1') {
+    if (review.learnerId !== callerId) {
       throw new ForbiddenException('You can only edit your own reviews');
     }
 
@@ -141,7 +130,7 @@ export class ReviewsService {
     if (!review) throw new NotFoundException(`Review '${id}' not found`);
 
     const callerId = await this.learnerIdFor(userId);
-    if (userId && callerId && review.learnerId && review.learnerId !== callerId && callerId !== 'lrn-1') {
+    if (review.learnerId !== callerId) {
       throw new ForbiddenException('You can only delete your own reviews');
     }
 

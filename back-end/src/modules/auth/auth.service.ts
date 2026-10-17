@@ -1,5 +1,6 @@
 import { Inject, Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
+import { JsonDatabaseService } from '../../database/json-db.service';
 import { JsonRepository } from '../../database/json-repository';
 import { UserEntity } from '../../database/schema';
 import { LoginDto, RegisterDto, ChangePasswordDto, PasswordResetConfirmDto } from './dto/auth.dto';
@@ -13,7 +14,9 @@ export class AuthService {
     @Inject(REPOSITORY_TOKENS.LEARNERS)
     private readonly learnersRepo: JsonRepository<any>,
     @Inject(REPOSITORY_TOKENS.INSTRUCTORS)
-    private readonly instructorsRepo: JsonRepository<any>
+    private readonly instructorsRepo: JsonRepository<any>,
+    @Inject(REPOSITORY_TOKENS.ORGANIZATIONS) private readonly organizationsRepo:JsonRepository<any>,
+    private readonly db:JsonDatabaseService
   ) {}
 
   private meetsPasswordCriteria(password: string) {
@@ -160,7 +163,10 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    if(!['Student','Instructor','Organization'].includes(dto.role))throw new BadRequestException('Administrator accounts cannot be created through public registration.');
     this.ensurePasswordCriteria(dto.password);
+    dto.email=dto.email.trim().toLowerCase();
+    return this.db.runTransaction(async()=>{
     const existing = await this.usersRepo.findOne({ email: dto.email });
     if (existing) {
       throw new BadRequestException('A user with this email address already exists');
@@ -183,6 +189,7 @@ export class AuthService {
     });
 
     let instructorId: string | null = null;
+    let organizationId: string | null = null;
 
     if (dto.role === 'Student') {
       await this.learnersRepo.create({
@@ -220,16 +227,23 @@ export class AuthService {
       });
     }
 
+    if(dto.role==='Organization'){
+      const org=await this.organizationsRepo.create({name:newUser.name,email:newUser.email,userId:newUser.id,status:'Active',currency:'INR',instructorIds:[],coursesCount:0,learnersCount:0,totalRevenue:0,monthlyRevenue:0,createdAt:new Date().toISOString()});
+      organizationId=org.id;
+      await this.usersRepo.update(newUser.id,{organizationId:org.id,organizationName:org.name});
+    }
+
     return {
       token: `jwt-token-${newUser.id}-${Date.now()}`,
       user: {
         ...newUser,
         instructorId,
-        organizationId: null,
-        organizationName: null,
+        organizationId,
+        organizationName: organizationId?newUser.name:null,
         status: initialStatus,
       },
     };
+    });
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {

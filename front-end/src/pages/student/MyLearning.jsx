@@ -187,6 +187,7 @@ export default function MyLearning() {
             <form
               onSubmit={async (ev) => {
                 ev.preventDefault();
+                if (!student?.id) return addToast('Your profile is still loading. Please retry.', 'warning');
                 if (!reviewComment.trim()) return addToast('Please enter your review feedback', 'warning');
                 setSubmittingReview(true);
                 try {
@@ -194,8 +195,8 @@ export default function MyLearning() {
                     reviewCourse.courseId,
                     reviewRating,
                     reviewComment.trim(),
-                    student?.name || 'Arjun Sharma',
-                    student?.id || 'lrn-1'
+                    student.name,
+                    student.id
                   );
                   addToast('Your review was published successfully!', 'success');
                   setReviewCourse(null);

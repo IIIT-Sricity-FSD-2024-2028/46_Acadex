@@ -100,24 +100,8 @@ export default function StudentReviews() {
       const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
       setReviews(list);
     } catch (err) {
-      console.warn('Direct reviews fetch notice:', err?.message);
-      try {
-        const allRes = await api.courses.list();
-        const courseList = Array.isArray(allRes) ? allRes : (allRes?.items || []);
-        const reviewFetches = courseList.slice(0, 5).map(c => 
-          api.courses.getReviews(c.id).catch(() => [])
-        );
-        const resolvedReviews = await Promise.all(reviewFetches);
-        const combined = resolvedReviews.flat();
-        const myFiltered = combined.filter(r => 
-          r.learnerId === 'lrn-1' || 
-          r.learnerName === 'Arjun Sharma' ||
-          r.learnerName === student?.name
-        );
-        setReviews(myFiltered.length > 0 ? myFiltered : combined.slice(0, 3));
-      } catch {
-        setReviews([]);
-      }
+      setReviews([]);
+      addToast(err.message || 'Unable to load your reviews', 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -191,6 +175,7 @@ export default function StudentReviews() {
 
   const handleCreateReview = async (e) => {
     e.preventDefault();
+    if (!student?.id) return addToast('Your profile is still loading. Please retry.', 'warning');
     if (!selectedCourseId) return addToast('Please select a course to review', 'warning');
     if (!newComment.trim()) return addToast('Please enter your review comment', 'warning');
     setSubmittingNew(true);
@@ -199,8 +184,8 @@ export default function StudentReviews() {
         selectedCourseId,
         newRating,
         newComment.trim(),
-        student?.name || 'Arjun Sharma',
-        student?.id || 'lrn-1'
+        student.name,
+        student.id
       );
       addToast('Your review was published successfully!', 'success');
       setShowNewModal(false);

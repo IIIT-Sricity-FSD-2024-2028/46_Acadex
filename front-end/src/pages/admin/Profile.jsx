@@ -1,103 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { UserAvatar } from '../../components/admin/UserAvatar';
-import { Mail, Shield, Clock, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShieldCheck, Clock3, Save } from 'lucide-react';
 import { api } from '../../utils/api';
-
+import { useAdminSession } from '../../context/AdminSession';
+import { AdminDataState, AdminHeader, AdminSectionHeader } from '../../components/admin/AdminUI';
+import { dateLabel } from '../../utils/adminDisplay';
 export const Profile = () => {
-  const [profile, setProfile] = useState({
-    name: 'Admin User',
-    email: 'admin@platform.com',
-    role: 'Super Admin',
-    lastLogin: 'Just now',
-  });
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    api.get(`/users/${localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || ''}`)
-      .then(user => {
-        if (user) {
-          setProfile({
-            name: user.name,
-            email: user.email,
-            role: user.role === 'Admin' ? 'Super Admin' : user.role,
-            lastLogin: user.lastLogin,
-          });
-        }
-      })
-      .catch(err => console.error('Error fetching admin profile:', err));
-  }, []);
-
-  const handleSave = (e) => {
-    e.preventDefault();
-    api.patch(`/users/${localStorage.getItem('user_id') || localStorage.getItem('nexuspay_user_id') || ''}`, { name: profile.name, email: profile.email })
-      .then(() => {
+    const session = useAdminSession();
+    const [form, setForm] = useState({ name: '', email: '' });
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const [saved, setSaved] = useState(false);
+    useEffect(() => { if (session.profile)
+        setForm({ name: session.profile.name || '', email: session.profile.email || '' }); }, [session.profile]);
+    async function save(e) { e.preventDefault(); if (busy)
+        return; setBusy(true); setError(''); setSaved(false); try {
+        const updated = await api.patch('/admin/profile', form);
+        localStorage.setItem('user_name', updated.name);
+        localStorage.setItem('user_email', updated.email);
+        window.dispatchEvent(new Event('admin-data-changed'));
+        window.dispatchEvent(new Event('account-changed'));
         setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      })
-      .catch(err => console.error('Error saving profile:', err));
-  };
-
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Profile</h1>
+    }
+    catch (e) {
+        setError(e.message);
+    }
+    finally {
+        setBusy(false);
+    } }
+    return <div className="admin-page">
+    <AdminHeader eyebrow="Account settings" title="My profile" description="Your account details and workspace identity."/>{!session.profile ? <AdminDataState {...session}/> : <div className="grid lg:grid-cols-[minmax(240px,1fr)_2fr] gap-5 items-start">
+        <section className="admin-card text-center">
+        <span className="admin-avatar !w-20 !h-20 !text-3xl mx-auto mt-3 mb-5">{session.profile.name?.charAt(0) || 'A'}</span>
+        <h2 className="font-semibold text-lg">{session.profile.name}</h2>
+        <p className="admin-muted break-all mt-2">{session.profile.email}</p>
+        <div className="border-t border-[#edf1e9] mt-6 pt-5 space-y-4 text-left">
+        <p className="admin-record-meta">
+        <ShieldCheck size={16}/>{session.profile.role}</p>
+        <p className="admin-record-meta">
+        <Clock3 size={16}/>Last login: {dateLabel(session.profile.lastLogin)}</p>
         </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-8 border-b border-slate-200">
-          <div className="flex items-center gap-6">
-            <UserAvatar name={profile.name} size="xl" />
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{profile.name}</h2>
-              <div className="mt-2 flex flex-col gap-2 text-sm text-slate-500">
-                <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {profile.email}</span>
-                <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> {profile.role}</span>
-                <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> Last login: {profile.lastLogin}</span>
-              </div>
-            </div>
-          </div>
+        </section>
+        <form onSubmit={save} className="admin-card space-y-6">
+        <AdminSectionHeader title="Personal information" description="Keep your name and contact email up to date."/>{error && <p role="alert" className="admin-alert">{error}</p>}{saved && <p role="status" className="admin-success">Your profile has been updated.</p>}<label className="block text-xs">Full name<input required maxLength={160} className="admin-input mt-2" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setSaved(false); }}/>
+        </label>
+        <label className="block text-xs">Email address<input required type="email" className="admin-input mt-2" value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setSaved(false); }}/>
+        </label>
+        <div className="border-t border-[#edf1e9] pt-5 flex justify-end">
+        <button disabled={busy || !form.name.trim()} className="admin-button admin-button-primary">
+        <Save size={14}/>{busy ? 'Saving…' : 'Save changes'}</button>
         </div>
-        
-        <div className="p-8">
-          <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-4">Edit Profile</h3>
-          {saved && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
-              <Check className="w-4 h-4" /> Profile updated successfully!
-            </div>
-          )}
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                <input 
-                  type="text" 
-                  value={profile.name} 
-                  onChange={e => setProfile({ ...profile, name: e.target.value })} 
-                  placeholder="e.g. Admin User"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                <input 
-                  type="email" 
-                  value={profile.email} 
-                  onChange={e => setProfile({ ...profile, email: e.target.value })} 
-                  placeholder="e.g. admin@platform.com"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" 
-                />
-              </div>
-            </div>
-            <div>
-              <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium">
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
+        </form>
+        </div>}</div>;
 };

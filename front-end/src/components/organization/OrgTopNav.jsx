@@ -1,3 +1,4 @@
+import NotificationBell from '../workspace/NotificationBell';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -58,16 +59,7 @@ export default function OrgTopNav({ breadcrumbs = [], actions }) {
 
         {/* Notifications Popover */}
         <div className="relative">
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors relative border border-outline-variant/40"
-            title="Organization Alerts"
-          >
-            <Bell className="w-4 h-4" />
-            {stats.unreadNotifications > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse"></span>
-            )}
-          </button>
+          <NotificationBell/>
 
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-[28rem] max-w-[calc(100vw-1.5rem)] bg-surface-container-lowest rounded-2xl shadow-elevation-3 border border-outline-variant p-5 z-50 animate-in fade-in">

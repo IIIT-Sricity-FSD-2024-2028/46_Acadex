@@ -1,9 +1,9 @@
 [
   {
     "id": "org-1",
-    "name": "Meridian Tech Institute",
+    "name": "IIIT SRICITY",
     "tagline": "Practical skills for working engineers",
-    "email": "admin@meridiantech.io",
+    "email": "admin@iiits.in",
     "phone": "+1 (415) 552-8800",
     "location": "San Francisco, CA, USA",
     "address": "180 Townsend Street, San Francisco, CA 94107",
@@ -27,9 +27,9 @@
   },
   {
     "id": "org-2",
-    "name": "QuantLearn Academy",
+    "name": "IISC BANGALORE",
     "tagline": "Data science and security education that goes deep",
-    "email": "admin@quantlearn.io",
+    "email": "admin@iisc.ac.in",
     "phone": "+1 (617) 445-3200",
     "location": "Boston, MA, USA",
     "address": "320 Congress Street, Boston, MA 02210",

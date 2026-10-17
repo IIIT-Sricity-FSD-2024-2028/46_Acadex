@@ -7,8 +7,8 @@
     "course": "Distributed Systems",
     "courseTitle": "Distributed Systems",
     "courseId": "cou-b00839da",
-    "organization": "Stanford University",
-    "raisedBy": "Arjun Sharma",
+    "organization": "IIIT SRICITY",
+    "raisedBy": "Nishanth",
     "raisedById": "lrn-1",
     "raisedByType": "Learner",
     "raisedByRole": "Learner",
@@ -23,7 +23,7 @@
     "comments": [
       {
         "id": "com-1",
-        "author": "Arjun Sharma",
+        "author": "Nishanth",
         "message": "I attempted playback on Chrome 129 and Safari 18; the stream consistently halts at 12:44.",
         "isAdmin": false,
         "timestamp": "2026-10-14T09:32:00.000Z"
@@ -33,7 +33,7 @@
       {
         "id": "tl-1",
         "type": "created",
-        "message": "Dispute ticket DSP-2026-101 submitted by Arjun Sharma",
+        "message": "Dispute ticket DSP-2026-101 submitted by Nishanth",
         "timestamp": "2026-10-14T09:30:00.000Z"
       }
     ]
@@ -91,7 +91,7 @@
     "course": "Full Stack Web Development with React & Node.js",
     "courseTitle": "Full Stack Web Development with React & Node.js",
     "courseId": "crs-1",
-    "organization": "Stanford University",
+    "organization": "IIIT SRICITY",
     "raisedBy": "Sophia Martinez",
     "raisedById": "lrn-2",
     "raisedByType": "Learner",
@@ -123,7 +123,7 @@
     "courseTitle": "Backend Development - 2345",
     "courseId": "cou-2238c587",
     "organization": null,
-    "raisedBy": "Arjun Sharma",
+    "raisedBy": "Nishanth",
     "raisedById": "lrn-1",
     "raisedByType": "Learner",
     "raisedByRole": "Learner",
@@ -150,7 +150,7 @@
       {
         "id": "tl-5",
         "type": "created",
-        "message": "Payment dispute logged by Arjun Sharma",
+        "message": "Payment dispute logged by Nishanth",
         "timestamp": "2026-10-10T11:20:00.000Z"
       },
       {
@@ -170,7 +170,7 @@
     "courseTitle": "Object Oriented Programming",
     "courseId": "cou-fb5ac543",
     "organization": null,
-    "raisedBy": "Sofia Reyes",
+    "raisedBy": "Puneeth",
     "raisedById": "lrn-2",
     "raisedByType": "Learner",
     "raisedByRole": "Learner",
@@ -189,7 +189,7 @@
       {
         "id": "tl-7",
         "type": "created",
-        "message": "Technical issue report created by Sofia Reyes",
+        "message": "Technical issue report created by Puneeth",
         "timestamp": "2026-10-08T16:45:00.000Z"
       },
       {
