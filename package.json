@@ -1,0 +1,24 @@
+{
+  "name": "edtech-app-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Unified Enterprise EdTech Platform (4 Actors: Student, Instructor, Organization, Admin)",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build --prefix back-end && npm run build --prefix front-end",
+    "backend:dev": "npm run start:dev --prefix back-end",
+    "backend:build": "npm run build --prefix back-end",
+    "frontend:dev": "npm run dev --prefix front-end",
+    "frontend:build": "npm run build --prefix front-end"
+  },
+  "keywords": [
+    "edtech",
+    "nestjs",
+    "react",
+    "vite",
+    "tailwind",
+    "lms"
+  ],
+  "author": "NexusPay Enterprise",
+  "license": "MIT"
+}

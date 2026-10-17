@@ -1,0 +1,27 @@
+[
+  {
+    "role": "Student",
+    "userId": "usr-5",
+    "password": "Password123!"
+  },
+  {
+    "role": "Instructor",
+    "userId": "usr-1",
+    "password": "Password123!"
+  },
+  {
+    "role": "Organization",
+    "userId": "usr-7",
+    "password": "Password123!"
+  },
+  {
+    "role": "Admin",
+    "userId": "usr-9",
+    "password": "Password123!"
+  },
+  {
+    "role": "SuperAdmin",
+    "userId": "usr-10",
+    "password": "Password123!"
+  }
+]

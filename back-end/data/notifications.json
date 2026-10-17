@@ -1,0 +1,89 @@
+[
+  {
+    "title": "Raghuveer accepted your invitation",
+    "desc": "Faculty invitation to join IIIT SRICITY.",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": true,
+    "color": "green",
+    "organizationId": "org-1",
+    "id": "not-e55bd460",
+    "createdAt": "2026-10-16T15:48:44.946Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
+  },
+  {
+    "title": "Course Completed",
+    "desc": "Nishanth completed \"Python Backend Development with FastAPI\" and received a certificate.",
+    "time": "Just now",
+    "category": "Certificate",
+    "read": true,
+    "color": "green",
+    "learnerId": "lrn-1",
+    "id": "not-06a794d8",
+    "createdAt": "2026-10-16T13:57:52.238Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
+  },
+  {
+    "title": "Course Completed",
+    "desc": "Nishanth completed \"Object Oriented Programming\" and received a certificate.",
+    "time": "Just now",
+    "category": "Certificate",
+    "read": true,
+    "color": "green",
+    "learnerId": "lrn-1",
+    "id": "not-dde2f573",
+    "createdAt": "2026-10-16T13:52:18.961Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
+  },
+  {
+    "title": "Course Completed",
+    "desc": "Nishanth completed \"Backend Development - 2345\" and received a certificate.",
+    "time": "Just now",
+    "category": "Certificate",
+    "read": true,
+    "color": "green",
+    "learnerId": "lrn-1",
+    "id": "not-21a1732e",
+    "createdAt": "2026-10-16T13:47:40.519Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
+  },
+  {
+    "title": "Teaching invitation sent to Raghuveer",
+    "desc": "IIIT SRICITY invited Raghuveer to teach \"General Course Assignment\".",
+    "time": "Just now",
+    "category": "Instructor",
+    "read": true,
+    "color": "blue",
+    "organizationId": "org-1",
+    "instructorId": "inst-3",
+    "id": "not-72516796",
+    "createdAt": "2026-10-16T10:52:25.383Z",
+    "updatedAt": "2026-10-16T16:32:51.753Z"
+  },
+  {
+    "id": "review-submission-data-engineering",
+    "title": "Course awaiting review",
+    "desc": "Data Engineering Foundations is awaiting platform approval.",
+    "recipientRole": "platform",
+    "category": "CourseApproval",
+    "courseId": "submission-data-engineering",
+    "organizationId": "org-1",
+    "createdAt": "2026-10-17T05:43:40.167867+00:00",
+    "read": false,
+    "actionUrl": "/admin/courses/approval",
+    "actionLabel": "Review course"
+  },
+  {
+    "id": "review-submission-secure-systems",
+    "title": "Course awaiting review",
+    "desc": "Secure Systems Design is awaiting platform approval.",
+    "recipientRole": "platform",
+    "category": "CourseApproval",
+    "courseId": "submission-secure-systems",
+    "organizationId": "org-2",
+    "createdAt": "2026-10-17T05:43:40.167867+00:00",
+    "read": false,
+    "actionUrl": "/admin/courses/approval",
+    "actionLabel": "Review course"
+  }
+]

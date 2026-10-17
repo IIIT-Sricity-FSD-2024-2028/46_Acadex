@@ -1,0 +1,203 @@
+[
+  {
+    "id": "DSP-2026-101",
+    "subject": "Lesson 3.2 video player playback issue and broken repository link",
+    "type": "Course Content",
+    "disputeType": "Course Content",
+    "course": "Distributed Systems",
+    "courseTitle": "Distributed Systems",
+    "courseId": "cou-b00839da",
+    "organization": "IIIT SRICITY",
+    "raisedBy": "Nishanth",
+    "raisedById": "lrn-1",
+    "raisedByType": "Learner",
+    "raisedByRole": "Learner",
+    "priority": "High",
+    "status": "Open",
+    "createdAt": "2026-10-14T09:30:00.000Z",
+    "updatedAt": "2026-10-14T09:30:00.000Z",
+    "resolvedAt": null,
+    "description": "In Module 3 (Raft Consensus Protocol), the video stream in lesson 3.2 freezes at 12:44 with an audio desync error. Additionally, the supplementary exercise code GitHub repository link in the sidebar returns a 404 Not Found error, blocking progress to the subsequent module.",
+    "desiredResolution": "Repair the transcoded video asset for lesson 3.2 and update the exercise repository URL.",
+    "adminNotes": "Forwarded to course instructor Raghuveer for content verification.",
+    "comments": [
+      {
+        "id": "com-1",
+        "author": "Nishanth",
+        "message": "I attempted playback on Chrome 129 and Safari 18; the stream consistently halts at 12:44.",
+        "isAdmin": false,
+        "timestamp": "2026-10-14T09:32:00.000Z"
+      }
+    ],
+    "timeline": [
+      {
+        "id": "tl-1",
+        "type": "created",
+        "message": "Dispute ticket DSP-2026-101 submitted by Nishanth",
+        "timestamp": "2026-10-14T09:30:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "DSP-2026-102",
+    "subject": "Outdated IAM Policy and ECS syntax in Lab 4.2",
+    "type": "Course Content",
+    "disputeType": "Course Content",
+    "course": "Cloud Infrastructure & DevOps with AWS",
+    "courseTitle": "Cloud Infrastructure & DevOps with AWS",
+    "courseId": "crs-2",
+    "organization": "Enterprise Learning Consortium",
+    "raisedBy": "Enterprise Learning Consortium",
+    "raisedById": "org-1",
+    "raisedByType": "Organization",
+    "raisedByRole": "Organization",
+    "priority": "High",
+    "status": "In Progress",
+    "createdAt": "2026-10-13T14:15:00.000Z",
+    "updatedAt": "2026-10-14T11:00:00.000Z",
+    "resolvedAt": null,
+    "description": "Our enterprise cohort of 45 learners is unable to complete Hands-on Lab 4.2. The bundled CloudFormation template references deprecated AWS ECS task definition parameters, causing validation errors upon template deployment in AWS CloudShell.",
+    "desiredResolution": "Update the CloudFormation stack template with current AWS CLI v2 and ECS Fargate parameters.",
+    "adminNotes": "Assigned to DevOps Curriculum Team. Reviewing updated template revisions.",
+    "comments": [
+      {
+        "id": "com-2",
+        "author": "Admin",
+        "message": "Reviewed template with AWS lab team. Deploying patched JSON spec for verification.",
+        "isAdmin": true,
+        "timestamp": "2026-10-14T11:00:00.000Z"
+      }
+    ],
+    "timeline": [
+      {
+        "id": "tl-2",
+        "type": "created",
+        "message": "Dispute opened by Enterprise Learning Consortium",
+        "timestamp": "2026-10-13T14:15:00.000Z"
+      },
+      {
+        "id": "tl-3",
+        "type": "comment",
+        "message": "Status updated to In Progress by Curriculum Operations",
+        "timestamp": "2026-10-14T11:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "DSP-2026-103",
+    "subject": "Certificate cryptographic verification link invalid",
+    "type": "Certificate",
+    "disputeType": "Certificate",
+    "course": "Full Stack Web Development with React & Node.js",
+    "courseTitle": "Full Stack Web Development with React & Node.js",
+    "courseId": "crs-1",
+    "organization": "IIIT SRICITY",
+    "raisedBy": "Puneeth",
+    "raisedById": "lrn-2",
+    "raisedByType": "Learner",
+    "raisedByRole": "Learner",
+    "priority": "Medium",
+    "status": "Open",
+    "createdAt": "2026-10-15T08:10:00.000Z",
+    "updatedAt": "2026-10-15T08:10:00.000Z",
+    "resolvedAt": null,
+    "description": "Completed all 12 modules of Full Stack Web Development. The generated certificate PDF displays a verification QR code that points to an unresolvable hash on the verification portal.",
+    "desiredResolution": "Regenerate certificate with valid verification hash and sync credential ledger.",
+    "adminNotes": "Awaiting certificate signing service sync.",
+    "comments": [],
+    "timeline": [
+      {
+        "id": "tl-4",
+        "type": "created",
+        "message": "Dispute ticket DSP-2026-103 created by Puneeth",
+        "timestamp": "2026-10-15T08:10:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "DSP-2026-104",
+    "subject": "Duplicate checkout billing debit for course enrollment",
+    "type": "Payment",
+    "disputeType": "Payment",
+    "course": "Backend Development - 2345",
+    "courseTitle": "Backend Development - 2345",
+    "courseId": "cou-2238c587",
+    "organization": null,
+    "raisedBy": "Nishanth",
+    "raisedById": "lrn-1",
+    "raisedByType": "Learner",
+    "raisedByRole": "Learner",
+    "priority": "High",
+    "status": "Resolved",
+    "createdAt": "2026-10-10T11:20:00.000Z",
+    "updatedAt": "2026-10-11T16:00:00.000Z",
+    "resolvedAt": "2026-10-11T16:00:00.000Z",
+    "description": "During payment checkout via UPI, the gateway timed out on the first invocation and debited ₹4,499 twice under transaction references TXN-99124 and TXN-99125.",
+    "desiredResolution": "Refund duplicate ₹4,499 charge to original source UPI handle.",
+    "resolutionNote": "Payment reconciliation confirmed duplicate debit. Refund of ₹4,499 initiated back to source VPA nishanth@okaxis (UTR: 329019284910).",
+    "resolvedBy": "Finance Settlement Ops",
+    "adminNotes": "Refund processed and closed.",
+    "comments": [
+      {
+        "id": "com-3",
+        "author": "Finance Settlement Ops",
+        "message": "Duplicate payment identified with gateway. Refund batch settlement processed successfully.",
+        "isAdmin": true,
+        "timestamp": "2026-10-11T15:58:00.000Z"
+      }
+    ],
+    "timeline": [
+      {
+        "id": "tl-5",
+        "type": "created",
+        "message": "Payment dispute logged by Nishanth",
+        "timestamp": "2026-10-10T11:20:00.000Z"
+      },
+      {
+        "id": "tl-6",
+        "type": "resolved",
+        "message": "Dispute resolved and refund processed by Finance Settlement Ops",
+        "timestamp": "2026-10-11T16:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "DSP-2026-105",
+    "subject": "Compiler timeout on OOP Polymorphism unit test runner",
+    "type": "Course Content",
+    "disputeType": "Course Content",
+    "course": "Object Oriented Programming",
+    "courseTitle": "Object Oriented Programming",
+    "courseId": "cou-fb5ac543",
+    "organization": null,
+    "raisedBy": "Puneeth",
+    "raisedById": "lrn-2",
+    "raisedByType": "Learner",
+    "raisedByRole": "Learner",
+    "priority": "Low",
+    "status": "Resolved",
+    "createdAt": "2026-10-08T16:45:00.000Z",
+    "updatedAt": "2026-10-09T14:30:00.000Z",
+    "resolvedAt": "2026-10-09T14:30:00.000Z",
+    "description": "Interactive browser terminal in Section 4 (Polymorphism and Interface implementation) repeatedly times out when compiling multi-file test runners.",
+    "desiredResolution": "Increase container execution memory allocation from 256MB to 512MB.",
+    "resolutionNote": "Container runtime memory limit upgraded to 512MB and compilation timeout raised to 15s.",
+    "resolvedBy": "Platform Infrastructure Team",
+    "adminNotes": "Sandbox memory tuned across all OOP execution nodes.",
+    "comments": [],
+    "timeline": [
+      {
+        "id": "tl-7",
+        "type": "created",
+        "message": "Technical issue report created by Puneeth",
+        "timestamp": "2026-10-08T16:45:00.000Z"
+      },
+      {
+        "id": "tl-8",
+        "type": "resolved",
+        "message": "Resolved by Platform Infrastructure Team",
+        "timestamp": "2026-10-09T14:30:00.000Z"
+      }
+    ]
+  }
+]

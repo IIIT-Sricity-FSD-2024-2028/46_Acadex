@@ -1,0 +1,40 @@
+/* Imported by the editor itself, including when entering through a direct link. */
+.academy-portal .curriculum-editor .curriculum-inline {
+  background: transparent !important;
+  color: #263b2d !important;
+  box-shadow: none !important;
+  line-height: 1.6;
+}
+.academy-portal .curriculum-editor .curriculum-inline:hover {
+  background: #f1f6ed !important;
+  border-color: #cbdcc1;
+}
+.academy-portal .curriculum-editor .curriculum-inline.block {
+  display: block;
+  background: #fafcf8 !important;
+  border: 1px dashed #c6d8ba;
+  padding: 10px 12px;
+  margin: 0;
+  min-height: 44px;
+  border-radius: 8px;
+}
+.academy-portal .curriculum-editor .curriculum-inline.block > span {
+  color: #65775c !important;
+  font-style: normal;
+}
+.academy-portal .curriculum-editor .curriculum-pale-icon {
+  background: #edf4e7 !important;
+  color: #496e3b !important;
+}
+.academy-portal .curriculum-editor .curriculum-add-module {
+  background: #f8fbf5 !important;
+  color: #365d33 !important;
+  border: 1px dashed #aec59b;
+  border-radius: 12px;
+  padding: 19px;
+  box-shadow: none !important;
+}
+.academy-portal .curriculum-editor .curriculum-add-module:hover {
+  background: #edf4e6 !important;
+  border-color: #7a9d65;
+}

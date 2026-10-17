@@ -1,0 +1,54 @@
+/* Shared role dashboards: neutral cards, readable figures, restrained green accents. */
+.dashboard-page{width:100%;max-width:1280px;margin-inline:auto;gap:22px;padding-bottom:24px;color:#273f30}
+.dashboard-page .admin-page-header{align-items:center;margin-bottom:0;gap:16px}
+.dashboard-page .admin-heading{font-size:clamp(25px,2.3vw,31px);letter-spacing:-.8px;line-height:1.35}
+.dashboard-page .admin-stats-grid{gap:16px}
+.dashboard-page .admin-metric{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-content:center;min-height:116px;padding:21px;border-radius:14px;box-shadow:none;background:#fff;border:1px solid #dfe7d8}
+.dashboard-page .admin-metric-top{grid-column:2;grid-row:1/3;gap:8px;align-self:center;margin:0}
+.dashboard-page .admin-metric-top>svg{width:13px;height:13px}
+.dashboard-page .admin-metric-top .admin-icon-tile{width:35px;height:35px;border-radius:10px;background:#eef4e8;color:#587945}
+.dashboard-page .admin-metric-value{grid-column:1;grid-row:2;font-size:28px;line-height:1.3;letter-spacing:-.6px;margin:0;color:#2e4933}
+.dashboard-page .admin-metric-label{grid-column:1;grid-row:1;font-size:12px;line-height:1.5;font-weight:400;color:#607451;margin:0}
+.dashboard-page .admin-metric-detail{grid-column:1/-1;font-size:11px;line-height:1.6;color:#6f7f63;margin:0}
+.dashboard-page .admin-card{border-color:#dfe7d8;border-radius:14px;box-shadow:none;min-width:0}
+.dashboard-page .admin-card-link:hover{transform:none;background:#fcfef9;border-color:#a8bf97;box-shadow:0 3px 12px #29492608}
+.dashboard-page .admin-section-header{gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.dashboard-page .admin-section-header h2{color:#304b33;font-size:15px;line-height:1.5}
+.dashboard-page .admin-section-header p,.dashboard-page .admin-muted{font-size:12px;line-height:1.7;color:#6e8062}
+.dashboard-page .admin-user-row{padding:15px 0;gap:13px}
+.dashboard-page .admin-user-row strong{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.dashboard-page .admin-user-row small{font-size:11px;line-height:1.6;color:#6c7e61;overflow-wrap:anywhere}
+.dashboard-page .admin-grid{gap:16px}
+.dashboard-page .admin-record{padding:22px;display:flex;flex-direction:column}
+.dashboard-page .admin-record-footer{margin-top:auto;padding-top:18px}
+.dashboard-page .finance-summary-card{background:#fafcf7;border-color:#e0e8d8;border-radius:12px;padding:20px}
+.dashboard-page .finance-summary-card h3{color:#385733;line-height:1.6}
+.dashboard-page .finance-breakdown{margin-top:18px}
+.dashboard-page .finance-breakdown>div{padding:11px 0;font-size:12px;line-height:1.6;gap:15px}
+.dashboard-page .finance-breakdown dt{color:#697e5c}
+.dashboard-page .finance-breakdown dd{color:#385b35;font-variant-numeric:tabular-nums}
+.dashboard-page .recharts-cartesian-axis-tick text{font-size:11px;fill:#6b7e60}
+.dashboard-page .recharts-default-tooltip{border:1px solid #dbe5d1!important;border-radius:10px;background:#fff!important;font-size:12px;line-height:1.8;padding:12px 16px!important}
+.dashboard-page .recharts-tooltip-label{color:#4c6941}
+.dashboard-page .operations-list p{color:#6c7e61;line-height:1.7}
+.dashboard-page .operations-list time{font-size:11px;color:#6c7e61;white-space:nowrap}
+.dashboard-page progress{height:5px;accent-color:#71985b}
+.dashboard-page progress::-webkit-progress-bar{background:#edf2e7;border-radius:6px}
+.dashboard-page progress::-webkit-progress-value{background:#71985b;border-radius:6px}
+.dashboard-billing{margin-top:24px}
+.dashboard-billing .admin-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dashboard-org{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dashboard-org>.admin-page-header,.dashboard-org>.admin-stats-grid,.dashboard-org>[role=alert],.dashboard-org>.admin-skeleton-grid{grid-column:1/-1}
+.dashboard-page a:focus-visible,.dashboard-page button:focus-visible{outline:2px solid #5b8049;outline-offset:4px}
+.dashboard-page .dashboard-course-title{color:#304c32;font-weight:550;line-height:1.7}
+.dashboard-page .dashboard-course-title:hover{text-decoration:underline}
+/* Curriculum text is editable content, never a filled primary button. */
+.academy-portal .curriculum-editor .curriculum-inline{background:transparent;color:#283e30;line-height:1.6}
+.academy-portal .curriculum-editor .curriculum-inline:hover{background:#f1f6ed;border-color:#d5e3cc}
+.academy-portal .curriculum-editor .curriculum-inline.block{background:#fafcf8;padding:10px 12px;margin:0;border:1px dashed #cbdabe;border-radius:8px;min-height:44px}
+.curriculum-editor .curriculum-inline.block>span{color:#6a7e5f;font-style:normal}
+.academy-portal .curriculum-editor .curriculum-add-module{background:#f7faf3;color:#3e6539;border:1px dashed #aec59c;padding:19px;border-radius:12px}
+.academy-portal .curriculum-editor .curriculum-add-module:hover{background:#edf4e6;border-color:#789c61}
+.curriculum-editor .curriculum-add-module>div{background:#e7f0df;color:#3e6539}
+@media(max-width:1100px){.dashboard-page .admin-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-org{grid-template-columns:1fr}.dashboard-page .admin-dashboard-columns{grid-template-columns:1fr}}
+@media(max-width:600px){.dashboard-page{gap:18px}.dashboard-page .admin-metric{padding:16px;gap:7px 9px;min-height:105px}.dashboard-page .admin-metric-top{gap:0}.dashboard-page .admin-metric-top>svg{display:none}.dashboard-page .admin-metric-value{font-size:24px}.dashboard-page .admin-metric-label{font-size:11px}.dashboard-page .admin-icon-tile{width:30px;height:30px}.dashboard-page .admin-record{padding:18px}.dashboard-page .admin-page-header{flex-wrap:wrap}.dashboard-page .operations-list article{flex-wrap:wrap}.dashboard-page .finance-summary-card{padding:17px}}

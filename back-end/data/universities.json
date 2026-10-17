@@ -1,0 +1,14 @@
+[
+  {
+    "id": "uni-1",
+    "name": "IIIT SRICITY",
+    "domain": "iiits.in",
+    "website": "https://www.iiits.ac.in"
+  },
+  {
+    "id": "uni-2",
+    "name": "IISC BANGALORE",
+    "domain": "iisc.ac.in",
+    "website": "https://iisc.ac.in"
+  }
+]

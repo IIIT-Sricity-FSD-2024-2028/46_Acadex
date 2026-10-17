@@ -1,0 +1,15 @@
+[
+  {
+    "id": "settings-101",
+    "autoApproveEnrollments": true,
+    "emailAlerts": true,
+    "royaltyAlerts": true,
+    "weeklyDigest": false,
+    "requireTwoFactor": true,
+    "defaultCurrency": "INR",
+    "defaultAccessType": "Paid Masterclass",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-09-03T06:28:48.420Z",
+    "platformCommissionRate": 0.15
+  }
+]

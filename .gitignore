@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Scripts
+scripts/
+back-end/scripts/
+front-end/scripts/
+
+# NestJS / TypeScript build outputs
+**/dist/
+**/dist-test/
+**/coverage/
+*.tsbuildinfo
+
+# Dependencies
+**/node_modules/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Runtime logs
+*.log
