@@ -7,57 +7,53 @@ import api from '../../services/api';
 export default function PaymentSuccess() {
   const { state: locationState } = useLocation();
   const [searchParams] = useSearchParams();
-  const [payment, setPayment] = useState(() => {
-    if (locationState?.transactionId) return locationState;
-    try {
-      const stored = sessionStorage.getItem('nexuspay_last_payment');
-      if (stored) return JSON.parse(stored);
-    } catch {
-      // ignore
-    }
-    const txn = searchParams.get('transactionId');
-    const crs = searchParams.get('courseId');
-    if (txn) {
-      return {
-        transactionId: txn,
-        courseId: crs || '',
-        courseTitle: 'Enrolled Course',
-        amount: 0,
-        method: 'Card / UPI',
-        date: new Date().toISOString(),
-      };
-    }
-    return null;
-  });
+  const [payment, setPayment] = useState(locationState || null);
+  const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] = useState(false);
+  const txnParam = searchParams.get('transactionId');
+  const crsParam = searchParams.get('courseId');
 
   useEffect(() => {
-    document.title = 'Payment Successful | NexusEdu';
-    const courseId = payment?.courseId || searchParams.get('courseId');
-    if (courseId && (!payment?.courseTitle || payment.courseTitle === 'Enrolled Course')) {
-      setLoading(true);
-      api.courses
-        .get(courseId)
-        .then((course) => {
-          setPayment((prev) => ({
-            ...(prev || {}),
-            courseId,
-            courseTitle: course?.title || 'Enrolled Course',
-            amount: prev?.amount || course?.price || 0,
-          }));
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }
-  }, [payment?.courseId, searchParams]);
+    document.title = 'Payment Successful | Acadex';
+    setLoading(true);
 
-  if (!payment && !searchParams.get('transactionId')) {
+    api.student
+      .getPayments()
+      .then((payments) => {
+        const list = Array.isArray(payments) ? payments : [];
+        const match = txnParam
+          ? list.find((p) => p.id === txnParam)
+          : crsParam
+          ? list.find((p) => p.courseId === crsParam)
+          : locationState?.transactionId
+          ? list.find((p) => p.id === locationState.transactionId)
+          : list[0] || null;
+
+        if (match) {
+          setPayment({
+            transactionId: match.id,
+            courseId: match.courseId || crsParam || '',
+            courseTitle: match.course || match.courseTitle || 'Enrolled Course',
+            amount: match.amount || 0,
+            method: match.method || 'Card / UPI',
+            date: match.createdAt || match.date || new Date().toISOString(),
+          });
+        } else if (locationState) {
+          setPayment(locationState);
+        }
+      })
+      .catch(() => {
+        if (locationState) setPayment(locationState);
+      })
+      .finally(() => setLoading(false));
+  }, [txnParam, crsParam, locationState]);
+
+  if (!loading && !payment && !txnParam) {
     return <Navigate to="/student/my-learning" replace />;
   }
 
-  const transactionId = payment?.transactionId || searchParams.get('transactionId') || 'TXN-CONFIRMED';
-  const courseId = payment?.courseId || searchParams.get('courseId') || '';
+  const transactionId = payment?.transactionId || txnParam || 'TXN-CONFIRMED';
+  const courseId = payment?.courseId || crsParam || '';
   const courseTitle = payment?.courseTitle || 'Enrolled Course';
   const amount = payment?.amount !== undefined ? Number(payment.amount) : 0;
   const method = payment?.method || 'Card •••• 4242';

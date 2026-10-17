@@ -181,9 +181,6 @@ export default function StudentDisputes() {
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Disputes & Issue Resolution
             </h1>
-            <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-              Log inquiries for course curriculum errors, lab compiler glitches, and billing reviews. All tickets are reviewed under SLA by Acadex Council.
-            </p>
           </div>
 
           <div className="flex items-center gap-3">

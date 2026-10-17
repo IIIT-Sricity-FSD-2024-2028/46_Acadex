@@ -16,7 +16,6 @@ import {
   BookOpen,
   Calendar,
   Sparkles,
-  RefreshCw,
   Filter,
   Check,
   AlertCircle
@@ -243,21 +242,9 @@ export default function StudentReviews() {
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               My Reviews & Ratings
             </h1>
-            <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-              Track evaluations you have submitted across your enrolled curriculum, inspect faculty replies, and refine course feedback.
-            </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => loadReviews(true)}
-              disabled={refreshing}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs transition-all hover:border-slate-300 disabled:opacity-50"
-              title="Refresh reviews"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${refreshing ? 'animate-spin text-[#0056D2]' : ''}`} />
-              Refresh
-            </button>
             <button
               onClick={() => {
                 if (coursesToReview.length > 0 && !selectedCourseId) {

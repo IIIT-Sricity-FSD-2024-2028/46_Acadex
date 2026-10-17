@@ -105,11 +105,6 @@ export default function Checkout() {
           : { courseId, paymentMethod: 'upi', upiId: upiId.trim() };
       const result = await api.student.checkout(payload);
       setPaidSuccess(true);
-      try {
-        sessionStorage.setItem('nexuspay_last_payment', JSON.stringify(result));
-      } catch (e) {
-        // ignore
-      }
       await refreshData();
       navigate(`/student/payment-success?transactionId=${result.transactionId}&courseId=${courseId}`, {
         state: result,

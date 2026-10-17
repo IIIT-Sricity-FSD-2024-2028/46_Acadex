@@ -78,7 +78,7 @@ export default function Billing() {
                   {payments.map((p) => (
                     <tr key={p.id}>
                       <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">{formatDate(p.createdAt || p.date)}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">{p.course}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-900">{p.course || p.courseTitle || 'Course'}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{p.method}</td>
                       <td className="px-4 py-3 text-right font-bold text-slate-900">{formatINR(p.amount)}</td>
                       <td className="px-4 py-3">
@@ -109,8 +109,8 @@ export default function Billing() {
               {[
                 ['Transaction ID', receipt.id],
                 ['Date', formatDate(receipt.createdAt || receipt.date)],
-                ['Billed to', receipt.payer],
-                ['Course', receipt.course],
+                ['Billed to', receipt.payer || receipt.payerName || receipt.learnerName || 'Student'],
+                ['Course', receipt.course || receipt.courseTitle],
                 ['Provider', receipt.organizationName],
                 ['Method', receipt.method],
                 ['Amount', formatINR(receipt.amount)],
