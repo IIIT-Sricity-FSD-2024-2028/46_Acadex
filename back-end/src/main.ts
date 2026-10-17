@@ -66,7 +66,6 @@ async function bootstrap() {
     .addTag('Certificates & Verified Credentials', 'Verifiable credential issuance, digital certificates, and verification')
     .addTag('Payments & Transactions', 'Financial revenue settlement, tuition checkouts, and royalty splits')
     .addTag('Platform Admin - User Management', 'Platform user directory and administrative lifecycle controls')
-    .addTag('Platform Admin - Refunds & Chargebacks', 'Tuition refund processing and chargeback administration')
     .addTag('Disputes & Governance', 'Institutional dispute tickets, priority escalation, and resolutions')
     .addTag('Reviews & Course Ratings', 'Student course reviews, star ratings, and educator feedback')
     .addTag('Analytics & Telemetry', 'Comprehensive learning and financial telemetry')

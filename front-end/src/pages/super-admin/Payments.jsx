@@ -307,7 +307,6 @@ export default function SuperAdminPayments() {
               <option value="Completed">Completed</option>
               <option value="Paid">Paid</option>
               <option value="Pending">Pending</option>
-              <option value="Refunded">Refunded</option>
             </select>
           </div>
 
@@ -322,7 +321,6 @@ export default function SuperAdminPayments() {
               <option value="All">All Types</option>
               <option value="Payment">Payment</option>
               <option value="Payout">Payout</option>
-              <option value="Refund">Refund</option>
             </select>
           </div>
 
@@ -454,8 +452,6 @@ export default function SuperAdminPayments() {
                         className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                           ['completed', 'paid'].includes(tx.status.toLowerCase())
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                            : tx.status.toLowerCase() === 'refunded'
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
                             : 'bg-amber-50 text-amber-800 border border-amber-200/60'
                         }`}
                       >
@@ -463,8 +459,6 @@ export default function SuperAdminPayments() {
                           className={`w-1.5 h-1.5 rounded-full ${
                             ['completed', 'paid'].includes(tx.status.toLowerCase())
                               ? 'bg-emerald-500'
-                              : tx.status.toLowerCase() === 'refunded'
-                              ? 'bg-rose-500'
                               : 'bg-amber-500'
                           }`}
                         ></span>

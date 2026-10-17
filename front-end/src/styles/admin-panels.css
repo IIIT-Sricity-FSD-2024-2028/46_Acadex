@@ -1,0 +1,23 @@
+.admin-page { display: grid; gap: 1.5rem; }
+.admin-heading { font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 800; color: #0f172a; letter-spacing: -.025em; }
+.admin-muted { color: #64748b; font-size: .875rem; }
+.admin-card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; }
+.admin-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); align-items: start; }
+.admin-card[aria-pressed="true"] { border-color: #3b82f6; background: #eff6ff; }
+.admin-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .65rem 1rem; border: 1px solid #cbd5e1; border-radius: .65rem; font-size: .875rem; font-weight: 600; background: white; color: #334155; transition: background-color .15s, border-color .15s; }
+.admin-button:hover { background: #f1f5f9; }
+.admin-button:disabled { opacity: .5; cursor: not-allowed; }
+.admin-button-primary { background: #0056d2; color: white; border-color: #0056d2; }
+.admin-button-primary:hover { background: #00419e; }
+.admin-button-danger { color: #be123c; background: #fff1f2; border-color: #fecdd3; }
+.admin-input { width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; padding: .7rem .85rem; background: white; font-size: .875rem; }
+.admin-button:focus-visible, .admin-input:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.admin-alert { border: 1px solid #fecdd3; background: #fff1f2; color: #9f1239; border-radius: .75rem; padding: .85rem 1rem; font-size: .875rem; }
+.admin-success { border: 1px solid #a7f3d0; background: #ecfdf5; color: #047857; border-radius: .75rem; padding: .85rem 1rem; font-size: .875rem; }
+.admin-modal-backdrop { position: fixed; inset: 0; z-index: 60; padding: 1rem; display: grid; place-items: center; background: #0f172a99; }
+.admin-modal { width: min(100%, 42rem); max-height: 90vh; overflow: auto; background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 24px 60px #0f172a33; }
+@media print {
+  body.admin-print-certificate > * { visibility: hidden; }
+  body.admin-print-certificate .admin-certificate-document, body.admin-print-certificate .admin-certificate-document * { visibility: visible; }
+  body.admin-print-certificate .admin-certificate-document { position: fixed; inset: 0; padding: 2rem; background: white; }
+}

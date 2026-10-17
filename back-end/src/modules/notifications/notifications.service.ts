@@ -27,8 +27,9 @@ export class NotificationsService {
       ];
     } else if (role) {
       where.$or = [
-        { recipientRole: role },
+        { recipientRole: role.toLowerCase() },
         { recipientRole: 'all' },
+        ...(role.toLowerCase() === 'admin' ? [{ $and: [{ recipientRole: { $exists: false } }, { recipientId: { $exists: false } }] }] : []),
       ];
     }
 
@@ -89,8 +90,9 @@ export class NotificationsService {
       ];
     } else if (role) {
       where.$or = [
-        { recipientRole: role },
+        { recipientRole: role.toLowerCase() },
         { recipientRole: 'all' },
+        ...(role.toLowerCase() === 'admin' ? [{ $and: [{ recipientRole: { $exists: false } }, { recipientId: { $exists: false } }] }] : []),
       ];
     }
     const count = await this.notifsRepo.count(where);
@@ -105,8 +107,9 @@ export class NotificationsService {
     return this.notifsRepo.update(id, { read: true });
   }
 
-  async markAllAsRead() {
-    const updatedCount = await this.notifsRepo.updateMany({ read: false }, { read: true });
+  async markAllAsRead(query: NotificationQueryDto = {}) {
+    const visible = await this.findAll({ ...query, limit: 10000 });
+    const updatedCount = await this.notifsRepo.updateMany({ id: { $in: visible.items.map(n => n.id) }, read: false }, { read: true });
     return { markedCount: updatedCount };
   }
 

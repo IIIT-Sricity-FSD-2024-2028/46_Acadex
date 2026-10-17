@@ -30,7 +30,7 @@ export class PaymentsController {
   }
 
   @Post('transactions')
-  @ApiOperation({ summary: 'Record a new manual payment, payout, or refund transaction' })
+  @ApiOperation({ summary: 'Record a new manual payment or payout transaction' })
   @ApiResponse({ status: 201, description: 'Transaction recorded successfully' })
   async create(@Body() dto: CreateTransactionDto) {
     return this.paymentsService.create(dto);

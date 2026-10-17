@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { CreateTransactionDto, TransactionQueryDto } from './dto/payment.dto';
@@ -17,8 +17,8 @@ export class PaymentsService {
 
     const where: QueryFilter<any> = {};
 
-    if (type) where.type = type;
-    if (status) where.status = status;
+    where.type = type || { $ne: 'Refund' };
+    where.status = status || { $ne: 'Refunded' };
 
     if (search) {
       where.$or = [
@@ -46,6 +46,7 @@ export class PaymentsService {
   }
 
   async create(dto: CreateTransactionDto) {
+    if (String(dto.type).toLowerCase() === 'refund' || String(dto.status).toLowerCase() === 'refunded') throw new BadRequestException('Unsupported transaction type or status.');
     const now = new Date();
     const dateStr = `${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     const newTxnId = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -63,12 +64,11 @@ export class PaymentsService {
   }
 
   async getFinancialSummary() {
-    const transactions = await this.transactionsRepo.find();
+    const transactions = await this.transactionsRepo.find({ where: { type: { $ne: 'Refund' }, status: { $ne: 'Refunded' } } });
 
     let grossRevenue = 0;
     let pendingPayouts = 0;
     let completedPayouts = 0;
-    let totalRefunds = 0;
 
     for (const t of transactions) {
       const amt = Number(t.amount) || 0;
@@ -80,21 +80,18 @@ export class PaymentsService {
         } else if (t.status === 'Completed') {
           completedPayouts += amt;
         }
-      } else if (t.type === 'Refund' && t.status === 'Completed') {
-        totalRefunds += amt;
+
       }
     }
 
-    // Add baseline course enrollments revenue estimate for realistic stats
-    const totalGross = Math.max(grossRevenue, 142580);
-    const netProfit = totalGross - (completedPayouts + totalRefunds);
+    const totalGross = grossRevenue;
+    const netProfit = totalGross - completedPayouts;
 
     return {
       grossRevenue: totalGross,
       monthlyRevenue: Math.round(totalGross * 0.3),
-      pendingPayouts: pendingPayouts || 3200,
-      completedPayouts: completedPayouts || 18500,
-      totalRefunds: totalRefunds || 359.96,
+      pendingPayouts,
+      completedPayouts,
       netProfit,
       currency: 'USD',
       totalTransactions: transactions.length,

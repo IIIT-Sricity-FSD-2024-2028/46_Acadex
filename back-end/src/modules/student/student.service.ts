@@ -40,6 +40,7 @@ export class StudentService {
         const all = await this.learnersRepo.find();
         learner = all.find((l) => l.userId === userId || l.email === userId || l.id === userId) || null;
       }
+      if (learner?.status === 'Suspended') throw new ForbiddenException('This account is suspended.');
       if (learner) return learner;
     }
     throw new NotFoundException(`Learner '${userId || 'default'}' not found`);
@@ -328,7 +329,7 @@ export class StudentService {
 
   async getPayments(userId: string) {
     const learner = await this.resolveLearner(userId);
-    const txs = await this.transactionsRepo.find({ where: { payerId: learner.id } });
+    const txs = await this.transactionsRepo.find({ where: { payerId: learner.id, type: { $ne: 'Refund' }, status: { $ne: 'Refunded' } } });
     return txs.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   }
 

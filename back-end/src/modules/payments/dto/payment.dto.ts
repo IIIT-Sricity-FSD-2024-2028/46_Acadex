@@ -5,7 +5,6 @@ import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 export enum TransactionType {
   PAYMENT = 'Payment',
   PAYOUT = 'Payout',
-  REFUND = 'Refund',
 }
 
 export enum TransactionStatus {

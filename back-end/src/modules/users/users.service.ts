@@ -33,10 +33,21 @@ export class UsersService {
   }
 
   async findAll(role?: string) {
-    const users = (await this.usersRepo.find()).map(user => this.publicUser(user));
-    if (!role) return users;
+    const [accounts, learners, orgs] = await Promise.all([
+      this.usersRepo.find(), this.learnersRepo.find(), this.orgsRepo.find(),
+    ]);
+    const records = accounts.map(account => this.publicUser(account));
+    for (const [profiles, kind] of [[learners, 'Learner'], [orgs, 'Organization']] as const) {
+      for (const profile of profiles) {
+        const linked = records.find(account => account.id === profile.userId ||
+          (kind === 'Organization' && account.organizationId === profile.id) ||
+          (!!profile.email && account.email?.toLowerCase() === profile.email.toLowerCase()));
+        if (!linked) records.push(this.publicUser({ ...profile, role: kind }));
+      }
+    }
+    if (!role) return records;
     const lower = role.toLowerCase() === 'student' ? 'learner' : role.toLowerCase();
-    return users.filter(u => u.role?.toLowerCase() === lower);
+    return records.filter(user => user.role?.toLowerCase() === lower);
   }
 
   async findOne(id: string) {
@@ -101,58 +112,65 @@ export class UsersService {
     return this.publicUser(newUser);
   }
 
-  async update(id: string, dto: UpdateUserDto) {
-    const updated = await this.usersRepo.update(id, dto as any);
-    if (!updated) {
-      throw new NotFoundException(`User with ID '${id}' not found`);
-    }
-
-    if (dto.status) {
-      if (['Student', 'Learner'].includes(updated.role)) {
-        const learner = (await this.learnersRepo.findOne({ userId: id })) || (await this.learnersRepo.findOne({ email: updated.email }));
-        if (learner) {
-          await this.learnersRepo.update(learner.id, { status: dto.status });
-        }
-      } else if (updated.role === 'Organization') {
-        const org = (await this.orgsRepo.findOne({ userId: id })) || (await this.orgsRepo.findOne({ email: updated.email }));
-        if (org) {
-          await this.orgsRepo.update(org.id, { status: dto.status });
-        }
-      }
-    }
-
-    return this.publicUser(updated);
+  private async accountRecords(id: string) {
+    const detail = await this.findOne(id);
+    const accounts = await this.usersRepo.find();
+    const account = accounts.find(user => user.id === id ||
+      (!!detail.email && user.email?.toLowerCase() === detail.email.toLowerCase()));
+    const repo = detail.role === 'Learner' ? this.learnersRepo : detail.role === 'Organization' ? this.orgsRepo : null;
+    const profile = repo ? (await repo.find()).find(p => p.id === id || (!!account && p.userId === account.id) ||
+      (detail.role === 'Organization' && p.id === account?.organizationId) ||
+      (!!detail.email && p.email?.toLowerCase() === detail.email.toLowerCase())) : null;
+    return { detail, account, profile, repo };
   }
 
-  async remove(id: string) {
-    const user = await this.usersRepo.findById(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID '${id}' not found`);
-    }
-
-    if (user.role === 'Instructor') {
-      throw new BadRequestException('Instructors cannot be removed directly by Platform Admin. Only affiliated organizations can manage instructor appointments.');
-    }
-
-    if (user.role === 'Admin' || user.role === 'SuperAdmin') {
-      throw new BadRequestException('Platform Admin accounts are protected from direct removal.');
-    }
-
-    if (user.role === 'Organization') {
-      const org = (await this.orgsRepo.findOne({ userId: id })) || (await this.orgsRepo.findOne({ email: user.email }));
-      if (org) {
-        await this.orgsRepo.delete(org.id);
+  async update(id: string, dto: UpdateUserDto, actor = 'admin') {
+    const { detail, account, profile, repo } = await this.accountRecords(id);
+    if (actor.toLowerCase() === 'admin') {
+      if (detail.role === 'Instructor') throw new BadRequestException('Instructors are managed by their organization.');
+      if (dto.role) throw new BadRequestException('Account type cannot be changed here.');
+      if (dto.status && !['Learner', 'Organization'].includes(detail.role)) {
+        throw new BadRequestException('Only learners and organizations can be suspended here.');
       }
     }
+    if (dto.status && !['Active', 'Suspended'].includes(dto.status)) throw new BadRequestException('Unsupported account status.');
+    await this.db.runTransaction(async () => {
+      if (account) await this.usersRepo.update(account.id, dto as any);
+      if (repo && profile) await repo.update(profile.id, dto);
+    });
+    return this.findOne(account?.id || id);
+  }
 
-    if (['Student', 'Learner'].includes(user.role)) {
-      const learner = (await this.learnersRepo.findOne({ userId: id })) || (await this.learnersRepo.findOne({ email: user.email }));
-      if (learner) {
-        await this.learnersRepo.delete(learner.id);
-      }
+  async remove(id: string, actor = 'admin') {
+    const { detail, account, profile, repo } = await this.accountRecords(id);
+    if (detail.role === 'Instructor') throw new BadRequestException('Instructors are managed by their organization.');
+    if (!['Learner', 'Organization'].includes(detail.role) && actor.toLowerCase() !== 'superadmin') {
+      throw new BadRequestException('Only learners and organizations can be deleted here.');
     }
-
-    await this.usersRepo.delete(id);
-    return { success: true, message: `User '${id}' permanently removed` };
+    if (detail.role === 'SuperAdmin') throw new BadRequestException('Super Admin accounts are protected.');
+    await this.db.runTransaction(async () => {
+      if (detail.role === 'Organization' && profile) {
+        // Preserve teaching records while removing the deleted institution from active catalogs.
+        const faculty = await this.instructorsRepo.find({ where: { organizationId: profile.id } });
+        for (const instructor of faculty) {
+          await this.instructorsRepo.update(instructor.id, { organizationId: null, organizationName: null, status: 'Pending Affiliation' });
+          const instructorAccount = (await this.usersRepo.find()).find(user => user.id === instructor.userId || user.email === instructor.email);
+          if (instructorAccount) await this.usersRepo.update(instructorAccount.id, { organizationId: null, organizationName: null, status: 'Pending Affiliation' } as any);
+        }
+        const courses = await this.coursesRepo.find({ where: { organizationId: profile.id } });
+        for (const course of courses) await this.coursesRepo.update(course.id, { status: 'Archived' });
+      }
+      if (detail.role === 'Learner' && profile) {
+        const certificates = new JsonRepository<any>('certificates', this.db);
+        const credentials = await certificates.find({ where: { learnerId: { $in: [profile.id, account?.id].filter(Boolean) } } });
+        for (const credential of credentials) await certificates.update(credential.id, {
+          learnerName: profile.name || detail.name,
+          learnerEmail: profile.email || detail.email,
+        });
+      }
+      if (repo && profile) await repo.delete(profile.id);
+      if (account) await this.usersRepo.delete(account.id);
+    });
+    return { success: true, message: `Account '${id}' permanently deleted` };
   }
 }

@@ -58,7 +58,7 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
   if (!dispute) return null;
 
   const TypeIcon = typeIcons[dispute.type] || FileText;
-  const isPending = dispute.status === 'Pending';
+  const isPending = ['Pending', 'Open', 'In Progress', 'Under Review', 'Escalated'].includes(dispute.status);
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
@@ -129,7 +129,7 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-2xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+      <div role="dialog" aria-modal="true" aria-label="Dispute details" className="fixed right-0 top-0 h-screen w-full max-w-2xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="flex items-start justify-between px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0">
           <div className="flex items-start gap-4">
@@ -150,6 +150,7 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dispute details"
             className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
@@ -188,9 +189,9 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
                   </div>
                 ),
               },
-              { label: 'Type', value: <span className="font-semibold text-slate-800 text-sm">{dispute.type}</span> },
-              { label: 'Course', value: <span className="font-semibold text-slate-800 text-sm">{dispute.course}</span> },
-              { label: 'Organization', value: <span className="font-semibold text-slate-800 text-sm">{dispute.organization}</span> },
+              { label: 'Type', value: <span className="font-semibold text-slate-800 text-sm">{dispute.type || dispute.disputeType || dispute.category || 'Not recorded'}</span> },
+              { label: 'Course', value: <span className="font-semibold text-slate-800 text-sm">{dispute.course || dispute.courseTitle || 'Not recorded'}</span> },
+              { label: 'Organization', value: <span className="font-semibold text-slate-800 text-sm">{dispute.organization || dispute.organizationName || 'Not recorded'}</span> },
               {
                 label: 'Opened On',
                 value: (
@@ -436,7 +437,7 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
                               <Icon className="w-4 h-4" />
                             </div>
                             <div className="flex-1 pt-1">
-                              <p className="text-sm font-medium text-slate-800">{item.event}</p>
+                              <p className="text-sm font-medium text-slate-800">{item.event || item.message}</p>
                               <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                                 {item.actor && (
                                   <>

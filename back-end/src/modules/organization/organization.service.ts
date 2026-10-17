@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { REPOSITORY_TOKENS } from '../../database/database.module';
 import { JsonRepository } from '../../database/json-repository';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -28,18 +28,21 @@ export class OrganizationService {
     if (orgs.length === 0) throw new NotFoundException('Organization details not found');
     if (userEmail) {
       const match = orgs.find((o) => o.email?.toLowerCase() === userEmail.toLowerCase());
+      if (match?.status === 'Suspended') throw new ForbiddenException('This organization is suspended.');
       if (match) return match;
     }
     if (userId) {
       const account = await this.usersRepo.findById(userId);
       const org = orgs.find(o => o.id === account?.organizationId || o.id === userId ||
         (!!account?.email && o.email?.toLowerCase() === account.email.toLowerCase()));
+      if (org?.status === 'Suspended') throw new ForbiddenException('This organization is suspended.');
       if (org) return org;
       const allInstructors = await this.instructorsRepo.find();
       const inst = allInstructors.find((i) => i.userId === userId);
       if (inst?.organizationId) {
         const match = orgs.find((o) => o.id === inst.organizationId);
-        if (match) return match;
+        if (match?.status === 'Suspended') throw new ForbiddenException('This organization is suspended.');
+      if (match) return match;
       }
     }
     throw new NotFoundException('No organization is linked to the signed-in account');

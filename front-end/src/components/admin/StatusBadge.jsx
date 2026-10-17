@@ -14,7 +14,7 @@ export const StatusBadge = ({ status, className }) => {
     if (['suspended', 'rejected', 'failed', 'revoked', 'disputed'].includes(s)) {
       return 'bg-rose-50 text-rose-700 border-rose-200';
     }
-    if (['refunded', 'archived', 'dropped', 'inactive'].includes(s)) {
+    if (['archived', 'dropped', 'inactive'].includes(s)) {
       return 'bg-slate-100 text-slate-700 border-slate-200';
     }
 

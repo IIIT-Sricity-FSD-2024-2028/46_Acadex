@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Headers } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto, NotificationQueryDto } from './dto/notification.dto';
@@ -35,8 +35,8 @@ export class NotificationsController {
   @Patch('mark-all-read')
   @ApiOperation({ summary: 'Mark all unread notifications as read' })
   @ApiResponse({ status: 200, description: 'All notifications marked as read' })
-  async markAllRead() {
-    return this.notificationsService.markAllAsRead();
+  async markAllRead(@Query() query: NotificationQueryDto, @Headers('x-role') role?: string) {
+    return this.notificationsService.markAllAsRead({ ...query, role: query.role || role });
   }
 
   @Post()

@@ -399,7 +399,7 @@ export default function SuperAdminAdmins() {
                 >
                   <option value="All">All Categories</option>
                   <option value="Technical & Lab Anomaly">Lab Anomalies</option>
-                  <option value="Financial Settlement & Refunds">Refunds & Settlements</option>
+                  <option value="Financial Settlements">Settlements</option>
                   <option value="Curriculum & Quality Assurance">Course Approvals</option>
                   <option value="Institutional Accreditation">Accreditation</option>
                   <option value="Copyright & IP Infringement">IP & Copyright</option>

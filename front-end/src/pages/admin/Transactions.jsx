@@ -84,7 +84,6 @@ export const Transactions = () => {
     { label: 'All Statuses', value: '' },
     { label: 'Completed', value: 'Completed' },
     { label: 'Pending', value: 'Pending' },
-    { label: 'Refunded', value: 'Refunded' },
     { label: 'Failed', value: 'Failed' },
   ];
 

@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-do
 // 0. LANDING & GATEWAY
 // ──────────────────────────────────────────────────────────────
 import Landing from './pages/Landing';
+import VerifyCertificate from './pages/VerifyCertificate';
 import UnavailablePage from './pages/UnavailablePage';
 import SignIn from './pages/Signin';
 import SignUp from './pages/Signup';
@@ -103,6 +104,11 @@ import SuperAdminOrganizations from './pages/super-admin/Organizations';
 import SuperAdminLearners from './pages/super-admin/Learners';
 import SuperAdminSettings from './pages/super-admin/Settings';
 
+function LegacyAdminUserRedirect() {
+  const { learnerId, organizationId } = useParams();
+  return <Navigate to={`/admin/users/${learnerId || organizationId}`} replace />;
+}
+
 function LegacyLearnRedirect() {
   const { courseId } = useParams();
   return <Navigate to={`/student/learn/${courseId}`} replace />;
@@ -162,6 +168,7 @@ export default function App() {
       />
 
       <Route path="/signin" element={<SignIn />} />
+      <Route path="/verify/:credentialId" element={<VerifyCertificate />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/terms" element={<UnavailablePage />} />
@@ -440,11 +447,11 @@ export default function App() {
 
           {/* Consolidated into Users directory */}
           <Route path="learners" element={<Navigate to="/admin/users?role=Learner" replace />} />
-          <Route path="learners/:learnerId" element={<Navigate to="/admin/users" replace />} />
-          <Route path="instructors" element={<Navigate to="/admin/users?role=Instructor" replace />} />
-          <Route path="instructors/:instructorId" element={<Navigate to="/admin/users" replace />} />
+          <Route path="learners/:learnerId" element={<LegacyAdminUserRedirect />} />
+          <Route path="instructors" element={<Navigate to="/admin/users?role=Organization" replace />} />
+          <Route path="instructors/:instructorId" element={<Navigate to="/admin/users?role=Organization" replace />} />
           <Route path="organizations" element={<Navigate to="/admin/users?role=Organization" replace />} />
-          <Route path="organizations/:organizationId" element={<Navigate to="/admin/users" replace />} />
+          <Route path="organizations/:organizationId" element={<LegacyAdminUserRedirect />} />
           <Route path="organizations/verification" element={<Navigate to="/admin/users?role=Organization" replace />} />
           <Route path="enrollments" element={<Navigate to="/admin/users?role=Learner" replace />} />
 

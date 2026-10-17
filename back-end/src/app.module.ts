@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { AccountAccessGuard } from './common/guards/account-access.guard';
 import { DatabaseModule } from './database/database.module';
 
 // ── Route-level middleware ────────────────────────────────────────
@@ -22,7 +24,6 @@ import { AssignmentsModule }        from './modules/assignments/assignments.modu
 import { QuizzesModule }            from './modules/quizzes/quizzes.module';
 import { CertificatesModule }       from './modules/certificates/certificates.module';
 import { PaymentsModule }           from './modules/payments/payments.module';
-import { RefundsModule }            from './modules/refunds/refunds.module';
 import { ReviewsModule }            from './modules/reviews/reviews.module';
 import { DisputesModule }           from './modules/disputes/disputes.module';
 import { ReportsModule }            from './modules/reports/reports.module';
@@ -31,6 +32,7 @@ import { NotificationsModule }      from './modules/notifications/notifications.
 import { SettingsModule }           from './modules/settings/settings.module';
 
 @Module({
+  providers: [{ provide: APP_GUARD, useClass: AccountAccessGuard }],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -51,7 +53,6 @@ import { SettingsModule }           from './modules/settings/settings.module';
     QuizzesModule,
     CertificatesModule,
     PaymentsModule,
-    RefundsModule,
     ReviewsModule,
     DisputesModule,
     ReportsModule,

@@ -487,10 +487,10 @@ export const Dashboard = () => {
             </p>
             <div className="flex items-center gap-2">
               <Link
-                to="/admin/reports"
+                to="/admin/disputes"
                 className="w-full text-center px-4 py-2 rounded-xl bg-white/15 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-all"
               >
-                View System Reports
+                Review Disputes
               </Link>
             </div>
           </div>

@@ -64,7 +64,6 @@ export default function Disputes() {
     'Course Content Quality',
     'Academic Misconduct / Plagiarism',
     'Copyright & IP Infringement',
-    'Tuition Chargeback & Refund Appeal',
     'Instructor Contract / SLA Breach',
     'Grading & Certificate Verification',
     'Technical & Lab System Anomaly'

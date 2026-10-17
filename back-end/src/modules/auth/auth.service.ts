@@ -64,6 +64,7 @@ export class AuthService {
     if (!user) {
       // If not in users repo, try matching in learners or instructors
       const learner = await this.learnersRepo.findOne({ email: dto.email });
+      if (learner?.status === 'Suspended') throw new UnauthorizedException('This account is suspended.');
       if (learner && this.rolesMatch('Student', dto.role)) {
         return {
           token: `jwt-token-${learner.id}-${Date.now()}`,
@@ -99,6 +100,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password credentials');
     }
 
+    if (user.status === 'Suspended') throw new UnauthorizedException('This account is suspended.');
     if (user.password && user.password !== dto.password) {
       throw new UnauthorizedException('Invalid email or password credentials');
     }

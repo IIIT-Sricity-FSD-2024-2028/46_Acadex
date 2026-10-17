@@ -34,17 +34,15 @@ export const Payments = () => {
   const isCompleted = (s) => ['completed', 'successful', 'success', 'paid'].includes((s || '').toLowerCase());
   const isPending = (s) => (s || '').toLowerCase() === 'pending';
   const isFailed = (s) => (s || '').toLowerCase() === 'failed';
-  const isRefunded = (s) => (s || '').toLowerCase() === 'refunded';
 
   // Metrics calculation
-  const successfulTransactions = transactions.filter(t => isCompleted(t.status) || (t.type === 'Payment' && !isFailed(t.status) && !isRefunded(t.status)));
+  const successfulTransactions = transactions.filter(t => isCompleted(t.status) || (t.type === 'Payment' && !isFailed(t.status)));
   const totalRevenue = transactions
     .filter(t => isCompleted(t.status) || t.type === 'Payment')
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const successfulCount = transactions.filter(t => isCompleted(t.status)).length || transactions.length;
   const failedCount = transactions.filter(t => isFailed(t.status)).length;
-  const refundedCount = transactions.filter(t => isRefunded(t.status)).length;
   const pendingCount = transactions.filter(t => isPending(t.status)).length;
 
   const filteredTransactions = useMemo(() => {
@@ -119,7 +117,6 @@ export const Payments = () => {
     { label: 'All Statuses', value: '' },
     { label: 'Completed', value: 'Completed' },
     { label: 'Pending', value: 'Pending' },
-    { label: 'Refunded', value: 'Refunded' },
     { label: 'Failed', value: 'Failed' },
   ];
 
@@ -154,8 +151,8 @@ export const Payments = () => {
           color="warning" 
         />
         <StatCard 
-          title="Refunds / Failed" 
-          value={(refundedCount + failedCount).toString()} 
+          title="Failed payments"
+          value={failedCount.toString()}
           icon={CreditCard} 
           color="danger" 
         />

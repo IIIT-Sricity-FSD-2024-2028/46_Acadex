@@ -34,7 +34,7 @@ const adminNavItems = [
   { name: 'Transactions', href: '/admin/transactions', icon: Receipt },
   { name: 'Disputes', href: '/admin/disputes', icon: ShieldAlert },
   { name: 'Certificates', href: '/admin/certificates', icon: Award },
-  { name: 'Settings & Alerts', href: '/admin/settings', icon: Settings },
+  { name: 'Settings & Notifications', href: '/admin/settings', icon: Settings },
 ];
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {

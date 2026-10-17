@@ -22,7 +22,6 @@ const normalizeTransaction = (transaction) => {
     completed: 'Completed',
     pending: 'Pending',
     failed: 'Failed',
-    refunded: 'Refunded',
   }[status] || transaction?.status || 'Completed';
 
   return {

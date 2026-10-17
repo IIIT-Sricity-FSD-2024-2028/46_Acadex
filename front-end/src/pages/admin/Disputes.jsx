@@ -20,6 +20,7 @@ import { DisputeDetailDrawer } from '../../components/admin/DisputeDetailDrawer'
 import { api } from '../../utils/api';
 
 const PAGE_SIZE = 8;
+const awaitingReview = dispute => ['Pending', 'Open'].includes(dispute.status);
 
 const TYPE_COLORS = {
   'Course Content': 'bg-blue-50 text-blue-700',
@@ -72,6 +73,8 @@ export const Disputes = () => {
   const [disputes, setDisputes] = useState([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0, rejected: 0, inProgress: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [opening, setOpening] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -83,20 +86,28 @@ export const Disputes = () => {
 
   const [selectedDispute, setSelectedDispute] = useState(null);
 
+  const openDispute = async row => {
+    setOpening(true); setError('');
+    try { setSelectedDispute(await api.get(`/disputes/${row.id}`)); }
+    catch (err) { setError(err.message); }
+    finally { setOpening(false); }
+  };
+
   const fetchDisputes = useCallback(async () => {
     try {
-      const data = await api.get('/disputes', 'admin');
+      const data = await api.get('/disputes?limit=1000', 'admin');
       const list = Array.isArray(data) ? data : (data?.items || []);
       setDisputes(list);
       // compute stats client-side — /disputes/stats doesn't exist
       setStats({
         total:      list.length,
-        pending:    list.filter(d => d.status === 'Pending').length,
+        pending:    list.filter(awaitingReview).length,
         resolved:   list.filter(d => d.status === 'Resolved').length,
         rejected:   list.filter(d => d.status === 'Rejected').length,
         inProgress: list.filter(d => d.status === 'In Progress').length,
       });
     } catch (err) {
+      setError(err.message);
       console.error('Error fetching disputes:', err);
       setDisputes([]);
     } finally {
@@ -114,7 +125,7 @@ export const Disputes = () => {
       // recompute stats from updated list
       setStats({
         total:      next.length,
-        pending:    next.filter(d => d.status === 'Pending').length,
+        pending:    next.filter(awaitingReview).length,
         resolved:   next.filter(d => d.status === 'Resolved').length,
         rejected:   next.filter(d => d.status === 'Rejected').length,
         inProgress: next.filter(d => d.status === 'In Progress').length,
@@ -135,7 +146,7 @@ export const Disputes = () => {
       const q = searchTerm.toLowerCase();
       const matchSearch = !q || [d.id, d.subject, d.raisedBy, d.organization, d.organizationName, d.type, d.disputeType, d.category, d.course, d.courseTitle, d.description]
         .some((v) => v?.toLowerCase().includes(q));
-      const matchStatus = !statusFilter || d.status === statusFilter;
+      const matchStatus = !statusFilter || (statusFilter === 'Pending' ? awaitingReview(d) : d.status === statusFilter);
       const disputeCategory = (d.type || d.disputeType || d.category || '').toLowerCase();
       const matchType = !typeFilter || disputeCategory === typeFilter.toLowerCase();
       const role = (d.raisedByType || d.raisedByRole || '').toLowerCase();
@@ -184,6 +195,7 @@ export const Disputes = () => {
 
   return (
     <div className="space-y-6">
+      {error && <p role="alert" className="p-4 border border-rose-200 bg-rose-50 text-rose-700 rounded-xl">{error}</p>}
       {/* Page Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -360,7 +372,7 @@ export const Disputes = () => {
                 {paginated.map((row) => (
                   <tr
                     key={row.id}
-                    onClick={() => setSelectedDispute(row)}
+                    onClick={() => openDispute(row)}
                     className="hover:bg-indigo-50/40 transition-colors cursor-pointer group"
                   >
                     {/* ID */}
@@ -419,29 +431,7 @@ export const Disputes = () => {
 
                     {/* Actions */}
                     <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
-                      {row.status === 'Pending' ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setSelectedDispute(row)}
-                            className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => setSelectedDispute(row)}
-                            className="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setSelectedDispute(row)}
-                          className="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
-                        >
-                          View Details
-                        </button>
-                      )}
+                      <button disabled={opening} onClick={() => openDispute(row)} className="px-3 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 disabled:opacity-50">View details →</button>
                     </td>
                   </tr>
                 ))}
@@ -459,6 +449,7 @@ export const Disputes = () => {
       {/* Detail Drawer */}
       {selectedDispute && (
         <DisputeDetailDrawer
+          key={selectedDispute.id}
           dispute={selectedDispute}
           onClose={() => setSelectedDispute(null)}
           onUpdated={handleDisputeUpdated}

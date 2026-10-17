@@ -104,9 +104,10 @@ export const api = {
   // 1. Authentication & Session
   auth: {
     login: (email, password, role) =>
-      request('/auth/login', { method: 'POST', body: { email, password, role } }).catch(() =>
-        mockLogin(email, password, role)
-      ),
+      request('/auth/login', { method: 'POST', body: { email, password, role } }).catch(error => {
+        if (error.status) throw error;
+        return mockLogin(email, password, role);
+      }),
     register: (data) => request('/auth/register', { method: 'POST', body: data }),
     getMe: (userId) => request('/auth/me', { headers: { 'x-user-id': userId } }),
     changePassword: (currentPassword, newPassword, userId) =>
@@ -280,15 +281,13 @@ export const api = {
     delete: (id) => request(`/users/${id}`, { method: 'DELETE' }),
   },
 
-  // 10. Financial Settlements, Payments & Refunds
+  // 10. Financial Settlements & Payments
   payments: {
     listTransactions: (params = { limit: 1000 }) => {
       const query = new URLSearchParams(params).toString();
       return request(`/payments/transactions${query ? `?${query}` : ''}`);
     },
     getSummary: () => request('/payments/summary'),
-    getRefunds: () => request('/refunds'),
-    processRefund: (data) => request('/refunds', { method: 'POST', body: data }),
   },
 
   // 11. Disputes & Governance

@@ -10,32 +10,32 @@ export class CertificatesService {
     @Inject(REPOSITORY_TOKENS.LEARNERS) private readonly learnersRepo: JsonRepository<any>
   ) {}
 
+  private async enrich(cert: any) {
+    const learner = cert.learnerId ? await this.learnersRepo.findById(cert.learnerId) : null;
+    const learnerName = learner?.name || cert.learnerName || cert.learner || '';
+    return { ...cert, learnerName, learner: learnerName,
+      learnerEmail: learner?.email || cert.learnerEmail || '',
+      courseTitle: cert.courseTitle || cert.course || '', course: cert.courseTitle || cert.course || '' };
+  }
+
   async findAll() {
-    const [certs, learners] = await Promise.all([this.certificatesRepo.find(), this.learnersRepo.find()]);
-    return certs.map(c => ({ ...c, learner: learners.find(l => l.id === c.learnerId)?.name || c.learnerName || c.learner,
-      learnerEmail: learners.find(l => l.id === c.learnerId)?.email || c.learnerEmail,
-      course: c.courseTitle || c.course, issuedDate: c.issuedAt?.slice(0, 10) || c.issueDate }));
+    return Promise.all((await this.certificatesRepo.find()).map(cert => this.enrich(cert)));
   }
 
   async findOne(id: string) {
-    const cert = await this.certificatesRepo.findById(id);
-    if (!cert) {
-      // Try search by credentialId
-      const byCred = await this.certificatesRepo.findOne({ credentialId: id });
-      if (byCred) return byCred;
-      throw new NotFoundException(`Certificate '${id}' not found`);
-    }
-    return cert;
+    const cert = await this.certificatesRepo.findById(id) || await this.certificatesRepo.findOne({ credentialId: id });
+    if (!cert) throw new NotFoundException(`Certificate '${id}' not found`);
+    return this.enrich(cert);
   }
 
   async verify(credentialId: string) {
-    const cert = await this.certificatesRepo.findOne({ credentialId });
+    const cert = await this.certificatesRepo.findOne({ credentialId }) || await this.certificatesRepo.findById(credentialId);
     if (!cert) {
       throw new NotFoundException(`Credential ID '${credentialId}' not found on public ledger`);
     }
     return {
       verified: true,
-      certificate: cert,
+      certificate: await this.enrich(cert),
       verificationTimestamp: new Date().toISOString(),
     };
   }
