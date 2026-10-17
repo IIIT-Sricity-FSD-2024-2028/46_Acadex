@@ -20,12 +20,6 @@ pages/organization/Learners.jsx
 pages/organization/Profile.jsx
 pages/organization/Settings.jsx
 pages/organization/Transactions.jsx
-components/organization/OrgLayout.jsx
-components/organization/OrgSidebar.jsx
-components/organization/OrgTopNav.jsx
-context/OrgContext.jsx
-context/orgContextInstance.js
-context/useOrg.js
 
 Ruvan - Instructor
 ------------------
@@ -43,58 +37,21 @@ pages/instructor/instructor/Profile.jsx
 pages/instructor/onboarding/ConnectUniversity.jsx
 pages/instructor/students/StudentProgress.jsx
 pages/instructor/students/Students.jsx
-components/instructor/layouts/InstructorLayout.jsx
-components/instructor/layouts/InstructorSidebar.jsx
-components/instructor/ui/Table.jsx
-components/instructor/ui/Tabs.jsx
-context/InstructorContext.jsx
-context/instructorContextValue.js
-hooks/useInstructor.js
 
 Nishanth - Admin
 ----------------
-pages/admin/Analytics.jsx
 pages/admin/Certificates.jsx
 pages/admin/CourseApproval.jsx
 pages/admin/CourseDetails.jsx
 pages/admin/Courses.jsx
 pages/admin/Dashboard.jsx
 pages/admin/Disputes.jsx
-pages/admin/Enrollments.jsx
-pages/admin/InstructorDetails.jsx
-pages/admin/Instructors.jsx
-pages/admin/LearnerDetails.jsx
-pages/admin/Learners.jsx
-pages/admin/Notifications.jsx
-pages/admin/OrganizationDetails.jsx
-pages/admin/Organizations.jsx
-pages/admin/OrganizationVerification.jsx
 pages/admin/Payments.jsx
 pages/admin/Profile.jsx
-pages/admin/Refunds.jsx
-pages/admin/Reports.jsx
 pages/admin/Settings.jsx
 pages/admin/Transactions.jsx
 pages/admin/UserDetails.jsx
 pages/admin/Users.jsx
-components/admin/AdminLayout.jsx
-components/admin/Breadcrumb.jsx
-components/admin/ChartCard.jsx
-components/admin/DataTable.jsx
-components/admin/DisputeDetailDrawer.jsx
-components/admin/EmptyState.jsx
-components/admin/ErrorState.jsx
-components/admin/FilterBar.jsx
-components/admin/LoadingState.jsx
-components/admin/Modals.jsx
-components/admin/Pagination.jsx
-components/admin/SearchBar.jsx
-components/admin/Sidebar.jsx
-components/admin/StatCard.jsx
-components/admin/StatusBadge.jsx
-components/admin/Tabs.jsx
-components/admin/TopNavbar.jsx
-components/admin/UserAvatar.jsx
 
 Punit - Student
 ---------------
@@ -114,14 +71,6 @@ pages/student/Quiz.jsx
 pages/student/Reviews.jsx
 pages/super-admin/Learners.jsx
 pages/super-admin/Payments.jsx
-components/student/layout/StudentGuard.jsx
-components/student/layout/StudentRouteMiddleware.jsx
-components/student/quiz/QuestionCard.jsx
-components/student/quiz/QuestionNavigator.jsx
-components/student/quiz/QuizHeader.jsx
-components/student/quiz/QuizResultSummary.jsx
-components/student/quiz/SubmitConfirmationModal.jsx
-context/StudentContext.jsx
 
 Jyothi Prasad - Common and super-admin pages
 -------------------------------------------
@@ -129,6 +78,8 @@ pages/Landing.jsx
 pages/Signin.jsx
 pages/Signup.jsx
 pages/Forgot_Password.jsx
+pages/UnavailablePage.jsx
+pages/VerifyCertificate.jsx
 pages/super-admin/Admins.jsx
 pages/super-admin/Dashboard.jsx
 pages/super-admin/Login.jsx
