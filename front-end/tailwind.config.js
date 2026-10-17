@@ -8,6 +8,9 @@ export default {
     extend: {
       colors: {
         primary: {
+          50: '#f1f6ee', 100: '#e4eedf', 200: '#cadcc1',
+          300: '#a7c39a', 400: '#82a773', 500: '#648b56',
+          600: '#487041', 700: '#315e40', 800: '#274a34', 900: '#203c2c',
           DEFAULT: '#0056D2', // Stitch / Coursera Signature Brand Blue
           container: '#00419E',
           light: '#E8EDF5',

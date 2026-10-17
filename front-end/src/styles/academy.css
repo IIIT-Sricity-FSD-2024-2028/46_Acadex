@@ -740,13 +740,13 @@
   outline-offset: 2px;
   --tw-ring-color: transparent;
 }
-.academy-auth [class*="bg-blue-600"],.academy-auth [class*="bg-blue-700"] {
+.academy-auth .bg-blue-600,.academy-auth .bg-blue-700 {
   background: #2e5b3e!important;
 }
 .academy-auth [class*="text-blue-"] {
   color: #4a713d!important;
 }
-.academy-auth [class*="bg-blue-50"],.academy-auth [class*="bg-blue-100"] {
+.academy-auth .bg-blue-50,.academy-auth .bg-blue-100 {
   background: #edf3e4!important;
 }
 .academy-auth [class*="border-blue-"] {
@@ -760,7 +760,7 @@
 .academy-auth [class*="text-indigo-"] {
   color: #4f7442!important;
 }
-.academy-auth [class*="bg-indigo-50"] {
+.academy-auth .bg-indigo-50 {
   background: #eef2e6!important;
 }
 .academy-auth>footer {
@@ -821,7 +821,7 @@
 .academy-portal main .bg-white {
   border-color: #e1e8d8;
 }
-.academy-portal main [class*="rounded-2xl"],.academy-portal main [class*="rounded-3xl"] {
+.academy-portal main .rounded-2xl,.academy-portal main .rounded-3xl {
   box-shadow: 0 3px 12px #304b2204;
   border-radius: 17px;
 }
@@ -831,10 +831,10 @@
 .academy-portal main input:not([type=checkbox]):not([type=radio]),.academy-portal main select,.academy-portal main textarea {
   border-color: #dce5d1;
 }
-.academy-portal [class*="bg-primary"],.academy-portal [class*="bg-[#0056D2]"] {
+.academy-portal .bg-primary,.academy-portal [class~="bg-[#0056D2]"] {
   background: #315f43!important;
 }
-.academy-portal [class*="text-primary"],.academy-portal [class*="text-[#0056D2]"] {
+.academy-portal .text-primary,.academy-portal [class~="text-[#0056D2]"] {
   color: #3f754a!important;
 }
 .academy-portal>aside>div {
@@ -843,14 +843,14 @@
 .academy-portal>aside a {
   color: #c5d7bb;
 }
-.academy-portal>aside [class*="text-slate-900"] {
+.academy-portal>aside .text-slate-900 {
   color: #edf4e8!important;
 }
-.academy-portal>aside [class*="bg-blue-50"] {
+.academy-portal>aside .bg-blue-50 {
   background: #d6e8bd!important;
   color: #21442e!important;
 }
-.academy-portal>aside [class*="bg-blue-50"] svg {
+.academy-portal>aside .bg-blue-50 svg {
   color: #406a43!important;
 }
 .academy-public a:focus-visible,.academy-public button:focus-visible {
@@ -1142,7 +1142,7 @@
     transform: rotate(360deg);
   }
 }
-.academy-portal>aside [class*="bg-white"] {
+.academy-portal>aside .bg-white {
   background: #244934!important;
 }
 .academy-portal>aside [class*="border-slate-"] {

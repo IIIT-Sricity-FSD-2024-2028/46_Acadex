@@ -168,7 +168,7 @@ function InlineEdit({ value, onChange, className, placeholder, multiline = false
   return (
     <span
       onClick={() => setEditing(true)}
-      className={cn("cursor-text hover:bg-primary-50/50 rounded-md px-1.5 py-0.5 -mx-1.5 transition-colors border border-transparent hover:border-primary-200/50 inline-block", className)}
+      className={cn("curriculum-inline cursor-text hover:bg-primary-50/50 rounded-md px-1.5 py-0.5 -mx-1.5 transition-colors border border-transparent hover:border-primary-200/50 inline-block", className)}
       title="Click to edit"
     >
       {value || <span className="text-slate-400 italic">{placeholder}</span>}
@@ -826,7 +826,7 @@ export function CourseContent() {
   if(!course)return <div className="admin-card"><p role="alert" className="workspace-error">{saveError||'Course not found.'}</p><Link className="admin-button mt-4" to="/instructor/courses">My courses</Link></div>;
   if(course.status==='Archived')return <div className="admin-card"><h1 className="text-lg font-semibold">{course.title}</h1><p className="admin-muted mt-4">This course is archived. Its enrollment history is retained.</p><Link to="/instructor/courses" className="admin-button mt-5">My courses</Link></div>;
   return (
-    <div className="max-w-5xl mx-auto pb-28" onClickCapture={async e=>{const link=e.target.closest('a');const href=link?.getAttribute('href');if(href?.includes('/instructor/courses/quiz/')){e.preventDefault();e.stopPropagation();setSaving(true);try{await api.put(`/courses/${id}/curriculum-draft`,{modules});navigate(href);}catch(err){setSaveError(err.message);}finally{setSaving(false);}}}}>
+    <div className="curriculum-editor max-w-5xl mx-auto pb-28" onClickCapture={async e=>{const link=e.target.closest('a');const href=link?.getAttribute('href');if(href?.includes('/instructor/courses/quiz/')){e.preventDefault();e.stopPropagation();setSaving(true);try{await api.put(`/courses/${id}/curriculum-draft`,{modules});navigate(href);}catch(err){setSaveError(err.message);}finally{setSaving(false);}}}}>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
@@ -917,7 +917,7 @@ export function CourseContent() {
       <div className="mt-6">
         <button
           onClick={addModule}
-          className="w-full border-2 border-dashed border-slate-200 rounded-xl py-6 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
+          className="curriculum-add-module w-full border-2 border-dashed border-slate-200 rounded-xl py-6 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
         >
           <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors group-hover:scale-110">
             <Plus className="w-4 h-4" strokeWidth={2.5} />

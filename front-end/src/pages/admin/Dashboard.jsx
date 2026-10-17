@@ -3,14 +3,12 @@ import { Link } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { GraduationCap, BookOpen, Building2, CheckCircle2, ArrowUpRight, RefreshCw, Layers, ArrowRight, Users, CreditCard } from 'lucide-react';
 import { useRemoteData } from '../../hooks/useRemoteData';
-import { useAdminSession } from '../../context/AdminSession';
 import { AdminHeader, AdminMetric, AdminSectionHeader, AdminDataState } from '../../components/admin/AdminUI';
 import { money, currencyLabel } from '../../utils/adminDisplay';
 export const Dashboard = () => {
     const state = useRemoteData('/admin/overview');
-    const session = useAdminSession();
     const data = state.data;
-    return <div className="admin-page">
+    return <div className="admin-page dashboard-page">
     <AdminHeader title="Overview"/>
     <AdminDataState {...state}/>{data && !state.error && <>
         <div className="admin-stats-grid">
