@@ -1,6 +1,10 @@
 # EdTech Platform
 
-A learning platform with student, instructor, organization, and administrator interfaces. The project combines a React frontend with a NestJS API and a local JSON-based data store.
+A learning platform with student, instructor, organization, and administrator interfaces. It combines a React frontend with a NestJS API and a local JSON-based data store.
+
+Students can explore courses, enroll, follow lessons, complete quizzes, and view certificates. Instructors can manage course content, monitor learners, and review teaching activity. Organizations can manage courses, instructors, learners, enrollments, and institutional reports. Administrators have views for managing users, courses, organizations, payments, disputes, and platform activity.
+
+The backend provides APIs for these workflows, including authentication, course and enrollment management, assessments, payments, analytics, and notifications. Its JSON database stores collections in local files and initializes seed data when needed, allowing the project to run without a separate database server. Swagger provides interactive API documentation.
 
 ## Project structure
 
@@ -97,4 +101,3 @@ npm run test:cov --prefix back-end
 
 Coverage is written to `back-end/coverage`. Although the backend package defines a `test:e2e` script, its referenced `test/jest-e2e.json` configuration is not present in this checkout. The frontend has no automated test script configured; run `npm run frontend:build` and exercise the interface against the running API for a basic manual check.
 
-For backend-specific details, see [back-end/README.md](back-end/README.md).
