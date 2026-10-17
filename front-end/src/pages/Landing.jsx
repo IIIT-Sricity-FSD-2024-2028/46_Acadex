@@ -39,9 +39,9 @@ export default function Landing() {
     <div>
     <p className="academy-eyebrow">
     <span />ACADEX LEARNING PLATFORM</p>
-    <h1>Choose a course.<br/><em>Keep learning.</em>
+    <h1>Make time for<br/><em>your next skill.</em>
     </h1>
-    <p className="academy-hero-copy">Browse courses from participating institutes. Continue your lessons, take course assessments and access your certificates in Acadex.</p>
+    <p className="academy-hero-copy">Explore published courses from participating institutes. Continue your lessons and keep your progress in one place.</p>
     <div className="academy-hero-actions">
     <a href="#courses" className="academy-btn academy-btn-dark">Browse courses<ArrowUpRight size={16}/>
     </a>
@@ -130,7 +130,7 @@ export default function Landing() {
     </h2>
     </div>
     </div>
-    <div className="academy-step-grid">{[['01', 'Browse the catalog', 'Explore the course library and find something that makes you curious.'], ['02', 'Create your account', 'Create your learner account and enroll in your chosen course.'], ['03', 'Continue your lessons', 'Work through lessons, track your progress, and complete your course.']].map(([n, title, description]) => <article key={n}>
+    <div className="academy-step-grid">{[['01', 'Browse the catalog', 'Choose from published courses and review the lessons before enrolling.'], ['02', 'Create your account', 'Create your learner account and enroll in your chosen course.'], ['03', 'Continue your lessons', 'Work through lessons, track your progress, and complete your course.']].map(([n, title, description]) => <article key={n}>
         <span>{n}</span>
         <h3>{title}</h3>
         <p>{description}</p>
@@ -158,15 +158,15 @@ export default function Landing() {
     <div className="academy-section-heading">
     <div>
     <p className="academy-eyebrow">FROM THE LEARNING COMMUNITY</p>
-    <h2>Recorded <em>course reviews.</em>
+    <h2>What learners <em>are saying.</em>
     </h2>
-    <p>Course feedback recorded on the platform.</p>
+    <p>Reviews from enrolled learners.</p>
     </div>
     </div>{data?.reviews?.length ? <div className="academy-step-grid">{data.reviews.map(r => <article className="academy-review" key={r.id}>
             <Quote size={25}/>
             <div className="academy-stars" aria-label={`${r.rating} out of 5 stars`}>{Array.from({ length: Math.min(5, Math.max(0, Math.round(r.rating))) }, (_, i) => <Star size={13} fill="currentColor" key={i}/>)}</div>
             <blockquote>{r.comment}</blockquote>
-            <p>Course review · {r.course}</p>
+            <p>{r.course}</p>
             </article>)}</div> : <div className="academy-empty">
         <MessageCircle size={25}/>
         <p>{error ? 'Course feedback is temporarily unavailable.' : 'No published course feedback is available yet.'}</p>
@@ -177,7 +177,7 @@ export default function Landing() {
     <h2>Find a course.<br/>
     <em>Start your account.</em>
     </h2>
-    <p>Join as a learner, teach what you know, or grow your organization.</p>
+    <p>Choose your workspace to continue your courses or manage teaching.</p>
     </div>
     <div>
     <Link to="/signup" className="academy-btn academy-btn-light">Create an account<ArrowUpRight size={16}/>
@@ -191,7 +191,7 @@ export default function Landing() {
     <footer className="academy-container academy-footer">
     <div>
     <Brand />
-    <p>Stay curious. Continue your lessons.</p>
+    <p>Courses, teaching and learning records in one place.</p>
     </div>
     <div>
     <h3>Explore</h3>
@@ -210,7 +210,7 @@ export default function Landing() {
     </div>
     <div className="academy-footer-bottom">
     <span>© {new Date().getFullYear()} Acadex. Keep learning.</span>
-    <span>Built around people. Designed for possibility.</span>
+    <span>Courses · Teaching · Learning records</span>
     </div>
     </footer>
   </div>;

@@ -44,7 +44,6 @@ export class QuizzesService {
 
   async create(dto: CreateQuizDto) {
     const quiz = await this.quizzesRepo.create({
-      id: `qiz-${Date.now()}`,
       ...dto,
       status: (dto as any).status || 'Draft',
       questionsCount: 0,

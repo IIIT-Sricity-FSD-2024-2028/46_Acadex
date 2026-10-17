@@ -9,13 +9,14 @@ export function CreateLesson() {
   const navigate = useNavigate();
   const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
-  const courseId = paramId || searchParams.get('courseId') || '1';
+  const courseId = searchParams.get('courseId');
 
   const [lessonType, setLessonType] = useState('video');
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(10);
   const [readingContent, setReadingContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error,setError]=useState('');
 
   // Track the actual uploaded file
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -37,11 +38,12 @@ export function CreateLesson() {
 
   const handleSave = () => {
     if (!title.trim()) return;
-    setSaving(true);
+    if(!courseId){setError('Open a course from My courses first.');return;}setError('');setSaving(true);
     const targetModuleId = searchParams.get('moduleId');
 
-    api.get(`/courses/${courseId}`, "instructor")
-      .then((course) => {
+    api.get(`/courses/${courseId}/editor`, "instructor")
+      .then(async (course) => {
+        let uploadedUrl='';if(uploadedFile){const form=new FormData();form.append('file',uploadedFile);const result=await api.post(`/courses/${courseId}/upload`,form);uploadedUrl=(result.data||result).path;if(!uploadedUrl)throw new Error('The upload did not return a file URL.');}
         const currentModules = course.modules || [];
         if (currentModules.length > 0) {
           const targetMod = targetModuleId
@@ -52,7 +54,7 @@ export function CreateLesson() {
             type: lessonType === 'video' ? 'Video' : 'Reading',
             title,
             duration: Number(duration) || 10,
-            fileName: uploadedFile ? uploadedFile.name : '',
+            videoUrl:lessonType==='video'?uploadedUrl:null,resourceUrl:lessonType==='video'?null:uploadedUrl,fileName: uploadedFile ? uploadedFile.name : '',
             fileSize: uploadedFile ? formatBytes(uploadedFile.size) : '',
             url: '',
             description: readingContent,
@@ -60,7 +62,7 @@ export function CreateLesson() {
           };
           targetMod.items = [...(targetMod.items || []), newItem];
         }
-        return api.patch(`/courses/${courseId}`, {
+        return api.put(`/courses/${courseId}/curriculum-draft`, {
           modules: currentModules,
         }, "instructor");
       })
@@ -68,7 +70,7 @@ export function CreateLesson() {
         navigate(`/instructor/courses/${courseId}/content`);
       })
       .catch((err) => {
-        console.error("Error creating lesson:", err);
+        setError(err.message||"Unable to save lesson draft.");
         setSaving(false);
       });
   };
@@ -81,7 +83,8 @@ export function CreateLesson() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          {error&&<p role="alert" className="workspace-error mb-4">{error}</p>}
+      <Card>
             <CardContent className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Lesson Title</label>
@@ -176,15 +179,8 @@ export function CreateLesson() {
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6 space-y-4">
-              <h3 className="font-bold text-slate-900">Publish Settings</h3>
-              <div className="flex items-center justify-between text-sm text-slate-700">
-                <span>Free Preview</span>
-                <input type="checkbox" className="rounded text-primary-600" />
-              </div>
-              <div className="flex items-center justify-between text-sm text-slate-700">
-                <span>Downloadable</span>
-                <input type="checkbox" className="rounded text-primary-600" defaultChecked />
-              </div>
+              <h3 className="font-bold text-slate-900">Draft settings</h3>
+              <p className="text-xs text-slate-500">Lessons are saved as a draft. Request organization approval from the course editor when your content is ready.</p>
               <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
                 <Button onClick={handleSave} disabled={saving} className="w-full">
                   {saving ? "Saving..." : "Save Lesson"}

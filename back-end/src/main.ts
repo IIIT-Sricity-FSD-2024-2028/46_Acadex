@@ -1,4 +1,6 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -9,7 +11,9 @@ import { RolesGuard } from './common/guards/roles.guard';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.useStaticAssets(join(process.cwd(),'uploads'),{prefix:'/uploads/'});
 
   // Global prefix
   const apiPrefix = process.env.API_PREFIX || 'api';

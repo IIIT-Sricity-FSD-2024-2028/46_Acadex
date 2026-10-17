@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   initialUsersData,
+  initialDemoAccountsData,
   initialOrganizationData,
   initialUniversitiesData,
   initialInstructorsData,
@@ -37,6 +38,7 @@ export class JsonDatabaseService implements OnModuleInit {
   // Default collections and initial seed data mapping
   private readonly defaultSeedMap: Record<string, any[]> = {
     users: initialUsersData,
+    demo_accounts: initialDemoAccountsData,
     organizations: initialOrganizationData,
     universities: initialUniversitiesData,
     instructors: initialInstructorsData,

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  Allow,
   IsArray,
   IsEnum,
   IsNotEmpty,
@@ -14,8 +15,8 @@ import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 export class CourseModuleDto {
   @ApiPropertyOptional({ example: 'mod-1' })
   @IsOptional()
-  @IsString()
-  id?: string;
+  @Allow()
+  id?: string|number;
 
   @ApiProperty({ example: 'Distributed Consensus & Two-Phase Commit' })
   @IsNotEmpty()
@@ -24,13 +25,18 @@ export class CourseModuleDto {
 
   @ApiPropertyOptional({ example: 4 })
   @IsOptional()
-  @IsNumber()
-  lessons?: number;
+  @Allow()
+  @Type(()=>Object)
+  lessons?: number|any[];
 
   @ApiPropertyOptional({ example: '3h 15m' })
   @IsOptional()
   @IsString()
   duration?: string;
+  @IsOptional() @IsArray() @Type(()=>Object) items?: any[];
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsArray() objectives?: string[];
+
 }
 
 export class CourseInstructorAssignmentDto {

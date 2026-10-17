@@ -1,3 +1,6 @@
+import {ForbiddenException,BadRequestException} from '@nestjs/common';
+import {WorkspaceService} from '../platform/workspace.service';
+import {CourseWorkflowService} from '../courses/course-workflow.service';
 import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InstructorRequestsService } from './instructor-requests.service';
@@ -13,7 +16,7 @@ import {
 @ApiTags('Instructor Requests')
 @Controller('instructor-requests')
 export class InstructorRequestsController {
-  constructor(private readonly requestsService: InstructorRequestsService) {}
+  constructor(private readonly requestsService: InstructorRequestsService,private readonly workspace:WorkspaceService,private readonly workflow:CourseWorkflowService) {}
 
   @Get()
   @ApiOperation({ summary: 'List requests (filter by organizationId, instructorId, type)' })
@@ -64,7 +67,11 @@ export class InstructorRequestsController {
 
   @Post()
   @ApiOperation({ summary: 'Organization sends a teaching invitation to an instructor' })
-  create(@Body() dto: CreateTeachingRequestDto) {
+  async create(@Body() dto: CreateTeachingRequestDto,@Headers('x-user-id') userId:string) {
+    const actor=await this.workspace.identity({'x-user-id':userId});
+    if(actor.canonicalRole!=='organization')throw new ForbiddenException('Organization access is required.');
+    if(dto.courseId||dto.courseTitle&&dto.courseTitle!=='General Course Assignment'){const options=await this.workflow.assignmentOptions(actor);const courseId=dto.courseId||options.courses.find(c=>c.title===dto.courseTitle)?.id;if(!courseId)throw new BadRequestException('Choose an existing course to assign.');return this.workflow.assign({courseIds:[courseId],instructorIds:[dto.instructorId]},actor);}
+    dto.organizationId=actor.profileId;
     return this.requestsService.create(dto);
   }
 

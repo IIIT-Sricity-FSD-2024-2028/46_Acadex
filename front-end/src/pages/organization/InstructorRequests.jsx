@@ -192,7 +192,7 @@ export default function InstructorRequests() {
 
   return (
     <OrgLayout
-      breadcrumbs={[{ label: 'Course Teaching Requests' }]}
+      breadcrumbs={[{ label: 'Instructor invitations' }]}
     >
       <div className="space-y-6">
 
@@ -544,11 +544,11 @@ export default function InstructorRequests() {
                         <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
                           <BookOpen className="w-6 h-6 text-outline" />
                         </div>
-                        <p className="text-sm font-bold text-on-surface">No teaching requests found</p>
+                        <p className="text-sm font-bold text-on-surface">No instructor invitations</p>
                         <p className="text-xs text-on-surface-variant max-w-xs">
                           {search || filter !== 'All'
                             ? 'Try adjusting your search or filter.'
-                            : 'Use "Invite Instructor by Email" above to send your first teaching request.'}
+                            : 'Use "Invite Instructor by Email" above to send your first invitation.'}
                         </p>
                       </div>
                     </td>
@@ -599,15 +599,7 @@ export default function InstructorRequests() {
                         {/* Actions: View Details and Resend Mail (No Accept/Decline here, as that is the instructor's choice) */}
                         <td className="py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {isPending && (
-                              <button
-                                title="Resend teaching request email to professor"
-                                onClick={() => handleResendMail(req.id)}
-                                className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary border border-outline-variant transition-colors"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+
                             <Link
                               to={`/org/instructor-requests/${req.id}`}
                               className="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-bold text-xs inline-flex items-center gap-1.5 transition-colors border border-outline-variant/60"

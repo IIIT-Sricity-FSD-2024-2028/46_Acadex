@@ -1,35 +1,5 @@
 [
   {
-    "id": "usr-1791912292823",
-    "name": "Shameer Basha Shaik",
-    "email": "shameer.basha.shaik@iisc.ac.in",
-    "password": "Password123!",
-    "role": "Instructor",
-    "status": "Active",
-    "verificationStatus": "Verified",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "createdAt": "2026-10-13T17:24:52.823Z",
-    "updatedAt": "2026-10-14T17:42:04.558Z",
-    "organizationId": "org-2",
-    "organizationName": "IISC BANGALORE",
-    "lastLogin": "2026-10-14T17:42:04.557Z"
-  },
-  {
-    "id": "usr-1791911606594",
-    "name": "Shivamani",
-    "email": "shivamani2@iiits.in",
-    "password": "Password123!",
-    "role": "Instructor",
-    "status": "Active",
-    "verificationStatus": "Verified",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "createdAt": "2026-10-13T17:13:26.594Z",
-    "updatedAt": "2026-10-14T18:17:19.302Z",
-    "lastLogin": "2026-10-14T18:17:19.300Z",
-    "organizationId": "org-1",
-    "organizationName": "NexusPay Enterprise Academy"
-  },
-  {
     "id": "usr-1",
     "name": "Shameer Basha Shaik",
     "email": "shameer.basha.shaik@iiits.in",
@@ -41,8 +11,11 @@
     "organizationName": "IIIT SRICITY",
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-03-10T09:00:00.000Z",
-    "updatedAt": "2026-10-17T06:48:12.976Z",
-    "lastLogin": "2026-10-17T06:48:12.975Z"
+    "updatedAt": "2026-10-17T09:10:54.299Z",
+    "lastLogin": "2026-10-17T09:10:54.297Z",
+    "legacyUserIds": [
+      "usr-1791912292823"
+    ]
   },
   {
     "id": "usr-2",
@@ -56,8 +29,11 @@
     "organizationName": "IIIT SRICITY",
     "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-04-02T09:00:00.000Z",
-    "updatedAt": "2026-10-17T07:51:32.837Z",
-    "lastLogin": "2026-10-17T07:51:32.834Z"
+    "updatedAt": "2026-10-17T09:27:23.533Z",
+    "lastLogin": "2026-10-17T09:27:23.533Z",
+    "legacyUserIds": [
+      "usr-1791911606594"
+    ]
   },
   {
     "id": "usr-3",
@@ -72,22 +48,12 @@
     "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-02-18T09:00:00.000Z",
     "updatedAt": "2026-10-15T08:00:00.000Z",
-    "lastLogin": "2026-10-15T09:15:00.000Z"
-  },
-  {
-    "id": "usr-4",
-    "name": "Raghuveer",
-    "email": "raghuveer2@iisc.ac.in",
-    "password": "Password123!",
-    "role": "Instructor",
-    "status": "Active",
-    "verificationStatus": "Verified",
-    "organizationId": "org-2",
-    "organizationName": "IISC BANGALORE",
-    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-    "createdAt": "2024-05-05T09:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z",
-    "lastLogin": "2026-10-14T11:00:00.000Z"
+    "lastLogin": "2026-10-15T09:15:00.000Z",
+    "legacyUserIds": [
+      "usr-4",
+      "usr-1791915010416",
+      "usr-testins"
+    ]
   },
   {
     "id": "usr-5",
@@ -99,8 +65,8 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2026-09-20T10:00:00.000Z",
-    "updatedAt": "2026-10-17T06:57:12.639Z",
-    "lastLogin": "2026-10-17T06:57:12.636Z"
+    "updatedAt": "2026-10-17T10:03:14.470Z",
+    "lastLogin": "2026-10-17T10:03:14.470Z"
   },
   {
     "id": "usr-6",
@@ -127,8 +93,8 @@
     "organizationName": "IIIT SRICITY",
     "avatar": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-01-10T08:00:00.000Z",
-    "updatedAt": "2026-10-17T06:48:12.989Z",
-    "lastLogin": "2026-10-17T06:48:12.989Z"
+    "updatedAt": "2026-10-17T09:27:23.547Z",
+    "lastLogin": "2026-10-17T09:27:23.547Z"
   },
   {
     "id": "usr-8",
@@ -155,8 +121,8 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-17T06:48:13.017Z",
-    "lastLogin": "2026-10-17T06:48:13.016Z"
+    "updatedAt": "2026-10-17T09:27:23.562Z",
+    "lastLogin": "2026-10-17T09:27:23.562Z"
   },
   {
     "id": "usr-10",
@@ -168,8 +134,8 @@
     "verificationStatus": "Verified",
     "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2026-10-17T06:48:13.030Z",
-    "lastLogin": "2026-10-17T06:48:13.029Z"
+    "updatedAt": "2026-10-17T09:27:23.575Z",
+    "lastLogin": "2026-10-17T09:27:23.575Z"
   },
   {
     "id": "usr-ruvan",

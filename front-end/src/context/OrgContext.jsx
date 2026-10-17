@@ -94,7 +94,7 @@ export function OrgProvider({ children }) {
   };
 
   const scopeInvitations = (list, orgId) =>
-    list.filter((request) => request.type !== 'join' && belongsToOrganization(request.organizationId, orgId));
+    list.filter((request) => request.type !== 'join' && request.type !== 'course-assignment' && !request.courseId && belongsToOrganization(request.organizationId, orgId));
 
   // Fetch all collections from the backend JSON database
   const refreshData = useCallback(async () => {
@@ -216,6 +216,8 @@ export function OrgProvider({ children }) {
       setIsLoading(false);
     }
   }, [inOrgPortal, accountId]);
+
+  useEffect(()=>{if(!inOrgPortal)return;const refresh=()=>refreshData();window.addEventListener('account-changed',refresh);window.addEventListener('learning-data-changed',refresh);window.addEventListener('focus',refresh);return()=>{window.removeEventListener('account-changed',refresh);window.removeEventListener('learning-data-changed',refresh);window.removeEventListener('focus',refresh);};},[refreshData,inOrgPortal]);
 
   // Initial load from backend on mount — refresh all data then sync org counts into organizations.json
   useEffect(() => {
@@ -363,6 +365,8 @@ export function OrgProvider({ children }) {
 
   // 3. College Course Teaching Requests
   const sendCourseTeachingRequest = async ({ instructorId, courseId, courseTitle, semester, creditHours, proposedTerms, message, organizationId, organizationName }) => {
+    if(courseId){const result=await api.post('/courses/assignments',{courseIds:[courseId],instructorIds:[instructorId]});await refreshData();window.dispatchEvent(new Event('notifications-changed'));return result;}
+
     try {
       const payload = {
         instructorId,

@@ -7,18 +7,19 @@ export function CreateModule() {
   const navigate = useNavigate();
   const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
-  const courseId = paramId || searchParams.get('courseId') || '1';
+  const courseId = searchParams.get('courseId');
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [objectives, setObjectives] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error,setError]=useState('');
 
   const handleSave = () => {
     if (!title.trim()) return;
-    setSaving(true);
+    if(!courseId){setError('Open a course from My courses first.');return;}setError('');setSaving(true);
 
-    api.get(`/courses/${courseId}`, "instructor")
+    api.get(`/courses/${courseId}/editor`, "instructor")
       .then((course) => {
         const currentModules = course.modules || [];
         const newMod = {
@@ -28,7 +29,7 @@ export function CreateModule() {
           objectives: objectives.split("\n").filter(Boolean),
           items: [],
         };
-        return api.patch(`/courses/${courseId}`, {
+        return api.put(`/courses/${courseId}/curriculum-draft`, {
           modules: [...currentModules, newMod],
         }, "instructor");
       })
@@ -36,7 +37,7 @@ export function CreateModule() {
         navigate(`/instructor/courses/${courseId}/content`);
       })
       .catch((err) => {
-        console.error("Error creating module:", err);
+        setError(err.message||"Unable to save module draft.");
         setSaving(false);
       });
   };
@@ -47,6 +48,7 @@ export function CreateModule() {
         <h1 className="text-2xl font-bold text-slate-900">Create New Module</h1>
       </div>
 
+      {error&&<p role="alert" className="workspace-error mb-4">{error}</p>}
       <Card>
         <CardContent className="p-8 space-y-6">
           <div>

@@ -166,6 +166,7 @@ export default function LearningPlayer() {
               <>
                 {/* Real HTML5 Video Player */}
                 <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black relative shadow-lg">
+                  {current.isDemo&&<div className="learner-record-note mb-4">{current.mediaLabel||'Demo video · sample playback'} — sample content for demonstrating playback.</div>}
                   {current.type === 'reading' || !current.videoUrl ? (
                     <div className="w-full h-full flex flex-col items-center justify-center text-white bg-slate-900 p-8 text-center">
                       <FileText className="w-14 h-14 text-blue-400 mb-3" />

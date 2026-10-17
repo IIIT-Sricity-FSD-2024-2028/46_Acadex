@@ -14,8 +14,12 @@ export class AccountAccessGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const path = request.path || request.url || '';
+    const tokenId=String(request.headers.authorization||'').replace(/^Bearer\s+/i,'').match(/^jwt-token-(.+)-\d+$/)?.[1];
+    const legacyId=request.headers['x-user-id']||tokenId;
+    if(legacyId){const accounts=await this.users.find();const canonical=accounts.find(a=>Array.isArray((a as any).legacyUserIds)&&(a as any).legacyUserIds.includes(legacyId));if(canonical)request.headers['x-user-id']=canonical.id;}
+
     // Sign-in and public credential verification must remain reachable.
-    if (/\/public\/landing\/?$/.test(path) || /\/auth\//.test(path) || /\/certificates\/verify\//.test(path)) return true;
+    if (/\/public\/(?:landing|demo-credentials)\/?$/.test(path) || /\/auth\//.test(path) || /\/certificates\/verify\//.test(path)) return true;
     const method=String(request.method||'GET').toUpperCase();
     const cleanPath=path.replace(/^\/api/,'').split('?')[0].replace(/\/$/,'');
     const createAccount=method==='POST'&&['/users','/learners','/organizations','/admin/accounts'].includes(cleanPath);

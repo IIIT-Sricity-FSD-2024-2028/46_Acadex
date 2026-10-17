@@ -1,11 +1,14 @@
 [
   {
-    "id": "univ-1",
+    "id": "uni-1",
     "name": "IIIT SRICITY",
-    "domain": "stanford.edu",
-    "location": "Stanford, California, USA",
-    "website": "https://stanford.edu",
-    "status": "Verified",
-    "createdAt": "2022-01-01T00:00:00.000Z"
+    "domain": "iiits.in",
+    "website": "https://www.iiits.ac.in"
+  },
+  {
+    "id": "uni-2",
+    "name": "IISC BANGALORE",
+    "domain": "iisc.ac.in",
+    "website": "https://iisc.ac.in"
   }
 ]

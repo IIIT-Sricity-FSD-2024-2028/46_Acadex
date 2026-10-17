@@ -19,7 +19,7 @@
     "resolvedAt": null,
     "description": "In Module 3 (Raft Consensus Protocol), the video stream in lesson 3.2 freezes at 12:44 with an audio desync error. Additionally, the supplementary exercise code GitHub repository link in the sidebar returns a 404 Not Found error, blocking progress to the subsequent module.",
     "desiredResolution": "Repair the transcoded video asset for lesson 3.2 and update the exercise repository URL.",
-    "adminNotes": "Forwarded to course instructor Dr. Marcus Vance for content verification.",
+    "adminNotes": "Forwarded to course instructor Raghuveer for content verification.",
     "comments": [
       {
         "id": "com-1",
@@ -92,7 +92,7 @@
     "courseTitle": "Full Stack Web Development with React & Node.js",
     "courseId": "crs-1",
     "organization": "IIIT SRICITY",
-    "raisedBy": "Sophia Martinez",
+    "raisedBy": "Puneeth",
     "raisedById": "lrn-2",
     "raisedByType": "Learner",
     "raisedByRole": "Learner",
@@ -109,7 +109,7 @@
       {
         "id": "tl-4",
         "type": "created",
-        "message": "Dispute ticket DSP-2026-103 created by Sophia Martinez",
+        "message": "Dispute ticket DSP-2026-103 created by Puneeth",
         "timestamp": "2026-10-15T08:10:00.000Z"
       }
     ]
@@ -134,7 +134,7 @@
     "resolvedAt": "2026-10-11T16:00:00.000Z",
     "description": "During payment checkout via UPI, the gateway timed out on the first invocation and debited ₹4,499 twice under transaction references TXN-99124 and TXN-99125.",
     "desiredResolution": "Refund duplicate ₹4,499 charge to original source UPI handle.",
-    "resolutionNote": "Payment reconciliation confirmed duplicate debit. Refund of ₹4,499 initiated back to source VPA arjun@okaxis (UTR: 329019284910).",
+    "resolutionNote": "Payment reconciliation confirmed duplicate debit. Refund of ₹4,499 initiated back to source VPA nishanth@okaxis (UTR: 329019284910).",
     "resolvedBy": "Finance Settlement Ops",
     "adminNotes": "Refund processed and closed.",
     "comments": [

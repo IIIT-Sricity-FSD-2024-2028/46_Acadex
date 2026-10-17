@@ -11,19 +11,19 @@
     "status": "Active",
     "verificationStatus": "Verified",
     "establishedYear": 2021,
-    "totalRevenue": 30294,
-    "monthlyRevenue": 12448,
+    "totalRevenue": 19796,
+    "monthlyRevenue": 15297,
     "currency": "USD",
     "instructorIds": [
       "inst-1",
       "inst-2",
-      "inst-1791915010420"
+      "inst-3"
     ],
-    "coursesCount": 3,
+    "coursesCount": 5,
     "learnersCount": 2,
     "logo": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-01-10T08:00:00.000Z",
-    "updatedAt": "2026-10-17T07:29:07.493Z"
+    "updatedAt": "2026-10-17T09:17:42.068Z"
   },
   {
     "id": "org-2",
@@ -37,17 +37,16 @@
     "status": "Active",
     "verificationStatus": "Verified",
     "establishedYear": 2022,
-    "totalRevenue": 16596,
-    "monthlyRevenue": 4979,
+    "totalRevenue": 11498,
+    "monthlyRevenue": 7498,
     "currency": "USD",
     "instructorIds": [
-      "inst-3",
-      "inst-4"
+      "inst-3"
     ],
-    "coursesCount": 6,
+    "coursesCount": 9,
     "learnersCount": 3,
     "logo": "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=200&auto=format&fit=crop&q=80",
     "createdAt": "2024-02-01T08:00:00.000Z",
-    "updatedAt": "2026-10-16T16:09:18.034Z"
+    "updatedAt": "2026-10-17T10:01:19.416Z"
   }
 ]

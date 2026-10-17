@@ -97,6 +97,7 @@ export class CoursesService {
       leadInstructorName: leadInstructor.name,
       organizationId: (await this.instructorsRepo.findById(leadInstructor.id))?.organizationId,
       instructors: instructorsList,
+      coInstructorIds: instructorsList.slice(1).map(i=>i.id),
       enrolledCount: 0,
       price: typeof dto.price === 'number' ? dto.price : 0,
       currency: 'INR',
@@ -123,7 +124,7 @@ export class CoursesService {
 
     let updatedInstructors = dto.instructors || existing.instructors || [];
 
-    if (dto.instructorId || dto.coInstructorIds) {
+    if (dto.instructorId || dto.coInstructorIds || dto.instructors) {
       updatedInstructors = await this.resolveInstructors(dto);
     }
 
@@ -135,6 +136,7 @@ export class CoursesService {
     return this.coursesRepo.update(id, {
       ...dto,
       instructors: updatedInstructors,
+      coInstructorIds: updatedInstructors.map(i=>i.id).filter(id=>id!==leadInst.id),
       instructorId: leadInst.id,
       leadInstructorName: leadInst.name,
       instructorName: updatedInstructors.map((i: any) => i.name).join(', '),
@@ -154,41 +156,8 @@ export class CoursesService {
   }
 
   private async resolveInstructors(dto: { instructorId?: string; coInstructorIds?: string[]; instructors?: any[] }) {
-    if (dto.instructors && Array.isArray(dto.instructors) && dto.instructors.length > 0) {
-      return dto.instructors;
-    }
-
-    const allInstructors = await this.instructorsRepo.find();
-    const lead = allInstructors.find((i) => i.id === dto.instructorId);
-    if (!lead) throw new BadRequestException('Choose an existing lead instructor.');
-
-    const result = [
-      {
-        id: lead.id,
-        name: lead.name,
-        role: 'Lead Instructor',
-        avatar: lead.avatar,
-        specialization: lead.specialization,
-      },
-    ];
-
-    if (Array.isArray(dto.coInstructorIds)) {
-      dto.coInstructorIds.forEach((coId) => {
-        if (coId !== lead.id) {
-          const co = allInstructors.find((i) => i.id === coId);
-          if (co) {
-            result.push({
-              id: co.id,
-              name: co.name,
-              role: 'Co-Instructor',
-              avatar: co.avatar,
-              specialization: co.specialization,
-            });
-          }
-        }
-      });
-    }
-
-    return result;
+    const ids=[...new Set([dto.instructorId,...(Array.isArray(dto.instructors)?dto.instructors.map(i=>typeof i==='string'?i:i?.id):[]),...(dto.coInstructorIds||[])].filter(Boolean))];
+    const all=await this.instructorsRepo.find();if(!ids.length)throw new BadRequestException('Choose an existing lead instructor.');
+    return ids.map((id,index)=>{const teacher=all.find(i=>i.id===id);if(!teacher)throw new BadRequestException('Choose existing instructors.');return {id:teacher.id,name:teacher.name,email:teacher.email,role:index===0?'Lead Instructor':'Co-Instructor',avatar:teacher.avatar,specialization:teacher.specialization};});
   }
 }

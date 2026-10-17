@@ -8,6 +8,8 @@ export class WorkspaceController {
   @Get('instructor/reviews') async reviews(@Req() req:any){return this.workspace.instructorReviews(await this.workspace.identity(req.headers));}
   @Post('instructor/reviews/:id/reply') async reply(@Req() req:any,@Param('id') id:string,@Body() body:any){return this.workspace.instructorReply(await this.workspace.identity(req.headers),id,body);}
   @Delete('instructor/reviews/:id/reply') async removeReply(@Req() req:any,@Param('id') id:string){return this.workspace.instructorReply(await this.workspace.identity(req.headers),id,null,true);}
+  @Get('account') async account(@Req() req:any){return this.workspace.accountProfile(await this.workspace.identity(req.headers));}
+  @Patch('account') async updateAccount(@Req() req:any,@Body() body:any){return this.workspace.updateAccountProfile(await this.workspace.identity(req.headers),body);}
   @Get('session') async session(@Req() req:any){return this.workspace.identity(req.headers);}
   @Get('overview') async overview(@Req() req:any){return this.workspace.overview(await this.workspace.identity(req.headers));}
   @Get('notifications') async inbox(@Req() req:any){return this.workspace.inbox(await this.workspace.identity(req.headers));}

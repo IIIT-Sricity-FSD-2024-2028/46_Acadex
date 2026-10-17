@@ -23,6 +23,8 @@ async function request(endpoint, options = {}) {
     ...(options.headers || {}),
   };
 
+  if(options.body instanceof FormData)delete headers['Content-Type'];
+
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   const config = {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, Button, Input, Badge } from "../../../components/common";
 import { cn } from "../../../utils/cn";
 import { api } from "../../../utils/api";
@@ -25,8 +25,7 @@ import {
 } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
-let nextModuleId = 100;
-let nextItemId = 1000;
+
 
 function formatDuration(minutes) {
   if (minutes >= 60) {
@@ -178,12 +177,13 @@ function InlineEdit({ value, onChange, className, placeholder, multiline = false
 }
 
 // ─── File Upload Modal ──────────────────────────────────────────────────────────
-function FileUploadModal({ item, onClose, onSave }) {
+function FileUploadModal({ item,courseId, onClose, onSave }) {
   const isVideo = item?.type === "Video";
   const [dragActive, setDragActive] = useState(false);
+  const [selectedFile,setSelectedFile]=useState(null);const [uploading,setUploading]=useState(false);const [uploadError,setUploadError]=useState('');
   const [fileName, setFileName] = useState(item?.fileName || "");
   const [fileSize, setFileSize] = useState(item?.fileSize || "");
-  const [videoUrl, setVideoUrl] = useState(item?.url || "");
+  const [videoUrl, setVideoUrl] = useState(item?.videoUrl||item?.resourceUrl||item?.url || "");
   const [lessonTitle, setLessonTitle] = useState(item?.title || "");
   const [duration, setDuration] = useState(item?.duration || 0);
   const fileInputRef = useRef(null);
@@ -225,20 +225,14 @@ function FileUploadModal({ item, onClose, onSave }) {
   };
 
   const processFile = (file) => {
-    setFileName(file.name);
+    setSelectedFile(file);setUploadError('');setFileName(file.name);
     setFileSize(formatBytes(file.size));
   };
 
-  const handleSave = () => {
-    onSave({
-      ...item,
-      title: lessonTitle,
-      duration: parseInt(duration) || 0,
-      fileName: fileName,
-      fileSize: fileSize,
-      url: videoUrl,
-    });
-    onClose();
+  const handleSave = async () => {
+    setUploading(true);setUploadError('');try{let url=videoUrl;if(selectedFile){const form=new FormData();form.append('file',selectedFile);const uploaded=await api.post(`/courses/${courseId}/upload`,form);url=(uploaded.data||uploaded).path;if(!url)throw new Error('The server did not return an uploaded file.');}
+    onSave({...item,title:lessonTitle,duration:parseInt(duration)||0,fileName,fileSize,url,videoUrl:isVideo?url:null,resourceUrl:isVideo?null:url,isDemo:false,mediaLabel:null});onClose();
+    }catch(e){setUploadError(e.message);}finally{setUploading(false);}
   };
 
   return (
@@ -368,13 +362,14 @@ function FileUploadModal({ item, onClose, onSave }) {
           </div>
         </div>
 
+        {uploadError&&<p className="workspace-error mx-6 mb-4" role="alert">{uploadError}</p>}
         {/* Footer */}
         <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSave}>
-            Save File Input
+          <Button size="sm" onClick={handleSave} disabled={uploading}>
+            {uploading?"Uploading…":"Save file"}
           </Button>
         </div>
       </div>
@@ -458,7 +453,7 @@ function CurriculumItem({ item, index, totalItems, courseId, moduleId, onUpdate,
             {item.type === "Quiz" && (
               <Link
                 to={item.quizId
-                  ? `/instructor/courses/quiz/${item.quizId}/edit`
+                  ? `/instructor/courses/quiz/${item.quizId}/edit?courseId=${courseId}&moduleId=${moduleId}&itemId=${item.id}`
                   : `/instructor/courses/quiz/create?courseId=${courseId}&moduleId=${moduleId}&itemId=${item.id}`}
                 className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-800 font-medium hover:underline transition-colors"
               >
@@ -568,7 +563,7 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
 
   const addItem = (type) => {
     const newItem = {
-      id: nextItemId++,
+      id: crypto.randomUUID(),
       type,
       title: `New ${type}`,
       duration: type === "Quiz" ? 15 : type === "Reading" ? 10 : 12,
@@ -706,6 +701,7 @@ function ModuleCard({ module, index, totalModules, expanded, onToggle, onUpdate,
 // ─── Main Page ──────────────────────────────────────────────────────────────────
 export function CourseContent() {
   const { id } = useParams();
+  const navigate=useNavigate();
   const [course, setCourse] = useState(null);
   const [expandedModules, setExpandedModules] = useState([1]);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -714,16 +710,23 @@ export function CourseContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [savedMessage,setSavedMessage]=useState('');
+  const [pending,setPending]=useState(null);
   const [saveError,setSaveError]=useState('');
+  const dirty=useRef(false);const [revision,setRevision]=useState(0);
+  useEffect(()=>{const refresh=()=>setRevision(r=>r+1);window.addEventListener('focus',refresh);window.addEventListener('learning-data-changed',refresh);return()=>{window.removeEventListener('focus',refresh);window.removeEventListener('learning-data-changed',refresh);};},[]);
 
+  useEffect(()=>{dirty.current=false;setCourse(null);setModules([]);setLoading(true);},[id]);
   useEffect(() => {
-    api.get(`/courses/${id || 1}`, "instructor")
+    let active=true;
+    api.get(`/courses/${id}/editor`, "instructor")
       .then((data) => {
+        if(!active)return;
         if (!data) {
           setLoading(false);
           return;
         }
-        setCourse(data);
+        setCourse(data);setPending(data.pendingModuleRequest);
         const rawModules = Array.isArray(data.modules) ? data.modules : [];
         const normalized = rawModules.map((mod, idx) => ({
           ...mod,
@@ -735,40 +738,33 @@ export function CourseContent() {
             ? mod.items
             : Array.isArray(mod.lessons)
             ? mod.lessons
-            : typeof mod.lessons === 'number'
-            ? Array.from({ length: mod.lessons }, (_, i) => ({
-                id: `item-${mod.id || idx + 1}-${i + 1}`,
-                type: i % 3 === 0 ? "Video" : i % 3 === 1 ? "Reading" : "Quiz",
-                title: `Lesson ${i + 1}: Core Concepts`,
-                duration: 15,
-                fileName: "",
-                fileSize: "",
-                url: "",
-              }))
             : [],
         }));
-        setModules(normalized);
+        if(!dirty.current)setModules(normalized);
         if (normalized.length > 0) {
           setExpandedModules([normalized[0].id]);
         }
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error loading course content:", err);
+        if(!active)return;
+        setSaveError(err.message||'Unable to load this course.');
         setLoading(false);
       });
-  }, [id]);
+    return()=>{active=false;};
+  }, [id,revision]);
 
   const updateModules = (newModules) => {
-    setModules(newModules);
+    dirty.current=true;setModules(newModules);
   };
 
+  const handleSaveDraft=async()=>{setSaving(true);setSaveError('');try{await api.put(`/courses/${id}/curriculum-draft`,{modules});setSavedSuccess(true);setSavedMessage('Draft saved. Learner content is unchanged.');dirty.current=false;}catch(e){setSaveError(e.message);}finally{setSaving(false);}};
   const handleSaveToBackend = () => {
     setSaving(true);setSaveError('');
     api.post(`/courses/${id}/module-requests`, { modules }, "instructor")
       .then(() => {
         setSaving(false);
-        setSavedSuccess(true);
+        setSavedSuccess(true);setSavedMessage('Changes submitted to your organization.');setPending({status:'Pending'});dirty.current=false;
         setTimeout(() => setSavedSuccess(false), 3000);
       })
       .catch((err) => {
@@ -800,7 +796,7 @@ export function CourseContent() {
 
   const addModule = () => {
     const newModule = {
-      id: nextModuleId++,
+      id: crypto.randomUUID(),
       title: `Module ${modules.length + 1}: New Module`,
       description: "",
       objectives: [],
@@ -827,8 +823,9 @@ export function CourseContent() {
     return <div className="p-12 text-center text-slate-500">Loading course curriculum...</div>;
   }
 
+  if(!course)return <div className="admin-card"><p role="alert" className="workspace-error">{saveError||'Course not found.'}</p><Link className="admin-button mt-4" to="/instructor/courses">My courses</Link></div>;
   return (
-    <div className="max-w-5xl mx-auto pb-28">
+    <div className="max-w-5xl mx-auto pb-28" onClickCapture={async e=>{const link=e.target.closest('a');const href=link?.getAttribute('href');if(href?.includes('/instructor/courses/quiz/')){e.preventDefault();e.stopPropagation();setSaving(true);try{await api.put(`/courses/${id}/curriculum-draft`,{modules});navigate(href);}catch(err){setSaveError(err.message);}finally{setSaving(false);}}}}>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
@@ -929,11 +926,11 @@ export function CourseContent() {
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0  right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
+      <div className="instructor-editor-actions fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/60 p-3 px-6 z-10 flex justify-between items-center shadow-[0_-4px_16px_-2px_rgba(0,0,0,0.06)]">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-slate-500">Status:</span>
           <Badge variant="success" className="font-semibold">
-            {course?.status || "Published"}
+            {course?.status||"Status not recorded"}
           </Badge>
           <span className="hidden sm:inline text-sm text-slate-400">·</span>
           <span className="hidden sm:inline text-sm text-slate-500">{modules.length} modules · {totalItems} items · {formatDuration(totalDuration)}</span>
@@ -942,11 +939,12 @@ export function CourseContent() {
           {saveError&&<p role="alert" className="workspace-error">{saveError}</p>}
           {savedSuccess && (
             <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
-              Submitted for organization review
+              {savedMessage}
             </span>
           )}
-          <Button onClick={handleSaveToBackend} disabled={saving} size="sm" className="shadow-sm">
-            <Save className="w-4 h-4 mr-1.5" /> {saving ? "Submitting..." : "Submit for review"}
+          <Button onClick={handleSaveDraft} disabled={saving} variant="outline" size="sm">Save draft</Button>
+          <Button onClick={handleSaveToBackend} disabled={saving||!!pending} size="sm" className="shadow-sm">
+            <Save className="w-4 h-4 mr-1.5" /> {saving ? "Saving…" : pending?"Awaiting organization approval":"Request organization approval"}
           </Button>
         </div>
       </div>
@@ -955,6 +953,7 @@ export function CourseContent() {
       {uploadModalItem && (
         <FileUploadModal
           item={uploadModalItem}
+          courseId={id}
           onClose={() => setUploadModalItem(null)}
           onSave={handleSaveUploadedFile}
         />

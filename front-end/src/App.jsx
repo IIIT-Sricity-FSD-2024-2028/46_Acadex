@@ -168,7 +168,7 @@ export default function App() {
         <Route path="learners/:userId" element={<AccountDetails superAdmin/>}/>
         <Route path="admins/:userId" element={<AccountDetails superAdmin/>}/>
         <Route path="history" element={<AdministratorHistory/>}/>
-        <Route path="notifications" element={<NotificationsPage/>}/><Route path="settings" element={<SuperAdminSettings />} />
+        <Route path="notifications" element={<Navigate to="/super-admin/settings?tab=notifications" replace />}/><Route path="settings" element={<SuperAdminSettings />} /><Route path="profile" element={<Navigate to="/super-admin/settings" replace />}/>
       </Route>
 
       <Route
@@ -323,9 +323,9 @@ export default function App() {
           {/* Insights & Settings */}
           <Route path="reviews" element={<InstructorReviews />} />
           <Route path="disputes" element={<Navigate to="/instructor/reviews" replace />} />
-          <Route path="analytics" element={<InstructorAnalytics />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="settings" element={<InstructorSettings />} />
+          <Route path="analytics" element={<Navigate to="/instructor/dashboard" replace />} />
+          <Route path="notifications" element={<Navigate to="/instructor/profile?tab=notifications" replace />} />
+          <Route path="settings" element={<Navigate to="/instructor/profile?tab=settings" replace />} />
         </Route>
       </Route>
 
@@ -344,7 +344,7 @@ export default function App() {
         <Route path="/org/dashboard" element={<OrgDashboard />} />
         <Route path="/organization/dashboard" element={<OrgDashboard />} />
 
-        <Route path="/org/module-requests" element={<OrgLayout><ModuleRequests/></OrgLayout>}/><Route path="/org/notifications" element={<OrgLayout><NotificationsPage/></OrgLayout>}/><Route path="/org/profile" element={<OrgProfile />} />
+        <Route path="/org/module-requests" element={<Navigate to="/org/courses" replace />}/><Route path="/org/notifications" element={<Navigate to="/org/profile?tab=notifications" replace />}/><Route path="/org/profile" element={<OrgProfile />} />
         <Route path="/organization/profile" element={<OrgProfile />} />
 
         <Route
@@ -426,7 +426,7 @@ export default function App() {
         />
         <Route
           path="/org/settings"
-          element={<Navigate to="/org/profile" replace />}
+          element={<Navigate to="/org/profile?tab=settings" replace />}
         />
         <Route
           path="/organization/reports"
@@ -434,15 +434,15 @@ export default function App() {
         />
         <Route
           path="/org/analytics"
-          element={<OrgLayout><OrgAnalytics /></OrgLayout>}
+          element={<Navigate to="/org/dashboard" replace />}
         />
         <Route
           path="/organization/analytics"
-          element={<OrgLayout><OrgAnalytics /></OrgLayout>}
+          element={<Navigate to="/org/dashboard" replace />}
         />
         <Route
           path="/organization/settings"
-          element={<Navigate to="/org/profile" replace />}
+          element={<Navigate to="/org/profile?tab=settings" replace />}
         />
       </Route> {/* FIX: closes the Organization RoleGuard route */}
 
@@ -488,7 +488,7 @@ export default function App() {
           {/* Notifications merged into Settings */}
           <Route path="notifications" element={<Navigate to="/admin/settings?tab=notifications" replace />} />
 
-          <Route path="profile" element={<AdminProfile />} />
+          <Route path="profile" element={<Navigate to="/admin/settings" replace />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Route>

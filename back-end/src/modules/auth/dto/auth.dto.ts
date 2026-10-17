@@ -2,7 +2,7 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-vali
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiProperty({ example: 'sarah.jenkins@university.edu' })
+  @ApiProperty({ example: 'shivamani@iiits.in' })
   @IsEmail()
   email: string;
 
@@ -18,12 +18,12 @@ export class LoginDto {
 }
 
 export class RegisterDto {
-  @ApiProperty({ example: 'Alex Johnson' })
+  @ApiProperty({ example: 'Nishanth' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'alex.johnson@stanford.edu' })
+  @ApiProperty({ example: 'nishanth@gmail.com' })
   @IsEmail()
   email: string;
 
@@ -36,7 +36,7 @@ export class RegisterDto {
   @IsString()
   role: 'Student' | 'Instructor' | 'Organization' | 'Admin' | 'SuperAdmin';
 
-  @ApiPropertyOptional({ example: 'Stanford University' })
+  @ApiPropertyOptional({ example: 'IIIT SRICITY' })
   @IsOptional()
   @IsString()
   university?: string;
@@ -60,13 +60,13 @@ export class ChangePasswordDto {
 }
 
 export class PasswordResetRequestDto {
-  @ApiProperty({ example: 'alex.chen@stanford.edu' })
+  @ApiProperty({ example: 'nishanth@gmail.com' })
   @IsEmail()
   email: string;
 }
 
 export class PasswordResetConfirmDto {
-  @ApiProperty({ example: 'alex.chen@stanford.edu' })
+  @ApiProperty({ example: 'nishanth@gmail.com' })
   @IsEmail()
   email: string;
 

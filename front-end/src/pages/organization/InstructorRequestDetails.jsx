@@ -168,13 +168,6 @@ export default function InstructorRequestDetails() {
               <div className="space-y-2">
                 <button
                   disabled={busy}
-                  onClick={() => run(() => resendInvitation(request.id), 'Reminder sent')}
-                  className="w-full py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs border border-outline-variant flex items-center justify-center gap-2"
-                >
-                  <RotateCcw className="w-4 h-4" /> Send reminder
-                </button>
-                <button
-                  disabled={busy}
                   onClick={() => window.confirm('Withdraw this invitation?') && run(() => withdrawInvitation(request.id), 'Invitation withdrawn')}
                   className="w-full py-2.5 rounded-xl border border-rose-200 text-rose-700 font-bold text-xs"
                 >

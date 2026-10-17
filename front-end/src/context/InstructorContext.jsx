@@ -69,15 +69,7 @@ export function InstructorProvider({ children }) {
 
   // Stage 2: Course teaching requests (Org -> Instructor)
   // Rule: An instructor MUST already be affiliated with the organization to receive course requests!
-  const pendingCourseRequests = isAffiliated
-    ? invitations.filter(
-        (i) =>
-          isPendingStatus(i.status) &&
-          (i.type === 'course-assignment' || Boolean(i.courseId)) &&
-          i.courseTitle !== 'General Course Assignment' &&
-          i.organizationId === instructor.organizationId
-      )
-    : [];
+  const pendingCourseRequests = [];
 
   const pendingCount = isAffiliated ? pendingCourseRequests.length : pendingOrgInvitations.length;
 

@@ -1,7 +1,12 @@
+import {CourseMediaGuard} from './course-media.guard';
+import {diskStorage} from 'multer';
+import {randomUUID} from 'crypto';
+import {extname,resolve} from 'path';
+import {mkdirSync} from 'fs';
 import {
   Body, Controller, Delete, Get, Req,
   Param, Patch, Post, Put, Query,
-  UseInterceptors, UploadedFile,
+  UseInterceptors, UploadedFile,UseGuards,BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -16,9 +21,14 @@ import { CourseQueryDto, CreateCourseDto, UpdateCourseDto } from './dto/course.d
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService, private readonly workflow:CourseWorkflowService, private readonly workspace:WorkspaceService) {}
 
+  @Get('assignment-options') async assignmentOptions(@Req() req:any){return this.workflow.assignmentOptions(await this.workspace.identity(req.headers));}
+  @Post('assignments') async assign(@Body() body:any,@Req() req:any){return this.workflow.assign(body,await this.workspace.identity(req.headers));}
+  @Get(':id/organization') async organizationCourse(@Param('id') id:string,@Req() req:any){return this.workflow.organizationCourse(id,await this.workspace.identity(req.headers));}
+  @Get(':id/editor') async editor(@Param('id') id:string,@Req() req:any){return this.workflow.editor(id,await this.workspace.identity(req.headers));}
+  @Put(':id/curriculum-draft') async draft(@Param('id') id:string,@Body() body:any,@Req() req:any){return this.workflow.saveDraft(id,body,await this.workspace.identity(req.headers));}
   @Post(':id/submit') async submit(@Param('id') id:string,@Req() req:any){return this.workflow.submit(id,await this.workspace.identity(req.headers));}
   @Post(':id/module-requests') async requestModules(@Param('id') id:string,@Body() body:any,@Req() req:any){return this.workflow.request(id,body,await this.workspace.identity(req.headers));}
-  @Get('module-requests/mine') async moduleRequests(@Req() req:any){return this.workflow.list(await this.workspace.identity(req.headers));}
+  @Get('module-requests/mine') async moduleRequests(@Req() req:any,@Query('courseId') courseId:string){return this.workflow.list(await this.workspace.identity(req.headers),courseId);}
   @Post('module-requests/:requestId/decision') async decideModules(@Param('requestId') id:string,@Body() body:any,@Req() req:any){return this.workflow.decide(id,body,await this.workspace.identity(req.headers));}
 
   @Get()
@@ -44,6 +54,7 @@ export class CoursesController {
     const requested=dto.status;dto.status='Draft';
     const course=await this.coursesService.create(dto,actor.profileId);
     this.workflow.assertOrganization(actor,course);
+    await this.workflow.notifyAssignments(course,null,actor);
     return ['Published','Pending Approval'].includes(requested)?this.workflow.submit(course.id,actor):course;
   }
 
@@ -61,14 +72,15 @@ export class CoursesController {
     const actor=await this.workspace.identity(req.headers);const course=await this.workflow.course(id);
     if(actor.canonicalRole==='instructor'){
       if(Object.keys(dto).some(k=>k!=='modules'))throw new ForbiddenException('Instructors submit curriculum changes for organization approval.');
-      const request=await this.workflow.request(id,dto,actor);return {...course,pendingModuleRequest:request};
+      return this.workflow.saveDraft(id,dto,actor);
     }
     this.workflow.assertOrganization(actor,course);
+    const update=async()=>{const updated=await this.coursesService.update(id,dto);await this.workflow.notifyAssignments(updated,course,actor);return updated;};
     if(dto.status==='Published'||dto.status==='Pending Approval'){
-      if(course.status==='Published'&&dto.status==='Published'){delete dto.status;return this.coursesService.update(id,dto);}
-      delete dto.status;if(Object.keys(dto).length)await this.coursesService.update(id,dto);return this.workflow.submit(id,actor);
+      if(course.status==='Published'&&dto.status==='Published'){delete dto.status;return update();}
+      delete dto.status;if(Object.keys(dto).length)await update();return this.workflow.submit(id,actor);
     }
-    return this.coursesService.update(id, dto);
+    return update();
   }
 
   @Delete(':id')
@@ -81,18 +93,20 @@ export class CoursesController {
 
   // ──────────────────────────────────────────────────────────────
   // FILE UPLOAD – POST /api/courses/:id/upload
-  // Uses the multer middleware we created in upload.middleware.ts
+  // Course-scoped media uploads are authorized before writing to disk.
   // ──────────────────────────────────────────────────────────────
   @Post(':id/upload')
+  @UseGuards(CourseMediaGuard)
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: 'uploads',   // save files to /uploads folder
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+      storage:diskStorage({destination:(_req,_file,cb)=>{const dir=resolve(process.env.COURSE_UPLOAD_DIR||'uploads');mkdirSync(dir,{recursive:true});cb(null,dir);},filename:(_req,file,cb)=>cb(null,randomUUID()+extname(file.originalname).toLowerCase())}),
+      limits:{fileSize:100*1024*1024},
+      fileFilter:(_req,file,cb)=>{const extension=extname(file.originalname).toLowerCase();if(!['.mp4','.webm','.mov','.m4v','.pdf','.png','.jpg','.jpeg','.gif','.webp'].includes(extension))return cb(new BadRequestException('Upload a video, PDF or image.'),false);cb(null,true);}
     }),
   )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Upload a course thumbnail or material (image / PDF, max 5 MB)',
+    description: 'Upload a course thumbnail or material (video, PDF or image, max 100 MB)',
     schema: {
       type: 'object',
       properties: {
@@ -107,7 +121,7 @@ export class CoursesController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      return { success: false, message: 'No file received' };
+      throw new BadRequestException('Choose a file to upload.');
     }
 
     return {

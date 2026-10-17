@@ -94,35 +94,7 @@ export default function EditCourse() {
           instructorName: assignedInstructors.map(i => i.name).join(', ')
         });
 
-        // Match the faculty-assignment workflow: notify only the instructors
-        // newly added to this selected course's teaching team.
-        const newAssignments = assignedInstructors.filter(
-          (instructor) => !originalInstructorIds.has(instructor.id)
-        );
-        try {
-          await Promise.all(newAssignments.map((instructor) =>
-            sendCourseTeachingRequest({
-              instructorId: instructor.id,
-              courseId: course.id,
-              courseTitle: courseForm.title,
-              semester: 'Fall 2026',
-              creditHours: '',
-              proposedTerms: 'Departmental faculty honorarium + 70/30 course royalties',
-              message: 'The College Academic Committee requests you to instruct this course for the upcoming academic term. Please confirm your availability.',
-              organizationId: info?.id || 'org-1',
-              organizationName: info?.name || 'NexusPay Enterprise Academy',
-            })
-          ));
-        } catch (requestError) {
-          addToast('Course saved, but one or more faculty teaching requests could not be sent.', 'info');
-          navigate('/org/courses');
-          return;
-        }
-
-        addToast(
-          `Course "${courseForm.title}" updated successfully with ${assignedInstructors.length} instructors${newAssignments.length ? `; ${newAssignments.length} teaching request(s) sent.` : '!'} `,
-          'success'
-        );
+        addToast(`Course "${courseForm.title}" saved with ${assignedInstructors.length} assigned instructors.`, 'success');
         navigate('/org/courses');
       } catch (err) {
         addToast(`Failed to update course: ${err.message || 'Server error'}`, 'error');
@@ -247,7 +219,7 @@ export default function EditCourse() {
             </div>
 
             <p className="text-[11px] text-outline">
-              Adding an instructor updates this course only and sends that faculty member a teaching request when you save.
+              Selected instructors receive course access when you save.
             </p>
 
             <div>

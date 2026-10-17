@@ -1,7 +1,7 @@
 export function publishedLessons(course:any):any[]{
  return (Array.isArray(course?.modules)?course.modules:[]).filter(Boolean).flatMap((mod:any,mIdx:number)=>{
   const modId=mod.id||`mod-${mIdx+1}`;const items=Array.isArray(mod.items)?mod.items:Array.isArray(mod.lessons)?mod.lessons:[];
-  return items.filter(Boolean).map((value:any,i:number)=>{const item=typeof value==='string'?{title:value}:value;const type=String(item.type||'').toLowerCase();return {id:String(item.id||`${modId}-l${i+1}`),moduleId:modId,moduleIndex:mIdx,moduleTitle:mod.title||null,number:i+1,title:item.title||item.name||null,duration:item.duration||null,type:type||null,videoUrl:item.videoUrl||(type==='video'?item.url||item.contentUrl:null)||null,resourceUrl:item.resourceUrl||item.fileUrl||item.contentUrl||item.url||null,description:item.description||item.content||'',quizId:item.quizId||null};});
+  return items.filter(Boolean).map((value:any,i:number)=>{const item=typeof value==='string'?{title:value}:value;const type=String(item.type||'').toLowerCase();return {id:String(item.id||`${modId}-l${i+1}`),moduleId:modId,moduleIndex:mIdx,moduleTitle:mod.title||null,number:i+1,title:item.title||item.name||null,duration:item.duration||null,type:type||null,videoUrl:item.videoUrl||(type==='video'?item.url||item.contentUrl:null)||null,resourceUrl:item.resourceUrl||item.fileUrl||item.contentUrl||item.url||null,description:item.description||item.content||'',isDemo:item.isDemo===true,mediaLabel:item.mediaLabel||null,quizId:item.quizId||null};});
  });
 }
 export function enrollmentLearning(course:any,enrollment:any){

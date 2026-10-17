@@ -130,9 +130,9 @@ export function InstructorLayout() {
 
               {/* Settings Shortcut */}
               <Link
-                to="/instructor/settings"
+                to="/instructor/profile?tab=settings"
                 className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors hidden sm:inline-flex"
-                title="Studio Settings"
+                title="Account settings"
               >
                 <Settings className="w-4 h-4" />
               </Link>
@@ -169,15 +169,15 @@ export function InstructorLayout() {
                         className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                       >
                         <User className="w-4 h-4 text-slate-400" />
-                        Faculty Profile
+                        My account
                       </Link>
                       <Link
-                        to="/instructor/settings"
+                        to="/instructor/profile?tab=settings"
                         onClick={() => setProfileDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                       >
                         <Settings className="w-4 h-4 text-slate-400" />
-                        Studio Settings
+                        Account settings
                       </Link>
                     </div>
 

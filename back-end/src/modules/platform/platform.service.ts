@@ -70,6 +70,19 @@ export class PlatformService {
         const rows = all.filter(c => (!q.status || c.status === q.status) && (!term || [c.id, c.title, c.category, c.organizationName, ...c.instructors.map(i => i.name)].some(v => String(v || '').toLowerCase().includes(term))));
         return { ...this.paginate(rows.sort((a, b) => time(b) - time(a)), q), statuses: [...new Set(all.map(c => c.status).filter(Boolean))].sort() };
     }
+    async courseQueue(search='') {
+        const all=await this.courseRecords();const term=String(search).trim().toLowerCase();
+        const matches=(c:any)=>!term||[c.title,c.organizationName,...c.instructors.map(i=>i.name)].some(v=>String(v||'').toLowerCase().includes(term));
+        const pending=all.filter(c=>c.status==='Pending Approval').sort((a,b)=>time(b)-time(a));
+        const recent=all.filter(c=>c.status==='Published').sort((a,b)=>(Date.parse(b.reviewedAt||b.publishedAt||b.updatedAt||b.createdAt)||0)-(Date.parse(a.reviewedAt||a.publishedAt||a.updatedAt||a.createdAt)||0)).slice(0,10);
+        return {pending:pending.filter(matches),recentlyApproved:recent.filter(matches),pendingCount:pending.length,recentlyApprovedCount:recent.length};
+    }
+    async demoCredentials(role:string){
+        if(process.env.NODE_ENV==='production'&&process.env.ENABLE_DEMO_LOGIN!=='true')return null;
+        const demo=(await this.records('demo_accounts')).find(d=>d.role===role);if(!demo)return null;
+        const account=(await this.records('users')).find(a=>a.id===demo.userId&&a.status==='Active'&&a.role===role&&a.password===demo.password);
+        return account?{role,name:account.name,email:account.email,password:demo.password}:null;
+    }
     async course(id: string) { const course = (await this.courseRecords()).find(c => c.id === id); if (!course)
         throw new NotFoundException('Course not found.'); return course; }
     async review(id: string, dto: CourseDecision, admin: any) {

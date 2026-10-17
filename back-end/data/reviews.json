@@ -8,7 +8,7 @@
     "courseTitle": "Object Oriented Programming",
     "rating": 5,
     "comment": "Outstanding coursework! The modules on design patterns and polymorphic architecture were remarkably clear. The lab exercises directly improved my system design skills.",
-    "response": "Thank you Arjun! Glad the architectural exercises and design pattern labs helped solidify the mental model.",
+    "response": "Thank you Nishanth! Glad the architectural exercises and design pattern labs helped solidify the mental model.",
     "repliedAt": "2026-10-14T09:15:00.000Z",
     "createdAt": "2026-10-12T10:00:00.000Z",
     "updatedAt": "2026-10-14T09:15:00.000Z"
@@ -29,8 +29,8 @@
   },
   {
     "id": "rev-3",
-    "learnerId": "lrn-3",
-    "learnerName": "Marcus Vance",
+    "learnerId": "lrn-ruvan",
+    "learnerName": "Ruvan",
     "learnerAvatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
     "courseId": "cou-fb5ac543",
     "courseTitle": "Object Oriented Programming",
@@ -50,15 +50,15 @@
     "courseTitle": "Distributed Systems",
     "rating": 5,
     "comment": "The consensus algorithms module (Raft & Paxos) is by far the best theoretical and practical breakdown available online.",
-    "response": "Appreciate the feedback, Arjun! Designing resilient consensus mechanisms is central to distributed engineering.",
+    "response": "Appreciate the feedback, Nishanth! Designing resilient consensus mechanisms is central to distributed engineering.",
     "repliedAt": "2026-10-15T08:00:00.000Z",
     "createdAt": "2026-10-14T18:20:00.000Z",
     "updatedAt": "2026-10-15T08:00:00.000Z"
   },
   {
     "id": "rev-5",
-    "learnerId": "lrn-4",
-    "learnerName": "Aisha Patel",
+    "learnerId": "lrn-ruvan",
+    "learnerName": "Ruvan",
     "learnerAvatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     "courseId": "cou-b00839da",
     "courseTitle": "Distributed Systems",
@@ -86,7 +86,7 @@
   {
     "id": "rev-8",
     "learnerId": "lrn-1",
-    "learnerName": "Alex Chen",
+    "learnerName": "Nishanth",
     "learnerAvatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
     "courseId": "crs-1",
     "courseTitle": "Full Stack Web Development with React & Node.js",

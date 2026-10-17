@@ -1,81 +1,5 @@
 [
   {
-    "id": "inst-1791915010420",
-    "userId": "usr-1791915010416",
-    "name": "Raghuveer",
-    "email": "raghuveer@iiits.in",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "educatorType": "Faculty Instructor",
-    "specialization": "Computer Science",
-    "bio": "Newly registered faculty educator on the platform.",
-    "status": "Active",
-    "organizationId": "org-1",
-    "organizationName": "IIIT SRICITY",
-    "coursesCount": 0,
-    "enrolledStudents": 0,
-    "avgRating": 5,
-    "revenueGenerated": 0,
-    "createdAt": "2026-10-13T18:10:10.420Z",
-    "updatedAt": "2026-10-16T15:48:44.888Z",
-    "orgJoinedAt": "2026-10-16T15:48:44.887Z"
-  },
-  {
-    "id": "inst-1791912292835",
-    "userId": "usr-1791912292823",
-    "name": "Shameer Basha Shaik",
-    "email": "shameer.basha.shaik@iisc.ac.in",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "educatorType": "Faculty Instructor",
-    "specialization": "Computer Science & AI",
-    "bio": "Newly registered faculty educator on the platform.",
-    "status": "Active",
-    "coursesCount": 1,
-    "enrolledStudents": 0,
-    "avgRating": 5,
-    "revenueGenerated": 0,
-    "createdAt": "2026-10-13T17:24:52.835Z",
-    "updatedAt": "2026-10-13T17:41:47.829Z",
-    "organizationId": "org-2",
-    "organizationName": "IISC BANGALORE"
-  },
-  {
-    "id": "inst-1791911606628",
-    "userId": "usr-1791911606594",
-    "name": "Shivamani",
-    "email": "shivamani2@iiits.in",
-    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-    "educatorType": "Faculty Instructor",
-    "specialization": "Computer Science & AI",
-    "bio": "Newly registered faculty educator on the platform.",
-    "status": "Active",
-    "coursesCount": 1,
-    "enrolledStudents": 1,
-    "avgRating": 5,
-    "revenueGenerated": 0,
-    "createdAt": "2026-10-13T17:13:26.628Z",
-    "updatedAt": "2026-10-14T18:08:37.532Z",
-    "organizationId": "org-1",
-    "organizationName": "NexusPay Enterprise Academy"
-  },
-  {
-    "name": "Raghuveer",
-    "email": "raghuveer@iiits.in",
-    "specialization": "Computer Science",
-    "status": "Pending Affiliation",
-    "coursesCount": 0,
-    "enrolledStudents": 0,
-    "avgRating": 5,
-    "revenueGenerated": 0,
-    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
-    "joinedDate": "October 2026",
-    "id": "ins-32434090",
-    "userId": "usr-testins",
-    "organizationId": null,
-    "organizationName": null,
-    "createdAt": "2026-10-01T06:18:05.310Z",
-    "updatedAt": "2026-10-01T06:18:05.310Z"
-  },
-  {
     "id": "inst-1",
     "userId": "usr-1",
     "name": "Shameer Basha Shaik",
@@ -100,7 +24,10 @@
     "revenueGenerated": 0,
     "joinedDate": "March 2024",
     "createdAt": "2024-03-10T09:00:00.000Z",
-    "updatedAt": "2026-10-15T06:57:47.125Z"
+    "updatedAt": "2026-10-15T06:57:47.125Z",
+    "legacyIds": [
+      "inst-1791912292835"
+    ]
   },
   {
     "id": "inst-2",
@@ -127,7 +54,10 @@
     "revenueGenerated": 0,
     "joinedDate": "April 2024",
     "createdAt": "2024-04-02T09:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
+    "updatedAt": "2026-10-15T08:00:00.000Z",
+    "legacyIds": [
+      "inst-1791911606628"
+    ]
   },
   {
     "id": "inst-3",
@@ -154,33 +84,13 @@
     "revenueGenerated": 0,
     "joinedDate": "February 2024",
     "createdAt": "2024-02-18T09:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
-  },
-  {
-    "id": "inst-4",
-    "userId": "usr-4",
-    "name": "Raghuveer",
-    "email": "raghuveer2@iisc.ac.in",
-    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-    "educatorType": "Senior Instructor",
-    "specialization": "Cybersecurity & Network Security",
-    "expertise": [
-      "Zero Trust",
-      "Network Security",
-      "Cryptography",
-      "Penetration Testing",
-      "SIEM"
-    ],
-    "bio": "CISSP certified. Spent a decade in enterprise security consulting before moving to education. Wrote a course because he kept seeing the same mistakes made by developers who never learned security fundamentals.",
-    "status": "Active",
-    "organizationId": "org-2",
-    "organizationName": "IISC BANGALORE",
-    "coursesCount": 1,
-    "enrolledStudents": 0,
-    "avgRating": 0,
-    "revenueGenerated": 0,
-    "joinedDate": "May 2024",
-    "createdAt": "2024-05-05T09:00:00.000Z",
-    "updatedAt": "2026-10-15T08:00:00.000Z"
+    "updatedAt": "2026-10-15T08:00:00.000Z",
+    "legacyIds": [
+      "inst-1791915010420",
+      "ins-32434090",
+      "inst-4",
+      "inst-5",
+      "inst-6"
+    ]
   }
 ]

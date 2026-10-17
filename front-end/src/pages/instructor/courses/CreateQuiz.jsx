@@ -511,10 +511,10 @@ export function CreateQuiz() {
   const { id: routeQuizId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const courseId = searchParams.get("courseId") || "crs-1";
+  const [courseId,setCourseId] = useState(searchParams.get("courseId"));
   const moduleId = searchParams.get("moduleId");
   const itemId = searchParams.get("itemId");
-  const [quizTitle, setQuizTitle] = useState("Quiz: Core Concepts");
+  const [quizTitle, setQuizTitle] = useState("");
   const [passingScore, setPassingScore] = useState(80);
   const [showExplanations, setShowExplanations] = useState(true);
   const [questions, setQuestions] = useState([]);
@@ -525,7 +525,7 @@ export function CreateQuiz() {
   const linkQuizToCurriculumItem = async (quizId) => {
     if (!moduleId || !itemId) return;
 
-    const course = await api.get(`/courses/${courseId}`, "instructor");
+    const course = await api.get(`/courses/${courseId}/editor`, "instructor");
     const modules = (course?.modules || []).map((module) =>
       String(module.id) !== String(moduleId)
         ? module
@@ -541,7 +541,7 @@ export function CreateQuiz() {
           }
     );
 
-    await api.patch(`/courses/${courseId}`, { modules }, "instructor");
+    await api.put(`/courses/${courseId}/curriculum-draft`, { modules }, "instructor");
   };
 
   useEffect(() => {
@@ -555,7 +555,7 @@ export function CreateQuiz() {
     api.get(`/quizzes/${routeQuizId}`, "instructor")
       .then((data) => {
         if (data) {
-          setQuizTitle(data.title || "Quiz: Core Concepts");
+          setCourseId(data.courseId);setQuizTitle(data.title||"");
           setPassingScore(data.passingScore || 80);
           setShowExplanations(data.showExplanations ?? true);
           setQuestions((data.questions || []).map((question) => ({
@@ -604,13 +604,14 @@ export function CreateQuiz() {
         passingScore: passingScore || 80,
         description: showExplanations ? "Explanations are shown after submission." : "",
         showExplanations,
-        status: publish ? 'Published' : 'Draft',
+        status: 'Draft',
         questions,
       };
 
       if (editingQuizId) {
-        await api.patch(`/quizzes/${editingQuizId}`, quizPayload, "instructor");
-        alert(publish ? "Quiz updated and published successfully!" : "Quiz draft saved successfully!");
+        const saved=await api.patch(`/quizzes/${editingQuizId}`, quizPayload, "instructor");
+        await linkQuizToCurriculumItem(saved.id);setEditingQuizId(saved.id);
+        alert('Assessment draft saved. Submit the course content to your organization for approval.');
         return;
       }
 
@@ -625,11 +626,11 @@ export function CreateQuiz() {
       await api.patch(`/quizzes/${quiz.id}`, quizPayload, "instructor");
       await linkQuizToCurriculumItem(quiz.id);
 
-      alert(publish ? "Quiz published successfully!" : "Quiz draft saved successfully!");
-      navigate(`/instructor/courses/quiz/${quiz.id}/edit`);
+      alert('Assessment draft saved. Submit the course content for organization approval.');
+      setEditingQuizId(quiz.id);navigate(`/instructor/courses/${courseId}/content`);
     } catch (err) {
       console.error("Error saving quiz:", err);
-      alert(`Unable to publish quiz: ${err.message || "Server error"}`);
+      alert(`Unable to save assessment: ${err.message || "Server error"}`);
     } finally {
       setSaving(false);
     }
@@ -864,7 +865,7 @@ export function CreateQuiz() {
             disabled={loading || saving || !allQuestionsValid}
             className="shadow-sm bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-100 disabled:text-emerald-700 disabled:opacity-100"
           >
-              <CheckCircle className="w-4 h-4 mr-1.5" /> Save & Publish
+              <CheckCircle className="w-4 h-4 mr-1.5" /> Save draft
           </Button>
         </div>
       </div>

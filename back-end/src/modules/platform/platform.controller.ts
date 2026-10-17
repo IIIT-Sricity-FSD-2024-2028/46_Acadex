@@ -26,6 +26,7 @@ export class AdminController {
     courses(
     @Query()
     query: AdminQuery) { return this.platform.courses(query); }
+    @Get('course-queue') courseQueue(@Query('search') search:string){return this.platform.courseQueue(search);}
     @Get('courses/:id')
     course(
     @Param('id')
@@ -62,6 +63,7 @@ export class AdminController {
 @Controller('public')
 export class PublicController {
     constructor(private readonly platform: PlatformService) { }
+    @Get('demo-credentials') demo(@Query('role') role:string){return this.platform.demoCredentials(role);}
     @Get('landing')
     landing() { return this.platform.landing(); }
 }

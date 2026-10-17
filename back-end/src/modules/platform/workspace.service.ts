@@ -1,4 +1,5 @@
-import { enrollmentLearning } from '../../common/learning/learning-records';
+import {isAssignedInstructor} from '../../common/courses/assignment';
+import { publishedLessons,enrollmentLearning } from '../../common/learning/learning-records';
 import { Injectable, UnauthorizedException, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { JsonDatabaseService } from '../../database/json-db.service';
 import { JsonRepository } from '../../database/json-repository';
@@ -15,7 +16,23 @@ export class WorkspaceService {
     const role=roleOf(account.role);const collection=role==='student'?'learners':role==='instructor'?'instructors':role==='organization'?'organizations':null;
     const profiles=collection?await this.db.getCollection<any>(collection):[];
     const profile=profiles.find(p=>p.userId===id||p.id===account.organizationId||String(p.email||'').toLowerCase()===String(account.email).toLowerCase());
-    return {id:account.id,name:profile?.name||account.name,email:account.email,role:account.role,canonicalRole:role,profileId:profile?.id||null,aliases:[id,profile?.id].filter(Boolean)};
+    return {id:account.id,name:profile?.name||account.name,email:account.email,role:account.role,canonicalRole:role,profileId:profile?.id||null,aliases:[id,profile?.id,...(account.legacyUserIds||[]),...(profile?.legacyIds||[])].filter(Boolean)};
+  }
+  async accountProfile(user:any){
+    const collection=({student:'learners',instructor:'instructors',organization:'organizations'} as any)[user.canonicalRole];
+    const profile=collection?(await this.db.getCollection<any>(collection)).find(p=>p.id===user.profileId):null;
+    const {password,...account}=(await this.db.getCollection<any>('users')).find(a=>a.id===user.id)||{};
+    return {id:user.id,profileId:user.profileId,role:user.role,name:profile?.name||account.name,email:account.email,phone:profile?.phone||account.phone||'',bio:profile?.bio||account.bio||'',website:profile?.website||'',specialization:profile?.specialization||'',organizationName:profile?.organizationName||null,createdAt:account.createdAt||profile?.createdAt||null};
+  }
+  async updateAccountProfile(user:any,body:any){
+    const name=String(body.name||'').trim();if(name.length<2||name.length>160)throw new BadRequestException('Enter a name between 2 and 160 characters.');
+    const fields={name,phone:String(body.phone||'').trim().slice(0,30),bio:String(body.bio||'').trim().slice(0,1000)};
+    return this.db.runTransaction(async()=>{
+      await new JsonRepository<any>('users',this.db).update(user.id,fields);
+      const collection=({student:'learners',instructor:'instructors',organization:'organizations'} as any)[user.canonicalRole];
+      if(collection&&user.profileId)await new JsonRepository<any>(collection,this.db).update(user.profileId,fields);
+      return this.accountProfile(user);
+    });
   }
   private visible(n:any,user:any) {
     if(n.recipientId)return user.aliases.includes(n.recipientId);
@@ -62,15 +79,15 @@ export class WorkspaceService {
 
   async instructorWorkspace(user:any){
     if(user.canonicalRole!=='instructor')throw new ForbiddenException('Instructor access is required.');
-    const [teachers,courses,enrollments,learners,accounts,reviews,events]=await Promise.all(['instructors','courses','enrollments','learners','users','reviews','learning_activity'].map(n=>this.db.getCollection<any>(n)));
+    const [teachers,courses,enrollments,learners,accounts,reviews,events,organizations]=await Promise.all(['instructors','courses','enrollments','learners','users','reviews','learning_activity','organizations'].map(n=>this.db.getCollection<any>(n)));
     const instructor=teachers.find(i=>i.id===user.profileId);if(!instructor)throw new NotFoundException('Instructor profile not found.');
-    const assigned=courses.filter(c=>user.aliases.includes(c.instructorId)||(Array.isArray(c.instructors)&&c.instructors.some(i=>user.aliases.includes(typeof i==='string'?i:i?.id)))||(Array.isArray(c.coInstructorIds)&&c.coInstructorIds.some(id=>user.aliases.includes(id))));
+    const assigned=courses.filter(c=>isAssignedInstructor(c,user));
     const ids=new Set(assigned.map(c=>c.id));const related=enrollments.filter(e=>ids.has(e.courseId)).map(e=>enrollmentLearning(assigned.find(c=>c.id===e.courseId),e));
     const rows=related.map(e=>{const learner=learners.find(l=>l.id===e.learnerId||l.userId===e.learnerId||l.id===e.userId||l.userId===e.userId);const account=accounts.find(a=>a.id===learner?.userId||a.id===e.learnerId);return {...e,id:learner?.id||e.learnerId||e.userId,enrollmentId:e.id,name:learner?.name||account?.name||e.learnerName||null,email:learner?.email||account?.email||e.learnerEmail||null,profileAvailable:!!learner,course:assigned.find(c=>c.id===e.courseId)?.title||e.courseTitle, lastActive:e.lastAccessedAt||e.lastAccessed||null};});
     const ownEvents=events.filter(e=>ids.has(e.courseId));
     const engagementData=Array.from({length:7},(_,i)=>{const date=new Date();date.setUTCDate(date.getUTCDate()-6+i);const key=date.toISOString().slice(0,10);return {date:key,week:date.toLocaleDateString('en-IN',{day:'numeric',month:'short',timeZone:'UTC'}),hours:Math.round(ownEvents.filter(e=>String(e.createdAt).startsWith(key)).reduce((sum,e)=>sum+Number(e.seconds||0),0)/3600*100)/100};});
-    const decorated=assigned.map(c=>{const ratings=reviews.filter(r=>r.courseId===c.id&&Number(r.rating)>=1&&Number(r.rating)<=5);const own=related.filter(e=>e.courseId===c.id);return {...c,enrolledCount:own.length,rating:ratings.length?ratings.reduce((sum,r)=>sum+Number(r.rating),0)/ratings.length:null,completionRate:own.length?Math.round(own.filter(e=>e.status==='Completed').length/own.length*100):0};});
-    const active=rows.filter(e=>e.status==='Active');return {instructor,courses:decorated,learners:rows,stats:{courses:assigned.length,learners:new Set(rows.map(e=>e.id)).size,enrollments:rows.length,activeLearners:new Set(active.map(e=>e.id)).size,completedEnrollments:rows.filter(e=>e.status==='Completed').length,averageProgress:rows.length?Math.round(rows.reduce((sum,e)=>sum+Number(e.progress||0),0)/rows.length):0,engagementHours:Math.round(ownEvents.reduce((sum,e)=>sum+Number(e.seconds||0),0)/3600*100)/100},engagementData,engagementRecorded:ownEvents.length>0};
+    const decorated=assigned.map(c=>{const ratings=reviews.filter(r=>r.courseId===c.id&&Number(r.rating)>=1&&Number(r.rating)<=5);const own=related.filter(e=>e.courseId===c.id);return {...c,organizationName:organizations.find(o=>o.id===c.organizationId)?.name||null,modulesCount:Array.isArray(c.modules)?c.modules.length:0,lessonsCount:publishedLessons(c).length,enrolledCount:own.length,rating:ratings.length?ratings.reduce((sum,r)=>sum+Number(r.rating),0)/ratings.length:null,completionRate:own.length?Math.round(own.filter(e=>e.status==='Completed').length/own.length*100):0};});
+    const active=rows.filter(e=>e.status==='Active');return {instructor,courses:decorated,learners:rows,stats:{courses:assigned.length,publishedCourses:assigned.filter(c=>c.status==='Published').length,learners:new Set(rows.map(e=>e.id)).size,enrollments:rows.length,activeLearners:new Set(active.map(e=>e.id)).size,completedEnrollments:rows.filter(e=>e.status==='Completed').length,averageProgress:rows.length?Math.round(rows.reduce((sum,e)=>sum+Number(e.progress||0),0)/rows.length):0,engagementHours:Math.round(ownEvents.reduce((sum,e)=>sum+Number(e.seconds||0),0)/3600*100)/100},engagementData,engagementRecorded:ownEvents.length>0};
   }
   async instructorReviews(user:any){const data=await this.instructorWorkspace(user);const ids=new Set(data.courses.map(c=>c.id));const [reviews,learners]=await Promise.all(['reviews','learners'].map(n=>this.db.getCollection<any>(n)));return reviews.filter(r=>ids.has(r.courseId)).map(r=>({...r,learnerName:learners.find(l=>l.id===r.learnerId||l.userId===r.learnerId)?.name||r.learnerName||null,courseTitle:data.courses.find(c=>c.id===r.courseId)?.title})).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));}
   async instructorReply(user:any,id:string,body:any,remove=false){const rows=await this.instructorReviews(user);if(!rows.some(r=>r.id===id))throw new NotFoundException('Review not found in your assigned courses.');const response=String(body?.response||'').trim();if(!remove&&!response)throw new BadRequestException('Enter a reply.');return new JsonRepository<any>('reviews',this.db).update(id,{response:remove?null:response,repliedAt:remove?null:new Date().toISOString()});}
