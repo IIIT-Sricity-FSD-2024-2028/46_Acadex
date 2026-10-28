@@ -8,14 +8,14 @@ The project aims to provide a unified EdTech platform with dedicated workspaces 
 
 | Actor | Responsibility |
 | --- | --- |
-| Student / Learner | Enroll in courses, complete learning activities, and track progress and achievements. |
+| Learner | Enroll in courses, complete learning activities, and track progress and achievements. |
 | Instructor / Educator | Develop learning content for assigned courses and monitor learner performance. |
 | Organization | Manage institutional courses, instructors, learners, and enrollments. |
 | Administrator | Oversee users, course approvals, certificates, payments, and disputes. |
 
 ## Planned Features for Each Actor
 
-### Student / Learner
+### Learner
 
 - Register, sign in, recover account access, and manage a personal profile.
 - Browse and search courses, view course details, and enroll in free or paid courses.
