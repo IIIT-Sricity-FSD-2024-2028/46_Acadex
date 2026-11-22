@@ -1,3 +1,6 @@
+import {ReviewsService} from '../reviews/reviews.service';
+import {CertificatesService} from '../certificates/certificates.service';
+import {prepareWebSeed} from '../../database/web-seed';
 import {ValidationPipe} from '@nestjs/common';
 import {UpdateCourseDto} from '../courses/dto/course.dto';
 import { Test,TestingModule } from '@nestjs/testing';
@@ -27,6 +30,74 @@ describe('Learner records and workflows',()=>{
  };for(const [name,items]of Object.entries(rows))await db.setCollection(name,items);});
  afterAll(async()=>{await module.close();if(previous===undefined)delete process.env.DATA_DIR;else process.env.DATA_DIR=previous;await rm(dir,{recursive:true,force:true});});
  it('joins live catalog counts, ratings, teaching team and institute records',async()=>{const course=await service.getCatalogCourse('c1');expect(course.enrolledCount).toBe(1);expect(course.rating).toBe(4);expect(course.organizationName).toBe('Institute');expect(course.instructorName).toBe('Teacher');expect(course.lessonsCount).toBe(2);expect(JSON.stringify(course.modules)).not.toContain('/uploads/lesson.mp4');});
+ it('connects paid learning entries to their own receipt and excludes unpaid course access',async()=>{
+  expect((await service.getEnrollments('u1'))[0].paymentId).toBe('p1');
+  const payments=await db.getCollection<any>('transactions');await db.setCollection('transactions',payments.filter(p=>p.id!=='p1'));
+  expect(await service.getEnrollments('u1')).toEqual([]);
+  expect((await service.browse('u1')).items.find(c=>c.id==='c1').isEnrolled).toBe(false);
+  const workspace=module.get(WorkspaceService);const user=await workspace.identity({'x-user-id':'u1'});
+  expect((await workspace.overview(user)).courses).toEqual([]);
+  const paid=await service.checkout('u1',{courseId:'c1',paymentMethod:'upi',upiId:'learner@bank'});
+  expect((await service.getEnrollments('u1'))[0].paymentId).toBe(paid.transactionId);
+  expect((await service.receipt('u1',paid.transactionId)).enrollmentId).toBe('e1');
+  expect((await db.getCollection<any>('enrollments')).filter(e=>e.learnerId==='l1'&&e.courseId==='c1')).toHaveLength(1);
+ });
+ it('hides missing and cancelled learning entries while retaining their payment history',async()=>{
+  const rows=await db.getCollection<any>('enrollments');rows.push({id:'missing',learnerId:'l1',courseId:'missing-course',status:'Active'});await db.setCollection('enrollments',rows);
+  expect((await service.getEnrollments('u1')).map(e=>e.id)).toEqual(['e1']);
+  rows[0].status='Cancelled';await db.setCollection('enrollments',rows);
+  expect(await service.getEnrollments('u1')).toEqual([]);
+  expect((await service.billing('u1')).summary.completedPayments).toBe(1);
+ });
+ it('uses exactly three current seed courses while keeping archived course and financial history',()=>{
+  const ids=['cou-50d09a28','cou-fb5ac543','cou-2238c587','cou-old','crs-old'];
+  const snapshot={courses:ids.map(id=>({id,status:'Published'})),transactions:[{id:'historical',courseId:'cou-old'}],enrollments:[{id:'history',courseId:'cou-old'}]};
+  const prepared=prepareWebSeed(snapshot);
+  expect(prepared.courses.filter(c=>c.status==='Published').map(c=>c.id)).toEqual(ids.slice(0,3));
+  expect(prepared.transactions).toEqual(snapshot.transactions);expect(prepared.enrollments).toEqual(snapshot.enrollments);
+ });
+ it('rejects reviews and course disputes outside the learner enrollment',async()=>{
+  const reviews=module.get(ReviewsService);
+  await expect(reviews.create({courseId:'c1',rating:5,comment:'Not enrolled'},'u2')).rejects.toThrow('Enroll');
+  await expect(reviews.create({courseId:'c1',rating:5,comment:'Duplicate'},'u1')).rejects.toThrow('already reviewed');
+  await expect(service.createDispute('u2',{courseId:'c1',subject:'Course issue',description:'Not my course'})).rejects.toThrow('not enrolled');
+  const accountIssue=await service.createDispute('u2',{subject:'Account issue',description:'Help with my profile',category:'Account'});
+  expect(accountIssue.raisedById).toBe('l2');
+  const enrollments=await db.getCollection<any>('enrollments');enrollments[0].status='Cancelled';await db.setCollection('enrollments',enrollments);
+  expect(await reviews.findMy('u1')).toEqual([]);
+ });
+ it('issues and displays certificates only for fully completed enrollments',async()=>{
+  const certificates=module.get(CertificatesService);
+  await expect(certificates.create({learnerId:'l1',courseId:'c1'})).rejects.toThrow('Complete');
+  await db.setCollection('certificates',[{id:'invalid',learnerId:'l1',courseId:'c1',credentialId:'invalid-key'}]);
+  expect(await service.getCertificates('u1')).toEqual([]);expect((await service.getProfile('u1')).certificatesEarned).toBe(0);
+  await expect(certificates.verify('invalid-key')).rejects.toThrow('not found');
+  const enrollments=await db.getCollection<any>('enrollments');Object.assign(enrollments[0],{status:'Completed',progress:100,completedLessons:['lesson1','lesson2']});await db.setCollection('enrollments',enrollments);
+  expect(await service.getCertificates('u1')).toHaveLength(1);
+  const file=await service.downloadCertificate('u1','invalid');expect(file.mimeType).toBe('application/pdf');expect(Buffer.from(file.content,'base64').subarray(0,8).toString()).toBe('%PDF-1.4');
+  await expect(service.downloadCertificate('u2','invalid')).rejects.toThrow('not found');
+ });
+ it('requires both all lessons and a passing published assessment before issuing a certificate',async()=>{
+  await db.setCollection('quizzes',[{id:'required',courseId:'c1',title:'Required assessment',status:'Published',passingScore:80}]);
+  await db.setCollection('quiz_questions',[{id:'q',quizId:'required',questionText:'Question',optionA:'Wrong',optionB:'Correct',correctOption:'B'}]);
+  await service.updateProgress('u1','e1','lesson1',true);await service.updateProgress('u1','e1','lesson2',true);
+  expect(await service.getCertificates('u1')).toEqual([]);
+  await service.submitAssessment('u1','c1',{quizId:'required',answers:{q:0}});expect(await service.getCertificates('u1')).toEqual([]);
+  await service.submitAssessment('u1','c1',{quizId:'required',answers:{q:1}});expect(await service.getCertificates('u1')).toHaveLength(1);
+ });
+ it('keeps instructor, learner, admin and organization published duration in sync while isolating drafts',async()=>{
+  const courses=await db.getCollection<any>('courses');courses[0].modules=[{id:'m',title:'Duration test',items:[{id:'lesson',title:'Video',type:'Video',duration:'00:12'},{id:'read',type:'Reading',title:'Reading',duration:2}]}];await db.setCollection('courses',courses);
+  await db.setCollection('users',[...(await db.getCollection<any>('users')),{id:'teacher-user',role:'Instructor',name:'Teacher',email:'teacher@duration.test',status:'Active'}]);
+  const teachers=await db.getCollection<any>('instructors');teachers[0].userId='teacher-user';await db.setCollection('instructors',teachers);
+  const workspace=module.get(WorkspaceService),workflow=module.get(CourseWorkflowService);const teacher=await workspace.identity({'x-user-id':'teacher-user'});
+  expect((await workspace.instructorWorkspace(teacher)).courses.find(c=>c.id==='c1').duration).toBe('2 min 12 sec');
+  expect((await service.getCatalogCourse('c1')).duration).toBe('2 min 12 sec');
+  expect((await module.get(PlatformService).course('c1')).duration).toBe('2 min 12 sec');
+  expect((await workflow.organizationCourse('c1',{canonicalRole:'organization',profileId:'org'})).duration).toBe('2 min 12 sec');
+  await workflow.saveDraft('c1',{modules:[{id:'m',title:'Draft',items:[{id:'quiz',title:'Assessment',type:'Quiz',duration:5}]}]},teacher);
+  expect((await workflow.editor('c1',teacher)).duration).toBe('5 min');
+  expect((await service.getCatalogCourse('c1')).duration).toBe('2 min 12 sec');
+ });
  it('preserves recorded history and does not write progress while rendering enrollment or profile data',async()=>{const before=await db.getCollection('enrollments');expect((await service.getEnrollments('u1'))[0].progress).toBe(65);expect((await service.getProfile('u1')).inProgressCourses).toBe(1);expect(await db.getCollection('enrollments')).toEqual(before);});
  it('uses actual completion markers without fabricating numeric-count lessons',async()=>{await db.setCollection('enrollments',[{id:'e1',learnerId:'l1',courseId:'c1',status:'Active',progress:95,completedLessons:['lesson1']}]);expect((await service.getEnrollments('u1'))[0].progress).toBe(50);const courses=await db.getCollection<any>('courses');courses[0].modules=[{id:'numbers',title:'Summary only',lessons:30}];await db.setCollection('courses',courses);expect((await service.content('u1','c1')).lessons).toEqual([]);});
  it('loads only owned content, with recorded media and no substituted sample videos',async()=>{const content=await service.content('u1','c1');expect(content.lessons[0].videoUrl).toBe('/uploads/lesson.mp4');expect(content.lessons[1].videoUrl).toBeNull();expect(content.lessons[1].description).toBe('Published text');await expect(service.content('u2','c1')).rejects.toThrow('not enrolled');});
@@ -36,7 +107,7 @@ describe('Learner records and workflows',()=>{
  it('does not substitute an assessment from another course or expose answer keys',async()=>{await db.setCollection('quizzes',[{id:'foreign',courseId:'c2',title:'Other quiz',status:'Published',passingScore:80}]);await expect(service.assessment('u1','c1')).rejects.toThrow('No published assessment');await db.setCollection('quizzes',[{id:'quiz',courseId:'c1',title:'Actual quiz',status:'Published',passingScore:80}]);await db.setCollection('quiz_questions',[{id:'question',quizId:'quiz',questionText:'Recorded question',optionA:'A',optionB:'B',correctOption:'B'}]);const data=await service.assessment('u1','c1');expect(data.questions[0].options).toEqual(['A','B']);expect(data.questions[0]).not.toHaveProperty('correctOption');await expect(service.assessment('u2','c1')).rejects.toThrow('not enrolled');});
  it('grades and saves assessments on the server and never issues a course certificate merely for a quiz pass',async()=>{await db.setCollection('quizzes',[{id:'quiz',courseId:'c1',title:'Quiz',status:'Published',passingScore:80,showExplanations:true}]);await db.setCollection('quiz_questions',[{id:'question',quizId:'quiz',questionText:'Question',optionA:'A',optionB:'B',correctOption:'B',explanation:'Recorded explanation'}]);const failed=await service.submitAssessment('u1','c1',{quizId:'quiz',answers:{question:0},score:100});expect(failed.score).toBe(0);const passed=await service.submitAssessment('u1','c1',{quizId:'quiz',answers:{question:1}});expect(passed.score).toBe(100);expect((await db.getCollection<any>('quiz_attempts'))[1].learnerId).toBe('l1');expect(await db.getCollection('certificates')).toEqual([]);});
  it('records one purchase and one enrollment when checkout requests are repeated concurrently',async()=>{const result=await Promise.all([service.checkout('u1',{courseId:'c2',paymentMethod:'upi',upiId:'learner@bank'}),service.checkout('u1',{courseId:'c2',paymentMethod:'upi',upiId:'learner@bank'})]);expect(result[0].transactionId).toBe(result[1].transactionId);expect((await db.getCollection<any>('transactions')).filter(t=>t.payerId==='l1'&&t.courseId==='c2')).toHaveLength(1);expect((await db.getCollection<any>('enrollments')).filter(e=>e.learnerId==='l1'&&e.courseId==='c2')).toHaveLength(1);});
- it('keeps unapproved curriculum out of learner content until organization approval',async()=>{const workflow=module.get(CourseWorkflowService);const request=await workflow.request('c1',{modules:[{id:'approved-module',title:'Requested module',items:[{id:'new-lesson',title:'Proposed lesson',type:'Reading',content:'Approved later'}]}]},{id:'teacher-user',profileId:'inst',aliases:['inst'],name:'Teacher',canonicalRole:'instructor'});expect((await service.content('u1','c1')).lessons.map(l=>l.id)).not.toContain('new-lesson');await workflow.decide(request.id,{decision:'approve'},{id:'org-user',profileId:'org',name:'Institute',canonicalRole:'organization'});expect((await service.content('u1','c1')).lessons[0].id).toBe('new-lesson');});
+ it('keeps unapproved curriculum out of learner content until organization approval',async()=>{const workflow=module.get(CourseWorkflowService);const request=await workflow.request('c1',{modules:[{id:'approved-module',title:'Requested module',items:[{id:'new-lesson',title:'Proposed lesson',type:'Reading',content:'Approved later'}]}]},{id:'teacher-user',profileId:'inst',organizationId:'org',aliases:['inst'],name:'Teacher',canonicalRole:'instructor'});expect((await service.content('u1','c1')).lessons.map(l=>l.id)).not.toContain('new-lesson');await workflow.decide(request.id,{decision:'approve'},{id:'org-user',profileId:'org',name:'Institute',canonicalRole:'organization'});expect((await service.content('u1','c1')).lessons[0].id).toBe('new-lesson');});
  it('filters catalog records on the backend and returns facets and bounded pages',async()=>{
   const courses=await db.getCollection<any>('courses');Object.assign(courses[0],{category:'Programming',level:'Beginner'});Object.assign(courses[1],{category:'Cloud',level:'Advanced'});await db.setCollection('courses',courses);
   const result=await service.browse('u1',{category:'Programming',enrollment:'enrolled',search:'Teacher',limit:1,page:99});
@@ -52,12 +123,12 @@ describe('Learner records and workflows',()=>{
   expect(bill.items[0]).toEqual(receipt);expect(ledger.items[0]).toEqual(receipt);expect(receipt.course).toBe('Actual course');expect(receipt.recordedCourseTitle).toBe('Old title');expect(receipt.amount).toBe(100);expect(receipt.method).toBe('UPI recorded');expect(receipt.enrollmentId).toBe('e1');
   expect(bill.summary.transactions).toBe(2);expect(bill.summary.totalPaid).toBe(100);expect(bill.total).toBe(1);expect(bill.facets.statuses).toContain('Failed');
  });
- it('retains deleted course enrollments and payment history without pretending content is available',async()=>{
+ it('retains deleted course history in storage while hiding it from current learning',async()=>{
   const courses=(await db.getCollection<any>('courses')).filter(c=>c.id!=='c1');await db.setCollection('courses',courses);
-  const enrollments=await service.getEnrollments('u1');expect(enrollments).toHaveLength(1);expect(enrollments[0].contentAvailable).toBe(false);expect(enrollments[0].id).toBe('e1');
+  expect(await service.getEnrollments('u1')).toEqual([]);expect((await db.getCollection<any>('enrollments')).some(e=>e.id==='e1')).toBe(true);
   const payment=await service.receipt('u1','p1');expect(payment.courseAvailable).toBe(false);expect(payment.amount).toBe(100);expect(payment.enrollmentId).toBe('e1');
-  await expect(service.content('u1','c1')).rejects.toThrow('no longer available');
-  expect((await service.getProfile('u1')).enrolledCourses).toBe(1);
+  await expect(service.content('u1','c1')).rejects.toThrow('not enrolled');
+  expect((await service.getProfile('u1')).enrolledCourses).toBe(0);
  });
  it('restores access for an existing successful payment without charging the learner again',async()=>{
   const rows=await db.getCollection<any>('transactions');rows.push({id:'already-paid',payerId:'u1',courseId:'c2',type:'Payment',amount:150,currency:'INR',status:'Completed',method:'UPI'});await db.setCollection('transactions',rows);
@@ -69,18 +140,18 @@ describe('Learner records and workflows',()=>{
 
  it('stores valid support categories and rejects unknown categories',async()=>{expect(service.disputeCategories()).toContain('Course access');const request=await service.createDispute('u1',{subject:'Access',description:'Cannot open lesson',category:'Course access',courseId:'c1'});expect(request.category).toBe('Course access');await expect(service.createDispute('u1',{subject:'Access',description:'Details',category:'Invented'})).rejects.toThrow('valid issue category');});
  it('returns every assigned course by ID and current learner profiles, including historical learner links',async()=>{
-  const workspace=module.get(WorkspaceService);const user={id:'teacher',profileId:'inst',aliases:['teacher','inst'],canonicalRole:'instructor'};
-  const courses=await db.getCollection<any>('courses');for(let i=0;i<12;i++)courses.push({id:'extra-'+i,title:'Assigned '+i,instructors:['inst']});courses.push({id:'foreign',title:'Unrelated',instructorId:'someone'});await db.setCollection('courses',courses);
+  const workspace=module.get(WorkspaceService);const user={id:'teacher',profileId:'inst',organizationId:'org',aliases:['teacher','inst'],canonicalRole:'instructor'};
+  const courses=await db.getCollection<any>('courses');for(let i=0;i<12;i++)courses.push({id:'extra-'+i,title:'Assigned '+i,organizationId:'org',instructors:['inst']});courses.push({id:'foreign',title:'Unrelated',instructorId:'someone'});await db.setCollection('courses',courses);
   const enrollments=await db.getCollection<any>('enrollments');enrollments[0].learnerEmail='j.wilson@old.com';enrollments.push({id:'historical',learnerId:'removed',courseId:'c1',learnerName:'Recorded learner',status:'Active',progress:10});await db.setCollection('enrollments',enrollments);
   const data=await workspace.instructorWorkspace(user);expect(data.courses).toHaveLength(15);expect(data.courses.some(c=>c.id==='foreign')).toBe(false);expect(data.learners.find(l=>l.id==='l1').email).toBe('nishanth@test.com');expect((await workspace.instructorLearner(user,'e1')).learner.name).toBe('Nishanth');expect((await workspace.instructorLearner(user,'removed')).learner.profileAvailable).toBe(false);await expect(workspace.instructorLearner(user,'stranger')).rejects.toThrow('not enrolled');await expect(workspace.instructorWorkspace({canonicalRole:'student'})).rejects.toThrow('Instructor access');
  });
  it('records learning time only for enrolled published lessons and aggregates real engagement',async()=>{
-  const workspace=module.get(WorkspaceService);const user={id:'teacher',profileId:'inst',aliases:['inst'],canonicalRole:'instructor'};expect((await workspace.instructorWorkspace(user)).engagementRecorded).toBe(false);
+  const workspace=module.get(WorkspaceService);const user={id:'teacher',profileId:'inst',organizationId:'org',aliases:['inst'],canonicalRole:'instructor'};expect((await workspace.instructorWorkspace(user)).engagementRecorded).toBe(false);
   await service.recordEngagement('u1','c1',{lessonId:'lesson1',seconds:30});await service.recordEngagement('u1','c1',{lessonId:'lesson2',seconds:30});const data=await workspace.instructorWorkspace(user);expect(data.stats.engagementHours).toBe(0.02);expect(data.engagementRecorded).toBe(true);expect(data.engagementData.reduce((n,d)=>n+d.hours,0)).toBe(0.02);
   await expect(service.recordEngagement('u2','c1',{lessonId:'lesson1',seconds:30})).rejects.toThrow('not enrolled');await expect(service.recordEngagement('u1','c1',{lessonId:'missing',seconds:30})).rejects.toThrow('published');await expect(service.recordEngagement('u1','c1',{lessonId:'lesson1',seconds:3600})).rejects.toThrow('between 1 and 30');
  });
  it('scopes instructor reviews and reply actions to assigned courses',async()=>{
-  const workspace=module.get(WorkspaceService);const user={id:'teacher',profileId:'inst',aliases:['inst'],canonicalRole:'instructor'};await db.setCollection('reviews',[{id:'r1',courseId:'c1',learnerId:'l1',learnerName:'Old name',rating:4},{id:'foreign',courseId:'other',rating:5}]);const reviews=await workspace.instructorReviews(user);expect(reviews).toHaveLength(1);expect(reviews[0].learnerName).toBe('Nishanth');expect((await workspace.instructorReply(user,'r1',{response:'Thank you'})).response).toBe('Thank you');expect((await workspace.instructorReply(user,'r1',null,true)).response).toBeNull();await expect(workspace.instructorReply(user,'foreign',{response:'Wrong course'})).rejects.toThrow('not found');
+  const workspace=module.get(WorkspaceService);const user={id:'teacher',profileId:'inst',organizationId:'org',aliases:['inst'],canonicalRole:'instructor'};await db.setCollection('reviews',[{id:'r1',courseId:'c1',learnerId:'l1',learnerName:'Old name',rating:4},{id:'foreign',courseId:'other',rating:5}]);const reviews=await workspace.instructorReviews(user);expect(reviews).toHaveLength(1);expect(reviews[0].learnerName).toBe('Nishanth');expect((await workspace.instructorReply(user,'r1',{response:'Thank you'})).response).toBe('Thank you');expect((await workspace.instructorReply(user,'r1',null,true)).response).toBeNull();await expect(workspace.instructorReply(user,'foreign',{response:'Wrong course'})).rejects.toThrow('not found');
  });
 
  it('keeps unified account profile edits in the account and profile without changing email or history',async()=>{
@@ -91,7 +162,7 @@ describe('Learner records and workflows',()=>{
  });
  it('creates linked accounts for all three registration roles with distinct IDs and working sign-in',async()=>{
   const auth=module.get(AuthService),workspace=module.get(WorkspaceService);const roles=['Student','Instructor','Organization'] as const;const results=await Promise.all(roles.map(role=>auth.register({name:'New '+role,email:role.toLowerCase()+'@new.test',password:'Password123!',role})));expect(new Set(results.map(r=>r.user.id)).size).toBe(3);
-  for(let i=0;i<roles.length;i++){const signed=await auth.login({email:roles[i].toUpperCase()+'@NEW.TEST',password:'Password123!',role:roles[i]});expect(signed.user.id).toBe(results[i].user.id);expect((await workspace.identity({'x-user-id':signed.user.id})).profileId).toBeTruthy();expect(results[i].user).not.toHaveProperty('password');}
+  for(let i=0;i<roles.length;i++){if(roles[i]==='Organization'){await expect(auth.login({email:'organization@new.test',password:'Password123!'})).rejects.toThrow('verification');await module.get(PlatformService).verifyOrganization(results[i].user.id,{decision:'approve'},{id:'admin',name:'Admin',role:'Admin'});}const signed=await auth.login({email:roles[i].toUpperCase()+'@NEW.TEST',password:'Password123!',role:roles[i]});expect(signed.user.id).toBe(results[i].user.id);expect((await workspace.identity({'x-user-id':signed.user.id})).profileId).toBeTruthy();expect(results[i].user).not.toHaveProperty('password');}
   await expect(auth.register({name:'Duplicate',email:'student@new.test',password:'Password123!',role:'Student'})).rejects.toThrow('already exists');await expect(auth.register({name:' ',email:'empty@new.test',password:'Password123!',role:'Student'})).rejects.toThrow('name');await expect(auth.register({name:'Admin',email:'newadmin@new.test',password:'Password123!',role:'Admin'})).rejects.toThrow('Administrator');await expect(auth.login({email:'student@new.test',password:'WrongPass123!',role:'Student'})).rejects.toThrow('Invalid');await expect(auth.login({email:'student@new.test',password:'Password123!',role:'Instructor'})).rejects.toThrow('selected role');
  });
  it('exposes only explicitly configured demo credentials and disables them in production by default',async()=>{
@@ -111,11 +182,11 @@ describe('Learner records and workflows',()=>{
   const users=await db.getCollection<any>('users');users.push({id:'teacher',role:'Instructor',name:'Teacher',email:'teacher@test.com',status:'Active'});await db.setCollection('users',users);await db.setCollection('instructors',[{id:'inst',userId:'teacher',name:'Teacher',email:'teacher@test.com',organizationId:'org',status:'Active',legacyIds:['legacy-inst']}]);const courses=await db.getCollection<any>('courses');courses[0].instructorId='someone-else';courses[0].coInstructorIds=['legacy-inst'];courses[0].instructors=[];await db.setCollection('courses',courses);const workspace=module.get(WorkspaceService);const actor=await workspace.identity({'x-user-id':'teacher'});expect(actor.aliases).toContain('legacy-inst');expect((await workspace.instructorWorkspace(actor)).courses.some(c=>c.id==='c1')).toBe(true);expect((await module.get(CourseWorkflowService).editor('c1',actor)).id).toBe('c1');
  });
  it('keeps a new course off the learner catalog until organization submission and admin approval',async()=>{
-  const workflow=module.get(CourseWorkflowService),platform=module.get(PlatformService);const courses=await db.getCollection<any>('courses');courses[1].status='Draft';await db.setCollection('courses',courses);const instructor={id:'teacher',profileId:'inst',aliases:['inst'],canonicalRole:'instructor',name:'Teacher'},organization={id:'organization-user',profileId:'org',canonicalRole:'organization',name:'Institute'};
+  const workflow=module.get(CourseWorkflowService),platform=module.get(PlatformService);const courses=await db.getCollection<any>('courses');courses[1].status='Draft';await db.setCollection('courses',courses);const instructor={id:'teacher',profileId:'inst',organizationId:'org',aliases:['inst'],canonicalRole:'instructor',name:'Teacher'},organization={id:'organization-user',profileId:'org',canonicalRole:'organization',name:'Institute'};
   const request=await workflow.request('c2',{modules:[{id:'m',title:'Prepared module',items:[{id:'lesson',title:'Lesson',type:'Reading',content:'Approved text'}]}]},instructor);await workflow.decide(request.id,{decision:'approve'},organization);expect((await workflow.course('c2')).status).toBe('Draft');await expect(service.getCatalogCourse('c2')).rejects.toThrow('not available');await workflow.submit('c2',organization);expect((await workflow.course('c2')).status).toBe('Pending Approval');await expect(service.getCatalogCourse('c2')).rejects.toThrow('not available');await platform.review('c2',{decision:'approve'},{id:'admin',name:'Suhaas'});expect((await service.getCatalogCourse('c2')).status).toBe('Published');
  });
  it('blocks cross-organization assignments and decisions without changing course teams',async()=>{
-  const workflow=module.get(CourseWorkflowService);const before=await db.getCollection('courses');await expect(workflow.assign({courseIds:['c1'],instructorIds:['inst']},{id:'wrong-org',profileId:'other',canonicalRole:'organization'})).rejects.toThrow('organization');expect(await db.getCollection('courses')).toEqual(before);const request=await workflow.request('c1',{modules:[]},{id:'teacher',profileId:'inst',aliases:['inst'],canonicalRole:'instructor'});await expect(workflow.decide(request.id,{decision:'approve'},{id:'wrong-org',profileId:'other',canonicalRole:'organization'})).rejects.toThrow('owning organization');expect((await workflow.course('c1')).modules).toEqual((before[0] as any).modules);
+  const workflow=module.get(CourseWorkflowService);const before=await db.getCollection('courses');await expect(workflow.assign({courseIds:['c1'],instructorIds:['inst']},{id:'wrong-org',profileId:'other',canonicalRole:'organization'})).rejects.toThrow('organization');expect(await db.getCollection('courses')).toEqual(before);const request=await workflow.request('c1',{modules:[]},{id:'teacher',profileId:'inst',organizationId:'org',aliases:['inst'],canonicalRole:'instructor'});await expect(workflow.decide(request.id,{decision:'approve'},{id:'wrong-org',profileId:'other',canonicalRole:'organization'})).rejects.toThrow('owning organization');expect((await workflow.course('c1')).modules).toEqual((before[0] as any).modules);
  });
  it('does not let an instructor publish assessments or modify a live assessment without approval',async()=>{
   const users=await db.getCollection<any>('users');users.push({id:'teacher',role:'Instructor',name:'Teacher',email:'teacher@test.com',status:'Active'});await db.setCollection('users',users);await db.setCollection('instructors',[{id:'inst',userId:'teacher',name:'Teacher',email:'teacher@test.com',organizationId:'org',status:'Active'}]);const controller=module.get(QuizzesController);const draft=await controller.create({courseId:'c1',title:'Draft assessment',status:'Published'} as any,'teacher');expect(draft.status).toBe('Draft');await db.setCollection('quizzes',[{id:'live',courseId:'c1',title:'Live assessment',status:'Published',passingScore:80}]);await db.setCollection('quiz_questions',[{id:'live-question',quizId:'live',questionText:'Original question',optionA:'A',optionB:'B',correctOption:'B'}]);
@@ -129,9 +200,9 @@ describe('Learner records and workflows',()=>{
   const teachers=await db.getCollection<any>('instructors');teachers.push({id:'foreign-teacher',name:'Raghuveer',organizationId:'other-org',status:'Active'});await db.setCollection('instructors',teachers);const organization={id:'org-user',profileId:'org',canonicalRole:'organization',name:'Institute'};const workflow=module.get(CourseWorkflowService);expect((await workflow.assignmentOptions(organization)).instructors.map(i=>i.id)).toEqual(['inst']);const before=await db.getCollection('courses');await expect(workflow.assign({courseIds:['c1'],instructorIds:['foreign-teacher']},organization)).rejects.toThrow('in your organization');
   const users=await db.getCollection<any>('users');users.push({id:'org-user',role:'Organization',organizationId:'org',name:'Institute',email:'org@test.com',status:'Active'});await db.setCollection('users',users);await expect(module.get(CoursesController).updatePartial('c1',{instructorId:'foreign-teacher',instructors:[{id:'foreign-teacher',name:'Fake display name'}]} as any,{headers:{'x-user-id':'org-user'}})).rejects.toThrow('from this course');expect(await db.getCollection('courses')).toEqual(before);
  });
- it('does not publish an old curriculum request after the instructor leaves the institute',async()=>{const workflow=module.get(CourseWorkflowService);const request=await workflow.request('c1',{modules:[{id:'new',title:'Requested module',items:[]}]},{id:'teacher',profileId:'inst',aliases:['inst'],canonicalRole:'instructor'});const teachers=await db.getCollection<any>('instructors');teachers[0].organizationId='other-institute';await db.setCollection('instructors',teachers);await expect(workflow.decide(request.id,{decision:'approve'},{id:'org-user',profileId:'org',canonicalRole:'organization'})).rejects.toThrow('still be active and assigned');expect((await db.getCollection<any>('courses'))[0].modules[0].id).toBe('m1');});
- it('archives courses out of dashboards and the catalog without deleting enrollments or payments',async()=>{
-  const workflow=module.get(CourseWorkflowService),workspace=module.get(WorkspaceService);const enrollments=await db.getCollection('enrollments'),payments=await db.getCollection('transactions');const actor={id:'org-user',profileId:'org',canonicalRole:'organization'};await workflow.archive('c1',actor);await expect(service.getCatalogCourse('c1')).rejects.toThrow('not available');const learner=await workspace.identity({'x-user-id':'u1'});expect((await workspace.overview(learner)).courses.some(c=>c.id==='c1')).toBe(false);expect((await service.getEnrollments('u1'))[0].courseStatus).toBe('Archived');expect((await service.getProfile('u1')).inProgressCourses).toBe(0);expect(await db.getCollection('enrollments')).toEqual(enrollments);expect(await db.getCollection('transactions')).toEqual(payments);expect((await workflow.organizationCourses(actor,{archived:'true'})).items.map(c=>c.id)).toEqual(['c1']);expect((await workflow.restore('c1',actor)).status).toBe('Draft');await expect(service.getCatalogCourse('c1')).rejects.toThrow('not available');
+ it('does not publish an old curriculum request after the instructor leaves the institute',async()=>{const workflow=module.get(CourseWorkflowService);const request=await workflow.request('c1',{modules:[{id:'new',title:'Requested module',items:[]}]},{id:'teacher',profileId:'inst',organizationId:'org',aliases:['inst'],canonicalRole:'instructor'});const teachers=await db.getCollection<any>('instructors');teachers[0].organizationId='other-institute';await db.setCollection('instructors',teachers);await expect(workflow.decide(request.id,{decision:'approve'},{id:'org-user',profileId:'org',canonicalRole:'organization'})).rejects.toThrow('still be active and assigned');expect((await db.getCollection<any>('courses'))[0].modules[0].id).toBe('m1');});
+ it('rejects archive operations without changing courses or payment history',async()=>{
+  const workflow=module.get(CourseWorkflowService);const actor={id:'org-user',profileId:'org',canonicalRole:'organization'};const courses=await db.getCollection('courses'),payments=await db.getCollection('transactions');await expect(workflow.archive('c1',actor)).rejects.toThrow('no longer available');await expect(workflow.restore('c1',actor)).rejects.toThrow('no longer available');expect(await db.getCollection('courses')).toEqual(courses);expect(await db.getCollection('transactions')).toEqual(payments);
  });
  it('renders organization learner activity only from real, organization-scoped records',async()=>{
   const workspace=module.get(WorkspaceService);await db.setCollection('learning_activity',[{id:'event',courseId:'c1',learnerId:'l1',seconds:120,createdAt:new Date().toISOString()},{id:'foreign-event',courseId:'not-owned',learnerId:'l1',seconds:50000,createdAt:new Date().toISOString()}]);const data=await workspace.organizationLearner({canonicalRole:'organization',profileId:'org'},'l1');expect(data.learner.name).toBe('Nishanth');expect(data.activity.map(e=>e.id)).toEqual(['event']);expect(data.stats.engagementHours).toBe(0.03);await expect(workspace.organizationLearner({canonicalRole:'organization',profileId:'other'},'l1')).rejects.toThrow('not enrolled');

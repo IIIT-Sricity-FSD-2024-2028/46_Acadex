@@ -1,24 +1,36 @@
+import { useAppSelector } from '../../store/hooks';
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-const TOKEN_KEYS = ['nexuspay_auth_token', 'auth_token', 'nexuspay_student_token'];
+const TOKEN_KEYS = [
+  'nexuspay_auth_token',
+  'auth_token',
+  'nexuspay_student_token',
+];
 const ROLE_KEYS = ['nexuspay_active_role', 'user_role'];
 
-function readStoredValue(keys) {
+function readStoredValue(keys, auth) {
   for (const key of keys) {
-    const value = localStorage.getItem(key);
-    if (value && value !== 'null' && value !== 'undefined' && value.trim()) return value.trim();
+    const value = auth[key];
+    if (value && value !== 'null' && value !== 'undefined' && value.trim())
+      return value.trim();
   }
   return '';
 }
 
 export default function RoleGuard({ allowedRoles, loginRole }) {
   const location = useLocation();
-  const token = readStoredValue(TOKEN_KEYS);
-  const role = readStoredValue(ROLE_KEYS).toLowerCase().replace(/[\s_-]+/g, '');
-  const isAllowed = token && allowedRoles.some(
-    (allowedRole) => allowedRole.toLowerCase().replace(/[\s_-]+/g, '') === role
-  );
+  const auth = useAppSelector((state) => state.auth);
+  const token = readStoredValue(TOKEN_KEYS, auth);
+  const role = readStoredValue(ROLE_KEYS, auth)
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+  const isAllowed =
+    token &&
+    allowedRoles.some(
+      (allowedRole) =>
+        allowedRole.toLowerCase().replace(/[\s_-]+/g, '') === role
+    );
 
   if (!isAllowed) {
     return (

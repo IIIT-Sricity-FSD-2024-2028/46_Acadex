@@ -1,3 +1,6 @@
+import {certificateRecord} from '../../common/certificates/certificate-record';
+import {courseDuration} from '../../common/learning/duration';
+import {certificatePdf} from '../../common/certificates/certificate-pdf';
 import { paymentRecords,completedPaymentStatus } from '../../common/payments/payment-records';
 import {
   BadRequestException,
@@ -66,7 +69,7 @@ export class StudentService {
   private async enrichedCourses(){
     const [courses,orgs,instructors,reviews,enrollments]=await Promise.all(['courses','organizations','instructors','reviews','enrollments'].map(name=>this.db.getCollection<any>(name)));
     return courses.map(c=>{const teacherIds=[c.instructorId,...(Array.isArray(c.instructors)?c.instructors:[]).map(i=>typeof i==='string'?i:i?.id)].filter(Boolean);const teachers=instructors.filter(i=>teacherIds.includes(i.id));const ratings=reviews.filter(r=>r.courseId===c.id&&Number(r.rating)>=1&&Number(r.rating)<=5);const lessons=this.lessonsFor(c);
-      return {...c,organizationName:orgs.find(o=>o.id===c.organizationId)?.name||null,instructorName:teachers.map(i=>i.name).join(', '),leadInstructorName:teachers.find(i=>i.id===c.instructorId)?.name||null,instructors:teachers.map(i=>({id:i.id,name:i.name,specialization:i.specialization||null})),rating:ratings.length?ratings.reduce((sum,r)=>sum+Number(r.rating),0)/ratings.length:null,reviewsCount:ratings.length,enrolledCount:enrollments.filter(e=>e.courseId===c.id).length,lessonsCount:lessons.length,modules:(Array.isArray(c.modules)?c.modules:[]).filter(Boolean).map((m,i)=>({id:m.id||`mod-${i+1}`,title:m.title||null,description:m.description||'',lessonsCount:lessons.filter(l=>l.moduleIndex===i).length,lessons:lessons.filter(l=>l.moduleIndex===i).map(l=>({id:l.id,title:l.title,type:l.type,duration:l.duration}))}))};
+      return {...c,...courseDuration(c),organizationName:orgs.find(o=>o.id===c.organizationId)?.name||null,instructorName:teachers.map(i=>i.name).join(', '),leadInstructorName:teachers.find(i=>i.id===c.instructorId)?.name||null,instructors:teachers.map(i=>({id:i.id,name:i.name,specialization:i.specialization||null})),rating:ratings.length?ratings.reduce((sum,r)=>sum+Number(r.rating),0)/ratings.length:null,reviewsCount:ratings.length,enrolledCount:enrollments.filter(e=>e.courseId===c.id).length,lessonsCount:lessons.length,modules:(Array.isArray(c.modules)?c.modules:[]).filter(Boolean).map((m,i)=>({id:m.id||`mod-${i+1}`,title:m.title||null,description:m.description||'',lessonsCount:lessons.filter(l=>l.moduleIndex===i).length,lessons:lessons.filter(l=>l.moduleIndex===i).map(l=>({id:l.id,title:l.title,type:l.type,duration:l.duration}))}))};
     });
   }
 
@@ -74,7 +77,7 @@ export class StudentService {
     const learner = await this.resolveLearner(userId);
     const [enrollments, certificates] = await Promise.all([
       this.getEnrollments(userId),
-      this.certificatesRepo.find({ where: { learnerId: learner.id } }),
+      this.getCertificates(userId),
     ]);
     const completed = enrollments.filter((e) => e.status === 'Completed').length;
 
@@ -126,7 +129,7 @@ export class StudentService {
   }
 
   async browse(userId:string,query:any={}){
-    const learner=await this.resolveLearner(userId);const courses=await this.getCatalog();const enrollments=await this.enrollmentsRepo.find({where:{learnerId:learner.id}});
+    const courses=await this.getCatalog();const enrollments=await this.getEnrollments(userId);
     const term=String(query.search||'').trim().toLowerCase();
     const all=courses.map(c=>({...c,isEnrolled:enrollments.some(e=>e.courseId===c.id&&!['Dropped','Cancelled'].includes(e.status))}));
     let rows=all.filter(c=>(!term||[c.title,c.category,c.description,c.instructorName,c.organizationName].some(v=>String(v||'').toLowerCase().includes(term)))&&(!query.category||c.category===query.category)&&(!query.level||c.level===query.level)&&(!query.organizationId||c.organizationId===query.organizationId)&&(!query.price||query.price==='free'&&c.price===0||query.price==='paid'&&Number(c.price)>0)&&(!query.enrollment||query.enrollment==='enrolled'&&c.isEnrolled||query.enrollment==='available'&&!c.isEnrolled));
@@ -143,29 +146,26 @@ export class StudentService {
 
   async getEnrollments(userId: string) {
     const learner = await this.resolveLearner(userId);
-    const enrollments = await this.enrollmentsRepo.find({ where: { learnerId: learner.id } });
-    const courses = await this.enrichedCourses();
-
-    const result = [];
-    for (const enr of enrollments) {
-      const course = courses.find((c) => c.id === enr.courseId);
-      if(!course){result.push({...enr,completionTracked:Array.isArray(enr.completedLessons),courseTitle:enr.courseTitle||enr.course||null,contentAvailable:false,availabilityReason:'This course is no longer available. Your enrollment and payment history are retained.',courseStatus:null,totalLessons:null});continue;}
-      if (!this.hasInstructor(course)) {result.push({...enr,courseTitle:course.title,contentAvailable:false,availabilityReason:'Course content is currently unavailable.',courseStatus:course.status,totalLessons:null});continue;}
-
+    const aliases=[learner.id,learner.userId,userId].filter(Boolean);
+    const [enrollments,courses,payments]=await Promise.all([
+      this.enrollmentsRepo.find(),this.enrichedCourses(),this.getPayments(userId),
+    ]);
+    const result=[];
+    const seen=new Set<string>();
+    for(const enr of enrollments){
+      if(!aliases.includes(enr.learnerId)&&!aliases.includes(enr.userId))continue;
+      const course=courses.find(c=>c.id===enr.courseId);
+      if(!this.isAvailable(course)||!['Active','Completed'].includes(enr.status))continue;
+      if(seen.has(course.id))continue;
+      seen.add(course.id);
       const normalized=enrollmentLearning(course,enr);
-      result.push({
-        ...normalized,
-        contentAvailable:true,
-        courseStatus:course.status,
-        courseTitle: course.title,
-        category: course.category,
-        description: course.description,
-        thumbnail: course.thumbnail,
-        institution: course.organizationName || '',
-        instructorName: course.leadInstructorName || course.instructorName || '',
-      });
+      const payment=payments.find(p=>p.courseId===course.id&&completedPaymentStatus(p.status));
+      if(Number(course.price)>0&&!payment)continue;
+      result.push({...normalized,contentAvailable:true,courseStatus:course.status,courseTitle:course.title,
+        category:course.category,description:course.description,thumbnail:course.thumbnail,
+        institution:course.organizationName||'',instructorName:course.leadInstructorName||course.instructorName||'',
+        paymentId:payment?.id||null,paymentStatus:payment?.status||null});
     }
-
     return result;
   }
 
@@ -257,7 +257,7 @@ export class StudentService {
     });
 
     if (nowCompleted) {
-      await this.issueCertificate(learner, enrollment, course);
+      await this.issueCertificate(learner, {...enrollment,completedLessons,progress,status:'Completed'}, course);
     }
 
     return this.getEnrollmentForCourse(userId, enrollment.courseId);
@@ -265,6 +265,11 @@ export class StudentService {
   }
 
   private async issueCertificate(learner: any, enrollment: any, course: any) {
+    const normalized=enrollmentLearning(course,enrollment);
+    if(normalized.progress<100)return null;
+    const required=(await this.db.getCollection<any>('quizzes')).filter(q=>q.courseId===course.id&&q.status==='Published');
+    const attempts=await this.db.getCollection<any>('quiz_attempts');
+    if(required.some(q=>!attempts.some(a=>a.quizId===q.id&&a.learnerId===learner.id&&a.passed===true)))return null;
     const existing = await this.certificatesRepo.findOne({ learnerId: learner.id, courseId: course.id });
     if (existing) return existing;
 
@@ -303,7 +308,14 @@ export class StudentService {
     return cert;
   }
 
-  async getCertificates(userId:string){const learner=await this.resolveLearner(userId);const [certs,courses,orgs,teachers]=await Promise.all(['certificates','courses','organizations','instructors'].map(n=>this.db.getCollection<any>(n)));const aliases=[learner.id,learner.userId,userId].filter(Boolean);return certs.filter(c=>aliases.includes(c.learnerId)).map(c=>{const course=courses.find(course=>course.id===c.courseId);return {...c,learnerName:learner.name,learnerEmail:learner.email,courseTitle:course?.title||c.courseTitle,institution:orgs.find(o=>o.id===(course?.organizationId||c.organizationId))?.name||c.institution||null,instructorName:teachers.find(i=>i.id===course?.instructorId)?.name||c.instructorName||null};});}
+  async getCertificates(userId:string){const learner=await this.resolveLearner(userId);const [certs,courses,orgs,teachers]=await Promise.all(['certificates','courses','organizations','instructors'].map(n=>this.db.getCollection<any>(n)));const aliases=[learner.id,learner.userId,userId].filter(Boolean);const completed=await this.getEnrollments(userId);return certs.filter(c=>aliases.includes(c.learnerId)&&completed.some(e=>e.courseId===c.courseId&&e.status==='Completed'&&Number(e.progress)===100)).map(c=>{const course=courses.find(course=>course.id===c.courseId);return certificateRecord(c,{learners:[learner],courses,organizations:orgs,instructors:teachers});});}
+
+  async downloadCertificate(userId:string,id:string){
+    const certificate=(await this.getCertificates(userId)).find(c=>c.id===id||c.credentialId===id);
+    if(!certificate)throw new NotFoundException('Certificate not found in your completed courses.');
+    const filename=`Acadex-${String(certificate.credentialId||certificate.id).replace(/[^a-zA-Z0-9_-]/g,'-')}.pdf`;
+    return {filename,mimeType:'application/pdf',content:certificatePdf(certificate).toString('base64')};
+  }
 
   async getPayments(userId:string){const learner=await this.resolveLearner(userId);const aliases=[learner.id,learner.userId,userId].filter(Boolean);return (await paymentRecords(this.db)).filter(t=>t.type==='Payment'&&(aliases.includes(t.payerId)||aliases.includes(t.learnerId)||aliases.includes(t.userId)||t.payerEmail&&t.payerEmail.toLowerCase()===learner.email?.toLowerCase()));}
   async billing(userId:string,query:any={}){
@@ -332,7 +344,8 @@ export class StudentService {
     return {quiz,questions:rows};
   }
   async assessment(userId:string,courseId:string){const {quiz,questions}=await this.quizRecord(userId,courseId);const course=await this.coursesRepo.findById(courseId);return {id:quiz.id,courseId,title:quiz.title,description:quiz.description||null,courseTitle:course?.title||null,durationMinutes:quiz.durationMinutes??null,passingScore:quiz.passingScore,questions:questions.map(q=>({id:q.id,text:q.questionText||q.text||q.question,options:Array.isArray(q.options)?q.options.map(o=>typeof o==='string'?o:o.text||o.title):[q.optionA,q.optionB,q.optionC,q.optionD].filter(v=>v!==undefined&&v!==null&&v!=='')}))};}
-  async submitAssessment(userId:string,courseId:string,body:any){const learner=await this.resolveLearner(userId);const {quiz,questions}=await this.quizRecord(userId,courseId);if(body.quizId!==quiz.id)throw new ConflictException('The assessment has changed. Reload it before submitting.');if(!body.answers||typeof body.answers!=='object'||Array.isArray(body.answers))throw new BadRequestException('Assessment answers are required.');let correct=0;const feedback=questions.map(q=>{const options=Array.isArray(q.options)?q.options:[];const correctIndex=Number.isInteger(q.correctAnswer)?q.correctAnswer:options.some(o=>o&&o.isCorrect)?options.findIndex(o=>o.isCorrect):'ABCD'.indexOf(String(q.correctOption||'').toUpperCase());if(correctIndex<0)throw new BadRequestException('The assessment answer key is incomplete.');const selected=body.answers[q.id];const isCorrect=Number.isInteger(selected)&&selected===correctIndex;if(isCorrect)correct++;return {questionId:q.id,selected:selected??null,correctIndex,isCorrect,...(quiz.showExplanations?{explanation:q.explanation||null}:{})};});const score=Math.round(correct/questions.length*100);const attempt=await new JsonRepository<any>('quiz_attempts',this.db).create({quizId:quiz.id,courseId,learnerId:learner.id,answers:body.answers,score,passed:score>=Number(quiz.passingScore),correctCount:correct,totalQuestions:questions.length,submittedAt:new Date().toISOString()});return {id:attempt.id,score:attempt.score,passed:attempt.passed,correctCount:correct,totalQuestions:questions.length,passingScore:quiz.passingScore,submittedAt:attempt.submittedAt,feedback};}
+  async submitAssessment(userId:string,courseId:string,body:any){const learner=await this.resolveLearner(userId);const {quiz,questions}=await this.quizRecord(userId,courseId);if(body.quizId!==quiz.id)throw new ConflictException('The assessment has changed. Reload it before submitting.');if(!body.answers||typeof body.answers!=='object'||Array.isArray(body.answers))throw new BadRequestException('Assessment answers are required.');let correct=0;const feedback=questions.map(q=>{const options=Array.isArray(q.options)?q.options:[];const correctIndex=Number.isInteger(q.correctAnswer)?q.correctAnswer:options.some(o=>o&&o.isCorrect)?options.findIndex(o=>o.isCorrect):'ABCD'.indexOf(String(q.correctOption||'').toUpperCase());if(correctIndex<0)throw new BadRequestException('The assessment answer key is incomplete.');const selected=body.answers[q.id];const isCorrect=Number.isInteger(selected)&&selected===correctIndex;if(isCorrect)correct++;return {questionId:q.id,selected:selected??null,correctIndex,isCorrect,...(quiz.showExplanations?{explanation:q.explanation||null}:{})};});const score=Math.round(correct/questions.length*100);const attempt=await new JsonRepository<any>('quiz_attempts',this.db).create({quizId:quiz.id,courseId,learnerId:learner.id,answers:body.answers,score,passed:score>=Number(quiz.passingScore),correctCount:correct,totalQuestions:questions.length,submittedAt:new Date().toISOString()});if(attempt.passed){const enrollment=await this.getEnrollmentForCourse(userId,courseId);const course=await this.coursesRepo.findById(courseId);await this.issueCertificate(learner,enrollment,course);}
+    return {id:attempt.id,score:attempt.score,passed:attempt.passed,correctCount:correct,totalQuestions:questions.length,passingScore:quiz.passingScore,submittedAt:attempt.submittedAt,feedback};}
 
   async checkout(userId: string, dto: StudentCheckoutDto) {
     return this.db.runTransaction(async()=>{
@@ -341,7 +354,7 @@ export class StudentService {
 
     const existing=await this.enrollmentsRepo.findOne({learnerId:learner.id,courseId:course.id});
     const priorPayment=(await this.getPayments(userId)).find(p=>p.courseId===course.id&&completedPaymentStatus(p.status));
-    if(existing||priorPayment){
+    if(priorPayment||(existing&&Number(course.price)===0)){
       const enrollment=existing||await this.createEnrollment(learner,course);
       return {success:true,alreadyEnrolled:!!existing,restoredAccess:!existing,transactionId:priorPayment?.id||null,enrollmentId:enrollment.id,courseId:course.id,courseTitle:course.title,amount:priorPayment?.amount??null,method:priorPayment?.method||null,date:priorPayment?.createdAt||priorPayment?.date||null};
     }
@@ -379,7 +392,7 @@ export class StudentService {
       updatedAt: now,
     });
 
-    const enrollment = await this.createEnrollment(learner, course);
+    const enrollment = existing || await this.createEnrollment(learner, course);
     await this.coursesRepo.update(course.id, {
       revenue: (course.revenue || 0) + (Number(course.price) || 0),
     });

@@ -1,5 +1,8 @@
+import {
+  InstructorScope,
+  useInstructorState,
+} from '../context/InstructorContext';
 import { useContext } from 'react';
-import { InstructorContext } from '../context/instructorContextValue';
 
 const defaultInstructorContext = {
   instructor: null,
@@ -25,6 +28,7 @@ const defaultInstructorContext = {
 };
 
 export function useInstructor() {
-  const context = useContext(InstructorContext);
-  return context || defaultInstructorContext;
+  const context = useContext(InstructorScope);
+  const state = useInstructorState(context);
+  return context ? state : defaultInstructorContext;
 }

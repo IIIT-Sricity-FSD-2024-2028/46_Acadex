@@ -1,3 +1,5 @@
+import {PlatformService} from '../platform/platform.service';
+import {CertificatesController} from '../certificates/certificates.controller';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -45,7 +47,7 @@ describe('Admin workflows with shared JSON persistence', () => {
       instructors: [{ id: 'i-1', userId: 'u-instructor', name: 'Teacher', email: 'teacher@test.com', organizationId: 'o-1', status: 'Active' }],
       courses: [{ id: 'c-1', title: 'Actual course', organizationId: 'o-1', instructorId: 'i-1', status: 'Published', price: 20 }],
       enrollments: [{ id: 'e-1', learnerId: 'l-1', courseId: 'c-1', status: 'Active', progress: 35 }],
-      certificates: [{ id: 'cert-1', credentialId: 'CREDENTIAL-1', learnerId: 'l-1', learnerName: 'Old name', courseTitle: 'Actual course', status: 'Verified' }],
+      certificates: [{ id: 'cert-1', credentialId: 'CREDENTIAL-1', learnerId: 'l-1', courseId: 'c-1', learnerName: 'Old name', courseTitle: 'Actual course', status: 'Verified' }],
       transactions: [{ id: 't-1', payerId: 'l-1', courseId: 'c-1', type: 'Payment', amount: 20, status: 'Completed' }],
       notifications: [
         { id: 'n-admin', title: 'Admin ticket', recipientRole: 'admin', read: false },
@@ -76,6 +78,23 @@ describe('Admin workflows with shared JSON persistence', () => {
     expect(org.courses[0].id).toBe('c-1');
     expect(org.orgInstructors[0].name).toBe('Teacher');
   });
+  it('ignores a stale organization roster and excludes archived courses in admin and super admin details',async()=>{
+    const organizations=await db.getCollection<any>('organizations');organizations[0].instructorIds=['i-1','raghu'];await db.setCollection('organizations',organizations);
+    const teachers=await db.getCollection<any>('instructors');teachers.push({id:'raghu',name:'Raghuveer',email:'raghuveer@iisc.ac.in',organizationId:'o-orphan',bio:'Previously worked with Institution',status:'Active'});await db.setCollection('instructors',teachers);
+    const courses=await db.getCollection<any>('courses');courses.push({id:'old',title:'Old course',status:'Archived',organizationId:'o-1',instructorId:'i-1'});await db.setCollection('courses',courses);
+    for(const role of ['Admin','SuperAdmin']){const result=await module.get(PlatformService).accountDetail('u-org',{role});expect(result.orgInstructors.map(i=>i.id)).toEqual(['i-1']);expect(result.courses.map(c=>c.id)).toEqual(['c-1']);expect(result.orgInstructors[0].courses).toBe(1);}
+    const orgs=await module.get(OrganizationService).findAllOrgs();expect(orgs.find(o=>o.id==='o-1').instructors.map(i=>i.id)).toEqual(['i-1']);
+    expect((await module.get(PlatformService).courses({} as any)).items.some(c=>c.id==='old')).toBe(false);
+  });
+  it('uses identical current certificate data and PDF bytes for learner and administrator views',async()=>{
+    await db.setCollection('enrollments',[{id:'e-1',learnerId:'l-1',courseId:'c-1',status:'Completed',progress:100}]);
+    const certs=await db.getCollection<any>('certificates');Object.assign(certs[0],{courseTitle:'Old course name',institution:'Wrong institution',instructorName:'Old instructor'});await db.setCollection('certificates',certs);
+    const service=module.get(CertificatesService),student=module.get(StudentService);
+    const learnerCert=(await student.getCertificates('u-learner'))[0],adminCert=await service.findOne('cert-1');expect(adminCert).toEqual(learnerCert);expect(adminCert).toMatchObject({learnerName:'Learner',courseTitle:'Actual course',institution:'Institution',instructorName:'Teacher'});
+    expect(await service.download('cert-1')).toEqual(await student.downloadCertificate('u-learner','cert-1'));
+    const controller=module.get(CertificatesController);await expect(controller.download('cert-1','u-learner','')).rejects.toThrow('Administrator');
+    const accounts=await db.getCollection<any>('users');accounts.push({id:'admin-download',role:'Admin',status:'Active'});await db.setCollection('users',accounts);expect((await controller.download('cert-1','admin-download','')).mimeType).toBe('application/pdf');
+  });
   it('suspends learner login and existing learner data access; restoration persists', async () => {
     await users.update('u-learner', { status: 'Suspended' });
     await expect(module.get(AuthService).login({ email: 'learner@test.com', password, role: 'Student' })).rejects.toThrow('suspended');
@@ -103,7 +122,8 @@ describe('Admin workflows with shared JSON persistence', () => {
     await expect(module.get(StudentService).getProfile('u-learner')).rejects.toThrow();
     expect((await db.getCollection<any>('learners')).map(l => l.id)).toEqual(['l-orphan']);
     expect((await db.getCollection<any>('enrollments')).length).toBe(1);
-    expect((await module.get(CertificatesService).findOne('cert-1')).learnerEmail).toBe('learner@test.com');
+    await expect(module.get(CertificatesService).findOne('cert-1')).rejects.toThrow('not found');
+    expect(await db.getCollection('certificates')).toHaveLength(1);
   });
   it('deletes only the selected orphan profile', async () => {
     await users.remove('l-orphan');
@@ -137,7 +157,8 @@ describe('Admin workflows with shared JSON persistence', () => {
     const learnerFeed = await module.get(NotificationsService).findAll({ role: 'student' });
     expect(learnerFeed.items.some(n => n.title === 'Learner update')).toBe(true);
   });
-  it('returns current learner identity for certificate list, view, and verification', async () => {
+  it('returns current learner identity for a completed-course certificate list, view, and verification', async () => {
+    await new JsonRepository<any>('enrollments',db).update('e-1',{status:'Completed',progress:100});
     const service = module.get(CertificatesService);
     const list = await service.findAll();
     expect(list[0]).toMatchObject({ learnerName: 'Learner', learnerEmail: 'learner@test.com', courseTitle: 'Actual course' });

@@ -1,23 +1,26 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { added, removed } from '../../store/slices/toastSlice';
 
 const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([]);
+  const toasts = useAppSelector((state) => state.toast);
+  const dispatch = useAppDispatch();
 
   const addToast = useCallback((message, type = 'success', duration = 3000) => {
     const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    dispatch(added({ id, message, type }));
 
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+      dispatch(removed(id));
     }, duration);
-  }, []);
+  }, [dispatch]);
 
   const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+    dispatch(removed(id));
+  }, [dispatch]);
 
   return (
     <ToastContext.Provider value={{ addToast }}>
@@ -31,14 +34,20 @@ export function ToastProvider({ children }) {
               toast.type === 'success'
                 ? 'bg-emerald-950/90 text-emerald-100 border-emerald-500/40 shadow-emerald-950/20'
                 : toast.type === 'error'
-                ? 'bg-rose-950/90 text-rose-100 border-rose-500/40 shadow-rose-950/20'
-                : 'bg-slate-900/90 text-slate-100 border-slate-700 shadow-slate-950/20'
+                  ? 'bg-rose-950/90 text-rose-100 border-rose-500/40 shadow-rose-950/20'
+                  : 'bg-slate-900/90 text-slate-100 border-slate-700 shadow-slate-950/20'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
-              {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />}
-              {toast.type === 'info' && <Info className="w-4 h-4 text-primary-fixed flex-shrink-0" />}
+              {toast.type === 'success' && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              )}
+              {toast.type === 'error' && (
+                <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              )}
+              {toast.type === 'info' && (
+                <Info className="w-4 h-4 text-primary-fixed flex-shrink-0" />
+              )}
               <span className="leading-snug">{toast.message}</span>
             </div>
             <button

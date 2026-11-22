@@ -1,12 +1,171 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import OrganizationPayments from '../../components/workspace/OrganizationPayments';
 import { Link } from 'react-router-dom';
-import { Users, BookOpen, CheckCircle2, CreditCard } from 'lucide-react';
+import {
+  Users,
+  BookOpen,
+  ArrowUpRight,
+  Clock3,
+  Plus,
+  UserRound,
+} from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import { useRemoteData } from '../../hooks/useRemoteData';
-import { AdminHeader, AdminMetric, AdminDataState, AdminSectionHeader, AdminEmpty } from '../../components/admin/AdminUI';
-import { money, currencyLabel } from '../../utils/adminDisplay';
-export default function Analytics({dashboardStyle=false}) {
- const state=useRemoteData('/analytics/organization');const data=state.data;
- const content=<div className="admin-page dashboard-page dashboard-org"><AdminHeader title={dashboardStyle?"Overview":"Analytics"}/><AdminDataState {...state}/>{data&&!state.error&&<><div className="admin-stats-grid"><AdminMetric icon={Users} label="Enrollments" value={data.kpis.totalEnrollments}/><AdminMetric icon={Users} label="Learners" value={data.kpis.activeLearners}/><AdminMetric icon={BookOpen} label="Courses" value={data.stats.courses}/><AdminMetric icon={CheckCircle2} label="Completion rate" value={`${data.kpis.completionRate}%`}/></div><section className="admin-card"><AdminSectionHeader title="Recorded learner payments"/><div className="admin-grid">{data.revenueTotals.map(g=><div key={g.currency||'unknown'} className="finance-summary-card"><CreditCard size={20}/><h3 className="mt-4">{currencyLabel(g.currency)}</h3><strong className="block text-2xl mt-3">{money(g.amount,g.currency)}</strong></div>)}</div>{!data.revenueTotals.length&&<AdminEmpty title="No completed payments"/>}</section><section className="admin-card"><AdminSectionHeader title="Course categories"><Link to="/org/courses" className="admin-button">View courses</Link></AdminSectionHeader><div className="admin-grid">{data.categoryBreakdown.map(c=><article key={c.category} className="finance-summary-card"><h3>{c.category}</h3><dl className="finance-breakdown"><div><dt>Courses</dt><dd>{c.coursesCount}</dd></div><div><dt>Enrollments</dt><dd>{c.seatsEnrolled}</dd></div></dl></article>)}</div>{!data.categoryBreakdown.length&&<AdminEmpty title="No course categories yet"/>}</section></>}</div>;
- return dashboardStyle?content:<OrgLayout breadcrumbs={[{label:'Analytics'}]}>{content}</OrgLayout>;
+import {
+  AdminHeader,
+  AdminMetric,
+  AdminDataState,
+  AdminSectionHeader,
+  AdminEmpty,
+} from '../../components/admin/AdminUI';
+import { StatusBadge } from '../../components/admin/StatusBadge';
+export default function Analytics({ dashboardStyle = false }) {
+  const [params, setParams] = useSearchParams();
+  const [paymentsOpen, setPaymentsOpen] = useState(
+    params.get('payments') === 'received'
+  );
+  const paymentView = params.get('payments');
+  useEffect(() => {
+    if (paymentView === 'received') setPaymentsOpen(true);
+  }, [paymentView]);
+  const state = useRemoteData('/analytics/organization'),
+    data = state.data;
+  const content = (
+    <div className="admin-page dashboard-page dashboard-org">
+      <AdminHeader title="Dashboard">
+        <button
+          className="admin-button"
+          onClick={() => setPaymentsOpen((v) => !v)}
+        >
+          Received payments
+        </button>
+        <Link className="admin-button" to="/org/logs">
+          Activity logs
+        </Link>
+        <Link
+          className="admin-button admin-button-primary"
+          to="/org/courses/create"
+        >
+          <Plus size={15} />
+          Create course
+        </Link>
+      </AdminHeader>
+      <AdminDataState {...state} />
+      {data && !state.error && (
+        <>
+          <div className="admin-stats-grid">
+            <AdminMetric
+              icon={BookOpen}
+              label="Published courses"
+              value={data.stats.publishedCourses}
+            />
+            <AdminMetric
+              icon={Users}
+              label="Learners"
+              value={data.kpis.activeLearners}
+            />
+            <AdminMetric
+              icon={UserRound}
+              label="Active instructors"
+              value={data.stats.activeInstructors}
+            />
+            <AdminMetric
+              icon={Clock3}
+              label="Awaiting course approval"
+              value={data.stats.pendingCourses}
+            />
+          </div>
+          {paymentsOpen && (
+            <OrganizationPayments
+              onClose={() => {
+                setPaymentsOpen(false);
+                if (params.has('payments')) setParams({});
+              }}
+            />
+          )}
+          <div className="org-dashboard-columns">
+            <section className="admin-card">
+              <AdminSectionHeader title="Teaching team">
+                <Link className="admin-button" to="/org/instructors">
+                  View instructors
+                  <ArrowUpRight size={14} />
+                </Link>
+              </AdminSectionHeader>
+              <div className="org-teaching-list">
+                {data.instructorWorkload.map((i) => (
+                  <article className="org-teacher-card" key={i.id}>
+                    <div className="org-teacher-heading">
+                      <Link to={`/org/instructors/${i.id}`}>
+                        <strong>{i.name}</strong>
+                        <small>{i.email}</small>
+                      </Link>
+                      <StatusBadge status={i.status} />
+                    </div>
+                    <dl className="org-teacher-stats">
+                      <div>
+                        <dt>Courses</dt>
+                        <dd>{i.assignedCourses}</dd>
+                      </div>
+                      <div>
+                        <dt>Enrollments</dt>
+                        <dd>{i.totalEnrollments}</dd>
+                      </div>
+                    </dl>
+                    <div className="org-teacher-courses">
+                      {i.courses.map((c) => (
+                        <Link key={c.id} to={`/org/courses/${c.id}`}>
+                          {c.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {!data.instructorWorkload.length && (
+                <AdminEmpty title="No instructors associated yet" />
+              )}
+            </section>
+            <section className="admin-card">
+              <AdminSectionHeader
+                title={
+                  data.topRatedCourses.some((c) => c.reviewCount)
+                    ? 'Top rated courses'
+                    : 'Your courses'
+                }
+              >
+                <Link to="/org/courses" className="admin-button">
+                  View all
+                </Link>
+              </AdminSectionHeader>
+              <div className="org-ranked-courses">
+                {data.topRatedCourses.map((c, index) => (
+                  <Link to={`/org/courses/${c.id}`} key={c.id}>
+                    <span className="org-course-rank">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <div>
+                      <h3>{c.title}</h3>
+                      <p>
+                        {c.enrollments} enrollments ·{' '}
+                        {c.reviewCount
+                          ? `${Number(c.rating).toFixed(1)} / 5`
+                          : 'No ratings yet'}
+                      </p>
+                      <StatusBadge status={c.status} />
+                    </div>
+                    <ArrowUpRight size={17} />
+                  </Link>
+                ))}
+              </div>
+              {!data.topRatedCourses.length && (
+                <AdminEmpty title="No current courses" />
+              )}
+            </section>
+          </div>
+        </>
+      )}
+    </div>
+  );
+  return dashboardStyle ? content : <OrgLayout>{content}</OrgLayout>;
 }

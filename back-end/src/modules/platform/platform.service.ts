@@ -1,3 +1,4 @@
+import {courseDuration} from '../../common/learning/duration';
 import { paymentRecords } from '../../common/payments/payment-records';
 import { AuthService } from '../auth/auth.service';
 import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
@@ -47,14 +48,14 @@ export class PlatformService {
     }
     private async courseRecords() {
         const [courses, orgs, teachers, enrollments, reviews] = await Promise.all(['courses', 'organizations', 'instructors', 'enrollments', 'reviews'].map(n => this.records(n)));
-        return courses.map(c => {
+        return courses.filter(c=>!['Archived','Rejected','Deleted'].includes(c.status)).map(c => {
             const ids = new Set([c.instructorId, ...array(c.coInstructorIds), ...array(c.instructors).filter(Boolean).map(i => typeof i === 'string' ? i : i.id)].filter(Boolean));
-            const faculty = teachers.filter(i => ids.has(i.id)).map(i => ({ id: i.id, name: i.name, email: i.email }));
+            const faculty = teachers.filter(i => i.organizationId===c.organizationId&&ids.has(i.id)).map(i => ({ id: i.id, name: i.name, email: i.email }));
             const ratings = reviews.filter(r => r.courseId === c.id && number(r.rating) !== null && r.rating >= 1 && r.rating <= 5);
             const modules = array(c.modules).filter(m=>m&&typeof m==='object').map(m => ({ ...m, lessonCount: Array.isArray(m.items) ? m.items.length : Array.isArray(m.lessons) ? m.lessons.length : number(m.lessons) ?? 0 }));
             const own = enrollments.filter(e => e.courseId === c.id);
             return { ...c, organizationName: orgs.find(o => o.id === c.organizationId)?.name || c.organizationName || null,
-                instructors: faculty, enrolledCount: own.length, completedCount: own.filter(e => e.status === 'Completed' || Number(e.progress) === 100).length,
+                ...courseDuration(c), instructors: faculty, enrolledCount: own.length, completedCount: own.filter(e => e.status === 'Completed' || Number(e.progress) === 100).length,
                 rating: ratings.length ? ratings.reduce((s, r) => s + Number(r.rating), 0) / ratings.length : null, reviewCount: ratings.length,
                 modules, modulesCount: modules.length, lessonsCount: modules.reduce((s, m) => s + m.lessonCount, 0), price: number(c.price), currency: currency(c) };
         });
@@ -77,11 +78,15 @@ export class PlatformService {
         const recent=all.filter(c=>c.status==='Published').sort((a,b)=>(Date.parse(b.reviewedAt||b.publishedAt||b.updatedAt||b.createdAt)||0)-(Date.parse(a.reviewedAt||a.publishedAt||a.updatedAt||a.createdAt)||0)).slice(0,10);
         return {pending:pending.filter(matches),recentlyApproved:recent.filter(matches),pendingCount:pending.length,recentlyApprovedCount:recent.length};
     }
-    async demoCredentials(role:string){
-        if(process.env.NODE_ENV==='production'&&process.env.ENABLE_DEMO_LOGIN!=='true')return null;
-        const demo=(await this.records('demo_accounts')).find(d=>d.role===role);if(!demo)return null;
-        const account=(await this.records('users')).find(a=>a.id===demo.userId&&a.status==='Active'&&a.role===role&&a.password===demo.password);
-        return account?{role,name:account.name,email:account.email,password:demo.password}:null;
+    async demoCredentials(role?: string){
+        const single = Boolean(role);
+        if(process.env.NODE_ENV==='production'&&process.env.ENABLE_DEMO_LOGIN!=='true')return single?null:[];
+        const [demos, users] = await Promise.all([this.records('demo_accounts'),this.records('users')]);
+        const available=demos.filter(d=>!single||d.role===role).flatMap(demo=>{
+            const account=users.find(a=>a.id===demo.userId&&a.status==='Active'&&a.role===demo.role&&a.password===demo.password);
+            return account?[{role:demo.role,name:account.name,email:account.email,password:demo.password}]:[];
+        });
+        return single?available[0]||null:available;
     }
     async course(id: string) { const course = (await this.courseRecords()).find(c => c.id === id); if (!course)
         throw new NotFoundException('Course not found.'); return course; }
@@ -97,17 +102,24 @@ export class PlatformService {
             if (dto.decision === 'approve' && !c.instructors.length)
                 throw new BadRequestException('Assign an existing instructor before publishing.');
             const reviewedAt = new Date().toISOString();
-            await new JsonRepository<any>('courses', this.db).update(id, { status: dto.decision === 'approve' ? 'Published' : 'Rejected', reviewNote: dto.reason?.trim() || null, reviewedBy: admin.id, reviewedAt });
-            await new JsonRepository<any>('admin_activity', this.db).create({ adminId: admin.id, adminName: admin.name, courseId: id, title: `${dto.decision} course: ${c.title}`, actionTaken: dto.reason?.trim() || 'Approved for publication', resolvedAt: reviewedAt });
-            if(c.organizationId)await new JsonRepository<any>('notifications',this.db).create({title:dto.decision==='approve'?'Course approved':'Course changes requested',desc:`${c.title}: ${dto.decision==='approve'?'approved for publication':dto.reason.trim()}`,category:'CourseApproval',recipientId:c.organizationId,courseId:id,actionUrl:`/org/courses/${id}`,actionLabel:'View course',read:false,createdAt:reviewedAt});
+            const rejected=dto.decision==='reject';
+            const hasHistory=rejected&&((await this.records('enrollments')).some(e=>e.courseId===id)||(await this.records('transactions')).some(t=>t.courseId===id));
+            if(rejected){
+              await new JsonRepository<any>('course_decisions',this.db).create({courseId:id,courseTitle:c.title,organizationId:c.organizationId,decision:'Rejected',reason:dto.reason.trim(),reviewedBy:admin.id,createdAt:reviewedAt,deleted:!hasHistory});
+              if(!hasHistory){await new JsonRepository<any>('courses',this.db).delete(id);for(const name of ['curriculum_drafts','module_requests'])await new JsonRepository<any>(name,this.db).deleteMany({courseId:id});}
+              else await new JsonRepository<any>('courses',this.db).update(id,{status:'Deleted',reviewNote:dto.reason.trim(),reviewedBy:admin.id,reviewedAt});
+            }else await new JsonRepository<any>('courses',this.db).update(id,{status:'Published',reviewNote:null,reviewedBy:admin.id,reviewedAt});
+
+            await new JsonRepository<any>('admin_activity', this.db).create({ adminId: admin.id, adminName: admin.name, courseId: id, organizationId:c.organizationId,title: `${rejected?'Rejected course deleted':'Course approved'}: ${c.title}`, actionTaken: dto.reason?.trim() || 'Approved for publication', resolvedAt: reviewedAt });
+            if(c.organizationId)await new JsonRepository<any>('notifications',this.db).create({title:dto.decision==='approve'?'Course approved':'Rejected course deleted',desc:`${c.title}: ${dto.decision==='approve'?'approved for publication':dto.reason.trim()}`,category:'CourseApproval',recipientId:c.organizationId,courseId:id,actionUrl:rejected?'/org/logs':`/org/courses/${id}`,actionLabel:'View course',read:false,createdAt:reviewedAt});
             const notices=await this.records('notifications');
             for(const notice of notices.filter(n=>n.category==='CourseApproval'&&n.courseId===id&&n.recipientRole==='platform')){notice.read=true;notice.actionLabel='Review completed';}
             await this.db.setCollection('notifications',notices);
-            return this.course(id);
+            return rejected?{id,courseId:id,title:c.title,organizationId:c.organizationId,status:'Deleted',deleted:true,reviewNote:dto.reason.trim()}:this.course(id);
         });
     }
     private paymentRecords(){return paymentRecords(this.db);}
-    private filterPayments(rows: any[], q: AdminQuery) { const term = String(q.search || '').trim().toLowerCase(); return rows.filter(t => (!q.status || t.status === q.status) && (!q.type || t.type === q.type) && (!term || [t.id, t.payer, t.course, t.method].some(v => String(v || '').toLowerCase().includes(term)))); }
+    private filterPayments(rows: any[], q: AdminQuery) { const term = String(q.search || '').trim().toLowerCase(); return rows.filter(t => (!q.status || t.status === q.status) && (!q.type || t.type === q.type) && (!term || [t.id,t.reference,t.organizationName,t.payee,t.payer,t.course,t.method,t.recordedByName].some(v => String(v || '').toLowerCase().includes(term)))); }
     private totals(rows: any[]) {
         const groups = new Map<string, {
             currency: string | null;
@@ -123,26 +135,15 @@ export class PlatformService {
             s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
         return { filename: `transactions-${new Date().toISOString().slice(0, 10)}.csv`, content: [['ID', 'Type', 'Payer', 'Course', 'Amount', 'Currency', 'Method', 'Date', 'Status'], ...rows.map(t => [t.id, t.type, t.payer, t.course, t.amount, t.currency, t.method, t.date || t.createdAt, t.status])].map(r => r.map(cell).join(',')).join('\r\n') };
     }
-    async editCourse(id:string, dto:any) {
-      await this.course(id);
-      const changes:any={};
-      for(const key of ['title','description','category','level'])if(dto[key]!==undefined)changes[key]=String(dto[key]).trim();
-      if(dto.title!==undefined&&!changes.title)throw new BadRequestException('A course title is required.');
-      await new JsonRepository<any>('courses',this.db).update(id,changes);return this.course(id);
-    }
-    async removeCourse(id:string) {
-      const c=await this.course(id);
-      const transactions=await this.records('transactions');
-      if(c.enrolledCount||transactions.some(t=>t.courseId===id))throw new ConflictException('This course has enrollment or payment history. Archive it instead.');
-      await new JsonRepository<any>('courses',this.db).delete(id);return {success:true};
-    }
-    async archiveCourse(id:string) {await this.course(id);return new JsonRepository<any>('courses',this.db).update(id,{status:'Archived'});}
+    async editCourse(id:string,dto:any){throw new ForbiddenException('Course content can only be edited by its organization or assigned instructors. Administrators approve or reject submissions.');}
+    async removeCourse(id:string){throw new ForbiddenException('Only the owning organization manages the course lifecycle.');}
+    async archiveCourse(id:string){throw new ForbiddenException('Only the owning organization can archive a course.');}
     async finance() {
       const [rows,orgs,courses,learners,settings,enrollments]=await Promise.all([this.paymentRecords(),this.records('organizations'),this.records('courses'),this.records('learners'),this.records('settings'),this.records('enrollments')]);
       const commission=Number(settings[0]?.platformCommissionRate);
       const rate=Number.isFinite(commission)&&commission>=0&&commission<=1?commission:null;
       const organizationRows=orgs.flatMap(org=>{
-        const related=rows.filter(t=>t.organizationId===org.id||courses.find(c=>c.id===t.courseId)?.organizationId===org.id);
+        const related=rows.filter(t=>t.organizationId===org.id);
         const currencies=[...new Set(related.map(t=>t.currency))];
         return currencies.map(code=>{
           const payments=related.filter(t=>t.currency===code&&t.type==='Payment'&&paid(t.status));
@@ -150,7 +151,7 @@ export class PlatformService {
           const payouts=rows.filter(t=>t.organizationId===org.id&&t.currency===code&&t.type==='Payout'&&paid(t.status));
           const paidAmount=payouts.reduce((sum,t)=>sum+(t.amount||0),0);
           const share=rate===null?null:Math.round(gross*(1-rate)*100)/100;
-          return {organizationId:org.id,name:org.name,currency:code,received:gross,platformShare:rate===null?null:Math.round((gross-share)*100)/100,organizationShare:share,paid:paidAmount,due:share===null?null:Math.max(0,Math.round((share-paidAmount)*100)/100),learners:new Set(payments.map(t=>t.payerId||t.learnerId||t.payer).filter(Boolean)).size,payments:payments.length};
+          return {organizationId:org.id,name:org.name,status:org.status||'Active',currency:code,received:gross,platformShare:rate===null?null:Math.round((gross-share)*100)/100,organizationShare:share,paid:paidAmount,due:share===null?null:Math.max(0,Math.round((share-paidAmount)*100)/100),learners:new Set(payments.map(t=>t.payerId||t.learnerId||t.payer).filter(Boolean)).size,payments:payments.length};
         });
       });
       const totals=this.totals(rows);
@@ -158,16 +159,24 @@ export class PlatformService {
       return {totals,currencySummaries,organizations:organizationRows,platformCommissionRate:rate,learnerCount:new Set(rows.filter(t=>t.type==='Payment'&&paid(t.status)).map(t=>t.payerId||t.learnerId||t.payer).filter(Boolean)).size,enrollmentCount:enrollments.length};
     }
     async payout(body:any,admin:any) {
-      if(!String(body.reference||'').trim()||!String(body.method||'').trim())throw new BadRequestException('Payment reference and method are required.');
-      const amount=number(body.amount);if(amount===null||amount<=0)throw new BadRequestException('Enter a positive payout amount.');
+      if(!['admin','superadmin'].includes(String(admin?.role||'').toLowerCase().replace(/[\s_-]/g,'')))throw new ForbiddenException('Administrator access is required.');
+      const reference=String(body.reference||'').trim(),method=String(body.method||'').trim();
+      if(!reference||!method)throw new BadRequestException('Payment reference and method are required.');
+      if(reference.length>120||method.length>60)throw new BadRequestException('Payment reference or method is too long.');
+      const amount=number(body.amount);if(amount===null||amount<=0||Math.abs(amount*100-Math.round(amount*100))>0.000001)throw new BadRequestException('Enter a positive amount with at most two decimal places.');
       return this.db.runTransaction(async()=>{
+        const rows=await this.records('transactions');if(rows.some(t=>t.type==='Payout'&&String(t.reference).toLowerCase()===reference.toLowerCase()))throw new ConflictException('That payout reference is already recorded.');
         const summary=await this.finance();
-        const group=summary.organizations.find(o=>o.organizationId===body.organizationId&&o.currency===(body.currency||null));
+        const group=summary.organizations.find(o=>o.organizationId===body.organizationId&&o.currency===body.currency);
         if(!group||group.due===null)throw new BadRequestException('This organization has no calculated payable balance.');
+        if(group.status!=='Active')throw new BadRequestException('Payments can only be sent to active organizations.');
         if(!group.currency)throw new BadRequestException('Record the source payment currency before recording a payout.');
         if(amount>group.due)throw new BadRequestException('Payout exceeds the remaining organization balance.');
-        const rows=await this.records('transactions');if(rows.some(t=>t.type==='Payout'&&t.reference===body.reference.trim()))throw new ConflictException('That payout reference is already recorded.');
-        const now=new Date().toISOString();return new JsonRepository<any>('transactions',this.db).create({type:'Payout',organizationId:group.organizationId,organizationName:group.name,payer:'Platform',payee:group.name,amount,currency:group.currency,method:body.method.trim(),reference:body.reference.trim(),status:'Completed',createdAt:now,date:now,recordedBy:admin.id});
+        const now=new Date().toISOString();
+        const payment=await new JsonRepository<any>('transactions',this.db).create({type:'Payout',organizationId:group.organizationId,organizationName:group.name,payer:'Acadex',payee:group.name,amount,currency:group.currency,method,reference,status:'Completed',createdAt:now,date:now,recordedBy:admin.id,recordedByName:admin.name});
+        await new JsonRepository<any>('notifications',this.db).create({title:'Organization payment received',desc:`Acadex recorded ${group.currency} ${amount.toFixed(2)} for your organization. Reference: ${reference}.`,recipientId:group.organizationId,category:'Payment',paymentId:payment.id,read:false,createdAt:now,actionUrl:'/org/dashboard?payments=received#organization-payments',actionLabel:'View received payment'});
+        await new JsonRepository<any>('admin_activity',this.db).create({adminId:admin.id,adminName:admin.name,organizationId:group.organizationId,paymentId:payment.id,title:`Organization payment: ${group.name}`,actionTaken:`${group.currency} ${amount.toFixed(2)} · ${reference}`,createdAt:now});
+        return payment;
       });
     }
     async accounts(role:string,admin:any) {
@@ -192,17 +201,66 @@ export class PlatformService {
       }
       return user;
     }
-    async history(admin:any,adminId?:string){
+    async historyOptions(admin:any,query:any={}){
       if(String(admin.role).toLowerCase()!=='superadmin')throw new ForbiddenException('Only the super administrator can review administrator activity.');
-      const [activity,disputes,users]=await Promise.all([this.records('admin_activity'),this.records('disputes'),this.records('users')]);
-      const administrators=users.filter(u=>u.role==='Admin');
+      const search=String(query.search||'').trim().toLowerCase();
+      let rows:any[]=[];
+      if(query.type==='administrator')rows=(await this.records('users')).filter(u=>['Admin','SuperAdmin'].includes(u.role)).map(u=>({value:u.id,label:u.name,detail:u.email||u.role}));
+      else if(query.type==='course'){
+        const [courses,decisions,orgs]=await Promise.all([this.records('courses'),this.records('course_decisions'),this.records('organizations')]);
+        const unique=new Map(courses.map(c=>[c.id,{value:c.id,label:c.title,detail:orgs.find(o=>o.id===c.organizationId)?.name||c.status}]));
+        for(const d of decisions)if(!unique.has(d.courseId))unique.set(d.courseId,{value:d.courseId,label:d.courseTitle,detail:'Deleted course'});
+        rows=[...unique.values()];
+      }else throw new BadRequestException('Choose administrator or course options.');
+      const selected=rows.find(r=>r.value===query.selected);
+      const matching=rows.filter(r=>!search||[r.label,r.detail].some(v=>String(v||'').toLowerCase().includes(search))).sort((a,b)=>String(a.label).localeCompare(String(b.label)));
+      const items=matching.slice(0,30);if(selected&&!items.some(i=>i.value===selected.value))items.unshift(selected);
+      return {items,total:matching.length};
+    }
+    async history(admin:any,adminId?:string,query:any={}){
+      if(String(admin.role).toLowerCase()!=='superadmin')throw new ForbiddenException('Only the super administrator can review administrator activity.');
+      const [activity,disputes,users,courses,orgs,decisions]=await Promise.all(['admin_activity','disputes','users','courses','organizations','course_decisions'].map(n=>this.records(n)));
+      const administrators=users.filter(u=>['Admin','SuperAdmin'].includes(u.role));
       const names=new Map(administrators.map(u=>[u.id,u.name]));
-      const actions=activity.filter(a=>!adminId||a.adminId===adminId).map(a=>({...a,adminName:names.get(a.adminId)||a.adminName||'Administrator',date:a.createdAt||a.resolvedAt,action:a.title||'Administration action',details:a.actionTaken||''}));
-      const cases=disputes.filter(d=>!adminId||d.assignedTo===adminId||d.resolvedBy===names.get(adminId)||Array.isArray(d.timeline)&&d.timeline.some(t=>t.actorId===adminId)).map(d=>({id:d.id,subject:d.subject,status:d.status,assignedName:names.get(d.assignedTo)||d.assignedName||d.resolvedBy||null,resolution:d.resolutionNote||d.rejectionReason||null,updatedAt:d.resolvedAt||d.updatedAt||d.createdAt}));
-      return {administrators:administrators.map(u=>({id:u.id,name:u.name})),actions:actions.sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0)),cases};
+      const courseInfo=(id:string)=>{const c=courses.find(c=>c.id===id)||decisions.find(c=>c.courseId===id);return {courseTitle:c?.title||c?.courseTitle||'',organizationName:orgs.find(o=>o.id===c?.organizationId)?.name||''};};
+      const search=String(query.search||'').trim().toLowerCase();
+      const searchBy=['administrator','course','organization','action'].includes(query.searchBy)?query.searchBy:'all';
+      const matches=(r:any)=>{const fields={administrator:[r.adminName||r.assignedName],course:[r.courseTitle],organization:[r.organizationName],action:[r.action,r.details,r.subject,r.resolution,r.id]};return !search||(searchBy==='all'?Object.values(fields).flat():fields[searchBy]).some(v=>String(v||'').toLowerCase().includes(search));};
+      const from=query.from?Date.parse(`${query.from}T00:00:00+05:30`):null,to=query.to?Date.parse(`${query.to}T23:59:59.999+05:30`):null;
+      if((from!==null&&!Number.isFinite(from))||(to!==null&&!Number.isFinite(to))||(from!==null&&to!==null&&from>to))throw new BadRequestException('Choose a valid date range.');
+      const inRange=(date:string)=>{const time=Date.parse(date);return (from===null||time>=from)&&(to===null||time<=to);};
+      const actions=activity.filter(a=>(!adminId||a.adminId===adminId)&&(!query.courseId||a.courseId===query.courseId)).map(a=>{
+        const info=courseInfo(a.courseId);const courseExists=courses.some(c=>c.id===a.courseId&&!['Archived','Deleted','Rejected'].includes(c.status));
+        return {...a,...info,organizationName:info.organizationName||orgs.find(o=>o.id===a.organizationId)?.name||'',adminName:names.get(a.adminId)||a.adminName||'Administrator',date:a.createdAt||a.resolvedAt,action:a.title||'Administration action',details:a.actionTaken||'',href:a.paymentId?`/super-admin/payments?type=Payout&search=${encodeURIComponent(a.paymentId)}`:a.disputeId?`/super-admin/disputes?disputeId=${encodeURIComponent(a.disputeId)}`:a.courseId&&courseExists?`/super-admin/courses/${a.courseId}`:null};
+      }).filter(r=>matches(r)&&inRange(r.date));
+      const cases=disputes.filter(d=>(!adminId||d.assignedTo===adminId||d.resolvedBy===names.get(adminId)||array(d.timeline).some(t=>t.actorId===adminId))&&(!query.courseId||d.courseId===query.courseId)&&(!query.status||d.status===query.status)).map(d=>({...courseInfo(d.courseId),id:d.id,courseId:d.courseId,subject:d.subject,status:d.status,assignedName:names.get(d.assignedTo)||d.assignedName||d.resolvedBy||null,resolution:d.resolutionNote||d.rejectionReason||null,updatedAt:d.resolvedAt||d.updatedAt||d.createdAt,href:`/super-admin/disputes?disputeId=${encodeURIComponent(d.id)}`})).filter(r=>matches(r)&&inRange(r.updatedAt));
+      const order=['oldest','administrator','course'].includes(query.order)?query.order:'newest';
+      const compare=(a:any,b:any)=>{const date=(r:any)=>Date.parse(r.date||r.updatedAt)||0;if(order==='oldest')return date(a)-date(b)||String(a.id).localeCompare(String(b.id));if(order==='administrator')return String(a.adminName||a.assignedName||'').localeCompare(String(b.adminName||b.assignedName||''))||date(b)-date(a);if(order==='course')return String(a.courseTitle).localeCompare(String(b.courseTitle))||date(b)-date(a);return date(b)-date(a)||String(a.id).localeCompare(String(b.id));};
+      actions.sort(compare);cases.sort(compare);
+      const limit=Math.min(50,Math.max(1,Math.floor(Number(query.limit))||20));const total=query.view==='cases'?cases.length:query.view==='actions'?actions.length:Math.max(actions.length,cases.length);const totalPages=Math.max(1,Math.ceil(total/limit));const page=Math.min(totalPages,Math.max(1,Math.floor(Number(query.page))||1)),offset=(page-1)*limit;
+      return {administrators:administrators.slice(0,30).map(u=>({id:u.id,name:u.name})),actions:query.view==='cases'?[]:actions.slice(offset,offset+limit),cases:query.view==='actions'?[]:cases.slice(offset,offset+limit),actionsTotal:actions.length,casesTotal:cases.length,total,page,limit,totalPages,statuses:[...new Set(disputes.map(d=>d.status).filter(Boolean))]};
+    }
+    async verifyOrganization(id:string,body:any,admin:any){
+      if(!['admin','superadmin'].includes(String(admin.role).toLowerCase().replace(/\s/g,'')))throw new ForbiddenException('Administrator verification is required.');
+      if(!['approve','reject'].includes(body.decision))throw new BadRequestException('Choose approve or reject.');
+      if(body.decision==='reject'&&!String(body.reason||'').trim())throw new BadRequestException('Provide a rejection reason.');
+      return this.db.runTransaction(async()=>{
+        const account=(await this.records('users')).find(u=>u.id===id);
+        if(!account||account.role!=='Organization')throw new NotFoundException('Organization account not found.');
+        if(account.status!=='Pending Verification')throw new ConflictException('This organization is not awaiting verification.');
+        const org=(await this.records('organizations')).find(o=>o.userId===account.id||o.id===account.organizationId);
+        if(!org)throw new NotFoundException('Organization profile not found.');
+        const now=new Date().toISOString();const changes={status:body.decision==='approve'?'Active':'Rejected',verificationStatus:body.decision==='approve'?'Verified':'Rejected',verifiedBy:admin.id,verifiedAt:now,verificationNote:String(body.reason||'').trim()};
+        await new JsonRepository<any>('users',this.db).update(account.id,changes);
+        await new JsonRepository<any>('organizations',this.db).update(org.id,changes);
+        await new JsonRepository<any>('notifications',this.db).create({title:body.decision==='approve'?'Organization verified':'Organization verification rejected',desc:body.decision==='approve'?'Your organization account is approved. You can now sign in.':changes.verificationNote,recipientId:account.id,recipientRole:'organization',read:false,createdAt:now});
+        await new JsonRepository<any>('admin_activity',this.db).create({adminId:admin.id,adminName:admin.name,title:`Organization ${body.decision==='approve'?'verified':'rejected'}: ${account.name}`,actionTaken:changes.verificationNote||changes.verificationStatus,createdAt:now});
+        return this.accountDetail(id,admin);
+      });
     }
     async editAccount(id:string,body:any,admin:any) {
-      await this.accountDetail(id,admin);
+      const account=await this.accountDetail(id,admin);
+      if(account.role==='Organization'&&['Pending Verification','Rejected'].includes(account.status))throw new ForbiddenException('Use organization verification before changing account access.');
       if(Object.keys(body).some(key=>key!=='status'))throw new ForbiddenException('Account details belong to the account owner. Platform administrators can only change access.');
       if(!['Active','Suspended'].includes(body.status))throw new BadRequestException('Choose Active or Suspended.');
       if(id===admin.id)throw new BadRequestException('You cannot suspend your own account.');

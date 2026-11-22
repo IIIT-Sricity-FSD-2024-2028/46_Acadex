@@ -112,6 +112,25 @@ describe('JSON-backed admin and public platform', () => {
         const guard = new AccountAccessGuard(repo('users'), repo('learners'), repo('instructors'), repo('organizations'));
         expect(await guard.canActivate({ switchToHttp: () => ({ getRequest: () => ({ path: '/api/public/landing', headers: { authorization: 'Bearer jwt-token-deleted-123', 'x-user-id': 'deleted' } }) }) } as any)).toBe(true);
     });
+    it.each(['Student', 'Instructor', 'Organization', 'Admin', 'SuperAdmin'])('resolves %s from credentials without a selected role', async (role) => {
+        const email = role === 'Admin' ? admin.email : role === 'Student' ? 'learner@test.com' : `${role.toLowerCase()}@test.com`;
+        const result = await module.get(AuthService).login({ email, password: 'Password123!' });
+        expect(result.user.role).toBe(role);
+        expect(result.token).toBeTruthy();
+    });
+    it('lists only valid demo accounts and retains the single-role response', async () => {
+        await db.setCollection('demo_accounts', [
+            {id:'demo-a',role:'Admin',userId:'a',password:'Password123!'},
+            {id:'demo-u',role:'Student',userId:'u',password:'Password123!'},
+            {id:'demo-i',role:'Instructor',userId:'role-0',password:'wrong'},
+        ]);
+        expect(await service.demoCredentials()).toEqual([
+            {role:'Admin',name:admin.name,email:admin.email,password:'Password123!'},
+            {role:'Student',name:'Learner',email:'learner@test.com',password:'Password123!'},
+        ]);
+        expect(await service.demoCredentials('Admin')).toEqual({role:'Admin',name:admin.name,email:admin.email,password:'Password123!'});
+        expect(await service.demoCredentials('Instructor')).toBeNull();
+    });
     it.each(['Student', 'Instructor', 'Organization', 'Admin', 'SuperAdmin'])('preserves backend credential login for %s', async (role) => {
         const email = role === 'Student' ? 'learner@test.com' : role === 'Admin' ? 'admin@test.com' : `${role.toLowerCase()}@test.com`;
         const result = await module.get(AuthService).login({ email, password: 'Password123!', role });
@@ -166,7 +185,7 @@ describe('JSON-backed admin and public platform', () => {
         await expect(service.accounts('Admin',admin)).rejects.toThrow('not managed');
         await expect(service.accountDetail('role-2',admin)).rejects.toThrow('not managed');
         await expect(service.removeCourse('c')).rejects.toThrow();
-        expect((await service.archiveCourse('c')).status).toBe('Archived');
+        await expect(service.archiveCourse('c')).rejects.toThrow('owning organization');
         expect((await db.getCollection<any>('enrollments'))[0].courseId).toBe('c');
     });
 
@@ -218,7 +237,7 @@ describe('JSON-backed admin and public platform', () => {
     });
     it('stages instructor curriculum and releases it only after the owning organization approves',async()=>{
         const workflow=module.get(CourseWorkflowService);
-        const teacher={id:'role-0',profileId:'i',aliases:['role-0','i'],canonicalRole:'instructor',name:'Teacher'};
+        const teacher={id:'role-0',profileId:'i',organizationId:'o',aliases:['role-0','i'],canonicalRole:'instructor',name:'Teacher'};
         const org={id:'role-1',profileId:'o',aliases:['role-1','o'],canonicalRole:'organization',name:'School'};
         const proposal=[{id:'module-new',title:'New approved module',items:[{id:'lesson-new',title:'New lesson'}]}];
         const before=(await service.course('c')).modules;
@@ -235,7 +254,7 @@ describe('JSON-backed admin and public platform', () => {
     });
     it('keeps rejected curriculum out of the published course and requires platform course approval',async()=>{
         const workflow=module.get(CourseWorkflowService);
-        const teacher={id:'role-0',profileId:'i',aliases:['i'],canonicalRole:'instructor',name:'Teacher'};
+        const teacher={id:'role-0',profileId:'i',organizationId:'o',aliases:['i'],canonicalRole:'instructor',name:'Teacher'};
         const org={id:'role-1',profileId:'o',aliases:['o'],canonicalRole:'organization',name:'School'};
         const proposal=[{title:'Proposal',items:[]}];const before=(await service.course('c')).modules;
         const request=await workflow.request('c',{modules:proposal},teacher);
@@ -249,7 +268,7 @@ describe('JSON-backed admin and public platform', () => {
         expect((await db.getCollection<any>('notifications')).some(n=>n.recipientId==='o'&&n.courseId==='draft')).toBe(true);
     });
 
-    it.each(['/users','/organizations','/learners','/admin/accounts','/notifications','/workspace/notifications','/admin/payouts','/payments/transactions'])('blocks manual administration creation through legacy route %s',async path=>{
+    it.each(['/users','/organizations','/learners','/admin/accounts','/notifications','/workspace/notifications','/payments/transactions'])('blocks manual administration creation through legacy route %s',async path=>{
         const repo=(name:string)=>new JsonRepository(name,db);
         const guard=new AccountAccessGuard(repo('users'),repo('learners'),repo('instructors'),repo('organizations'));
         const context={switchToHttp:()=>({getRequest:()=>({method:'POST',path:'/api'+path,headers:{'x-user-id':'a'},body:{}})})} as any;
@@ -266,11 +285,32 @@ describe('JSON-backed admin and public platform', () => {
         await expect(guard.canActivate(context('/admin/payments/t1','PATCH',{currency:'USD'}))).rejects.toThrow('read-only');
     });
 
+    it('blocks pending organization sessions and requires explicit administrator verification',async()=>{
+        const auth=module.get(AuthService);const registered=await auth.register({name:'Pending Institute',email:'pending@institute.test',password:'Password123!',role:'Organization'});
+        expect(registered.token).toBeNull();
+        await expect(module.get(WorkspaceService).identity({'x-user-id':registered.user.id})).rejects.toThrow('verification');
+        await expect(service.editAccount(registered.user.id,{status:'Active'},admin)).rejects.toThrow('verification');
+        await expect(service.verifyOrganization(registered.user.id,{decision:'approve'},{id:'u',role:'Student'})).rejects.toThrow('Administrator');
+        await expect(service.verifyOrganization(registered.user.id,{decision:'reject'},admin)).rejects.toThrow('reason');
+        await service.verifyOrganization(registered.user.id,{decision:'approve'},admin);
+        expect((await auth.login({email:'pending@institute.test',password:'Password123!'})).user.role).toBe('Organization');
+        expect((await db.getCollection<any>('organizations')).find(o=>o.id===registered.user.organizationId).verificationStatus).toBe('Verified');
+        await expect(service.verifyOrganization(registered.user.id,{decision:'approve'},admin)).rejects.toThrow('not awaiting');
+    });
+    it('rejects admin course edits and lifecycle changes while keeping course review available',async()=>{
+        await expect(service.editCourse('c',{title:'Wrong edit'})).rejects.toThrow('Administrators approve');
+        await expect(service.archiveCourse('c')).rejects.toThrow('owning organization');
+        await expect(service.removeCourse('c')).rejects.toThrow('owning organization');
+        expect((await service.review('c',{decision:'approve'},admin)).status).toBe('Published');
+    });
     it('creates the organization profile through self-registration and blocks public administrator signup',async()=>{
         const auth=module.get(AuthService);
         await expect(auth.register({name:'Unapproved Admin',email:'new-admin@test.com',password:'Password123!',role:'Admin'})).rejects.toThrow('cannot be created');
         const result=await auth.register({name:'Registered Institute',email:'new-org@test.com',password:'Password123!',role:'Organization'});
         expect(result.user.organizationId).toBeTruthy();
+        expect(result.pendingVerification).toBe(true);
+        await expect(auth.login({email:'new-org@test.com',password:'Password123!'})).rejects.toThrow('verification');
+        await service.verifyOrganization(result.user.id,{decision:'approve'},admin);
         const identity=await module.get(WorkspaceService).identity({'x-user-id':result.user.id});
         expect(identity.profileId).toBe(result.user.organizationId);
         const directory=await service.accounts('Organization',admin);

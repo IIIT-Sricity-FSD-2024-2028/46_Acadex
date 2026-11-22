@@ -1,56 +1,62 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { api } from '../services/api';
+import { subscribeToStoreEvents } from '../store/listeners';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useCallback,
+  useMemo,
+  useId,
+  useRef,
+} from 'react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  refreshStudent,
+  updateStudentProfile,
+  resetStudent,
+  selectStudent,
+} from '../store/slices/studentSlice';
 
+// The context only records provider scope; all domain state lives in Redux.
 const StudentContext = createContext(null);
-
 export function StudentProvider({ children }) {
-  const [student, setStudent] = useState(null);
-  const [enrollments, setEnrollments] = useState([]);
-  const [certificates, setCertificates] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const refreshData = useCallback(async () => {
-    setError(null);
-    const [profileRes, enrollmentsRes, certsRes] = await Promise.allSettled([
-      api.student.getProfile(),
-      api.student.getEnrollments(),
-      api.student.getCertificates(),
-    ]);
-    if (profileRes.status === 'fulfilled') setStudent(profileRes.value);
-    else {setStudent(null);setError(profileRes.reason);}
-    if (enrollmentsRes.status === 'fulfilled') setEnrollments(Array.isArray(enrollmentsRes.value) ? enrollmentsRes.value : []);
-    else {setEnrollments([]);setError(enrollmentsRes.reason);}
-    if (certsRes.status === 'fulfilled') setCertificates(Array.isArray(certsRes.value) ? certsRes.value : []);
-    else {setCertificates([]);setError(certsRes.reason);}
-    setIsLoading(false);
-  }, []);
-
+  const dispatch = useAppDispatch();
+  const id = useId();
+  const mounted = useRef(true);
+  const scope = useMemo(() => ({ id, mounted }), [id]);
   useEffect(() => {
-    refreshData();
-    window.addEventListener('focus',refreshData);window.addEventListener('learning-data-changed',refreshData);
-    return ()=>{window.removeEventListener('focus',refreshData);window.removeEventListener('learning-data-changed',refreshData);};
-  }, [refreshData]);
-
-  const updateProfile = useCallback(async (updates) => {
-    const updated = await api.student.updateProfile(updates);
-    setStudent(updated);
-    if (updated?.name) localStorage.setItem('user_name', updated.name);
-    return updated;
-  }, []);
-
-  const value = useMemo(
-    () => ({ student, enrollments, certificates, isLoading, error, refreshData, updateProfile }),
-    [student, enrollments, certificates, isLoading, error, refreshData, updateProfile]
+    mounted.current = true;
+    const refresh = () => dispatch(refreshStudent(scope));
+    refresh();
+    const unsubscribe = subscribeToStoreEvents(
+      ['focus', 'learning-data-changed'],
+      refresh
+    );
+    return () => {
+      unsubscribe();
+      mounted.current = false;
+      dispatch(resetStudent(id));
+    };
+  }, [dispatch, scope, id]);
+  return (
+    <StudentContext.Provider value={scope}>{children}</StudentContext.Provider>
   );
-
-  return <StudentContext.Provider value={value}>{children}</StudentContext.Provider>;
 }
-
 export function useStudent() {
-  const context = useContext(StudentContext);
-  if (!context) throw new Error('useStudent must be used within a <StudentProvider>');
-  return context;
+  const scope = useContext(StudentContext);
+  const state = useAppSelector((state) => selectStudent(state, scope?.id));
+  const dispatch = useAppDispatch();
+  const refreshData = useCallback(async () => {
+    await dispatch(refreshStudent(scope)).unwrap();
+  }, [dispatch, scope]);
+  const updateProfile = useCallback(
+    (updates) => dispatch(updateStudentProfile(scope, updates)),
+    [dispatch, scope]
+  );
+  const value = useMemo(
+    () => ({ ...state, refreshData, updateProfile }),
+    [state, refreshData, updateProfile]
+  );
+  if (!scope)
+    throw new Error('useStudent must be used within a <StudentProvider>');
+  return value;
 }
-
-export default StudentContext;
