@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Menu, Settings } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { Link, useLocation } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchWorkspaceSession } from '../../store/actions/usersActions';
 import NotificationBell from '../workspace/NotificationBell';
+
 export const SuperAdminTopNavbar = ({ toggleSidebar }) => {
-  const session = useRemoteData('/workspace/session');
+  const dispatch = useAppDispatch();
+  const { pathname } = useLocation();
+  const session = useAppSelector((state) => state.users.workspaceSession);
+
+  useEffect(() => {
+    dispatch(fetchWorkspaceSession());
+  }, [dispatch, pathname]);
+
   return (
     <header className="workspace-topbar">
       <div className="flex items-center gap-3">

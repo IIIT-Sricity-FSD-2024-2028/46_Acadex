@@ -1,8 +1,9 @@
 import SearchableSelect from '../../../components/common/SearchableSelect';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, BookOpen, CheckCircle2, ArrowUpRight } from 'lucide-react';
-import { useRemoteData } from '../../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchInstructorWorkspace } from '../../../store/actions/instructorsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -13,7 +14,11 @@ import {
 import { StatusBadge } from '../../../components/admin/StatusBadge';
 import { dateLabel } from '../../../utils/adminDisplay';
 export function Students() {
-  const state = useRemoteData('/workspace/instructor');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.instructors.workspace);
+  useEffect(() => {
+    dispatch(fetchInstructorWorkspace());
+  }, [dispatch]);
   const [search, setSearch] = useState('');
   const [course, setCourse] = useState('');
   const data = state.data;
@@ -27,7 +32,11 @@ export function Students() {
   return (
     <div className="admin-page">
       <AdminHeader title="Learners" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchInstructorWorkspace())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

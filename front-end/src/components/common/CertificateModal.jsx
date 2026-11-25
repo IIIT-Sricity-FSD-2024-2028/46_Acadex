@@ -1,8 +1,12 @@
-import { downloadCertificate } from '../../utils/certificateDownload';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { X, Award, Download } from 'lucide-react';
 import { StatusBadge } from '../admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearDownloadError,
+  downloadCertificatePdf,
+} from '../../store/actions/certificatesActions';
 export default function CertificateModal({
   certificate: provided,
   cert,
@@ -10,18 +14,20 @@ export default function CertificateModal({
   administrator = false,
 }) {
   const c = provided || cert;
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  async function download() {
-    setBusy(true);
-    setError('');
-    try {
-      await downloadCertificate(c, { administrator });
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+  const dispatch = useAppDispatch();
+  const { downloadingId, downloadError } = useAppSelector(
+    (s) => s.certificates
+  );
+  const busy = Boolean(c?.id && downloadingId === c.id);
+  const error = downloadError;
+
+  useEffect(() => {
+    dispatch(clearDownloadError());
+  }, [dispatch, c?.id]);
+
+  function download() {
+    if (!c) return;
+    dispatch(downloadCertificatePdf({ certificate: c, administrator }));
   }
   useEffect(() => {
     const close = (e) => {

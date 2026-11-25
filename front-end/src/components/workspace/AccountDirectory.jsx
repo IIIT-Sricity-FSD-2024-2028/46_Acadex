@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Users, Building2, ArrowUpRight, ShieldCheck } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchAccounts } from '../../store/actions/usersActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -9,13 +10,20 @@ import {
   AdminDataState,
 } from '../admin/AdminUI';
 import { StatusBadge } from '../admin/StatusBadge';
+
 export default function AccountDirectory({ fixedRole, superAdmin = false }) {
   const [params, setParams] = useSearchParams();
   const role =
     fixedRole ||
     (params.get('role') === 'Organization' ? 'Organization' : 'Learner');
-  const state = useRemoteData(`/admin/accounts?role=${role}`);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.users.directory);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    dispatch(fetchAccounts(role));
+  }, [dispatch, role]);
+
   const records = (state.data?.items || []).filter((u) =>
     `${u.name || ''} ${u.email || ''}`
       .toLowerCase()
@@ -35,6 +43,7 @@ export default function AccountDirectory({ fixedRole, superAdmin = false }) {
         : 'learners';
   const detail = (id) =>
     superAdmin ? `/super-admin/${section}/${id}` : `/admin/users/${id}`;
+
   return (
     <div className="admin-page">
       <AdminHeader title={fixedRole ? title : 'Users'} />
@@ -68,7 +77,10 @@ export default function AccountDirectory({ fixedRole, superAdmin = false }) {
           {records.length} {title.toLowerCase()}
         </span>
       </div>
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchAccounts(role))}
+      />
       {!state.loading && !state.error && (
         <div className="admin-grid">
           {records.map((u) => (

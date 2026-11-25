@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useRemoteData } from '../../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchInstructorLearnerById } from '../../../store/actions/learnersActions';
 import { AdminHeader, AdminDataState } from '../../../components/admin/AdminUI';
 import { StatusBadge } from '../../../components/admin/StatusBadge';
 import { dateLabel } from '../../../utils/adminDisplay';
 export function StudentProgress() {
   const { id } = useParams();
-  const state = useRemoteData(
-    `/workspace/instructor/learners/${encodeURIComponent(id)}`
-  );
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.learners.instructorLearnerDetail);
+  useEffect(() => {
+    if (id) dispatch(fetchInstructorLearnerById(id));
+  }, [dispatch, id]);
   const data = state.data;
   return (
     <div className="admin-page">
@@ -17,7 +20,11 @@ export function StudentProgress() {
         <ArrowLeft size={14} />
         Learners
       </Link>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchInstructorLearnerById(id))}
+      />
       {data && !state.error && (
         <>
           <AdminHeader title={data.learner.name || 'Learner details'} />

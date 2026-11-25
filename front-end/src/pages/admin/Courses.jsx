@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -7,7 +7,8 @@ import {
   Clock,
   CheckCircle2,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchAdminCourseQueue } from '../../store/actions/coursesActions';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   AdminHeader,
@@ -19,16 +20,22 @@ import {
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
 export const Courses = () => {
+  const dispatch = useAppDispatch();
   const [search, setSearch] = useState('');
   const query = useDebouncedValue(search);
-  const state = useRemoteData(
-    `/admin/course-queue?${new URLSearchParams({ search: query })}`
-  );
+  const state = useAppSelector((s) => s.courses.adminQueue);
   const data = state.data;
+  useEffect(() => {
+    dispatch(fetchAdminCourseQueue(query));
+  }, [dispatch, query]);
   return (
     <div className="admin-page">
       <AdminHeader title="Course approvals" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchAdminCourseQueue(query))}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

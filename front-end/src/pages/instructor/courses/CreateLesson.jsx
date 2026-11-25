@@ -1,27 +1,24 @@
 import { Card, CardContent, Button, Input } from '../../../components/common';
-import {
-  Link,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { PlayCircle, FileText, UploadCloud, Paperclip } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { cn } from '../../../utils/cn';
-import { api } from '../../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { createLessonAndSaveDraft } from '../../../store/actions/curriculumActions';
 
 export function CreateLesson() {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get('courseId');
+  const saving = useAppSelector((s) => s.curriculum.saving);
+  const saveError = useAppSelector((s) => s.curriculum.saveError);
 
   const [lessonType, setLessonType] = useState('video');
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(10);
   const [readingContent, setReadingContent] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   // Track the actual uploaded file
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -41,66 +38,32 @@ export function CreateLesson() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) return;
     if (!courseId) {
-      setError('Open a course from My courses first.');
+      setValidationError('Open a course from My courses first.');
       return;
     }
-    setError('');
-    setSaving(true);
+    setValidationError('');
     const targetModuleId = searchParams.get('moduleId');
-
-    api
-      .get(`/courses/${courseId}/editor`, 'instructor')
-      .then(async (course) => {
-        let uploadedUrl = '';
-        if (uploadedFile) {
-          const form = new FormData();
-          form.append('file', uploadedFile);
-          const result = await api.post(`/courses/${courseId}/upload`, form);
-          uploadedUrl = (result.data || result).path;
-          if (!uploadedUrl)
-            throw new Error('The upload did not return a file URL.');
-        }
-        const currentModules = course.modules || [];
-        if (currentModules.length > 0) {
-          const targetMod = targetModuleId
-            ? currentModules.find(
-                (m) => String(m.id) === String(targetModuleId)
-              ) || currentModules[0]
-            : currentModules[0];
-          const newItem = {
-            id: Date.now(),
-            type: lessonType === 'video' ? 'Video' : 'Reading',
-            title,
-            duration: Number(duration) || 10,
-            videoUrl: lessonType === 'video' ? uploadedUrl : null,
-            resourceUrl: lessonType === 'video' ? null : uploadedUrl,
-            fileName: uploadedFile ? uploadedFile.name : '',
-            fileSize: uploadedFile ? formatBytes(uploadedFile.size) : '',
-            url: '',
-            description: readingContent,
-            content: readingContent,
-          };
-          targetMod.items = [...(targetMod.items || []), newItem];
-        }
-        return api.put(
-          `/courses/${courseId}/curriculum-draft`,
-          {
-            modules: currentModules,
-          },
-          'instructor'
-        );
-      })
-      .then(() => {
-        navigate(`/instructor/courses/${courseId}/content`);
-      })
-      .catch((err) => {
-        setError(err.message || 'Unable to save lesson draft.');
-        setSaving(false);
-      });
+    try {
+      await dispatch(
+        createLessonAndSaveDraft({
+          courseId,
+          targetModuleId,
+          lessonType,
+          title,
+          duration,
+          readingContent,
+          uploadedFile,
+        })
+      ).unwrap();
+      navigate(`/instructor/courses/${courseId}/content`);
+    } catch {
+      // handled by curriculumSlice
+    }
   };
+  const error = validationError || saveError;
 
   return (
     <div className="max-w-4xl mx-auto pb-24">

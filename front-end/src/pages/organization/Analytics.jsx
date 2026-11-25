@@ -11,7 +11,8 @@ import {
   UserRound,
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchOrgAnalytics } from '../../store/actions/analyticsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -21,6 +22,7 @@ import {
 } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 export default function Analytics({ dashboardStyle = false }) {
+  const dispatch = useAppDispatch();
   const [params, setParams] = useSearchParams();
   const [paymentsOpen, setPaymentsOpen] = useState(
     params.get('payments') === 'received'
@@ -29,8 +31,11 @@ export default function Analytics({ dashboardStyle = false }) {
   useEffect(() => {
     if (paymentView === 'received') setPaymentsOpen(true);
   }, [paymentView]);
-  const state = useRemoteData('/analytics/organization'),
-    data = state.data;
+  useEffect(() => {
+    dispatch(fetchOrgAnalytics());
+  }, [dispatch]);
+  const state = useAppSelector((s) => s.analytics.orgAnalytics);
+  const data = state.data;
   const content = (
     <div className="admin-page dashboard-page dashboard-org">
       <AdminHeader title="Dashboard">
@@ -51,7 +56,11 @@ export default function Analytics({ dashboardStyle = false }) {
           Create course
         </Link>
       </AdminHeader>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchOrgAnalytics())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

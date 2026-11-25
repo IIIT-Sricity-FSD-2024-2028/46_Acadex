@@ -1,14 +1,23 @@
 import SearchableSelect from '../../components/common/SearchableSelect';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearDisputeError,
+  createStudentDispute,
+  fetchStudentDisputeCategories,
+} from '../../store/actions/disputesActions';
+import { fetchStudentEnrollments } from '../../store/actions/enrollmentsActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import { AdminHeader, AdminDataState } from '../../components/admin/AdminUI';
 export default function SupportRequest() {
-  const categories = useRemoteData('/student/dispute-categories');
-  const courses = useRemoteData('/student/enrollments');
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector((s) => s.disputes.categories);
+  const busy = useAppSelector((s) => s.disputes.saving);
+  const actionError = useAppSelector((s) => s.disputes.actionError);
+  const courses = useAppSelector((s) => s.enrollments);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     subject: '',
@@ -16,26 +25,30 @@ export default function SupportRequest() {
     courseId: '',
     category: '',
   });
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
+
+  useEffect(() => {
+    dispatch(clearDisputeError());
+    dispatch(fetchStudentDisputeCategories());
+    dispatch(fetchStudentEnrollments());
+  }, [dispatch]);
+
   async function submit(e) {
     e.preventDefault();
     if (!form.category) {
-      setError('Choose an issue category.');
+      setValidationError('Choose an issue category.');
       return;
     }
-    setBusy(true);
-    setError('');
+    setValidationError('');
     try {
-      const created = await api.post('/student/disputes', form);
-      window.dispatchEvent(new Event('notifications-changed'));
+      const created = await dispatch(createStudentDispute(form)).unwrap();
+      dispatch(fetchWorkspaceNotifications());
       navigate(`/student/disputes/${created.id}`, { replace: true });
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // handled by disputesSlice
     }
   }
+  const error = validationError || actionError;
   return (
     <StudentPage>
       <Link className="admin-count-label" to="/student/disputes">
@@ -69,7 +82,11 @@ export default function SupportRequest() {
             placeholder="Choose an issue category"
             searchPlaceholder="Search issue categories…"
           />
-          <AdminDataState {...categories} />
+          <AdminDataState
+            loading={categories.loading}
+            error={categories.error}
+            refresh={() => dispatch(fetchStudentDisputeCategories())}
+          />
           <SearchableSelect
             label="Related course"
             value={form.courseId}
@@ -84,7 +101,11 @@ export default function SupportRequest() {
             placeholder="Choose an enrolled course"
             searchPlaceholder="Search your enrolled courses…"
           />
-          <AdminDataState {...courses} />
+          <AdminDataState
+            loading={courses.loading}
+            error={courses.error}
+            refresh={() => dispatch(fetchStudentEnrollments())}
+          />
           <label>
             Details
             <textarea

@@ -1,6 +1,4 @@
-import { store } from '../../store';
-import { clearSession } from '../../store/slices/authSlice';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -10,13 +8,10 @@ import {
   Award,
   CreditCard,
   ShieldAlert,
-  Bell,
-  Settings,
   UserRound,
   Compass,
   Star,
   Building2,
-  BarChart3,
   UserPlus,
   LogOut,
   Layers,
@@ -24,7 +19,10 @@ import {
   ScrollText,
   X,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { clearSession } from '../../store/actions/authActions';
+import { fetchWorkspaceSession } from '../../store/actions/usersActions';
+
 const navigation = {
   Student: [
     ['Overview', 'dashboard', LayoutDashboard],
@@ -75,6 +73,7 @@ const navigation = {
     ['My account', 'settings', UserRound],
   ],
 };
+
 const prefixes = {
   Student: '/student',
   Instructor: '/instructor',
@@ -82,10 +81,17 @@ const prefixes = {
   Admin: '/admin',
   SuperAdmin: '/super-admin',
 };
+
 export function WorkspaceSidebar({ role, isOpen = false, onClose }) {
-  const session = useRemoteData('/workspace/session');
+  const dispatch = useAppDispatch();
+  const session = useAppSelector((root) => root.users.workspaceSession);
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchWorkspaceSession());
+  }, [dispatch, pathname]);
+
   const prefix = prefixes[role];
   const items = navigation[role];
   const active = items
@@ -95,18 +101,22 @@ export function WorkspaceSidebar({ role, isOpen = false, onClose }) {
         pathname.startsWith(`${prefix}/${path}/`)
     )
     .sort((a, b) => b[1].length - a[1].length)[0]?.[1];
+
   function logout() {
-    store.dispatch(clearSession([
-      'nexuspay_auth_token',
-      'nexuspay_student_token',
-      'auth_token',
-      'nexuspay_active_role',
-      'user_role',
-      'user_id',
-      'nexuspay_user_id',
-    ]));
+    dispatch(
+      clearSession([
+        'nexuspay_auth_token',
+        'nexuspay_student_token',
+        'auth_token',
+        'nexuspay_active_role',
+        'user_role',
+        'user_id',
+        'nexuspay_user_id',
+      ])
+    );
     navigate(`/signin?role=${role}`);
   }
+
   return (
     <>
       {isOpen && (

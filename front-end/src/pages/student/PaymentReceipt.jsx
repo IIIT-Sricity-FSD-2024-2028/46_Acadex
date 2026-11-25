@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Receipt } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudentPaymentById } from '../../store/actions/paymentsActions';
 import { AdminHeader, AdminDataState } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { money, dateLabel } from '../../utils/adminDisplay';
 export default function PaymentReceipt() {
   const { paymentId } = useParams();
-  const state = useRemoteData(
-    `/student/payments/${encodeURIComponent(paymentId)}`
-  );
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.payments.selectedReceipt);
   const p = state.data;
+  useEffect(() => {
+    if (paymentId) dispatch(fetchStudentPaymentById(paymentId));
+  }, [dispatch, paymentId]);
   return (
     <StudentPage>
       <Link className="admin-count-label print:hidden" to="/student/billing">
@@ -19,7 +22,11 @@ export default function PaymentReceipt() {
         Billing & payments
       </Link>
       <AdminHeader title="Payment details" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchStudentPaymentById(paymentId))}
+      />
       {p && !state.error && (
         <section className="admin-card learner-receipt">
           <div className="flex justify-between items-start gap-4">

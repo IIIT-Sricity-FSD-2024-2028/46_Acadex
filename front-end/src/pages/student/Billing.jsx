@@ -1,10 +1,11 @@
 import SearchableSelect from '../../components/common/SearchableSelect';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CreditCard, Receipt, Clock3, X } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
 import PaymentCard from '../../components/student/PaymentCard';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudentBilling } from '../../store/actions/paymentsActions';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   AdminHeader,
@@ -17,17 +18,26 @@ import { Pagination } from '../../components/admin/Pagination';
 import { money } from '../../utils/adminDisplay';
 export default function Billing() {
   const [params, setParams] = useSearchParams();
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.payments.studentBilling);
   const search = params.get('q') || '';
+  const status = params.get('status') || '';
+  const organizationId = params.get('organizationId') || '';
+  const year = params.get('year') || '';
+  const page = params.get('page') || '1';
   const settled = useDebouncedValue(search);
-  const query = new URLSearchParams({
-    search: settled,
-    status: params.get('status') || '',
-    organizationId: params.get('organizationId') || '',
-    year: params.get('year') || '',
-    page: params.get('page') || '1',
-    limit: 9,
-  });
-  const state = useRemoteData(`/student/billing?${query}`);
+  useEffect(() => {
+    dispatch(
+      fetchStudentBilling({
+        search: settled,
+        status,
+        organizationId,
+        year,
+        page,
+        limit: 9,
+      })
+    );
+  }, [dispatch, settled, status, organizationId, year, page]);
   const data = state.data;
   const loading = state.loading || search !== settled;
   const active = ['q', 'status', 'organizationId', 'year'].some((k) =>
@@ -138,7 +148,18 @@ export default function Billing() {
       <AdminDataState
         loading={loading}
         error={state.error}
-        refresh={state.refresh}
+        refresh={() =>
+          dispatch(
+            fetchStudentBilling({
+              search: settled,
+              status,
+              organizationId,
+              year,
+              page,
+              limit: 9,
+            })
+          )
+        }
       />
       {data && !state.error && !loading && (
         <>

@@ -1,9 +1,14 @@
-import { useServerRecord } from '../../../hooks/useServerRecord';
-import { store } from '../../../store';
-import { clearSession } from '../../../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { clearSession } from '../../../store/actions/authActions';
+import { fetchInstructorWorkspace } from '../../../store/actions/instructorsActions';
+import {
+  fetchMyInvitations,
+  fetchMyJoinRequests,
+} from '../../../store/actions/instructorRequestsActions';
+import { fetchInstructorUnreadCount } from '../../../store/actions/notificationsActions';
 import NotificationBell from '../../workspace/NotificationBell';
 import React, { useState, useRef, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   User,
@@ -22,40 +27,52 @@ import {
 } from 'lucide-react';
 import { Avatar } from '../../common';
 import { InstructorSidebar } from './InstructorSidebar';
-import { useInstructor } from '../../../hooks/useInstructor';
 import { ConnectUniversity } from '../../../pages/instructor/onboarding/ConnectUniversity';
-import { api } from '../../../utils/api';
 
 export function InstructorLayout() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [unreadNotifsCount, setUnreadNotifsCount] = useServerRecord('instructor.sidebar.unreadNotifsCount', 0);
   const dropdownRef = useRef(null);
 
-  const { instructor, isAffiliated, loading, error, pendingJoinRequest } =
-    useInstructor();
+  const {
+    data: workspace,
+    loading,
+    error,
+  } = useAppSelector((s) => s.instructors.workspace);
+  const instructor = workspace?.instructor || null;
+  const isAffiliated =
+    Boolean(instructor?.organizationId) && instructor?.status === 'Active';
+  const joinRequests = useAppSelector(
+    (s) => s.instructorRequests.joinRequests.data
+  );
+  const pendingJoinRequest =
+    (joinRequests || []).find((r) => /pending|sent/i.test(r.status || '')) ||
+    null;
+  const unreadNotifsCount = useAppSelector(
+    (s) => s.notifications.instructor.unreadCount
+  );
   const location = useLocation();
 
   useEffect(() => {
-    const fetchUnread = () => {
-      const q = instructor?.id
-        ? `?recipientId=${instructor.id}`
-        : '?role=instructor';
-      api
-        .get(`/notifications/unread-count${q}`, 'instructor')
-        .then((res) => {
-          const count =
-            typeof res?.unreadCount === 'number'
-              ? res.unreadCount
-              : (res?.data?.unreadCount ?? 0);
-          setUnreadNotifsCount(count);
-        })
-        .catch(() => {});
-    };
+    dispatch(fetchInstructorWorkspace());
+    dispatch(fetchMyJoinRequests());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (instructor?.id) {
+      dispatch(fetchMyInvitations(instructor.id));
+    }
+  }, [dispatch, instructor?.id]);
+
+  useEffect(() => {
+    const fetchUnread = () =>
+      dispatch(fetchInstructorUnreadCount(instructor?.id));
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
-  }, [instructor?.id, location.pathname]);
+  }, [dispatch, instructor?.id, location.pathname]);
   const openWhileUnaffiliated = [
     '/instructor/profile',
     '/instructor/settings',
@@ -76,10 +93,16 @@ export function InstructorLayout() {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const handleSignOut = () => {
-    store.dispatch(clearSession([
-      'nexuspay_auth_token', 'auth_token', 'nexuspay_active_role', 'user_role',
-    ]));
-    window.location.href = '/signin?role=Instructor';
+    dispatch(
+      clearSession([
+        'nexuspay_auth_token',
+        'auth_token',
+        'nexuspay_active_role',
+        'user_role',
+        'nexuspay_instructor_id',
+      ])
+    );
+    navigate('/signin?role=Instructor');
   };
 
   const displayName = instructor?.name || '';
@@ -148,18 +171,12 @@ export function InstructorLayout() {
               </Link>
 
               {/* Profile Dropdown Menu */}
-              <div
-                className="relative"
-                ref={dropdownRef}
-              >
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
                 >
-                  <Avatar
-                    fallback={displayName}
-                    size="sm"
-                  />
+                  <Avatar fallback={displayName} size="sm" />
                   <div className="hidden md:flex flex-col text-left leading-tight">
                     <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
                       {displayName}

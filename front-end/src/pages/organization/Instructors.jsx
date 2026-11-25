@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Plus, BookOpen, Users } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchTeachingAssignments } from '../../store/actions/instructorRequestsActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -11,8 +12,12 @@ import {
 } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 export default function Instructors() {
-  const state = useRemoteData('/workspace/organization/teaching-assignments'),
-    [search, setSearch] = useState('');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.instructorRequests.teachingAssignments);
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    dispatch(fetchTeachingAssignments());
+  }, [dispatch]);
   const rows =
     state.data?.items.filter((i) =>
       `${i.name} ${i.email} ${i.specialization || ''}`
@@ -41,7 +46,11 @@ export default function Instructors() {
             {state.data ? `${rows.length} instructors` : ''}
           </span>
         </div>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchTeachingAssignments())}
+        />
         <div className="org-faculty-grid">
           {rows.map((i) => (
             <article className="admin-card org-faculty-card" key={i.id}>

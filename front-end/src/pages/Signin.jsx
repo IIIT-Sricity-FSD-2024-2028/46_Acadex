@@ -1,5 +1,5 @@
 import { useAppDispatch } from '../store/hooks';
-import { storeSession, login as signIn } from '../store/slices/authSlice';
+import { storeSession, login as signIn } from '../store/actions/authActions';
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
@@ -42,7 +42,9 @@ export default function SignIn() {
     setBusy(true);
     setError('');
     try {
-      const result = await dispatch(signIn(email.trim(), password));
+      const result = await dispatch(
+        signIn({ email: email.trim(), password })
+      ).unwrap();
       if (!result?.token || !result.user?.id)
         throw new Error('The server did not return a valid account.');
       const user = result.user;
@@ -51,20 +53,22 @@ export default function SignIn() {
         throw new Error(
           'This account has an unsupported workspace. Please contact support.'
         );
-      dispatch(storeSession({
-        nexuspay_auth_token: result.token,
-        auth_token: result.token,
-        user_id: user.id,
-        nexuspay_user_id: user.id,
-        user_role: resolved,
-        nexuspay_active_role: resolved,
-        user_name: user.name || '',
-        user_email: user.email || email.trim(),
-        nexuspay_user_email: user.email || email.trim(),
-        user_organization_id: user.organizationId || '',
-        user_organization_name: user.organizationName || '',
-        nexuspay_instructor_id: user.instructorId || '',
-      }));
+      dispatch(
+        storeSession({
+          nexuspay_auth_token: result.token,
+          auth_token: result.token,
+          user_id: user.id,
+          nexuspay_user_id: user.id,
+          user_role: resolved,
+          nexuspay_active_role: resolved,
+          user_name: user.name || '',
+          user_email: user.email || email.trim(),
+          nexuspay_user_email: user.email || email.trim(),
+          user_organization_id: user.organizationId || '',
+          user_organization_name: user.organizationName || '',
+          nexuspay_instructor_id: user.instructorId || '',
+        })
+      );
       const from = location.state?.from;
       const prefix = paths[resolved];
       const destination = from?.pathname?.startsWith(prefix + '/')

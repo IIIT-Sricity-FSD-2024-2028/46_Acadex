@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import StudentPage from '../../components/student/StudentPage';
 import CourseCard from '../../components/student/CourseCard';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { browseStudentCatalog } from '../../store/actions/coursesActions';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   AdminHeader,
@@ -14,11 +15,14 @@ import { Pagination } from '../../components/admin/Pagination';
 export default function ExploreCourses() {
   const [params, setParams] = useSearchParams();
   const search = params.get('q') || '';
+  const page = params.get('page') || '1';
   const settled = useDebouncedValue(search);
-  const state = useRemoteData(
-    `/student/catalog/browse?${new URLSearchParams({ search: settled, page: params.get('page') || '1', limit: 9 })}`
-  );
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses.browse);
   const data = state.data;
+  useEffect(() => {
+    dispatch(browseStudentCatalog({ search: settled, page, limit: 9 }));
+  }, [dispatch, settled, page]);
   function update(key, value) {
     setParams(
       (old) => {
@@ -43,7 +47,9 @@ export default function ExploreCourses() {
       <AdminDataState
         loading={state.loading || search !== settled}
         error={state.error}
-        refresh={state.refresh}
+        refresh={() =>
+          dispatch(browseStudentCatalog({ search: settled, page, limit: 9 }))
+        }
       />
       {data && !state.error && (
         <>

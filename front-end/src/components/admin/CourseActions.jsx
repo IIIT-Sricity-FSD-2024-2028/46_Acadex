@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Archive, Trash2, X } from 'lucide-react';
-import { api } from '../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  archiveAdminCourse,
+  clearCourseErrors,
+  deleteAdminCourse,
+  updateAdminCourse,
+} from '../../store/actions/coursesActions';
 export default function CourseActions({ course, onUpdated }) {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const busy = useAppSelector((s) => s.courses.actionLoading);
+  const error = useAppSelector((s) => s.courses.actionError);
   const [action, setAction] = useState('');
   const [form, setForm] = useState({});
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   function open(kind) {
     setAction(kind);
-    setError('');
+    dispatch(clearCourseErrors());
     setForm({
       title: course.title || '',
       description: course.description || '',
@@ -20,21 +27,21 @@ export default function CourseActions({ course, onUpdated }) {
   }
   async function save(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
     try {
-      if (action === 'edit')
-        await api.patch(`/admin/courses/${course.id}`, form);
-      else if (action === 'archive')
-        await api.post(`/admin/courses/${course.id}/archive`, {});
-      else await api.delete(`/admin/courses/${course.id}`);
+      if (action === 'edit') {
+        await dispatch(
+          updateAdminCourse({ courseId: course.id, form })
+        ).unwrap();
+      } else if (action === 'archive') {
+        await dispatch(archiveAdminCourse(course.id)).unwrap();
+      } else {
+        await dispatch(deleteAdminCourse(course.id)).unwrap();
+      }
       setAction('');
       if (action === 'delete') navigate('/admin/courses');
-      else onUpdated();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      else onUpdated?.();
+    } catch {
+      // handled by coursesSlice
     }
   }
   return (

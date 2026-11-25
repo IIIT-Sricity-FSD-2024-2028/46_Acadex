@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -10,8 +10,14 @@ import {
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
 import HumanAvatar from '../../components/common/HumanAvatar';
-import { useOrg } from '../../context/useOrg';
-import { useToast } from '../../components/common/Toast';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import {
+  decideJoinRequest,
+  fetchAllInstructorRequests,
+  fetchIncomingJoinRequests,
+  withdrawInvitation,
+} from '../../store/actions/instructorRequestsActions';
 
 const isPending = (s) => /pending|sent/i.test(s || '');
 const fmt = (d) =>
@@ -24,31 +30,37 @@ const fmt = (d) =>
 
 export default function InstructorRequestDetails() {
   const { id } = useParams();
-  const { addToast } = useToast();
+  const dispatch = useAppDispatch();
   const {
-    instructorRequests,
-    joinRequests,
-    isLoading,
-    decideJoinRequest,
-    resendInvitation,
-    withdrawInvitation,
-  } = useOrg();
-  const [busy, setBusy] = useState(false);
+    allRequests,
+    incomingJoinRequests,
+    actionLoading: busy,
+  } = useAppSelector((s) => s.instructorRequests);
+  const instructorRequests = allRequests.data || [];
+  const joinRequests = incomingJoinRequests.data || [];
+  const isLoading = allRequests.loading || incomingJoinRequests.loading;
+
+  useEffect(() => {
+    dispatch(fetchAllInstructorRequests());
+    dispatch(fetchIncomingJoinRequests());
+  }, [dispatch]);
 
   const request = [...joinRequests, ...instructorRequests].find(
     (r) => r.id === id
   );
   const isJoin = request?.type === 'join';
 
-  const run = async (fn, success) => {
-    setBusy(true);
+  const run = async (actionThunk, success) => {
     try {
-      await fn();
-      addToast(success, 'success');
+      await dispatch(actionThunk).unwrap();
+      dispatch(showToast(success, 'success'));
     } catch (err) {
-      addToast(err.message || 'Action failed', 'error');
-    } finally {
-      setBusy(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) || 'Action failed',
+          'error'
+        )
+      );
     }
   };
 
@@ -111,10 +123,7 @@ export default function InstructorRequestDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-5 border-b border-outline-variant">
-              <HumanAvatar
-                name={request.name}
-                size="lg"
-              />
+              <HumanAvatar name={request.name} size="lg" />
               <div>
                 <h1 className="text-xl font-bold text-on-surface">
                   {request.name}
@@ -185,10 +194,7 @@ export default function InstructorRequestDetails() {
               {rows
                 .filter(([, v]) => v)
                 .map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="flex justify-between gap-4 py-2.5"
-                  >
+                  <div key={k} className="flex justify-between gap-4 py-2.5">
                     <dt className="text-outline">{k}</dt>
                     <dd className="font-semibold text-on-surface text-right">
                       {v}
@@ -222,7 +228,10 @@ export default function InstructorRequestDetails() {
                   disabled={busy}
                   onClick={() =>
                     run(
-                      () => decideJoinRequest(request.id, 'reject'),
+                      decideJoinRequest({
+                        requestId: request.id,
+                        action: 'reject',
+                      }),
                       'Request rejected'
                     )
                   }
@@ -234,7 +243,10 @@ export default function InstructorRequestDetails() {
                   disabled={busy}
                   onClick={() =>
                     run(
-                      () => decideJoinRequest(request.id, 'approve'),
+                      decideJoinRequest({
+                        requestId: request.id,
+                        action: 'approve',
+                      }),
                       `${request.name} joined your organization`
                     )
                   }
@@ -252,7 +264,7 @@ export default function InstructorRequestDetails() {
                   onClick={() =>
                     window.confirm('Withdraw this invitation?') &&
                     run(
-                      () => withdrawInvitation(request.id),
+                      withdrawInvitation({ requestId: request.id }),
                       'Invitation withdrawn'
                     )
                   }

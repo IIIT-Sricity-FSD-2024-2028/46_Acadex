@@ -6,24 +6,35 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+let readAuthState = () => null;
+export function attachStore(getStateFn) {
+  readAuthState = typeof getStateFn === 'function' ? getStateFn : () => null;
+}
+
+function getAuthValue(key) {
+  const auth = readAuthState()?.auth;
+  if (auth && Object.prototype.hasOwnProperty.call(auth, key)) {
+    return auth[key];
+  }
+  return localStorage.getItem(key);
+}
+
 async function request(endpoint, options = {}) {
   const token =
-    localStorage.getItem('nexuspay_auth_token') ||
-    localStorage.getItem('nexuspay_student_token');
+    getAuthValue('nexuspay_auth_token') ||
+    getAuthValue('auth_token') ||
+    getAuthValue('nexuspay_student_token');
   const role =
     options.role ||
-    localStorage.getItem('nexuspay_active_role') ||
-    localStorage.getItem('user_role') ||
+    getAuthValue('nexuspay_active_role') ||
+    getAuthValue('user_role') ||
     'Student';
 
   const userId =
-    localStorage.getItem('user_id') ||
-    localStorage.getItem('nexuspay_user_id') ||
-    '';
+    getAuthValue('user_id') || getAuthValue('nexuspay_user_id') || '';
   const userEmail =
-    localStorage.getItem('user_email') ||
-    localStorage.getItem('nexuspay_user_email') ||
-    '';
+    getAuthValue('user_email') || getAuthValue('nexuspay_user_email') || '';
+  const orgId = getAuthValue('user_organization_id');
 
   const headers = {
     'Content-Type': 'application/json',
@@ -31,9 +42,7 @@ async function request(endpoint, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(userId ? { 'x-user-id': userId } : {}),
     ...(userEmail ? { 'x-user-email': userEmail } : {}),
-    ...(localStorage.getItem('user_organization_id')
-      ? { 'x-organization-id': localStorage.getItem('user_organization_id') }
-      : {}),
+    ...(orgId ? { 'x-organization-id': orgId } : {}),
     ...(options.headers || {}),
   };
 
@@ -358,7 +367,7 @@ export const api = {
   analytics: {
     getOverview: () =>
       request(
-        (localStorage.getItem('nexuspay_active_role') || '').toLowerCase() ===
+        (getAuthValue('nexuspay_active_role') || '').toLowerCase() ===
           'organization'
           ? '/analytics/organization'
           : '/analytics/overview'

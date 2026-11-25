@@ -1,5 +1,5 @@
 import { supportStatus } from '../../utils/supportStatus';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldAlert,
@@ -9,7 +9,8 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudentDisputes } from '../../store/actions/disputesActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -20,7 +21,11 @@ import {
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
 export default function Disputes() {
-  const state = useRemoteData('/student/disputes');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.disputes.studentDisputes);
+  useEffect(() => {
+    dispatch(fetchStudentDisputes());
+  }, [dispatch]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const rows = state.data || [];
@@ -42,7 +47,11 @@ export default function Disputes() {
           New support request
         </Link>
       </AdminHeader>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchStudentDisputes())}
+      />
       {state.data && !state.error && (
         <>
           <div className="admin-stats-grid">

@@ -1,19 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, BookOpen, CheckCircle2 } from 'lucide-react';
-import { useRemoteData } from '../../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchInstructorWorkspace } from '../../../store/actions/instructorsActions';
 import {
   AdminHeader,
   AdminMetric,
   AdminDataState,
 } from '../../../components/admin/AdminUI';
 export function Analytics({ dashboard = false }) {
-  const state = useRemoteData('/workspace/instructor');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.instructors.workspace);
+  useEffect(() => {
+    dispatch(fetchInstructorWorkspace());
+  }, [dispatch]);
   const data = state.data;
   return (
     <div className="admin-page dashboard-page">
       <AdminHeader title={dashboard ? 'Overview' : 'Course analytics'} />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchInstructorWorkspace())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid instructor-summary">

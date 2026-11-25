@@ -1,9 +1,13 @@
 import { BookOpen, Users, Mail, ArrowUpRight } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearSelectedInstructor,
+  fetchOrgInstructorById,
+  updateInstructorStatus,
+} from '../../store/actions/instructorsActions';
 import {
   AdminHeader,
   AdminDataState,
@@ -12,25 +16,25 @@ import {
 } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 export default function InstructorDetails() {
-  const { id } = useParams(),
-    state = useRemoteData(`/workspace/organization/instructors/${id}`),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
+  const { id } = useParams();
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.instructors.selected);
+  const busy = useAppSelector((s) => s.instructors.actionLoading);
+  const error = useAppSelector((s) => s.instructors.actionError);
   const i = state.data;
-  async function toggle() {
-    setBusy(true);
-    setError('');
-    try {
-      await api.patch(`/instructors/${id}`, {
+  useEffect(() => {
+    if (id) dispatch(fetchOrgInstructorById(id));
+    return () => {
+      dispatch(clearSelectedInstructor());
+    };
+  }, [dispatch, id]);
+  function toggle() {
+    dispatch(
+      updateInstructorStatus({
+        id,
         status: i.status === 'Suspended' ? 'Active' : 'Suspended',
-      });
-      state.refresh();
-      window.dispatchEvent(new Event('learning-data-changed'));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+      })
+    );
   }
   return (
     <OrgLayout>
@@ -38,7 +42,11 @@ export default function InstructorDetails() {
         <Link to="/org/instructors" className="admin-count-label">
           Back to instructors
         </Link>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchOrgInstructorById(id))}
+        />
         {i && !state.error && (
           <>
             <AdminHeader title={i.name}>

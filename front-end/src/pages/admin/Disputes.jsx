@@ -9,8 +9,12 @@ import {
   CalendarDays,
   UserRound,
 } from 'lucide-react';
-import { api } from '../../utils/api';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearSelectedDispute,
+  fetchAdminDisputeById,
+  fetchAdminDisputes,
+} from '../../store/actions/disputesActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -23,30 +27,27 @@ import { StatusBadge } from '../../components/admin/StatusBadge';
 import { Pagination } from '../../components/admin/Pagination';
 import { dateLabel } from '../../utils/adminDisplay';
 export const Disputes = () => {
+  const dispatch = useAppDispatch();
   const [params] = useSearchParams();
   const disputeId = params.get('disputeId');
-  const state = useRemoteData('/disputes?limit=1000');
+  const state = useAppSelector((s) => s.disputes.adminDisputes);
+  const selectedState = useAppSelector((s) => s.disputes.selected);
+  const selected = selectedState.data;
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState(null);
   const [opening, setOpening] = useState('');
-  const [error, setError] = useState('');
+  const error = selectedState.error;
+  useEffect(() => {
+    dispatch(fetchAdminDisputes());
+    return () => {
+      dispatch(clearSelectedDispute());
+    };
+  }, [dispatch]);
   useEffect(() => {
     if (!disputeId) return;
-    let active = true;
-    api
-      .get(`/disputes/${encodeURIComponent(disputeId)}`)
-      .then((row) => {
-        if (active) setSelected(row);
-      })
-      .catch((e) => {
-        if (active) setError(e.message);
-      });
-    return () => {
-      active = false;
-    };
-  }, [disputeId]);
+    dispatch(fetchAdminDisputeById(disputeId));
+  }, [dispatch, disputeId]);
   const records = Array.isArray(state.data)
     ? state.data
     : state.data?.items || [];
@@ -61,11 +62,10 @@ export const Disputes = () => {
   );
   async function view(row) {
     setOpening(row.id);
-    setError('');
     try {
-      setSelected(await api.get(`/disputes/${row.id}`));
-    } catch (e) {
-      setError(e.message);
+      await dispatch(fetchAdminDisputeById(row.id)).unwrap();
+    } catch {
+      // handled by disputesSlice
     } finally {
       setOpening('');
     }
@@ -145,7 +145,11 @@ export const Disputes = () => {
           {error}
         </p>
       )}
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchAdminDisputes())}
+      />
       {!state.loading && !state.error && (
         <>
           <p className="admin-count-label">
@@ -209,10 +213,9 @@ export const Disputes = () => {
         <DisputeDetailDrawer
           key={selected.id}
           dispute={selected}
-          onClose={() => setSelected(null)}
-          onUpdated={(updated) => {
-            setSelected(updated);
-            state.refresh();
+          onClose={() => dispatch(clearSelectedDispute())}
+          onUpdated={() => {
+            dispatch(fetchAdminDisputes());
           }}
         />
       )}

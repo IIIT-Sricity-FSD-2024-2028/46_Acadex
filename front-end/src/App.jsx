@@ -59,7 +59,6 @@ import RoleGuard from './components/auth/RoleGuard';
 // 2. INSTRUCTOR / EDUCATOR PAGES & LAYOUTS
 // ──────────────────────────────────────────────────────────────
 import { InstructorLayout } from './components/instructor/layouts/InstructorLayout';
-import { InstructorProvider } from './context/InstructorContext';
 const InstructorDashboard = lazy(() =>
   import('./pages/instructor/instructor/Dashboard').then((module) => ({
     default: module.Dashboard,
@@ -83,12 +82,7 @@ const InstructorCourseContent = lazy(() =>
 
 function InstructorEditCourseRedirect() {
   const { id } = useParams();
-  return (
-    <Navigate
-      to={`/instructor/courses/${id}/content`}
-      replace
-    />
-  );
+  return <Navigate to={`/instructor/courses/${id}/content`} replace />;
 }
 
 const CreateModule = lazy(() =>
@@ -265,22 +259,12 @@ function LegacyAdminUserRedirect() {
 
 function LegacyLearnRedirect() {
   const { courseId } = useParams();
-  return (
-    <Navigate
-      to={`/student/learn/${courseId}`}
-      replace
-    />
-  );
+  return <Navigate to={`/student/learn/${courseId}`} replace />;
 }
 
 function LegacyCourseRedirect() {
   const { id } = useParams();
-  return (
-    <Navigate
-      to={`/student/course/${id}`}
-      replace
-    />
-  );
+  return <Navigate to={`/student/course/${id}`} replace />;
 }
 
 function LegacyPlayerRedirect() {
@@ -486,14 +470,7 @@ export default function App() {
             <RoleGuard allowedRoles={['Instructor']} loginRole="Instructor" />
           }
         >
-          <Route
-            path="/instructor"
-            element={
-              <InstructorProvider>
-                <InstructorLayout />
-              </InstructorProvider>
-            }
-          >
+          <Route path="/instructor" element={<InstructorLayout />}>
             <Route index element={<InstructorDashboard />} />
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="profile" element={<InstructorProfile />} />

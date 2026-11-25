@@ -1,5 +1,5 @@
 import '../../../styles/curriculum-controls.css';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -7,7 +7,22 @@ import {
   Input,
   Badge,
 } from '../../../components/common';
-import { api } from '../../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { showToast } from '../../../store/actions/toastActions';
+import {
+  addQuestion,
+  createEmptyOption,
+  deleteQuestion,
+  expandInvalidQuestions,
+  fetchQuizById,
+  initNewQuiz,
+  moveQuestion,
+  saveQuiz,
+  setQuizCourseId,
+  setQuizTitle,
+  setShowExplanations,
+  updateQuestion,
+} from '../../../store/actions/quizzesActions';
 import {
   Plus,
   Trash2,
@@ -38,42 +53,6 @@ import {
 } from 'react-router-dom';
 import { cn } from '../../../utils/cn';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────────
-let nextQuestionId = 100;
-let nextOptionId = 1000;
-
-function generateOptionId() {
-  return `opt_${nextOptionId++}`;
-}
-
-function generateQuestionId() {
-  return nextQuestionId++;
-}
-
-function createEmptyOption(label = '') {
-  return {
-    id: generateOptionId(),
-    text: label,
-    isCorrect: false,
-  };
-}
-
-function createEmptyQuestion() {
-  return {
-    id: generateQuestionId(),
-    text: '',
-    options: [
-      { id: generateOptionId(), text: '', isCorrect: false },
-      { id: generateOptionId(), text: '', isCorrect: false },
-      { id: generateOptionId(), text: '', isCorrect: false },
-      { id: generateOptionId(), text: '', isCorrect: false },
-    ],
-    points: 10,
-    explanation: '',
-    collapsed: false,
-  };
-}
-
 const OPTION_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 // ─── Correct Answer Indicator ───────────────────────────────────────────────────
@@ -100,10 +79,7 @@ function CorrectAnswerRadio({ isCorrect, isLocked, onClick, disabled }) {
       }
     >
       {isCorrect ? (
-        <Check
-          className="w-4 h-4"
-          strokeWidth={3}
-        />
+        <Check className="w-4 h-4" strokeWidth={3} />
       ) : isLocked ? (
         <Lock className="w-3 h-3" />
       ) : (
@@ -252,7 +228,7 @@ function QuestionCard({
     onUpdate({
       ...question,
       options: question.options.map((o) =>
-        o.id === optionId ? { ...o, text } : o,
+        o.id === optionId ? { ...o, text } : o
       ),
     });
   };
@@ -351,18 +327,12 @@ function QuestionCard({
                   {question.points} pts
                 </span>
                 {hasCorrectAnswer ? (
-                  <Badge
-                    variant="success"
-                    className="text-[10px] py-0"
-                  >
+                  <Badge variant="success" className="text-[10px] py-0">
                     <CheckCircle className="w-2.5 h-2.5 mr-0.5" />
                     Answer set
                   </Badge>
                 ) : (
-                  <Badge
-                    variant="warning"
-                    className="text-[10px] py-0"
-                  >
+                  <Badge variant="warning" className="text-[10px] py-0">
                     <AlertCircle className="w-2.5 h-2.5 mr-0.5" />
                     No answer
                   </Badge>
@@ -478,10 +448,7 @@ function QuestionCard({
                 className="mt-3 flex items-center gap-2 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors pl-1 group"
               >
                 <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 group-hover:scale-110 transition-all">
-                  <Plus
-                    className="w-3 h-3"
-                    strokeWidth={3}
-                  />
+                  <Plus className="w-3 h-3" strokeWidth={3} />
                 </div>
                 Add option
                 <span className="text-slate-300 font-normal">
@@ -544,127 +511,48 @@ export function CreateQuiz() {
   const { id: routeQuizId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [courseId, setCourseId] = useState(searchParams.get('courseId'));
+  const dispatch = useAppDispatch();
+  const initialCourseId = searchParams.get('courseId');
   const moduleId = searchParams.get('moduleId');
   const itemId = searchParams.get('itemId');
-  const [quizTitle, setQuizTitle] = useState('');
-  const [passingScore, setPassingScore] = useState(80);
-  const [showExplanations, setShowExplanations] = useState(true);
-  const [questions, setQuestions] = useState([]);
-  const [editingQuizId, setEditingQuizId] = useState(routeQuizId || null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
-  const linkQuizToCurriculumItem = async (quizId) => {
-    if (!moduleId || !itemId) return;
-
-    const course = await api.get(`/courses/${courseId}/editor`, 'instructor');
-    const modules = (course?.modules || []).map((module) =>
-      String(module.id) !== String(moduleId)
-        ? module
-        : {
-            ...module,
-            items: (Array.isArray(module.items)
-              ? module.items
-              : Array.isArray(module.lessons)
-                ? module.lessons
-                : []
-            ).map((item) =>
-              String(item.id) === String(itemId) ? { ...item, quizId } : item
-            ),
-          },
-    );
-
-    await api.put(
-      `/courses/${courseId}/curriculum-draft`,
-      { modules },
-      'instructor'
-    );
-  };
+  const {
+    editingQuizId,
+    courseId,
+    quizTitle,
+    passingScore,
+    showExplanations,
+    questions,
+    loading,
+    saving,
+  } = useAppSelector((s) => s.quizzes.builder);
 
   useEffect(() => {
-    setEditingQuizId(routeQuizId || null);
     if (!routeQuizId) {
-      setQuestions([createEmptyQuestion()]);
-      setLoading(false);
+      dispatch(initNewQuiz(initialCourseId));
       return;
     }
+    if (initialCourseId) {
+      dispatch(setQuizCourseId(initialCourseId));
+    }
+    dispatch(fetchQuizById(routeQuizId));
+  }, [dispatch, routeQuizId, initialCourseId]);
 
-    api
-      .get(`/quizzes/${routeQuizId}`, 'instructor')
-      .then((data) => {
-        if (data) {
-          setCourseId(data.courseId);
-          setQuizTitle(data.title || '');
-          setPassingScore(data.passingScore || 80);
-          setShowExplanations(data.showExplanations ?? true);
-          setQuestions(
-            (data.questions || []).map((question) => ({
-              id: question.id,
-              text: question.questionText || question.text || '',
-              options: question.options || [
-                {
-                  id: `${question.id}-a`,
-                  text: question.optionA || '',
-                  isCorrect: question.correctOption === 'A',
-                },
-                {
-                  id: `${question.id}-b`,
-                  text: question.optionB || '',
-                  isCorrect: question.correctOption === 'B',
-                },
-                {
-                  id: `${question.id}-c`,
-                  text: question.optionC || '',
-                  isCorrect: question.correctOption === 'C',
-                },
-                {
-                  id: `${question.id}-d`,
-                  text: question.optionD || '',
-                  isCorrect: question.correctOption === 'D',
-                },
-              ],
-              points: question.points || 10,
-              explanation: question.explanation || '',
-              collapsed: false,
-            }))
-          );
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error loading quiz:', err);
-        // Course-content placeholders are not persisted quiz IDs. Treat them as a new quiz.
-        setEditingQuizId(null);
-        setQuestions([createEmptyQuestion()]);
-        setLoading(false);
-      });
-  }, [routeQuizId]);
-
-  const handleSaveQuiz = async (publish = true) => {
+  const handleSaveQuiz = async () => {
     const isTitleValid = quizTitle.trim().length > 0;
     const hasQuestions = questions.length > 0;
 
     if (!isTitleValid || !hasQuestions || !allQuestionsValid) {
-      setQuestions((prev) =>
-        prev.map((q) => {
-          const hasError =
-            !q.text.trim() ||
-            !q.options.some((o) => o.isCorrect) ||
-            q.options.some((o) => !o.text.trim()) ||
-            isNaN(q.points) ||
-            q.points <= 0;
-          return hasError ? { ...q, collapsed: false } : q;
-        }),
-      );
+      dispatch(expandInvalidQuestions());
       return;
     }
 
     if (!courseId) {
-      alert('Open quiz creation from an assigned course.');
+      dispatch(
+        showToast('Open quiz creation from an assigned course.', 'warning')
+      );
       return;
     }
-    setSaving(true);
     try {
       const quizPayload = {
         title: quizTitle.trim() || 'Untitled quiz',
@@ -676,81 +564,53 @@ export function CreateQuiz() {
         status: 'Draft',
         questions,
       };
-
-      if (editingQuizId) {
-        const saved = await api.patch(
-          `/quizzes/${editingQuizId}`,
-          quizPayload,
-          'instructor'
-        );
-        await linkQuizToCurriculumItem(saved.id);
-        setEditingQuizId(saved.id);
-        navigate(`/instructor/courses/${courseId}/content`);
-        alert(
-          'Assessment draft saved. Submit the course content to your organization for approval.'
-        );
-        return;
-      }
-
-      const quiz = await api.post(
-        '/quizzes',
-        {
+      await dispatch(
+        saveQuiz({
+          editingQuizId,
           courseId,
-          ...quizPayload,
-        },
-        'instructor'
+          moduleId,
+          itemId,
+          quizPayload,
+        })
+      ).unwrap();
+      dispatch(
+        showToast(
+          'Assessment draft saved. Submit the course content for organization approval.',
+          'success'
+        )
       );
-
-      // Create the quiz first, then replace its full question set through the
-      // same update endpoint used by existing quizzes. This guarantees every
-      // question is attached to the real generated quiz ID.
-      await api.patch(`/quizzes/${quiz.id}`, quizPayload, 'instructor');
-      await linkQuizToCurriculumItem(quiz.id);
-
-      alert(
-        'Assessment draft saved. Submit the course content for organization approval.'
-      );
-      setEditingQuizId(quiz.id);
       navigate(`/instructor/courses/${courseId}/content`);
     } catch (err) {
-      console.error('Error saving quiz:', err);
-      alert(`Unable to save assessment: ${err.message || 'Server error'}`);
-    } finally {
-      setSaving(false);
+      dispatch(
+        showToast(
+          `Unable to save assessment: ${(typeof err === 'string' ? err : err?.message) || 'Server error'}`,
+          'error'
+        )
+      );
     }
   };
 
   // ─── Question Operations ────────────────────────────────────────────
-  const addQuestion = () => {
-    setQuestions((prev) => [...prev, createEmptyQuestion()]);
+  const handleAddQuestion = () => {
+    dispatch(addQuestion());
   };
 
-  const updateQuestion = (updatedQuestion) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q)),
-    );
+  const handleUpdateQuestion = (updatedQuestion) => {
+    dispatch(updateQuestion(updatedQuestion));
   };
 
-  const deleteQuestion = (questionId) => {
-    if (questions.length <= 1) return;
-    setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+  const handleDeleteQuestion = (questionId) => {
+    dispatch(deleteQuestion(questionId));
   };
 
-  const moveQuestion = (fromIndex, direction) => {
-    const toIndex = fromIndex + direction;
-    if (toIndex < 0 || toIndex >= questions.length) return;
-    const newQuestions = [...questions];
-    [newQuestions[fromIndex], newQuestions[toIndex]] = [
-      newQuestions[toIndex],
-      newQuestions[fromIndex],
-    ];
-    setQuestions(newQuestions);
+  const handleMoveQuestion = (fromIndex, direction) => {
+    dispatch(moveQuestion({ fromIndex, direction }));
   };
 
   // ─── Stats ──────────────────────────────────────────────────────────
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
   const questionsWithAnswer = questions.filter((q) =>
-    q.options.some((o) => o.isCorrect),
+    q.options.some((o) => o.isCorrect)
   ).length;
   const allQuestionsValid =
     questions.length > 0 &&
@@ -836,24 +696,21 @@ export function CreateQuiz() {
               question={q}
               index={idx}
               totalQuestions={questions.length}
-              onUpdate={updateQuestion}
-              onDelete={() => deleteQuestion(q.id)}
-              onMoveUp={() => moveQuestion(idx, -1)}
-              onMoveDown={() => moveQuestion(idx, 1)}
+              onUpdate={handleUpdateQuestion}
+              onDelete={() => handleDeleteQuestion(q.id)}
+              onMoveUp={() => handleMoveQuestion(idx, -1)}
+              onMoveDown={() => handleMoveQuestion(idx, 1)}
             />
           ))}
         </div>
 
         {/* Add Question Button */}
         <button
-          onClick={addQuestion}
+          onClick={handleAddQuestion}
           className="quiz-add-question w-full border-2 border-dashed border-slate-200 rounded-xl py-8 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500 hover:text-primary-700 hover:border-primary-300 hover:bg-primary-50/30 transition-all group"
         >
           <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-all group-hover:scale-110">
-            <Plus
-              className="w-5 h-5"
-              strokeWidth={2.5}
-            />
+            <Plus className="w-5 h-5" strokeWidth={2.5} />
           </div>
           <div className="text-left">
             <div>Add New Question</div>
@@ -876,7 +733,7 @@ export function CreateQuiz() {
               </label>
               <Input
                 value={quizTitle}
-                onChange={(e) => setQuizTitle(e.target.value)}
+                onChange={(e) => dispatch(setQuizTitle(e.target.value))}
                 placeholder="e.g. Quiz: Core Concepts"
                 className={cn(
                   'h-9 text-sm',
@@ -898,7 +755,9 @@ export function CreateQuiz() {
                   Show Explanations
                 </span>
                 <button
-                  onClick={() => setShowExplanations(!showExplanations)}
+                  onClick={() =>
+                    dispatch(setShowExplanations(!showExplanations))
+                  }
                   className={cn(
                     'w-10 h-5.5 rounded-full transition-all duration-200 relative',
                     showExplanations ? 'bg-primary-600' : 'bg-slate-200'
@@ -924,7 +783,7 @@ export function CreateQuiz() {
             </h3>
 
             <button
-              onClick={addQuestion}
+              onClick={handleAddQuestion}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all text-left group"
             >
               <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">

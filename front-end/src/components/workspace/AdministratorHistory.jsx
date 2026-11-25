@@ -4,8 +4,13 @@ import SearchableSelect from '../common/SearchableSelect';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { Pagination } from '../admin/Pagination';
 import { timestampLabel } from '../../utils/adminDisplay';
-import React, { useState } from 'react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import React, { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  fetchAdminHistory,
+  fetchHistoryAdminOptions,
+  fetchHistoryCourseOptions,
+} from '../../store/actions/analyticsActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -90,19 +95,60 @@ export default function AdministratorHistory() {
     [to, setTo] = useState('');
   const [adminQuery, setAdminQuery] = useState(''),
     [courseQuery, setCourseQuery] = useState('');
+  const dispatch = useAppDispatch();
   const term = useDebouncedValue(search),
     adminTerm = useDebouncedValue(adminQuery),
     courseTerm = useDebouncedValue(courseQuery);
-  const state = useRemoteData(
-      `/admin/history?${new URLSearchParams({ view, search: term, searchBy, adminId, courseId, order, page, status, from, to, limit: 15 })}`
-    ),
+  const state = useAppSelector((root) => root.analytics.adminHistory),
     data = state.data;
-  const adminOptions = useRemoteData(
-    `/admin/history/options?${new URLSearchParams({ type: 'administrator', search: adminTerm, selected: adminId })}`
+  const adminOptions = useAppSelector(
+    (root) => root.analytics.historyAdminOptions
   );
-  const courseOptions = useRemoteData(
-    `/admin/history/options?${new URLSearchParams({ type: 'course', search: courseTerm, selected: courseId })}`
+  const courseOptions = useAppSelector(
+    (root) => root.analytics.historyCourseOptions
   );
+
+  useEffect(() => {
+    dispatch(
+      fetchAdminHistory({
+        view,
+        search: term,
+        searchBy,
+        adminId,
+        courseId,
+        order,
+        page,
+        status,
+        from,
+        to,
+        limit: 15,
+      })
+    );
+  }, [
+    dispatch,
+    view,
+    term,
+    searchBy,
+    adminId,
+    courseId,
+    order,
+    page,
+    status,
+    from,
+    to,
+  ]);
+
+  useEffect(() => {
+    dispatch(
+      fetchHistoryAdminOptions({ search: adminTerm, selected: adminId })
+    );
+  }, [dispatch, adminTerm, adminId]);
+
+  useEffect(() => {
+    dispatch(
+      fetchHistoryCourseOptions({ search: courseTerm, selected: courseId })
+    );
+  }, [dispatch, courseTerm, courseId]);
   function filter(set, value) {
     set(value);
     setPage(1);
@@ -249,7 +295,26 @@ export default function AdministratorHistory() {
           </p>
         )}
       </section>
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() =>
+          dispatch(
+            fetchAdminHistory({
+              view,
+              search: term,
+              searchBy,
+              adminId,
+              courseId,
+              order,
+              page,
+              status,
+              from,
+              to,
+              limit: 15,
+            })
+          )
+        }
+      />
       {data && !state.error && (
         <>
           <section className="admin-card">

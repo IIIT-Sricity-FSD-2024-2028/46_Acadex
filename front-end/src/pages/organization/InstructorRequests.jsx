@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Search, Send } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearInstructorLookup,
+  clearRequestActionError,
+  fetchTeachingAssignments,
+  lookupInstructorByEmail,
+  sendInvitation,
+} from '../../store/actions/instructorRequestsActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -13,48 +20,44 @@ import {
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
 export default function InstructorRequests() {
-  const state = useRemoteData('/workspace/organization/teaching-assignments');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.instructorRequests.teachingAssignments);
+  const lookupState = useAppSelector((s) => s.instructorRequests.lookup);
+  const teacher = lookupState.data;
+  const sendingInvite = useAppSelector(
+    (s) => s.instructorRequests.actionLoading
+  );
+  const actionError = useAppSelector((s) => s.instructorRequests.actionError);
+  const busy = lookupState.loading || sendingInvite;
+  const error = lookupState.error || actionError;
   const [search, setSearch] = useState(''),
     [email, setEmail] = useState(''),
-    [teacher, setTeacher] = useState(null),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
     [message, setMessage] = useState('');
+  useEffect(() => {
+    dispatch(clearInstructorLookup());
+    dispatch(fetchTeachingAssignments());
+  }, [dispatch]);
   async function lookup(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
+    dispatch(clearRequestActionError());
     setMessage('');
-    setTeacher(null);
-    try {
-      setTeacher(
-        await api.get(
-          `/workspace/organization/invitation-lookup?${new URLSearchParams({ email })}`
-        )
-      );
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+    dispatch(lookupInstructorByEmail(email));
   }
   async function invite() {
-    setBusy(true);
-    setError('');
+    if (!teacher) return;
+    const invitedName = teacher.name;
     try {
-      await api.post('/instructor-requests', {
-        instructorId: teacher.id,
-        message: 'You are invited to join our organization.',
-      });
-      setMessage(`Invitation sent to ${teacher.name}.`);
-      setTeacher(null);
+      await dispatch(
+        sendInvitation({
+          instructorId: teacher.id,
+          message: 'You are invited to join our organization.',
+        })
+      ).unwrap();
+      setMessage(`Invitation sent to ${invitedName}.`);
       setEmail('');
-      state.refresh();
-      window.dispatchEvent(new Event('notifications-changed'));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      dispatch(fetchWorkspaceNotifications());
+    } catch {
+      // handled by instructorRequestsSlice
     }
   }
   const rows =
@@ -85,7 +88,8 @@ export default function InstructorRequests() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setTeacher(null);
+                if (teacher || lookupState.error)
+                  dispatch(clearInstructorLookup());
               }}
               placeholder="Instructor's registered email"
             />
@@ -121,7 +125,11 @@ export default function InstructorRequests() {
             </p>
           )}
         </section>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchTeachingAssignments())}
+        />
         {state.data && !state.error && (
           <>
             <div className="admin-toolbar">

@@ -1,10 +1,15 @@
 import SearchableSelect from '../../components/common/SearchableSelect';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  assignCourseInstructors,
+  clearCourseErrors,
+  fetchAssignmentOptions,
+} from '../../store/actions/coursesActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import {
   AdminHeader,
   AdminDataState,
@@ -12,7 +17,10 @@ import {
   AdminEmpty,
 } from '../../components/admin/AdminUI';
 export default function AssignCourses() {
-  const state = useRemoteData('/courses/assignment-options');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses.assignmentOptions);
+  const busy = useAppSelector((s) => s.courses.actionLoading);
+  const error = useAppSelector((s) => s.courses.actionError);
   const [params] = useSearchParams();
   const fixedId = params.get('courseId');
   const navigate = useNavigate();
@@ -20,9 +28,11 @@ export default function AssignCourses() {
     [instructorIds, setInstructorIds] = useState(
       params.get('instructorId') ? [params.get('instructorId')] : []
     ),
-    [search, setSearch] = useState(''),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
+    [search, setSearch] = useState('');
+  useEffect(() => {
+    dispatch(clearCourseErrors());
+    dispatch(fetchAssignmentOptions());
+  }, [dispatch]);
   const data = state.data,
     course = data?.courses.find((c) => c.id === (fixedId || courseId));
   const eligibleIds = instructorIds.filter(
@@ -33,20 +43,17 @@ export default function AssignCourses() {
   async function assign(e) {
     e.preventDefault();
     if (!course) return;
-    setBusy(true);
-    setError('');
     try {
-      await api.post('/courses/assignments', {
-        courseIds: [course.id],
-        instructorIds: eligibleIds,
-      });
-      window.dispatchEvent(new Event('learning-data-changed'));
-      window.dispatchEvent(new Event('notifications-changed'));
+      await dispatch(
+        assignCourseInstructors({
+          courseIds: [course.id],
+          instructorIds: eligibleIds,
+        })
+      ).unwrap();
+      dispatch(fetchWorkspaceNotifications());
       navigate(`/org/courses/${course.id}`);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // handled by coursesSlice
     }
   }
   return (
@@ -66,7 +73,11 @@ export default function AssignCourses() {
               : 'Assign instructors'
           }
         />
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchAssignmentOptions())}
+        />
         {data && !state.error && (
           <form className="grid gap-5" onSubmit={assign}>
             {!fixedId && (

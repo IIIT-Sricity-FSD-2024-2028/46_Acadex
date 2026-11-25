@@ -1,9 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Clock3, CheckCircle2, Send, RotateCcw } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  fetchStudentAssessment,
+  setStudentAnswer,
+  submitStudentAssessment,
+} from '../../store/actions/quizzesActions';
 import {
   AdminHeader,
   AdminDataState,
@@ -27,44 +31,46 @@ export default function Quiz() {
   );
 }
 function Assessment({ courseId }) {
-  const state = useRemoteData(
-    `/student/assessments/${encodeURIComponent(courseId)}`
-  );
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.quizzes.assessment);
+  const {
+    answers,
+    result,
+    submitting: busy,
+    error,
+  } = useAppSelector((s) => s.quizzes.attempt);
   const q = state.data;
-  const [answers, setAnswers] = useState({});
-  const [result, setResult] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [remaining, setRemaining] = useState(null);
   const submitting = useRef(false);
+
   useEffect(() => {
-    setAnswers({});
-    setResult(null);
-    setError('');
+    dispatch(fetchStudentAssessment(courseId));
+  }, [dispatch, courseId]);
+
+  useEffect(() => {
     setRemaining(
       q && Number(q.durationMinutes) > 0 ? Number(q.durationMinutes) * 60 : null
     );
   }, [q]);
-  async function submit(e) {
-    e?.preventDefault();
-    if (!q || submitting.current || result) return;
-    submitting.current = true;
-    setBusy(true);
-    setError('');
-    try {
-      setResult(
-        await api.post(
-          `/student/assessments/${encodeURIComponent(courseId)}/submit`,
-          { quizId: q.id, answers }
-        )
-      );
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      submitting.current = false;
-      setBusy(false);
-    }
-  }
+
+  const submit = useCallback(
+    async (e) => {
+      e?.preventDefault();
+      if (!q || submitting.current || result) return;
+      submitting.current = true;
+      try {
+        await dispatch(
+          submitStudentAssessment({ courseId, quizId: q.id, answers })
+        ).unwrap();
+      } catch {
+        // handled by quizzesSlice
+      } finally {
+        submitting.current = false;
+      }
+    },
+    [dispatch, courseId, q, result, answers]
+  );
+
   useEffect(() => {
     if (remaining === null || result || !q) return;
     if (remaining <= 0) {
@@ -76,14 +82,18 @@ function Assessment({ courseId }) {
       1000
     );
     return () => clearTimeout(tick);
-  }, [remaining, result, q, answers]);
+  }, [remaining, result, q, submit]);
   return (
     <StudentPage>
       <Link className="admin-count-label" to={`/student/learn/${courseId}`}>
         <ArrowLeft size={14} />
         Back to course
       </Link>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchStudentAssessment(courseId))}
+      />
       {q && !state.error && (
         <>
           <AdminHeader title={q.title}>
@@ -126,7 +136,7 @@ function Assessment({ courseId }) {
                 </p>
                 <button
                   className="admin-button mt-5"
-                  onClick={() => state.refresh()}
+                  onClick={() => dispatch(fetchStudentAssessment(courseId))}
                 >
                   <RotateCcw size={14} />
                   Retake assessment
@@ -186,7 +196,12 @@ function Assessment({ courseId }) {
                           checked={answers[question.id] === index}
                           disabled={busy}
                           onChange={() =>
-                            setAnswers({ ...answers, [question.id]: index })
+                            dispatch(
+                              setStudentAnswer({
+                                questionId: question.id,
+                                optionIndex: index,
+                              })
+                            )
                           }
                         />
                         <span>{option}</span>

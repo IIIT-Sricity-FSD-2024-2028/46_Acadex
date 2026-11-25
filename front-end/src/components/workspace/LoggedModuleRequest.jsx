@@ -1,17 +1,26 @@
-import React from 'react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import React, { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchLoggedModuleRequest } from '../../store/actions/curriculumActions';
 import { AdminDataState } from '../admin/AdminUI';
 import { StatusBadge } from '../admin/StatusBadge';
 import { timestampLabel } from '../../utils/adminDisplay';
+
 export default function LoggedModuleRequest({ id }) {
-  const state = useRemoteData(
-      `/workspace/logs/requests/${encodeURIComponent(id)}`
-    ),
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.curriculum.loggedRequest),
     r = state.data;
+
+  useEffect(() => {
+    dispatch(fetchLoggedModuleRequest(id));
+  }, [dispatch, id]);
+
   return (
     <section className="admin-card operations-request" id={`request-${id}`}>
       <h2 className="text-base font-semibold mb-4">Curriculum request</h2>
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchLoggedModuleRequest(id))}
+      />
       {r && !state.error && (
         <>
           <div className="flex justify-between gap-4">

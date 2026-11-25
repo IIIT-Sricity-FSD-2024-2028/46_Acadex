@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -8,8 +8,12 @@ import {
   X,
   Clock3,
 } from 'lucide-react';
-import { api } from '../../utils/api';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearCourseErrors,
+  fetchAdminCourses,
+  reviewAdminCourse,
+} from '../../store/actions/coursesActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -19,36 +23,37 @@ import {
 import { Pagination } from '../../components/admin/Pagination';
 import { dateLabel } from '../../utils/adminDisplay';
 export const CourseApproval = () => {
+  const dispatch = useAppDispatch();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selection, setSelection] = useState(null);
   const [reason, setReason] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const state = useRemoteData(
-    `/admin/courses?${new URLSearchParams({ search, status: 'Pending Approval', page, limit: 12 })}`
-  );
+  const state = useAppSelector((s) => s.courses.adminCourses);
+  const busy = useAppSelector((s) => s.courses.actionLoading);
+  const error = useAppSelector((s) => s.courses.actionError);
+  useEffect(() => {
+    dispatch(
+      fetchAdminCourses({ search, status: 'Pending Approval', page, limit: 12 })
+    );
+  }, [dispatch, search, page]);
   function open(course, decision) {
     setSelection({ course, decision });
     setReason('');
-    setError('');
+    dispatch(clearCourseErrors());
     setMessage('');
   }
   async function submit(e) {
     e.preventDefault();
     if (busy) return;
-    setBusy(true);
-    setError('');
     try {
-      await api.post(
-        `/admin/courses/${selection.course.id}/review`,
-        {
+      await dispatch(
+        reviewAdminCourse({
+          courseId: selection.course.id,
           decision: selection.decision,
-          ...(selection.decision === 'reject' ? { reason } : {}),
-        },
-        'admin'
-      );
+          reason,
+        })
+      ).unwrap();
       setMessage(
         selection.decision === 'approve'
           ? 'Course approved and published.'
@@ -56,11 +61,16 @@ export const CourseApproval = () => {
       );
       setSelection(null);
       setPage(1);
-      state.refresh();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      dispatch(
+        fetchAdminCourses({
+          search,
+          status: 'Pending Approval',
+          page: 1,
+          limit: 12,
+        })
+      );
+    } catch {
+      // handled by coursesSlice
     }
   }
   return (
@@ -90,7 +100,20 @@ export const CourseApproval = () => {
           Awaiting review
         </span>
       </div>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() =>
+          dispatch(
+            fetchAdminCourses({
+              search,
+              status: 'Pending Approval',
+              page,
+              limit: 12,
+            })
+          )
+        }
+      />
       {!state.loading && !state.error && (
         <>
           <div className="admin-grid">

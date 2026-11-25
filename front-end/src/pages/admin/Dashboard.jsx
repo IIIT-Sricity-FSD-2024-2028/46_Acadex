@@ -21,7 +21,8 @@ import {
   Users,
   CreditCard,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchAdminOverview } from '../../store/actions/analyticsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -30,12 +31,20 @@ import {
 } from '../../components/admin/AdminUI';
 import { money, currencyLabel } from '../../utils/adminDisplay';
 export const Dashboard = () => {
-  const state = useRemoteData('/admin/overview');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.analytics.adminOverview);
   const data = state.data;
+  React.useEffect(() => {
+    dispatch(fetchAdminOverview());
+  }, [dispatch]);
   return (
     <div className="admin-page dashboard-page">
       <AdminHeader title="Overview" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchAdminOverview())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

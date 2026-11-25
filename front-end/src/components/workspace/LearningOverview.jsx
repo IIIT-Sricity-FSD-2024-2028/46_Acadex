@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, ArrowUpRight, Users, Award, Layers } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchWorkspaceOverview } from '../../store/actions/analyticsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -9,9 +10,16 @@ import {
   AdminEmpty,
 } from '../admin/AdminUI';
 import { StatusBadge } from '../admin/StatusBadge';
+
 export default function LearningOverview({ role }) {
-  const state = useRemoteData('/workspace/overview');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.analytics.workspaceOverview);
   const data = state.data;
+
+  useEffect(() => {
+    dispatch(fetchWorkspaceOverview());
+  }, [dispatch]);
+
   const target = (id) =>
     role === 'Student'
       ? `/student/learn/${id}`
@@ -21,7 +29,10 @@ export default function LearningOverview({ role }) {
   return (
     <div className="admin-page dashboard-page">
       <AdminHeader title="Overview" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchWorkspaceOverview())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

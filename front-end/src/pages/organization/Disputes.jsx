@@ -1,10 +1,15 @@
 import SearchableSelect from '../../components/common/SearchableSelect';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, X, Send, MessageSquare } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearDisputeError,
+  createOrgSupport,
+  fetchOrgSupport,
+} from '../../store/actions/disputesActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -14,13 +19,18 @@ import {
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { timestampLabel } from '../../utils/adminDisplay';
 export default function Disputes() {
-  const state = useRemoteData('/workspace/organization/support'),
-    [params, setParams] = useSearchParams();
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.disputes.orgSupport);
+  const busy = useAppSelector((s) => s.disputes.saving);
+  const error = useAppSelector((s) => s.disputes.actionError);
+  const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState(''),
     [status, setStatus] = useState(''),
-    [open, setOpen] = useState(false),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
+    [open, setOpen] = useState(false);
+  useEffect(() => {
+    dispatch(clearDisputeError());
+    dispatch(fetchOrgSupport());
+  }, [dispatch]);
   const empty = {
       category: '',
       otherCategory: '',
@@ -50,19 +60,14 @@ export default function Disputes() {
   }
   async function submit(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
     try {
-      const r = await api.post('/workspace/organization/support', form);
+      const r = await dispatch(createOrgSupport(form)).unwrap();
       setOpen(false);
       setForm(empty);
-      state.refresh();
       setParams({ disputeId: r.id });
-      window.dispatchEvent(new Event('notifications-changed'));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      dispatch(fetchWorkspaceNotifications());
+    } catch {
+      // handled by disputesSlice
     }
   }
   return (
@@ -72,7 +77,7 @@ export default function Disputes() {
           <button
             className="admin-button admin-button-primary"
             onClick={() => {
-              setError('');
+              dispatch(clearDisputeError());
               setOpen(true);
             }}
           >
@@ -80,7 +85,11 @@ export default function Disputes() {
             New request
           </button>
         </AdminHeader>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchOrgSupport())}
+        />
         <div className="admin-toolbar">
           <AdminSearch
             value={search}

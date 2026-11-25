@@ -1,50 +1,48 @@
-import { subscribeToStoreEvents } from '../../store/listeners';
 import { timestampLabel } from '../../utils/adminDisplay';
 import { Link, useLocation } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
-import { Bell, CheckCheck, X, Trash2, RefreshCw } from 'lucide-react';
-import { api } from '../../utils/api';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Bell, CheckCheck, X, RefreshCw } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  fetchWorkspaceNotifications,
+  markWorkspaceNotificationRead,
+  markAllWorkspaceNotificationsRead,
+  dismissWorkspaceNotification,
+} from '../../store/actions/notificationsActions';
+
 export function useInbox() {
-  const state = useRemoteData('/workspace/notifications');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.notifications.workspace);
+  const refresh = useCallback(
+    () => dispatch(fetchWorkspaceNotifications()),
+    [dispatch]
+  );
+
   useEffect(() => {
-    const refresh = () => state.refresh();
+    refresh();
     const tick = setInterval(refresh, 30000);
-    const unsubscribe = subscribeToStoreEvents(['notifications-changed', 'focus'], refresh);
-    return () => {
-      clearInterval(tick);
-      unsubscribe();
-    };
-  }, [state.refresh]);
-  return state;
+    return () => clearInterval(tick);
+  }, [refresh]);
+
+  return { ...state, refresh };
 }
+
 export function InboxPanel({ compact = false, state: provided }) {
+  const dispatch = useAppDispatch();
   const own = useInbox();
   const state = provided || own;
-  const [busy, setBusy] = useState('');
-  const [error, setError] = useState('');
   const [unread, setUnread] = useState(false);
-  async function run(path, method = 'patch') {
-    setBusy(path);
-    setError('');
-    try {
-      await api[method](path, {});
-      state.refresh();
-      window.dispatchEvent(new Event('notifications-changed'));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy('');
-    }
-  }
+
+  const busy = state.busyPath || '';
   const items = (state.data?.items || []).filter((n) => !unread || !n.read);
+
   return (
     <section className={`workspace-inbox ${compact ? 'is-compact' : ''}`}>
       <div className="workspace-inbox-actions">
         <span>{state.data?.unreadCount ?? '—'} unread</span>
         <button
           disabled={!!busy || !state.data?.unreadCount}
-          onClick={() => run('/workspace/notifications/read-all')}
+          onClick={() => dispatch(markAllWorkspaceNotificationsRead())}
         >
           <CheckCheck size={14} />
           Mark all read
@@ -61,9 +59,9 @@ export function InboxPanel({ compact = false, state: provided }) {
         />
         Unread only
       </label>
-      {(error || state.error) && (
+      {(state.actionError || state.error) && (
         <p role="alert" className="workspace-error">
-          {error || state.error}
+          {state.actionError || state.error}
           <button onClick={state.refresh}>Retry</button>
         </p>
       )}
@@ -78,9 +76,7 @@ export function InboxPanel({ compact = false, state: provided }) {
                 <button
                   disabled={!!busy}
                   aria-label={`Dismiss ${n.title}`}
-                  onClick={() =>
-                    run(`/workspace/notifications/${n.id}`, 'delete')
-                  }
+                  onClick={() => dispatch(dismissWorkspaceNotification(n.id))}
                 >
                   <X size={14} />
                 </button>
@@ -100,7 +96,9 @@ export function InboxPanel({ compact = false, state: provided }) {
                 {!n.read && (
                   <button
                     disabled={!!busy}
-                    onClick={() => run(`/workspace/notifications/${n.id}/read`)}
+                    onClick={() =>
+                      dispatch(markWorkspaceNotificationRead(n.id))
+                    }
                   >
                     Mark read
                   </button>
@@ -119,6 +117,7 @@ export function InboxPanel({ compact = false, state: provided }) {
     </section>
   );
 }
+
 export default function NotificationBell({ href }) {
   const location = useLocation();
   const prefix = location.pathname.startsWith('/organization')

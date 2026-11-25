@@ -1,6 +1,5 @@
-import { downloadCertificate } from '../../utils/certificateDownload';
 import { AdminDataState } from '../../components/admin/AdminUI';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Award,
@@ -11,31 +10,45 @@ import {
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import CertificateModal from '../../components/common/CertificateModal';
-import { useStudent } from '../../context/StudentContext';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearDownloadError,
+  downloadCertificatePdf,
+  fetchStudentCertificates,
+  setSelectedCertificate,
+} from '../../store/actions/certificatesActions';
+import { fetchStudentEnrollments } from '../../store/actions/enrollmentsActions';
 
 export default function Certificates() {
-  const { certificates, enrollments, isLoading, refreshData, error } =
-    useStudent();
+  const dispatch = useAppDispatch();
+  const {
+    studentItems,
+    selected: selectedState,
+    downloadingId: downloading,
+    downloadError,
+  } = useAppSelector((s) => s.certificates);
+  const enrollmentsState = useAppSelector((s) => s.enrollments);
+  const certificates = studentItems.data || [];
+  const enrollments = enrollmentsState.data || [];
+  const isLoading = studentItems.loading || enrollmentsState.loading;
+  const error = studentItems.error || enrollmentsState.error;
+  const selected = selectedState.data;
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState(null);
-  const [downloading, setDownloading] = useState('');
-  const [downloadError, setDownloadError] = useState('');
-  async function download(c) {
-    setDownloading(c.id);
-    setDownloadError('');
-    try {
-      await downloadCertificate(c);
-    } catch (e) {
-      setDownloadError(e.message);
-    } finally {
-      setDownloading('');
-    }
+
+  const refreshData = useCallback(() => {
+    dispatch(fetchStudentCertificates());
+    dispatch(fetchStudentEnrollments());
+  }, [dispatch]);
+
+  function download(c) {
+    dispatch(downloadCertificatePdf({ certificate: c }));
   }
 
   useEffect(() => {
     document.title = 'Certificates | Acadex';
+    dispatch(clearDownloadError());
     refreshData();
-  }, [refreshData]);
+  }, [dispatch, refreshData]);
 
   const completedCount = enrollments.filter(
     (e) => e.status === 'Completed'
@@ -178,7 +191,7 @@ export default function Certificates() {
                       {downloading === c.id ? 'Downloading…' : 'Download'}
                     </button>
                     <button
-                      onClick={() => setSelected(c)}
+                      onClick={() => dispatch(setSelectedCertificate(c))}
                       className="text-xs font-bold text-[#0056D2] hover:underline flex items-center gap-1"
                     >
                       View <ExternalLink className="w-3.5 h-3.5" />
@@ -193,7 +206,7 @@ export default function Certificates() {
       {selected && (
         <CertificateModal
           certificate={selected}
-          onClose={() => setSelected(null)}
+          onClose={() => dispatch(setSelectedCertificate(null))}
         />
       )}
     </PageLayout>

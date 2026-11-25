@@ -1,11 +1,15 @@
-import { useServerRecord } from '../../hooks/useServerRecord';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link, Navigate } from 'react-router-dom';
 import { CreditCard, Lock, ChevronRight, Smartphone } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import { useToast } from '../../components/common/Toast';
-import api from '../../services/api';
-import { useStudent } from '../../context/StudentContext';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import { fetchStudentCatalogCourse } from '../../store/actions/coursesActions';
+import { fetchStudentEnrollments } from '../../store/actions/enrollmentsActions';
+import {
+  checkoutCourse,
+  resetCheckout,
+} from '../../store/actions/paymentsActions';
 
 const UPI_PATTERN = /^[\w.-]{2,}@[a-zA-Z]{2,}$/;
 
@@ -44,11 +48,13 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get('courseId');
-  const { addToast } = useToast();
-  const { enrollments, refreshData } = useStudent();
+  const dispatch = useAppDispatch();
+  const enrollments = useAppSelector((s) => s.enrollments.data) || [];
+  const { data: course, loading } = useAppSelector(
+    (s) => s.courses.selectedCatalogCourse
+  );
+  const { processing } = useAppSelector((s) => s.payments.checkout);
 
-  const [course, setCourse] = useServerRecord('student.checkout.course', null);
-  const [loading, setLoading] = useState(true);
   const [method, setMethod] = useState('card');
   const [card, setCard] = useState({
     name: '',
@@ -58,17 +64,14 @@ export default function Checkout() {
   });
   const [upiId, setUpiId] = useState('');
   const [errors, setErrors] = useState({});
-  const [processing, setProcessing] = useState(false);
   const [paidSuccess, setPaidSuccess] = useState(false);
 
   useEffect(() => {
     if (!courseId) return;
-    api.student
-      .getCatalogCourse(courseId)
-      .then(setCourse)
-      .catch(() => setCourse(null))
-      .finally(() => setLoading(false));
-  }, [courseId, setCourse]);
+    dispatch(resetCheckout());
+    dispatch(fetchStudentCatalogCourse(courseId));
+    dispatch(fetchStudentEnrollments());
+  }, [dispatch, courseId]);
 
   useEffect(() => {
     document.title = 'Checkout | Acadex';
@@ -78,12 +81,7 @@ export default function Checkout() {
     return <Navigate to={`/student/course/${courseId}`} replace />;
   if (!courseId) return <Navigate to="/student/explore" replace />;
   if (!paidSuccess && enrollments.some((e) => e.courseId === courseId)) {
-    return (
-      <Navigate
-        to={`/student/learn/${courseId}`}
-        replace
-      />
-    );
+    return <Navigate to={`/student/learn/${courseId}`} replace />;
   }
 
   const setCardField = (field, value) => {
@@ -112,7 +110,6 @@ export default function Checkout() {
   const handlePay = async (ev) => {
     ev.preventDefault();
     if (!validate()) return;
-    setProcessing(true);
     try {
       const cleanDigits = card.number.replace(/\D/g, '');
       const payload =
@@ -123,10 +120,8 @@ export default function Checkout() {
               cardLast4: cleanDigits.slice(-4),
             }
           : { courseId, paymentMethod: 'upi', upiId: upiId.trim() };
-      const result = await api.student.checkout(payload);
+      const result = await dispatch(checkoutCourse(payload)).unwrap();
       setPaidSuccess(true);
-      await refreshData();
-      window.dispatchEvent(new Event('learning-data-changed'));
       if (!result.transactionId) {
         navigate(`/student/learn/${courseId}`, { replace: true });
         return;
@@ -139,9 +134,12 @@ export default function Checkout() {
         }
       );
     } catch (err) {
-      addToast(err.message || 'Payment failed', 'error');
-    } finally {
-      setProcessing(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) || 'Payment failed',
+          'error'
+        )
+      );
     }
   };
 
@@ -259,11 +257,7 @@ export default function Checkout() {
                 ))}
               </div>
 
-              <form
-                onSubmit={handlePay}
-                className="space-y-4"
-                noValidate
-              >
+              <form onSubmit={handlePay} className="space-y-4" noValidate>
                 {method === 'card' ? (
                   <>
                     <div>

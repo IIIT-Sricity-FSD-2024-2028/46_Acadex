@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchOrgLearners } from '../../store/actions/learnersActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -9,8 +10,12 @@ import {
   AdminEmpty,
 } from '../../components/admin/AdminUI';
 export default function Learners() {
-  const state = useRemoteData('/workspace/organization/learners'),
-    [search, setSearch] = useState('');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.learners.orgLearners);
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    dispatch(fetchOrgLearners());
+  }, [dispatch]);
   const rows =
     state.data?.filter((l) =>
       `${l.name} ${l.email}`.toLowerCase().includes(search.toLowerCase())
@@ -26,7 +31,11 @@ export default function Learners() {
             placeholder="Search learners by name or email…"
           />
         </div>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchOrgLearners())}
+        />
         {state.data && !state.error && (
           <section className="admin-card">
             <div className="operations-table-scroll">

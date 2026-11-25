@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Plus, ArrowUpRight, Clock3 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchOrgCourses } from '../../store/actions/coursesActions';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   AdminHeader,
@@ -13,12 +14,14 @@ import {
 } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 export default function Courses() {
+  const dispatch = useAppDispatch();
   const [search, setSearch] = useState('');
-  const settled = useDebouncedValue(search),
-    state = useRemoteData(
-      `/courses/organization/list?${new URLSearchParams({ search: settled })}`
-    ),
-    data = state.data;
+  const settled = useDebouncedValue(search);
+  const state = useAppSelector((s) => s.courses.orgCourses);
+  const data = state.data;
+  useEffect(() => {
+    dispatch(fetchOrgCourses(settled));
+  }, [dispatch, settled]);
   return (
     <OrgLayout>
       <div className="admin-page">
@@ -31,7 +34,11 @@ export default function Courses() {
             Create course
           </Link>
         </AdminHeader>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchOrgCourses(settled))}
+        />
         {data && !state.error && (
           <>
             <div className="admin-stats-grid org-summary">

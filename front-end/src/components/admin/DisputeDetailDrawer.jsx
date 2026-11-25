@@ -8,16 +8,26 @@ import {
   CheckCircle2,
   ArrowRight,
 } from 'lucide-react';
-import { api } from '../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  addAdminDisputeComment,
+  clearDisputeError,
+  transitionDispute,
+} from '../../store/actions/disputesActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import { StatusBadge } from './StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
 export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
+  const dispatch = useAppDispatch();
+  const busy = useAppSelector((s) => s.disputes.saving);
+  const error = useAppSelector((s) => s.disputes.actionError);
   const [tab, setTab] = useState('details');
   const [status, setStatus] = useState('');
   const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [comment, setComment] = useState('');
+  useEffect(() => {
+    dispatch(clearDisputeError());
+  }, [dispatch, dispute?.id]);
   useEffect(() => {
     const close = (e) => {
       if (e.key === 'Escape' && !busy) onClose();
@@ -34,40 +44,31 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
   const closed = ['Resolved', 'Rejected'].includes(dispute.status);
   async function update(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
     try {
-      const result = await api.post(
-        `/admin/disputes/${dispute.id}/transition`,
-        { status, note }
-      );
-      onUpdated(result);
+      const result = await dispatch(
+        transitionDispute({ disputeId: dispute.id, status, note })
+      ).unwrap();
+      onUpdated?.(result);
       setStatus('');
       setNote('');
-      window.dispatchEvent(new Event('notifications-changed'));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      dispatch(fetchWorkspaceNotifications());
+    } catch {
+      // handled by disputesSlice
     }
   }
   async function sendComment(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
     try {
-      const session = await api.get('/workspace/session');
-      const updated = await api.post(`/disputes/${dispute.id}/comments`, {
-        author: session.name,
-        message: comment.trim(),
-        isAdmin: true,
-      });
-      onUpdated(updated);
+      const updated = await dispatch(
+        addAdminDisputeComment({
+          disputeId: dispute.id,
+          message: comment.trim(),
+        })
+      ).unwrap();
+      onUpdated?.(updated);
       setComment('');
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // handled by disputesSlice
     }
   }
   const timeline = [...(dispute.timeline || [])].reverse();

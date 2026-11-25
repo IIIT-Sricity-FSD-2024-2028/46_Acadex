@@ -1,14 +1,12 @@
 import { useAppSelector } from '../../../store/hooks';
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { StudentProvider } from '../../../context/StudentContext';
 
 /**
  * StudentGuard
  * Route protection guard for the Student / Learner portal.
  * Redirects unauthenticated users attempting to open direct student URLs in Chrome
  * back to /signin?role=Student, preserving the intended destination in location state.
- * Wraps authenticated student views in the centralized StudentProvider Context.
  */
 export function StudentGuard({ children }) {
   const location = useLocation();
@@ -35,7 +33,7 @@ export function StudentGuard({ children }) {
     );
   }
 
-  return <StudentProvider>{children}</StudentProvider>;
+  return children;
 }
 
 export default StudentGuard;

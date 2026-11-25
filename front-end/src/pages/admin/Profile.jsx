@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Clock3, Save } from 'lucide-react';
-import { api } from '../../utils/api';
-import { useAdminSession } from '../../context/AdminSession';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearUsersActionError,
+  fetchAdminSession,
+  updateAdminProfile,
+} from '../../store/actions/usersActions';
 import {
   AdminDataState,
   AdminHeader,
@@ -9,11 +13,23 @@ import {
 } from '../../components/admin/AdminUI';
 import { dateLabel } from '../../utils/adminDisplay';
 export const Profile = () => {
-  const session = useAdminSession();
+  const dispatch = useAppDispatch();
+  const adminSession = useAppSelector((s) => s.users.adminSession);
+  const busy = useAppSelector((s) => s.users.saving);
+  const error = useAppSelector((s) => s.users.actionError);
+  const session = {
+    profile: adminSession.data?.profile || null,
+    permissions: adminSession.data?.permissions || [],
+    loading: adminSession.loading,
+    error: adminSession.error,
+    refresh: () => dispatch(fetchAdminSession()),
+  };
   const [form, setForm] = useState({ name: '', email: '' });
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    dispatch(clearUsersActionError());
+    dispatch(fetchAdminSession());
+  }, [dispatch]);
   useEffect(() => {
     if (session.profile)
       setForm({
@@ -24,20 +40,12 @@ export const Profile = () => {
   async function save(e) {
     e.preventDefault();
     if (busy) return;
-    setBusy(true);
-    setError('');
     setSaved(false);
     try {
-      const updated = await api.patch('/admin/profile', form);
-      localStorage.setItem('user_name', updated.name);
-      localStorage.setItem('user_email', updated.email);
-      window.dispatchEvent(new Event('admin-data-changed'));
-      window.dispatchEvent(new Event('account-changed'));
+      await dispatch(updateAdminProfile(form)).unwrap();
       setSaved(true);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // handled by usersSlice
     }
   }
   return (

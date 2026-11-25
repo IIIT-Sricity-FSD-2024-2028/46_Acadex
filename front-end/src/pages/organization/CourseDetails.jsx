@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -9,8 +9,13 @@ import {
   Edit,
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearCourseErrors,
+  fetchOrgCourseById,
+  submitCourseForApproval,
+} from '../../store/actions/coursesActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -22,22 +27,21 @@ import { money } from '../../utils/adminDisplay';
 import ModuleRequests from '../../components/workspace/ModuleRequests';
 export default function CourseDetails() {
   const { id } = useParams();
-  const state = useRemoteData(`/courses/${id}/organization`);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses.selectedOrgCourse);
+  const busy = useAppSelector((s) => s.courses.actionLoading);
+  const error = useAppSelector((s) => s.courses.actionError);
   const course = state.data;
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  useEffect(() => {
+    dispatch(clearCourseErrors());
+    if (id) dispatch(fetchOrgCourseById(id));
+  }, [dispatch, id]);
   async function submit() {
-    setBusy(true);
-    setError('');
     try {
-      await api.post(`/courses/${id}/submit`, {});
-      state.refresh();
-      window.dispatchEvent(new Event('learning-data-changed'));
-      window.dispatchEvent(new Event('notifications-changed'));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      await dispatch(submitCourseForApproval(id)).unwrap();
+      dispatch(fetchWorkspaceNotifications());
+    } catch {
+      // handled by coursesSlice
     }
   }
   return (
@@ -47,7 +51,11 @@ export default function CourseDetails() {
           <ArrowLeft size={14} />
           Courses
         </Link>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchOrgCourseById(id))}
+        />
         {course && !state.error && (
           <>
             <AdminHeader title={course.title}>

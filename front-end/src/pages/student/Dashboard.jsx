@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CreditCard, Receipt, ArrowUpRight } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import LearningOverview from '../../components/workspace/LearningOverview';
 import PaymentCard from '../../components/student/PaymentCard';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudentBilling } from '../../store/actions/paymentsActions';
 import {
   AdminMetric,
   AdminDataState,
@@ -12,8 +13,12 @@ import {
 } from '../../components/admin/AdminUI';
 import { money } from '../../utils/adminDisplay';
 export default function Dashboard() {
-  const billing = useRemoteData('/student/billing?limit=3');
+  const dispatch = useAppDispatch();
+  const billing = useAppSelector((s) => s.payments.studentBilling);
   const data = billing.data;
+  useEffect(() => {
+    dispatch(fetchStudentBilling({ limit: 3 }));
+  }, [dispatch]);
   return (
     <PageLayout className="p-5 md:p-8">
       <LearningOverview role="Student" />
@@ -25,7 +30,11 @@ export default function Dashboard() {
             <ArrowUpRight size={14} />
           </Link>
         </div>
-        <AdminDataState {...billing} />
+        <AdminDataState
+          loading={billing.loading}
+          error={billing.error}
+          refresh={() => dispatch(fetchStudentBilling({ limit: 3 }))}
+        />
         {data && !billing.error && (
           <>
             <div className="admin-stats-grid">

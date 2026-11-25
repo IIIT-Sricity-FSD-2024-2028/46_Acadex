@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { CheckCircle2, Receipt, BookOpen } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudentPaymentById } from '../../store/actions/paymentsActions';
 import { AdminDataState, AdminEmpty } from '../../components/admin/AdminUI';
 import { money, dateLabel } from '../../utils/adminDisplay';
 export default function PaymentSuccess() {
@@ -24,8 +25,12 @@ export default function PaymentSuccess() {
   );
 }
 function ConfirmedPayment({ id }) {
-  const state = useRemoteData(`/student/payments/${encodeURIComponent(id)}`);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.payments.selectedReceipt);
   const p = state.data;
+  useEffect(() => {
+    dispatch(fetchStudentPaymentById(id));
+  }, [dispatch, id]);
   const complete =
     p &&
     ['completed', 'paid', 'success', 'successful'].includes(
@@ -33,7 +38,11 @@ function ConfirmedPayment({ id }) {
     );
   return (
     <StudentPage>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchStudentPaymentById(id))}
+      />
       {p && !state.error && (
         <section className="admin-card learner-payment-confirmation">
           <span className="learner-confirmation-icon">

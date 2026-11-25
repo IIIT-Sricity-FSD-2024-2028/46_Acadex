@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Award, Clock } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchOrgLearnerById } from '../../store/actions/learnersActions';
 import {
   AdminHeader,
   AdminDataState,
@@ -13,7 +14,11 @@ import { StatusBadge } from '../../components/admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
 export default function LearnerDetails() {
   const { id } = useParams();
-  const state = useRemoteData(`/workspace/organization/learners/${id}`);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.learners.orgLearnerDetail);
+  useEffect(() => {
+    if (id) dispatch(fetchOrgLearnerById(id));
+  }, [dispatch, id]);
   const data = state.data;
   return (
     <OrgLayout>
@@ -22,7 +27,11 @@ export default function LearnerDetails() {
           <ArrowLeft size={14} />
           Learners
         </Link>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchOrgLearnerById(id))}
+        />
         {data && !state.error && (
           <>
             <AdminHeader title={data.learner.name} />

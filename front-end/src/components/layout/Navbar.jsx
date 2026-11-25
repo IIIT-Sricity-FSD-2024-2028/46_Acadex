@@ -1,6 +1,7 @@
-import { useServerRecord } from '../../hooks/useServerRecord';
-import { store } from '../../store';
-import { clearSession } from '../../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { clearSession } from '../../store/actions/authActions';
+import { fetchStudentProfile } from '../../store/actions/learnersActions';
+import { fetchStudentCatalog } from '../../store/actions/coursesActions';
 import { WorkspaceSidebar } from '../workspace/WorkspaceSidebar';
 import NotificationBell from '../workspace/NotificationBell';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -20,9 +21,7 @@ import {
   Star,
   ShieldAlert,
 } from 'lucide-react';
-import api from '../../services/api';
 import HumanAvatar from '../common/HumanAvatar';
-import { useStudent } from '../../context/StudentContext';
 
 const studentNavItems = [
   {
@@ -85,20 +84,17 @@ function isItemActive(item, pathname) {
   );
 }
 
-export function signOutStudent(navigate) {
-  store.dispatch(clearSession([
-    'auth_token',
-    'nexuspay_auth_token',
-    'nexuspay_student_token',
-    'user_id',
-    'nexuspay_user_id',
-    'user_role',
-    'nexuspay_active_role',
-    'user_name',
-    'user_email',
-  ]));
-  navigate('/signin?role=Student');
-}
+const AUTH_KEYS = [
+  'auth_token',
+  'nexuspay_auth_token',
+  'nexuspay_student_token',
+  'user_id',
+  'nexuspay_user_id',
+  'user_role',
+  'nexuspay_active_role',
+  'user_name',
+  'user_email',
+];
 
 export function StudentSidebar({ isOpen, onClose }) {
   return <WorkspaceSidebar role="Student" isOpen={isOpen} onClose={onClose} />;
@@ -107,20 +103,20 @@ export function StudentSidebar({ isOpen, onClose }) {
 export default function StudentTopbar({ onMenuClick }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { student } = useStudent();
+  const dispatch = useAppDispatch();
+  const student = useAppSelector((s) => s.learners.studentProfile.data);
+  const catalogRaw = useAppSelector((s) => s.courses.catalog.data);
+  const catalog = Array.isArray(catalogRaw) ? catalogRaw : [];
   const [query, setQuery] = useState('');
-  const [catalog, setCatalog] = useServerRecord('student.search.catalog', []);
   const [showResults, setShowResults] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const searchRef = useRef(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
-    api.student
-      .getCatalog()
-      .then((c) => setCatalog(Array.isArray(c) ? c : []))
-      .catch(() => setCatalog([]));
-  }, []);
+    dispatch(fetchStudentProfile());
+    dispatch(fetchStudentCatalog());
+  }, [dispatch]);
 
   useEffect(() => {
     setShowResults(false);
@@ -176,14 +172,8 @@ export default function StudentTopbar({ onMenuClick }) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div
-          ref={searchRef}
-          className="flex-1 max-w-xl relative"
-        >
-          <form
-            onSubmit={submitSearch}
-            className="relative"
-          >
+        <div ref={searchRef} className="flex-1 max-w-xl relative">
+          <form onSubmit={submitSearch} className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
               type="text"
@@ -298,7 +288,8 @@ export default function StudentTopbar({ onMenuClick }) {
               <button
                 onClick={() => {
                   setShowMenu(false);
-                  signOutStudent(navigate);
+                  dispatch(clearSession(AUTH_KEYS));
+                  navigate('/signin?role=Student');
                 }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-medium text-left"
               >

@@ -1,7 +1,6 @@
 import React, { useEffect, Component } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { AlertCircle, RotateCcw, Home } from 'lucide-react';
-import { StudentProvider } from '../../../context/StudentContext';
 
 /**
  * StudentErrorBoundary
@@ -91,9 +90,7 @@ export function StudentRouteMiddleware() {
 
   return (
     <StudentErrorBoundary resetKey={location.pathname}>
-      <StudentProvider>
-        <Outlet />
-      </StudentProvider>
+      <Outlet />
     </StudentErrorBoundary>
   );
 }

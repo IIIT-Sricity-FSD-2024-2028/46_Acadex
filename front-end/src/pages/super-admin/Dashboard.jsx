@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CreditCard,
@@ -9,7 +9,8 @@ import {
   BookOpen,
   ShieldAlert,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchSuperAdminExecutive } from '../../store/actions/analyticsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -19,8 +20,12 @@ import {
 } from '../../components/admin/AdminUI';
 import { money, currencyLabel, dateLabel } from '../../utils/adminDisplay';
 export default function Dashboard() {
-  const state = useRemoteData('/admin/executive');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.analytics.superAdminExecutive);
   const data = state.data;
+  useEffect(() => {
+    dispatch(fetchSuperAdminExecutive());
+  }, [dispatch]);
   return (
     <div className="admin-page dashboard-page">
       <AdminHeader title="Platform overview">
@@ -32,7 +37,11 @@ export default function Dashboard() {
           <ArrowUpRight size={14} />
         </Link>
       </AdminHeader>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchSuperAdminExecutive())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

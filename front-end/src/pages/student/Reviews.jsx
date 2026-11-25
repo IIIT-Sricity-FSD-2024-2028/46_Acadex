@@ -1,8 +1,7 @@
-import { useServerRecord } from '../../hooks/useServerRecord';
 import { dateLabel } from '../../utils/adminDisplay';
 import SearchableSelect from '../../components/common/SearchableSelect';
 import { AdminHeader } from '../../components/admin/AdminUI';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Star,
@@ -25,9 +24,16 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import { useStudent } from '../../context/StudentContext';
-import { useToast } from '../../components/common/Toast';
-import api from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import { fetchStudentProfile } from '../../store/actions/learnersActions';
+import { fetchStudentEnrollments } from '../../store/actions/enrollmentsActions';
+import {
+  createReview,
+  deleteReview,
+  fetchMyReviews,
+  updateReview,
+} from '../../store/actions/reviewsActions';
 
 function StarRating({ value, size = 'w-4 h-4', onPick, interactive = false }) {
   const [hoverRating, setHoverRating] = useState(0);
@@ -73,13 +79,18 @@ const RATING_LABELS = {
 };
 
 export default function StudentReviews() {
-  const { student, enrollments } = useStudent();
-  const { addToast } = useToast();
+  const dispatch = useAppDispatch();
+  const student = useAppSelector((s) => s.learners.studentProfile.data);
+  const enrollments = useAppSelector((s) => s.enrollments.data);
+  const {
+    data: reviewsData,
+    loading,
+    error: loadError,
+  } = useAppSelector((s) => s.reviews.myReviews);
+  const reviews = reviewsData || [];
+  const savingEdit = useAppSelector((s) => s.reviews.saving);
+  const submittingNew = savingEdit;
 
-  const [loadError, setLoadError] = useState('');
-  const [reviews, setReviews] = useServerRecord('student.reviews.reviews', []);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [starFilter, setStarFilter] = useState('all');
   const [tabFilter, setTabFilter] = useState('all'); // 'all' | 'replied' | 'unreplied'
@@ -88,40 +99,18 @@ export default function StudentReviews() {
   const [editingReview, setEditingReview] = useState(null);
   const [editRating, setEditRating] = useState(5);
   const [editComment, setEditComment] = useState('');
-  const [savingEdit, setSavingEdit] = useState(false);
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
-  const [submittingNew, setSubmittingNew] = useState(false);
-
-  const loadReviews = useCallback(
-    async (isRefresh = false) => {
-      setLoadError('');
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
-
-      try {
-        const res = await api.student.getMyReviews();
-        const list = Array.isArray(res) ? res : res?.data || res?.items || [];
-        setReviews(list);
-      } catch (err) {
-        setReviews([]);
-        setLoadError(err.message || 'Unable to load your reviews');
-        addToast(err.message || 'Unable to load your reviews', 'error');
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [student?.name]
-  );
 
   useEffect(() => {
     document.title = 'My Reviews & Ratings | Acadex';
-    loadReviews();
-  }, [loadReviews]);
+    dispatch(fetchStudentProfile());
+    dispatch(fetchStudentEnrollments());
+    dispatch(fetchMyReviews());
+  }, [dispatch]);
 
   // Statistics
   const totalReviews = reviews.length;
@@ -164,21 +153,27 @@ export default function StudentReviews() {
   const handleUpdateReview = async (e) => {
     e.preventDefault();
     if (!editComment.trim())
-      return addToast('Please enter your review feedback', 'warning');
-    setSavingEdit(true);
-    try {
-      await api.courses.updateReview(
-        editingReview.id,
-        editRating,
-        editComment.trim()
+      return dispatch(
+        showToast('Please enter your review feedback', 'warning')
       );
-      addToast('Review updated successfully', 'success');
+    try {
+      await dispatch(
+        updateReview({
+          reviewId: editingReview.id,
+          rating: editRating,
+          comment: editComment.trim(),
+        })
+      ).unwrap();
+      dispatch(showToast('Review updated successfully', 'success'));
       setEditingReview(null);
-      await loadReviews(true);
     } catch (err) {
-      addToast(err.message || 'Failed to update review', 'error');
-    } finally {
-      setSavingEdit(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) ||
+            'Failed to update review',
+          'error'
+        )
+      );
     }
   };
 
@@ -190,44 +185,52 @@ export default function StudentReviews() {
     )
       return;
     try {
-      await api.courses.deleteReview(reviewId);
-      addToast('Review deleted successfully', 'info');
-      await loadReviews(true);
+      await dispatch(deleteReview({ reviewId })).unwrap();
+      dispatch(showToast('Review deleted successfully', 'info'));
     } catch (err) {
-      addToast(err.message || 'Failed to delete review', 'error');
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) ||
+            'Failed to delete review',
+          'error'
+        )
+      );
     }
   };
 
   const handleCreateReview = async (e) => {
     e.preventDefault();
     if (!student?.id)
-      return addToast(
-        'Your profile is still loading. Please retry.',
-        'warning'
+      return dispatch(
+        showToast('Your profile is still loading. Please retry.', 'warning')
       );
     if (!selectedCourseId)
-      return addToast('Please select a course to review', 'warning');
+      return dispatch(showToast('Please select a course to review', 'warning'));
     if (!newComment.trim())
-      return addToast('Please enter your review comment', 'warning');
-    setSubmittingNew(true);
+      return dispatch(showToast('Please enter your review comment', 'warning'));
     try {
-      await api.courses.addReview(
-        selectedCourseId,
-        newRating,
-        newComment.trim(),
-        student.name,
-        student.id,
-      );
-      addToast('Your review was published successfully!', 'success');
+      await dispatch(
+        createReview({
+          courseId: selectedCourseId,
+          rating: newRating,
+          comment: newComment.trim(),
+          learnerName: student.name,
+          learnerId: student.id,
+        })
+      ).unwrap();
+      dispatch(showToast('Your review was published successfully!', 'success'));
       setShowNewModal(false);
       setSelectedCourseId('');
       setNewComment('');
       setNewRating(5);
-      await loadReviews(true);
     } catch (err) {
-      addToast(err.message || 'Could not submit review', 'error');
-    } finally {
-      setSubmittingNew(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) ||
+            'Could not submit review',
+          'error'
+        )
+      );
     }
   };
 
@@ -242,7 +245,7 @@ export default function StudentReviews() {
           </p>
           <button
             className="admin-button mt-3"
-            onClick={() => loadReviews(true)}
+            onClick={() => dispatch(fetchMyReviews())}
           >
             Try again
           </button>
@@ -620,10 +623,7 @@ export default function StudentReviews() {
               </p>
             </div>
 
-            <form
-              onSubmit={handleUpdateReview}
-              className="space-y-4"
-            >
+            <form onSubmit={handleUpdateReview} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5">
                   Rating:{' '}
@@ -708,10 +708,7 @@ export default function StudentReviews() {
               </button>
             </div>
 
-            <form
-              onSubmit={handleCreateReview}
-              className="space-y-4"
-            >
+            <form onSubmit={handleCreateReview} className="space-y-4">
               <div>
                 <SearchableSelect
                   label="Course"

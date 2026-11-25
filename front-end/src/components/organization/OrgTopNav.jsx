@@ -1,10 +1,19 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Settings } from 'lucide-react';
 import NotificationBell from '../workspace/NotificationBell';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchWorkspaceSession } from '../../store/actions/usersActions';
+
 export default function OrgTopNav({ breadcrumbs = [], actions }) {
-  const session = useRemoteData('/workspace/session');
+  const dispatch = useAppDispatch();
+  const { pathname } = useLocation();
+  const session = useAppSelector((state) => state.users.workspaceSession);
+
+  useEffect(() => {
+    dispatch(fetchWorkspaceSession());
+  }, [dispatch, pathname]);
+
   return (
     <header className="workspace-topbar">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">

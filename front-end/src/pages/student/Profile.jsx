@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   UserRound,
@@ -17,12 +17,28 @@ import {
   AdminMetric,
 } from '../../components/admin/AdminUI';
 import { InboxPanel } from '../../components/workspace/NotificationBell';
-import { useStudent } from '../../context/StudentContext';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { changePassword } from '../../store/actions/authActions';
+import {
+  fetchStudentProfile,
+  updateStudentProfile,
+} from '../../store/actions/learnersActions';
 import { dateLabel } from '../../utils/adminDisplay';
 export default function Profile() {
-  const { student, isLoading, error, refreshData, updateProfile } =
-    useStudent();
+  const dispatch = useAppDispatch();
+  const {
+    data: student,
+    loading: isLoading,
+    error,
+  } = useAppSelector((s) => s.learners.studentProfile);
+  const savingProfile = useAppSelector((s) => s.learners.saving);
+  const changingPassword = useAppSelector((s) => s.auth.loading);
+  const authUserId = useAppSelector((s) => s.auth.user_id);
+  const busy = savingProfile || changingPassword;
+  const refreshData = useCallback(
+    () => dispatch(fetchStudentProfile()),
+    [dispatch]
+  );
   const [params, setParams] = useSearchParams();
   const tab = ['account', 'security', 'notifications'].includes(
     params.get('tab')
@@ -35,12 +51,12 @@ export default function Profile() {
     next: '',
     confirm: '',
   });
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [failure, setFailure] = useState('');
   useEffect(() => {
     document.title = 'My account | Acadex';
-  }, []);
+    refreshData();
+  }, [refreshData]);
   useEffect(() => {
     if (student)
       setForm({
@@ -59,22 +75,26 @@ export default function Profile() {
       setFailure('The new passwords do not match.');
       return;
     }
-    setBusy(true);
     try {
       if (tab === 'security') {
-        const id = localStorage.getItem('user_id') || student.userId;
-        await api.auth.changePassword(password.current, password.next, id);
+        await dispatch(
+          changePassword({
+            currentPassword: password.current,
+            newPassword: password.next,
+            userId: authUserId || student?.userId,
+          })
+        ).unwrap();
         setPassword({ current: '', next: '', confirm: '' });
         setMessage('Your password has been changed.');
       } else {
-        await updateProfile(form);
-        window.dispatchEvent(new Event('account-changed'));
+        await dispatch(updateStudentProfile(form)).unwrap();
         setMessage('Your profile has been saved.');
       }
-    } catch (e) {
-      setFailure(e.message);
-    } finally {
-      setBusy(false);
+    } catch (err) {
+      setFailure(
+        (typeof err === 'string' ? err : err?.message) ||
+          'Unable to save changes.'
+      );
     }
   }
   function choose(value) {

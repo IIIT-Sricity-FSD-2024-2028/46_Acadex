@@ -1,34 +1,40 @@
 import { supportStatus } from '../../utils/supportStatus';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Send } from 'lucide-react';
 import StudentPage from '../../components/student/StudentPage';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  addStudentDisputeComment,
+  clearSelectedDispute,
+  fetchStudentDisputeById,
+} from '../../store/actions/disputesActions';
 import { AdminHeader, AdminDataState } from '../../components/admin/AdminUI';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
 export default function SupportDetails() {
   const { disputeId } = useParams();
-  const state = useRemoteData(`/student/disputes/${disputeId}`);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.disputes.selected);
+  const busy = useAppSelector((s) => s.disputes.saving);
+  const error = useAppSelector((s) => s.disputes.actionError);
   const d = state.data;
   const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  useEffect(() => {
+    if (disputeId) dispatch(fetchStudentDisputeById(disputeId));
+    return () => {
+      dispatch(clearSelectedDispute());
+    };
+  }, [dispatch, disputeId]);
   async function submit(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
     try {
-      await api.post(`/student/disputes/${disputeId}/comments`, {
-        message: text,
-      });
+      await dispatch(
+        addStudentDisputeComment({ disputeId, message: text })
+      ).unwrap();
       setText('');
-      state.refresh();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // handled by disputesSlice
     }
   }
   return (
@@ -37,7 +43,11 @@ export default function SupportDetails() {
         <ArrowLeft size={14} />
         Support requests
       </Link>
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchStudentDisputeById(disputeId))}
+      />
       {d && !state.error && (
         <>
           <AdminHeader title={d.subject}>

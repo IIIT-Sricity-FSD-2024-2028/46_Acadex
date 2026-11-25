@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -10,7 +10,8 @@ import {
   Building2,
   Star,
 } from 'lucide-react';
-import { useRemoteData } from '../../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchInstructorWorkspace } from '../../../store/actions/instructorsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -21,7 +22,11 @@ import {
 import { StatusBadge } from '../../../components/admin/StatusBadge';
 import { ratingLabel } from '../../../utils/adminDisplay';
 export function MyCourses() {
-  const state = useRemoteData('/workspace/instructor');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.instructors.workspace);
+  useEffect(() => {
+    dispatch(fetchInstructorWorkspace());
+  }, [dispatch]);
   const [search, setSearch] = useState('');
   const data = state.data;
   const rows = (data?.courses || []).filter((c) =>
@@ -33,7 +38,11 @@ export function MyCourses() {
   return (
     <div className="admin-page instructor-course-page">
       <AdminHeader title="My courses" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchInstructorWorkspace())}
+      />
       {data && !state.error && (
         <>
           <div className="admin-stats-grid">

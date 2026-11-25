@@ -1,5 +1,5 @@
 import LoggedModuleRequest from '../../components/workspace/LoggedModuleRequest';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Link,
   useParams,
@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   ArrowUpRight,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchAdminCourseById } from '../../store/actions/coursesActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -27,8 +28,12 @@ export const CourseDetails = () => {
   const { courseId } = useParams();
   const [params] = useSearchParams();
   const superAdmin = useLocation().pathname.startsWith('/super-admin');
-  const state = useRemoteData(`/admin/courses/${courseId}`);
-  if (state.loading || state.error)
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses.selectedAdminCourse);
+  useEffect(() => {
+    if (courseId) dispatch(fetchAdminCourseById(courseId));
+  }, [dispatch, courseId]);
+  if (state.loading || state.error || !state.data)
     return (
       <div className="admin-page">
         <Link
@@ -38,7 +43,11 @@ export const CourseDetails = () => {
           <ArrowLeft size={14} />
           Back to courses
         </Link>
-        <AdminDataState {...state} />
+        <AdminDataState
+          loading={state.loading}
+          error={state.error}
+          refresh={() => dispatch(fetchAdminCourseById(courseId))}
+        />
       </div>
     );
   const c = state.data;

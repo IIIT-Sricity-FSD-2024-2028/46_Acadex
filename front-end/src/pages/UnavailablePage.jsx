@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAppSelector } from '../store/hooks';
 
 const documents = {
   '/terms': 'Terms of Service',
@@ -10,11 +11,8 @@ const documents = {
 export default function UnavailablePage() {
   const { pathname } = useLocation();
   const title = documents[pathname];
-  const role = (
-    localStorage.getItem('nexuspay_active_role') ||
-    localStorage.getItem('user_role') ||
-    ''
-  )
+  const auth = useAppSelector((state) => state.auth);
+  const role = (auth['nexuspay_active_role'] || auth['user_role'] || '')
     .toLowerCase()
     .replace(/[\s_-]/g, '');
   const home =

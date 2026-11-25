@@ -1,61 +1,39 @@
 import { useState } from 'react';
 import { Card, CardContent, Button, Input } from '../../../components/common';
-import {
-  Link,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
-import { api } from '../../../utils/api';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { createModuleAndSaveDraft } from '../../../store/actions/curriculumActions';
 
 export function CreateModule() {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get('courseId');
+  const saving = useAppSelector((s) => s.curriculum.saving);
+  const saveError = useAppSelector((s) => s.curriculum.saveError);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [objectives, setObjectives] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) return;
     if (!courseId) {
-      setError('Open a course from My courses first.');
+      setValidationError('Open a course from My courses first.');
       return;
     }
-    setError('');
-    setSaving(true);
-
-    api
-      .get(`/courses/${courseId}/editor`, 'instructor')
-      .then((course) => {
-        const currentModules = course.modules || [];
-        const newMod = {
-          id: Date.now(),
-          title,
-          description,
-          objectives: objectives.split('\n').filter(Boolean),
-          items: [],
-        };
-        return api.put(
-          `/courses/${courseId}/curriculum-draft`,
-          {
-            modules: [...currentModules, newMod],
-          },
-          'instructor'
-        );
-      })
-      .then(() => {
-        navigate(`/instructor/courses/${courseId}/content`);
-      })
-      .catch((err) => {
-        setError(err.message || 'Unable to save module draft.');
-        setSaving(false);
-      });
+    setValidationError('');
+    try {
+      await dispatch(
+        createModuleAndSaveDraft({ courseId, title, description, objectives })
+      ).unwrap();
+      navigate(`/instructor/courses/${courseId}/content`);
+    } catch {
+      // handled by curriculumSlice
+    }
   };
+  const error = validationError || saveError;
 
   return (
     <div className="max-w-2xl mx-auto py-8">

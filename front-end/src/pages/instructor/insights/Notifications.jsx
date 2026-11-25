@@ -1,4 +1,3 @@
-import { useServerRecord } from '../../../hooks/useServerRecord';
 import { dateLabel } from '../../../utils/adminDisplay';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -19,8 +18,12 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { cn } from '../../../utils/cn';
-import { api } from '../../../utils/api';
-import { useInstructor } from '../../../hooks/useInstructor';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import {
+  fetchInstructorNotifications,
+  markAllInstructorNotificationsRead,
+  markInstructorNotificationRead,
+} from '../../../store/actions/notificationsActions';
 
 const TABS = [
   { value: 'all', label: 'All', category: null },
@@ -31,64 +34,33 @@ const TABS = [
 
 export function Notifications() {
   const navigate = useNavigate();
-  const { instructor } = useInstructor();
+  const dispatch = useAppDispatch();
+  const instructor = useAppSelector(
+    (s) => s.instructors.workspace.data?.instructor
+  );
+  const { data: notificationsData, loading } = useAppSelector(
+    (s) => s.notifications.instructor
+  );
+  const notifications = notificationsData || [];
   const [activeTab, setActiveTab] = useState('all');
-  const [notifications, setNotifications] = useServerRecord('instructor.notifications.notifications', []);
-  const [loading, setLoading] = useState(true);
-
-  const fetchNotifications = () => {
-    setLoading(true);
-    const cat = TABS.find((t) => t.value === activeTab)?.category;
-    const params = new URLSearchParams();
-    if (cat) params.append('category', cat);
-    if (instructor?.id) {
-      params.append('recipientId', instructor.id);
-    } else {
-      params.append('role', 'instructor');
-    }
-
-    api
-      .get(`/notifications?${params.toString()}`, 'instructor')
-      .then((data) => {
-        const items = Array.isArray(data)
-          ? data
-          : data?.items || data?.data?.items || data?.data || [];
-        setNotifications(items);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching notifications:', err);
-        setNotifications([]);
-        setLoading(false);
-      });
-  };
 
   useEffect(() => {
-    fetchNotifications();
-  }, [activeTab, instructor?.id]);
+    const category = TABS.find((t) => t.value === activeTab)?.category;
+    dispatch(
+      fetchInstructorNotifications({
+        category,
+        recipientId: instructor?.id,
+      })
+    );
+  }, [dispatch, activeTab, instructor?.id]);
 
   const markAllRead = () => {
-    api
-      .patch('/notifications/mark-all-read', {}, 'instructor')
-      .catch((err) => console.error('Failed to mark read on server:', err));
-    setNotifications((prev) =>
-      prev.map((n) => ({ ...n, unread: false, read: true }))
-    );
+    dispatch(markAllInstructorNotificationsRead());
   };
 
   const handleNotificationClick = (notif) => {
-    // If unread, mark read on backend
     if (!notif.read) {
-      api
-        .patch(`/notifications/${notif.id}/read`, {}, 'instructor')
-        .catch((err) =>
-          console.error('Failed to mark notification read:', err)
-        );
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notif.id ? { ...n, read: true, unread: false } : n
-        )
-      );
+      dispatch(markInstructorNotificationRead(notif.id));
     }
 
     // Deep link navigation
@@ -135,16 +107,10 @@ export function Notifications() {
         </Button>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           {TABS.map((t) => (
-            <TabsTrigger
-              key={t.value}
-              value={t.value}
-            >
+            <TabsTrigger key={t.value} value={t.value}>
               {t.label}
             </TabsTrigger>
           ))}

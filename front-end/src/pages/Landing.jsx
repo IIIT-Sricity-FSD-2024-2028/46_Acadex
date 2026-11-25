@@ -18,7 +18,8 @@ import {
   Building2,
   MessageCircle,
 } from 'lucide-react';
-import { useRemoteData } from '../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchPublicLanding } from '../store/actions/coursesActions';
 import { Brand } from '../components/brand/Brand';
 import '../styles/academy.css';
 const actors = [
@@ -128,8 +129,13 @@ function LandingStat({ value }) {
 }
 export default function Landing() {
   const pageRef = useRef(null);
-  const state = useRemoteData('/public/landing');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses.publicLanding);
   const { data, loading, error } = state;
+  useEffect(() => {
+    dispatch(fetchPublicLanding());
+  }, [dispatch]);
+  const refresh = () => dispatch(fetchPublicLanding());
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
@@ -415,7 +421,7 @@ export default function Landing() {
           ) : error ? (
             <div className="academy-data-error" role="alert">
               Platform activity is unavailable.{' '}
-              <button onClick={state.refresh}>Try again</button>
+              <button onClick={refresh}>Try again</button>
             </div>
           ) : (
             [
@@ -466,7 +472,7 @@ export default function Landing() {
           ) : error ? (
             <div className="academy-empty" role="alert">
               We couldn’t load the course library.{' '}
-              <button onClick={state.refresh}>Try again</button>
+              <button onClick={refresh}>Try again</button>
             </div>
           ) : (
             <div className="academy-course-grid">

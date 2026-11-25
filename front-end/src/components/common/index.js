@@ -26,5 +26,5 @@ export {
 } from './ProgressBar';
 export { default as HumanAvatar } from './HumanAvatar';
 export { Avatar, UserAvatar } from './Avatar';
-export { ToastProvider, useToast } from './Toast';
+export { ToastContainer } from './Toast';
 export { default as CertificateModal } from './CertificateModal';

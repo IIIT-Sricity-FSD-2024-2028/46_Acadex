@@ -1,5 +1,5 @@
 import HumanAvatar from '../../components/common/HumanAvatar';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -14,13 +14,27 @@ import {
   Mail,
 } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useOrg } from '../../context/useOrg';
-import { useToast } from '../../components/common/Toast';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import { fetchOrgProfile } from '../../store/actions/organizationsActions';
+import { fetchInstructors } from '../../store/actions/instructorsActions';
+import { createCourse } from '../../store/actions/coursesActions';
 
 export default function CreateCourse() {
   const navigate = useNavigate();
-  const { addToast } = useToast();
-  const { instructors, addCourse } = useOrg();
+  const dispatch = useAppDispatch();
+  const orgInfo = useAppSelector((s) => s.organizations.profile.data);
+  const faculty = useAppSelector((s) => s.instructors.items.data) || [];
+  const instructors = useMemo(
+    () =>
+      orgInfo?.id ? faculty.filter((i) => i.organizationId === orgInfo.id) : [],
+    [faculty, orgInfo?.id]
+  );
+
+  useEffect(() => {
+    dispatch(fetchOrgProfile());
+    dispatch(fetchInstructors());
+  }, [dispatch]);
 
   const [courseForm, setCourseForm] = useState({
     title: '',
@@ -85,7 +99,7 @@ export default function CreateCourse() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!courseForm.title.trim()) {
-      addToast('Please enter a course title', 'error');
+      dispatch(showToast('Please enter a course title', 'error'));
       return;
     }
 
@@ -93,7 +107,7 @@ export default function CreateCourse() {
       (i) => i.id === courseForm.leadInstructorId
     );
     if (!leadInst) {
-      addToast('Please select a lead instructor.', 'error');
+      dispatch(showToast('Please select a lead instructor.', 'error'));
       return;
     }
 
@@ -121,22 +135,28 @@ export default function CreateCourse() {
     });
 
     try {
-      const created = await addCourse({
-        ...courseForm,
-        status: 'Pending Approval',
-        instructorId: leadInst.id,
-        instructors: assignedInstructors,
-      });
+      const created = await dispatch(
+        createCourse({
+          ...courseForm,
+          status: 'Pending Approval',
+          instructorId: leadInst.id,
+          instructors: assignedInstructors,
+        })
+      ).unwrap();
 
-      addToast(
-        `Course "${created?.title || courseForm.title}" submitted for Admin approval.`,
-        'success'
+      dispatch(
+        showToast(
+          `Course "${created?.title || courseForm.title}" submitted for Admin approval.`,
+          'success'
+        )
       );
       navigate('/org/courses');
     } catch (err) {
-      addToast(
-        `Failed to author course: ${err.message || 'Server error'}`,
-        'error'
+      dispatch(
+        showToast(
+          `Failed to author course: ${(typeof err === 'string' ? err : err?.message) || 'Server error'}`,
+          'error'
+        )
       );
     }
   };

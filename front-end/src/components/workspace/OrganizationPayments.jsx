@@ -1,17 +1,23 @@
 import React, { useEffect } from 'react';
 import { CreditCard, ArrowDownLeft, X } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchOrgPayments } from '../../store/actions/paymentsActions';
 import { AdminDataState, AdminEmpty } from '../admin/AdminUI';
 import { StatusBadge } from '../admin/StatusBadge';
 import { money, timestampLabel } from '../../utils/adminDisplay';
+
 export default function OrganizationPayments({ onClose }) {
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.payments.orgPayments),
+    data = state.data;
+
   useEffect(() => {
     document
       .getElementById('organization-payments')
       ?.scrollIntoView({ block: 'start' });
-  }, []);
-  const state = useRemoteData('/workspace/organization/payments'),
-    data = state.data;
+    dispatch(fetchOrgPayments());
+  }, [dispatch]);
+
   return (
     <section
       className="admin-card organization-payments"
@@ -30,7 +36,7 @@ export default function OrganizationPayments({ onClose }) {
           <X size={16} />
         </button>
       </div>
-      <AdminDataState {...state} />
+      <AdminDataState {...state} refresh={() => dispatch(fetchOrgPayments())} />
       {data && !state.error && (
         <>
           <div className="admin-grid">

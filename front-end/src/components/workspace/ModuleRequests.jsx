@@ -1,49 +1,58 @@
 import { useSearchParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  fetchModuleRequests,
+  decideModuleRequest,
+  clearCurriculumNotices,
+} from '../../store/actions/curriculumActions';
+import { fetchOrgCourseById } from '../../store/actions/coursesActions';
 import { AdminHeader, AdminDataState, AdminEmpty } from '../admin/AdminUI';
 import { StatusBadge } from '../admin/StatusBadge';
 import { dateLabel } from '../../utils/adminDisplay';
+
 export default function ModuleRequests({ courseId, embedded = false }) {
   const [params] = useSearchParams();
   const requested = params.get('requestId');
-  const state = useRemoteData(
-    '/courses/module-requests/mine' +
-      (courseId ? '?' + new URLSearchParams({ courseId }) : '')
-  );
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.curriculum.moduleRequests);
+  const busy = useAppSelector((root) => root.curriculum.decisionBusy);
+  const error = useAppSelector((root) => root.curriculum.decisionError);
   const [decision, setDecision] = useState(null);
   const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    dispatch(fetchModuleRequests(courseId || ''));
+  }, [dispatch, courseId]);
+
   useEffect(() => {
     if (requested && state.data)
       document
         .getElementById(`request-${requested}`)
         ?.scrollIntoView({ block: 'start' });
   }, [requested, state.data]);
+
   async function decide(e) {
     e.preventDefault();
-    setBusy(true);
-    setError('');
     try {
-      await api.post(`/courses/module-requests/${decision.id}/decision`, {
-        decision: decision.value,
-        note,
-      });
+      await dispatch(
+        decideModuleRequest({
+          requestId: decision.id,
+          decision: decision.value,
+          note,
+        })
+      ).unwrap();
       setDecision(null);
       setNote('');
-      state.refresh();
-      window.dispatchEvent(new Event('learning-data-changed'));
-      window.dispatchEvent(new Event('notifications-changed'));
+      dispatch(fetchModuleRequests(courseId || ''));
+      if (courseId) dispatch(fetchOrgCourseById(courseId));
       setMessage('Decision saved. The instructor has been notified.');
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // decisionError is rendered from curriculum slice
     }
   }
+
   return (
     <div className="admin-page">
       <AdminHeader
@@ -54,7 +63,10 @@ export default function ModuleRequests({ courseId, embedded = false }) {
           {message}
         </p>
       )}
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchModuleRequests(courseId || ''))}
+      />
       {!state.loading && !state.error && (
         <>
           {state.data?.map((r) => (
@@ -163,7 +175,7 @@ export default function ModuleRequests({ courseId, embedded = false }) {
                       onClick={() => {
                         setDecision({ id: r.id, value: 'approve' });
                         setNote('');
-                        setError('');
+                        dispatch(clearCurriculumNotices());
                       }}
                     >
                       Approve changes
@@ -173,7 +185,7 @@ export default function ModuleRequests({ courseId, embedded = false }) {
                       onClick={() => {
                         setDecision({ id: r.id, value: 'reject' });
                         setNote('');
-                        setError('');
+                        dispatch(clearCurriculumNotices());
                       }}
                     >
                       Reject with note

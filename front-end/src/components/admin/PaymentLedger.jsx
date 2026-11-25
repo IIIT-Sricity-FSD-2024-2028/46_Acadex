@@ -1,5 +1,5 @@
 import { useLocation, useSearchParams } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CreditCard,
   Users,
@@ -9,8 +9,14 @@ import {
   Send,
   X,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  clearPayoutError,
+  fetchAdminFinance,
+  fetchAdminPayments,
+  recordAdminPayout,
+} from '../../store/actions/paymentsActions';
+import { fetchWorkspaceNotifications } from '../../store/actions/notificationsActions';
 import { money, timestampLabel } from '../../utils/adminDisplay';
 import {
   AdminHeader,
@@ -23,6 +29,7 @@ import { Pagination } from './Pagination';
 import { StatusBadge } from './StatusBadge';
 import SearchableSelect from '../common/SearchableSelect';
 export function PaymentLedger() {
+  const dispatch = useAppDispatch();
   const [params] = useSearchParams();
   const executive = useLocation().pathname.startsWith('/super-admin');
   const [search, setSearch] = useState(params.get('search') || ''),
@@ -32,8 +39,6 @@ export function PaymentLedger() {
     ),
     [page, setPage] = useState(1);
   const [showTransfer, setShowTransfer] = useState(false),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
     [message, setMessage] = useState('');
   const [form, setForm] = useState({
     group: '',
@@ -41,11 +46,17 @@ export function PaymentLedger() {
     method: 'Bank transfer',
     reference: '',
   });
-  const ledger = useRemoteData(
-      `/admin/payments?${new URLSearchParams({ search, status, type, page, limit: 12 })}`
-    ),
-    finance = useRemoteData('/admin/finance'),
-    data = finance.data;
+  const ledger = useAppSelector((s) => s.payments.adminLedger);
+  const finance = useAppSelector((s) => s.payments.adminFinance);
+  const busy = useAppSelector((s) => s.payments.payoutBusy);
+  const error = useAppSelector((s) => s.payments.payoutError);
+  const data = finance.data;
+  useEffect(() => {
+    dispatch(fetchAdminFinance());
+  }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchAdminPayments({ search, status, type, page, limit: 12 }));
+  }, [dispatch, search, status, type, page]);
   const groups = data?.organizations || [],
     selected = groups.find(
       (g) => `${g.organizationId}:${g.currency}` === form.group
@@ -66,11 +77,11 @@ export function PaymentLedger() {
       (g) => `${g.organizationId}:${g.currency}` === value
     );
     setForm((f) => ({ ...f, group: value, amount: group?.due || '' }));
-    setError('');
+    dispatch(clearPayoutError());
   }
   function open(group) {
     setMessage('');
-    setError('');
+    dispatch(clearPayoutError());
     setShowTransfer(true);
     setForm({
       group: group ? `${group.organizationId}:${group.currency}` : '',
@@ -82,16 +93,16 @@ export function PaymentLedger() {
   async function transfer(e) {
     e.preventDefault();
     if (!selected) return;
-    setBusy(true);
-    setError('');
     try {
-      const result = await api.post('/admin/payouts', {
-        organizationId: selected.organizationId,
-        currency: selected.currency,
-        amount: Number(form.amount),
-        method: form.method,
-        reference: form.reference,
-      });
+      const result = await dispatch(
+        recordAdminPayout({
+          organizationId: selected.organizationId,
+          currency: selected.currency,
+          amount: Number(form.amount),
+          method: form.method,
+          reference: form.reference,
+        })
+      ).unwrap();
       setShowTransfer(false);
       setType('Payout');
       setPage(1);
@@ -99,15 +110,18 @@ export function PaymentLedger() {
       setMessage(
         `${money(result.amount, result.currency)} recorded for ${result.organizationName}. Reference: ${result.reference}`
       );
-      finance.refresh();
-      ledger.refresh();
-      window.dispatchEvent(new Event('learning-data-changed'));
-      window.dispatchEvent(new Event('notifications-changed'));
-    } catch (e) {
-      setError(e.message);
-      finance.refresh();
-    } finally {
-      setBusy(false);
+      dispatch(
+        fetchAdminPayments({
+          search: '',
+          status,
+          type: 'Payout',
+          page: 1,
+          limit: 12,
+        })
+      );
+      dispatch(fetchWorkspaceNotifications());
+    } catch {
+      // handled by paymentsSlice
     }
   }
   return (
@@ -122,7 +136,11 @@ export function PaymentLedger() {
           Send payment
         </button>
       </AdminHeader>
-      <AdminDataState {...finance} />
+      <AdminDataState
+        loading={finance.loading}
+        error={finance.error}
+        refresh={() => dispatch(fetchAdminFinance())}
+      />
       {message && (
         <p className="admin-success" role="status">
           {message}
@@ -369,7 +387,15 @@ export function PaymentLedger() {
           ))}
         </select>
       </div>
-      <AdminDataState {...ledger} />
+      <AdminDataState
+        loading={ledger.loading}
+        error={ledger.error}
+        refresh={() =>
+          dispatch(
+            fetchAdminPayments({ search, status, type, page, limit: 12 })
+          )
+        }
+      />
       {!ledger.loading && !ledger.error && (
         <>
           <div className="admin-grid">

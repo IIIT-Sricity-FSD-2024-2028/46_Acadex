@@ -1,8 +1,7 @@
-import { useServerRecord } from '../../hooks/useServerRecord';
 import { formatDuration } from '../../utils/duration';
 import { dateLabel } from '../../utils/adminDisplay';
 import { ratingLabel, coursePriceLabel } from '../../utils/adminDisplay';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ChevronRight,
@@ -21,10 +20,24 @@ import {
   BookOpen,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import { useToast } from '../../components/common/Toast';
-import api from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import {
+  clearSelectedCatalogCourse,
+  fetchStudentCatalogCourse,
+} from '../../store/actions/coursesActions';
+import {
+  enrollFreeCourse,
+  fetchStudentEnrollments,
+} from '../../store/actions/enrollmentsActions';
+import { fetchStudentProfile } from '../../store/actions/learnersActions';
+import {
+  createReview,
+  deleteReview as deleteCourseReview,
+  fetchCourseReviews,
+  updateReview,
+} from '../../store/actions/reviewsActions';
 import HumanAvatar from '../../components/common/HumanAvatar';
-import { useStudent } from '../../context/StudentContext';
 
 function Stars({ value, size = 'w-3 h-3', onPick }) {
   return (
@@ -55,20 +68,29 @@ function Stars({ value, size = 'w-3 h-3', onPick }) {
 export default function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToast } = useToast();
-  const { student, enrollments, refreshData } = useStudent();
+  const dispatch = useAppDispatch();
+  const student = useAppSelector((s) => s.learners.studentProfile.data);
+  const enrollments = useAppSelector((s) => s.enrollments.data) || [];
+  const enrollBusy = useAppSelector((s) => s.enrollments.actionLoading);
+  const reviewBusy = useAppSelector((s) => s.reviews.saving);
+  const busy = enrollBusy || reviewBusy;
 
-  const [loadError, setLoadError] = useState('');
-  const [revision, setRevision] = useState(0);
-  const [course, setCourse] = useServerRecord('student.courseDetails.course', null);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: course,
+    loading: courseLoading,
+    error: loadError,
+  } = useAppSelector((s) => s.courses.selectedCatalogCourse);
+  const { data: reviewsData, loading: reviewsLoading } = useAppSelector(
+    (s) => s.reviews.courseReviews
+  );
+  const reviews = reviewsData || [];
+  const loading = courseLoading || (Boolean(reviewsLoading) && !course);
+
   const [expanded, setExpanded] = useState([]);
-  const [reviews, setReviews] = useServerRecord('student.courseDetails.reviews', []);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const location = useLocation();
 
@@ -82,10 +104,6 @@ export default function CourseDetails() {
     }, 50);
     return () => window.clearTimeout(timer);
   }, [location.hash, loading, course]);
-
-  useEffect(() => {
-    if (typeof refreshData === 'function') refreshData();
-  }, [refreshData]);
 
   const enrollment = useMemo(
     () =>
@@ -106,33 +124,17 @@ export default function CourseDetails() {
     ? reviews.filter((r) => r.learnerId !== student.id)
     : reviews;
 
-  const loadCourse = useCallback(
-    () =>
-      api.student
-        .getCatalogCourse(id)
-        .then(setCourse)
-        .catch((e) => {
-          setCourse(null);
-          setLoadError(e.message);
-          throw e;
-        }),
-    [id, setCourse]
-  );
-  const loadReviews = useCallback(
-    () =>
-      api.courses
-        .getReviews(id)
-        .then((r) => setReviews(Array.isArray(r) ? r : [])),
-    [id, setReviews]
-  );
-
   useEffect(() => {
-    setLoading(true);
-    setLoadError('');
-    Promise.allSettled([loadCourse(), loadReviews()]).finally(() =>
-      setLoading(false)
-    );
-  }, [loadCourse, loadReviews, revision]);
+    dispatch(fetchStudentProfile());
+    dispatch(fetchStudentEnrollments());
+    if (id) {
+      dispatch(fetchStudentCatalogCourse(id));
+      dispatch(fetchCourseReviews(id));
+    }
+    return () => {
+      dispatch(clearSelectedCatalogCourse());
+    };
+  }, [dispatch, id]);
 
   useEffect(() => {
     if (course) document.title = `${course.title} | Acadex`;
@@ -147,68 +149,84 @@ export default function CourseDetails() {
       navigate(`/student/checkout?courseId=${course?.id || id}`);
       return;
     }
-    setBusy(true);
     try {
-      await api.student.enrollFree(course?.id || id);
-      await refreshData();
-      addToast('Enrolled successfully', 'success');
+      await dispatch(enrollFreeCourse(course?.id || id)).unwrap();
+      dispatch(showToast('Enrolled successfully', 'success'));
       navigate(`/student/learn/${course?.id || id}`);
     } catch (err) {
-      if (err.message?.toLowerCase().includes('already enrolled')) {
+      const msg =
+        (typeof err === 'string' ? err : err?.message) || 'Could not enroll';
+      if (msg.toLowerCase().includes('already enrolled')) {
         navigate(`/student/learn/${course?.id || id}`);
         return;
       }
-      addToast(err.message || 'Could not enroll', 'error');
-    } finally {
-      setBusy(false);
+      dispatch(showToast(msg, 'error'));
     }
   };
 
-  const afterReviewChange = async () => {
-    await Promise.allSettled([loadReviews(), loadCourse()]);
-  };
-
   const submitReview = async () => {
-    if (!rating) return addToast('Select a star rating', 'warning');
-    if (!comment.trim()) return addToast('Write a short comment', 'warning');
-    setBusy(true);
+    if (!rating) return dispatch(showToast('Select a star rating', 'warning'));
+    if (!comment.trim())
+      return dispatch(showToast('Write a short comment', 'warning'));
     try {
       if (editingReviewId) {
-        await api.courses.updateReview(editingReviewId, rating, comment.trim());
-        addToast('Review updated', 'success');
+        await dispatch(
+          updateReview({
+            reviewId: editingReviewId,
+            rating,
+            comment: comment.trim(),
+            courseId: id,
+            refreshCatalog: true,
+          })
+        ).unwrap();
+        dispatch(showToast('Review updated', 'success'));
       } else {
-        await api.courses.addReview(
-          id,
-          rating,
-          comment.trim(),
-          student?.name,
-          student?.id
-        );
-        addToast('Review submitted', 'success');
+        await dispatch(
+          createReview({
+            courseId: id,
+            rating,
+            comment: comment.trim(),
+            learnerName: student?.name,
+            learnerId: student?.id,
+            refreshCatalog: true,
+          })
+        ).unwrap();
+        dispatch(showToast('Review submitted', 'success'));
       }
-      await afterReviewChange();
       setEditingReviewId(null);
       setShowReviewForm(false);
       setRating(5);
       setComment('');
     } catch (err) {
-      addToast(err.message || 'Could not save review', 'error');
-    } finally {
-      setBusy(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) ||
+            'Could not save review',
+          'error'
+        )
+      );
     }
   };
 
   const deleteReview = async (reviewId) => {
     if (!reviewId || !window.confirm('Delete this review?')) return;
-    setBusy(true);
     try {
-      await api.courses.deleteReview(reviewId);
-      await afterReviewChange();
-      addToast('Review deleted', 'info');
+      await dispatch(
+        deleteCourseReview({
+          reviewId,
+          courseId: id,
+          refreshCatalog: true,
+        })
+      ).unwrap();
+      dispatch(showToast('Review deleted', 'info'));
     } catch (err) {
-      addToast(err.message || 'Could not delete review', 'error');
-    } finally {
-      setBusy(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) ||
+            'Could not delete review',
+          'error'
+        )
+      );
     }
   };
 
@@ -235,7 +253,10 @@ export default function CourseDetails() {
           </p>
           <button
             className="admin-button mr-3"
-            onClick={() => setRevision((v) => v + 1)}
+            onClick={() => {
+              dispatch(fetchStudentCatalogCourse(id));
+              dispatch(fetchCourseReviews(id));
+            }}
           >
             Try again
           </button>
@@ -415,10 +436,7 @@ export default function CourseDetails() {
             )}
           </section>
 
-          <section
-            id="reviews"
-            className="space-y-4"
-          >
+          <section id="reviews" className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-base font-bold text-slate-900">
                 Reviews & Comments{' '}

@@ -1,5 +1,5 @@
 import { useAppDispatch } from '../store/hooks';
-import { storeSession, register } from '../store/slices/authSlice';
+import { storeSession, register } from '../store/actions/authActions';
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -79,18 +79,20 @@ export default function Signup() {
     setBusy(true);
     setError('');
     try {
-      const result = await dispatch(register({
-        name: form.name.trim(),
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-        role,
-        ...(role === 'Student' && form.university.trim()
-          ? { university: form.university.trim() }
-          : {}),
-        ...(role === 'Instructor' && form.expertise.trim()
-          ? { expertise: form.expertise.trim() }
-          : {}),
-      }));
+      const result = await dispatch(
+        register({
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+          role,
+          ...(role === 'Student' && form.university.trim()
+            ? { university: form.university.trim() }
+            : {}),
+          ...(role === 'Instructor' && form.expertise.trim()
+            ? { expertise: form.expertise.trim() }
+            : {}),
+        })
+      ).unwrap();
       if (result?.pendingVerification) {
         setNotice(result.message);
         setForm({ ...form, password: '' });
@@ -99,20 +101,25 @@ export default function Signup() {
       if (!result?.token || !result.user?.id)
         throw new Error('The server did not return a valid account.');
       const u = result.user;
-      dispatch(storeSession({
-        nexuspay_auth_token: result.token,
-        auth_token: result.token,
-        user_id: u.id,
-        nexuspay_user_id: u.id,
-        user_role: u.role,
-        nexuspay_active_role: u.role,
-        user_name: u.name,
-        user_email: u.email,
-        nexuspay_user_email: u.email,
-        user_organization_id: u.organizationId || '',
-        user_organization_name: u.organizationName || '',
-        nexuspay_instructor_id: u.instructorId || '',
-      }, true));
+      dispatch(
+        storeSession(
+          {
+            nexuspay_auth_token: result.token,
+            auth_token: result.token,
+            user_id: u.id,
+            nexuspay_user_id: u.id,
+            user_role: u.role,
+            nexuspay_active_role: u.role,
+            user_name: u.name,
+            user_email: u.email,
+            nexuspay_user_email: u.email,
+            user_organization_id: u.organizationId || '',
+            user_organization_name: u.organizationName || '',
+            nexuspay_instructor_id: u.instructorId || '',
+          },
+          true
+        )
+      );
       navigate(
         {
           Student: '/student/dashboard',

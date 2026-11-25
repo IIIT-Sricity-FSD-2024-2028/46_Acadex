@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import OrgLayout from '../organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchLogs } from '../../store/actions/analyticsActions';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   AdminHeader,
@@ -10,15 +11,20 @@ import {
   AdminEmpty,
 } from '../admin/AdminUI';
 import { timestampLabel } from '../../utils/adminDisplay';
+
 export default function Logs({ organization = false }) {
   const [search, setSearch] = useState(''),
     [category, setCategory] = useState(''),
     [page, setPage] = useState(1);
   const settled = useDebouncedValue(search);
-  const state = useRemoteData(
-      `/workspace/logs?${new URLSearchParams({ search: settled, category, page })}`
-    ),
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.analytics.logs),
     data = state.data;
+
+  useEffect(() => {
+    dispatch(fetchLogs({ search: settled, category, page }));
+  }, [dispatch, settled, category, page]);
+
   function filter(set, value) {
     set(value);
     setPage(1);
@@ -45,7 +51,10 @@ export default function Logs({ organization = false }) {
           <option value="payment">Payments</option>
         </select>
       </div>
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchLogs({ search: settled, category, page }))}
+      />
       {data && !state.error && (
         <>
           <section className="admin-card">

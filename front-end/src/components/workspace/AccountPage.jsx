@@ -8,13 +8,19 @@ import {
   Save,
   Building2,
 } from 'lucide-react';
-import { useRemoteData } from '../../hooks/useRemoteData';
-import { api } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { changePassword } from '../../store/actions/authActions';
+import {
+  fetchWorkspaceAccount,
+  updateWorkspaceAccount,
+} from '../../store/actions/usersActions';
 import { AdminHeader, AdminDataState } from '../admin/AdminUI';
 import { InboxPanel } from './NotificationBell';
 import { dateLabel } from '../../utils/adminDisplay';
+
 export default function AccountPage() {
-  const state = useRemoteData('/workspace/account');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.users.workspaceAccount);
   const [params, setParams] = useSearchParams();
   const tab = ['profile', 'settings', 'notifications'].includes(
     params.get('tab')
@@ -31,6 +37,11 @@ export default function AccountPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const account = state.data;
+
+  useEffect(() => {
+    dispatch(fetchWorkspaceAccount());
+  }, [dispatch]);
+
   useEffect(() => {
     if (account)
       setForm({
@@ -39,11 +50,13 @@ export default function AccountPage() {
         bio: account.bio || '',
       });
   }, [account]);
+
   function choose(value) {
     setParams({ tab: value });
     setMessage('');
     setError('');
   }
+
   async function save(e) {
     e.preventDefault();
     setBusy(true);
@@ -53,29 +66,33 @@ export default function AccountPage() {
       if (tab === 'settings') {
         if (password.next !== password.confirm)
           throw new Error('The new passwords do not match.');
-        await api.auth.changePassword(
-          password.current,
-          password.next,
-          account.id
-        );
+        await dispatch(
+          changePassword({
+            currentPassword: password.current,
+            newPassword: password.next,
+            userId: account.id,
+          })
+        ).unwrap();
         setPassword({ current: '', next: '', confirm: '' });
         setMessage('Password updated.');
       } else {
-        await api.patch('/workspace/account', form);
-        state.refresh();
-        window.dispatchEvent(new Event('account-changed'));
+        await dispatch(updateWorkspaceAccount(form)).unwrap();
         setMessage('Profile saved.');
       }
     } catch (e) {
-      setError(e.message);
+      setError(typeof e === 'string' ? e : e.message || 'Unable to save.');
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <div className="admin-page account-page">
       <AdminHeader title="My account" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchWorkspaceAccount())}
+      />
       {account && !state.error && (
         <>
           <section className="account-identity-card">

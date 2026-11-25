@@ -1,29 +1,26 @@
-import { useServerRecord } from '../hooks/useServerRecord';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api } from '../services/api';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  verifyCertificate,
+  clearVerification,
+} from '../store/actions/certificatesActions';
 import '../styles/admin-panels.css';
 
 export default function VerifyCertificate() {
   const { credentialId } = useParams();
-  const [result, setResult] = useServerRecord('public.certificate.result', null);
-  const [error, setError] = useState('');
+  const dispatch = useAppDispatch();
+  const { data: result, error } = useAppSelector(
+    (state) => state.certificates.verification
+  );
+
   useEffect(() => {
-    let live = true;
-    setResult(null);
-    setError('');
-    api.certificates
-      .verify(encodeURIComponent(credentialId))
-      .then((data) => {
-        if (live) setResult(data);
-      })
-      .catch((e) => {
-        if (live) setError(e.message);
-      });
+    dispatch(verifyCertificate(credentialId));
     return () => {
-      live = false;
+      dispatch(clearVerification());
     };
-  }, [credentialId, setResult]);
+  }, [dispatch, credentialId]);
+
   const certificate = result?.certificate;
   return (
     <main className="min-h-screen grid place-items-center bg-slate-50 p-6">

@@ -1,8 +1,13 @@
 import SearchableSelect from '../../../components/common/SearchableSelect';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, MessageSquare } from 'lucide-react';
-import { useRemoteData } from '../../../hooks/useRemoteData';
-import { api } from '../../../services/api';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import {
+  clearReviewError,
+  deleteReviewReply,
+  fetchInstructorReviews,
+  replyToReview,
+} from '../../../store/actions/reviewsActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -12,14 +17,19 @@ import {
 } from '../../../components/admin/AdminUI';
 import { dateLabel, ratingLabel } from '../../../utils/adminDisplay';
 export function Reviews() {
-  const state = useRemoteData('/workspace/instructor/reviews');
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.reviews.instructorReviews);
+  const busy = useAppSelector((s) => s.reviews.saving);
+  const error = useAppSelector((s) => s.reviews.actionError);
+  useEffect(() => {
+    dispatch(clearReviewError());
+    dispatch(fetchInstructorReviews());
+  }, [dispatch]);
   const [search, setSearch] = useState('');
   const [course, setCourse] = useState('');
   const [rating, setRating] = useState('');
   const [editing, setEditing] = useState(null);
   const [reply, setReply] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const all = state.data || [];
   const courses = [
     ...new Map(all.map((r) => [r.courseId, r.courseTitle])).entries(),
@@ -33,27 +43,26 @@ export function Reviews() {
         .includes(search.toLowerCase())
   );
   async function save(id, remove = false) {
-    setBusy(true);
-    setError('');
     try {
-      if (remove) await api.delete(`/workspace/instructor/reviews/${id}/reply`);
-      else
-        await api.post(`/workspace/instructor/reviews/${id}/reply`, {
-          response: reply,
-        });
+      if (remove) {
+        await dispatch(deleteReviewReply(id)).unwrap();
+      } else {
+        await dispatch(replyToReview({ id, response: reply })).unwrap();
+      }
       setEditing(null);
       setReply('');
-      state.refresh();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    } catch {
+      // handled by reviewsSlice
     }
   }
   return (
     <div className="admin-page">
       <AdminHeader title="Course reviews" />
-      <AdminDataState {...state} />
+      <AdminDataState
+        loading={state.loading}
+        error={state.error}
+        refresh={() => dispatch(fetchInstructorReviews())}
+      />
       {error && (
         <p className="workspace-error" role="alert">
           {error}

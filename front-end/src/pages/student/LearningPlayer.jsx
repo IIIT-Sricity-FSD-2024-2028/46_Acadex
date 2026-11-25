@@ -1,4 +1,3 @@
-import { useServerRecord } from '../../hooks/useServerRecord';
 import { formatDuration } from '../../utils/duration';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -18,73 +17,48 @@ import {
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
-import { useToast } from '../../components/common/Toast';
-import api from '../../services/api';
-import { useStudent } from '../../context/StudentContext';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import {
+  fetchLearningContent,
+  recordLearningActivity,
+  resetPlayer,
+  setCurrentLessonId,
+  updateLessonProgress,
+} from '../../store/actions/enrollmentsActions';
 
 export default function LearningPlayer() {
   const { courseId } = useParams();
-  const { addToast } = useToast();
-  const { refreshData } = useStudent();
+  const dispatch = useAppDispatch();
   const videoRef = useRef(null);
-
-  const [assessment, setAssessment] = useServerRecord('student.player.assessment', null);
-  const [lessons, setLessons] = useServerRecord('student.player.lessons', []);
-  const [loadError, setLoadError] = useState('');
-  const [revision, setRevision] = useState(0);
-  const [course, setCourse] = useServerRecord('student.player.course', null);
-  const [enrollment, setEnrollment] = useServerRecord('student.player.enrollment', null);
-  const [loading, setLoading] = useState(true);
-  const [notEnrolled, setNotEnrolled] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const {
+    course,
+    enrollment,
+    lessons,
+    assessment,
+    currentLessonId: currentId,
+    loading,
+    notEnrolled,
+    saving,
+    error: loadError,
+  } = useAppSelector((s) => s.enrollments.player);
   const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setLoadError('');
-    setNotEnrolled(false);
-    api
-      .get(`/student/courses/${encodeURIComponent(courseId)}/content`)
-      .then((data) => {
-        if (!active) return;
-        setCourse(data.course);
-        setEnrollment(data.enrollment);
-        setLessons(data.lessons);
-        setAssessment(data.assessment);
-        if (data.course?.title)
-          document.title = `${data.course.title} | Acadex`;
-      })
-      .catch((e) => {
-        if (!active) return;
-        setLoadError(e.message);
-        setNotEnrolled(e.status === 403 || e.status === 404);
-        setCourse(null);
-        setEnrollment(null);
-        setLessons([]);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    if (courseId) dispatch(fetchLearningContent(courseId));
     return () => {
-      active = false;
+      dispatch(resetPlayer());
     };
-  }, [courseId, revision]);
+  }, [dispatch, courseId]);
+
+  useEffect(() => {
+    if (course?.title) document.title = `${course.title} | Acadex`;
+  }, [course?.title]);
 
   const done = useMemo(
     () => new Set((enrollment?.completedLessons || []).map(String)),
     [enrollment]
   );
-
-  useEffect(() => {
-    if (lessons.length > 0) {
-      if (!currentId || !lessons.some((l) => l.id === currentId)) {
-        const next = lessons.find((l) => !done.has(l.id)) || lessons[0];
-        setCurrentId(next.id);
-      }
-    }
-  }, [lessons, done, currentId]);
 
   const currentIndex = lessons.findIndex((l) => l.id === currentId);
   const current =
@@ -114,18 +88,18 @@ export default function LearningPlayer() {
       seconds += 1;
       if (seconds === 30) {
         seconds = 0;
-        api
-          .post(`/student/courses/${courseId}/activity`, {
+        dispatch(
+          recordLearningActivity({
+            courseId,
             lessonId: currentId,
             seconds: 30,
           })
-          .catch((e) =>
-            console.warn('Activity could not be recorded:', e.message)
-          );
+        );
       }
     }, 1000);
     return () => clearInterval(tick);
   }, [
+    dispatch,
     courseId,
     currentId,
     enrollment?.id,
@@ -136,36 +110,43 @@ export default function LearningPlayer() {
 
   const toggleComplete = async (lesson, completed) => {
     if (!lesson || !enrollment || saving) return;
-    setSaving(true);
     try {
       const wasCompleted = enrollment.status === 'Completed';
-      const updated = await api.student.updateProgress(
-        enrollment.id,
-        lesson.id,
-        completed
-      );
-      setEnrollment(updated);
+      const updated = await dispatch(
+        updateLessonProgress({
+          enrollmentId: enrollment.id,
+          lessonId: lesson.id,
+          completed,
+        })
+      ).unwrap();
       if (updated.status === 'Completed' && !wasCompleted) {
-        addToast(
-          'Course completed! Your certificate has been issued.',
-          'success'
+        dispatch(
+          showToast(
+            'Course completed! Your certificate has been issued.',
+            'success'
+          )
         );
       } else {
-        addToast(
-          completed
-            ? 'Lesson marked as complete'
-            : 'Lesson marked as incomplete',
-          'success'
+        dispatch(
+          showToast(
+            completed
+              ? 'Lesson marked as complete'
+              : 'Lesson marked as incomplete',
+            'success'
+          )
         );
       }
       if (completed && currentIndex < lessons.length - 1) {
-        setCurrentId(lessons[currentIndex + 1].id);
+        dispatch(setCurrentLessonId(lessons[currentIndex + 1].id));
       }
-      await refreshData();
     } catch (err) {
-      addToast(err.message || 'Could not save progress', 'error');
-    } finally {
-      setSaving(false);
+      dispatch(
+        showToast(
+          (typeof err === 'string' ? err : err?.message) ||
+            'Could not save progress',
+          'error'
+        )
+      );
     }
   };
 
@@ -188,7 +169,7 @@ export default function LearningPlayer() {
           </p>
           <button
             className="admin-button mt-5"
-            onClick={() => setRevision((v) => v + 1)}
+            onClick={() => dispatch(fetchLearningContent(courseId))}
           >
             Try again
           </button>
@@ -399,7 +380,11 @@ export default function LearningPlayer() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       disabled={currentIndex <= 0}
-                      onClick={() => setCurrentId(lessons[currentIndex - 1].id)}
+                      onClick={() =>
+                        dispatch(
+                          setCurrentLessonId(lessons[currentIndex - 1].id)
+                        )
+                      }
                       className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
                       aria-label="Previous lesson"
                       title="Previous lesson"
@@ -428,7 +413,11 @@ export default function LearningPlayer() {
                     </button>
                     <button
                       disabled={currentIndex >= lessons.length - 1}
-                      onClick={() => setCurrentId(lessons[currentIndex + 1].id)}
+                      onClick={() =>
+                        dispatch(
+                          setCurrentLessonId(lessons[currentIndex + 1].id)
+                        )
+                      }
                       className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
                       aria-label="Next lesson"
                       title="Next lesson"
@@ -497,7 +486,7 @@ export default function LearningPlayer() {
                         return (
                           <button
                             key={l.id}
-                            onClick={() => setCurrentId(l.id)}
+                            onClick={() => dispatch(setCurrentLessonId(l.id))}
                             className={`w-full px-4 py-2.5 flex items-center justify-between gap-2.5 text-left text-xs transition-colors ${
                               isSelected
                                 ? 'bg-blue-50/80 text-[#0056D2] font-semibold border-l-4 border-[#0056D2]'

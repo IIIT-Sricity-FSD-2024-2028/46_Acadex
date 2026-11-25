@@ -1,26 +1,44 @@
 import HumanAvatar from '../../components/common/HumanAvatar';
 import SearchableSelect from '../../components/common/SearchableSelect';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, Save, GraduationCap, Check } from 'lucide-react';
 import OrgLayout from '../../components/organization/OrgLayout';
-import { useOrg } from '../../context/useOrg';
-import { useToast } from '../../components/common/Toast';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { showToast } from '../../store/actions/toastActions';
+import {
+  fetchOrgCourseById,
+  updateCourse,
+} from '../../store/actions/coursesActions';
+import { fetchInstructors } from '../../store/actions/instructorsActions';
 import { AdminDataState, AdminEmpty } from '../../components/admin/AdminUI';
 
 export default function EditCourse() {
   const { id } = useParams();
-  const state = useRemoteData(`/courses/${id}/organization`);
-  const org = useOrg();
-  if (state.loading || org.isLoading || state.error || org.error || !state.data)
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses.selectedOrgCourse);
+  const instructorsState = useAppSelector((s) => s.instructors.items);
+  useEffect(() => {
+    if (id) dispatch(fetchOrgCourseById(id));
+    dispatch(fetchInstructors());
+  }, [dispatch, id]);
+  if (
+    state.loading ||
+    instructorsState.loading ||
+    state.error ||
+    instructorsState.error ||
+    !state.data
+  )
     return (
       <OrgLayout>
         <div className="admin-page">
           <AdminDataState
-            loading={state.loading || org.isLoading}
-            error={state.error || org.error}
-            refresh={state.refresh}
+            loading={state.loading || instructorsState.loading}
+            error={state.error || instructorsState.error}
+            refresh={() => {
+              if (id) dispatch(fetchOrgCourseById(id));
+              dispatch(fetchInstructors());
+            }}
           />
           <Link className="admin-button" to="/org/courses">
             Back to courses
@@ -46,8 +64,8 @@ export default function EditCourse() {
 }
 function CourseEditor({ course }) {
   const navigate = useNavigate();
-  const { addToast } = useToast();
-  const { updateCourse, instructors: faculty } = useOrg();
+  const dispatch = useAppDispatch();
+  const faculty = useAppSelector((s) => s.instructors.items.data) || [];
   const instructors = faculty.filter(
     (i) => i.organizationId === course.organizationId
   );
@@ -97,7 +115,9 @@ function CourseEditor({ course }) {
         (i) => i.id === courseForm.leadInstructorId
       );
       if (!leadInst) {
-        addToast('Choose an active instructor from your institute.', 'error');
+        dispatch(
+          showToast('Choose an active instructor from your institute.', 'error')
+        );
         return;
       }
       const assignedInstructors = [
@@ -124,22 +144,31 @@ function CourseEditor({ course }) {
       });
 
       try {
-        await updateCourse(course.id, {
-          ...courseForm,
-          instructors: assignedInstructors,
-          instructorId: leadInst.id,
-          instructorName: assignedInstructors.map((i) => i.name).join(', '),
-        });
+        await dispatch(
+          updateCourse({
+            id: course.id,
+            data: {
+              ...courseForm,
+              instructors: assignedInstructors,
+              instructorId: leadInst.id,
+              instructorName: assignedInstructors.map((i) => i.name).join(', '),
+            },
+          })
+        ).unwrap();
 
-        addToast(
-          `Course "${courseForm.title}" saved with ${assignedInstructors.length} assigned instructors.`,
-          'success'
+        dispatch(
+          showToast(
+            `Course "${courseForm.title}" saved with ${assignedInstructors.length} assigned instructors.`,
+            'success'
+          )
         );
         navigate('/org/courses');
       } catch (err) {
-        addToast(
-          `Failed to update course: ${err.message || 'Server error'}`,
-          'error'
+        dispatch(
+          showToast(
+            `Failed to update course: ${(typeof err === 'string' ? err : err?.message) || 'Server error'}`,
+            'error'
+          )
         );
       }
     }

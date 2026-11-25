@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import OrgLayout from '../organization/OrgLayout';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchLogById } from '../../store/actions/analyticsActions';
 import { AdminHeader, AdminDataState } from '../admin/AdminUI';
 import { StatusBadge } from '../admin/StatusBadge';
 import { money, timestampLabel } from '../../utils/adminDisplay';
+
 export default function LogDetails({ organization = false }) {
   const { id } = useParams(),
     { pathname } = useLocation();
@@ -13,15 +15,21 @@ export default function LogDetails({ organization = false }) {
     : pathname.startsWith('/super-admin')
       ? '/super-admin'
       : '/admin';
-  const state = useRemoteData(`/workspace/logs/${encodeURIComponent(id)}`),
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.analytics.selectedLog),
     r = state.data;
+
+  useEffect(() => {
+    dispatch(fetchLogById(id));
+  }, [dispatch, id]);
+
   const content = (
     <div className="admin-page">
       <Link className="admin-count-label" to={`${prefix}/logs`}>
         Back to logs
       </Link>
       <AdminHeader title="Activity record" />
-      <AdminDataState {...state} />
+      <AdminDataState {...state} refresh={() => dispatch(fetchLogById(id))} />
       {r && !state.error && (
         <section className="admin-card">
           <h2 className="text-lg font-semibold">{r.title}</h2>

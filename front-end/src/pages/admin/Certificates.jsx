@@ -1,8 +1,12 @@
-import { useRemoteData } from '../../hooks/useRemoteData';
 import CertificateModal from '../../components/common/CertificateModal';
 import React, { useEffect, useState } from 'react';
 import { Award, BookOpen, ArrowUpRight } from 'lucide-react';
-import { api, getItems } from '../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  fetchAllCertificates,
+  fetchCertificateById,
+  setSelectedCertificate,
+} from '../../store/actions/certificatesActions';
 import {
   AdminHeader,
   AdminSearch,
@@ -14,27 +18,27 @@ import '../../styles/admin-panels.css';
 
 const PAGE_SIZE = 10;
 export const Certificates = () => {
-  const remote = useRemoteData('/certificates');
-  const certificates = getItems(remote.data);
+  const dispatch = useAppDispatch();
+  const remote = useAppSelector((s) => s.certificates.adminItems);
+  const selectedState = useAppSelector((s) => s.certificates.selected);
+  const certificates = remote.data || [];
   const loading = remote.loading;
-  const [selected, setSelected] = useState(null);
+  const selected = selectedState.data;
+  const busy = selectedState.loading;
+  const error = selectedState.error;
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  useEffect(() => {
+    dispatch(fetchAllCertificates());
+    return () => {
+      dispatch(setSelectedCertificate(null));
+    };
+  }, [dispatch]);
   useEffect(() => {
     setPage(1);
   }, [search]);
-  async function view(row) {
-    setError('');
-    setBusy(true);
-    try {
-      setSelected(await api.get(`/certificates/${encodeURIComponent(row.id)}`));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+  function view(row) {
+    dispatch(fetchCertificateById(row.id));
   }
   const filtered = certificates.filter((cert) =>
     [
@@ -143,7 +147,7 @@ export const Certificates = () => {
         <CertificateModal
           certificate={selected}
           administrator
-          onClose={() => setSelected(null)}
+          onClose={() => dispatch(setSelectedCertificate(null))}
         />
       )}
     </div>

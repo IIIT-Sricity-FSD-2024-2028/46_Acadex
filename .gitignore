@@ -50,3 +50,10 @@ front-end/scripts/
 
 # Runtime logs
 *.log
+
+# Local-only project
+/NexusPay/
+
+# Backend uploaded files
+back-end/uploads/*
+!back-end/uploads/.gitkeep

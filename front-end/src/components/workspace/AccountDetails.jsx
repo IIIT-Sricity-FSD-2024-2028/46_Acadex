@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Users,
   BookOpen,
   GraduationCap,
-  ShieldCheck,
   ArrowLeft,
   ArrowUpRight,
 } from 'lucide-react';
-import { api } from '../../utils/api';
-import { useRemoteData } from '../../hooks/useRemoteData';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  fetchAccountById,
+  verifyOrganizationAccount,
+  toggleAccountAccess,
+  deleteAccount,
+  clearSelectedAccount,
+} from '../../store/actions/usersActions';
 import {
   AdminHeader,
   AdminMetric,
@@ -19,17 +24,27 @@ import {
 import { StatusBadge } from '../admin/StatusBadge';
 import { money, dateLabel } from '../../utils/adminDisplay';
 import { HistoryRecords } from './AdministratorHistory';
+
 export default function AccountDetails({ superAdmin = false }) {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const state = useRemoteData(`/admin/accounts/${userId}`);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((root) => root.users.selectedAccount);
+  const busy = useAppSelector((root) => root.users.saving);
   const u = state.data;
   const [action, setAction] = useState('');
   const [reason, setReason] = useState('');
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [tab, setTab] = useState('overview');
+
+  useEffect(() => {
+    dispatch(fetchAccountById(userId));
+    return () => {
+      dispatch(clearSelectedAccount());
+    };
+  }, [dispatch, userId]);
+
   const section =
     u?.role === 'Organization'
       ? 'organizations'
@@ -39,41 +54,47 @@ export default function AccountDetails({ superAdmin = false }) {
   const back = superAdmin
     ? `/super-admin/${section}`
     : `/admin/users?role=${u?.role === 'Organization' ? 'Organization' : 'Learner'}`;
+
   async function confirm() {
-    setBusy(true);
     setError('');
     try {
       if (action === 'delete') {
-        await api.delete(`/admin/accounts/${u.id}`);
+        await dispatch(deleteAccount(u.id)).unwrap();
         navigate(back, { replace: true });
       } else if (action === 'approve' || action === 'reject') {
-        await api.post(`/admin/accounts/${u.id}/verification`, {
-          decision: action,
-          reason: reason.trim(),
-        });
-        state.refresh();
+        await dispatch(
+          verifyOrganizationAccount({
+            userId: u.id,
+            decision: action,
+            reason: reason.trim(),
+          })
+        ).unwrap();
         setNotice('Organization verification updated.');
       } else {
-        await api.patch(`/admin/accounts/${u.id}`, {
-          status: u.status === 'Suspended' ? 'Active' : 'Suspended',
-        });
-        state.refresh();
+        await dispatch(
+          toggleAccountAccess({
+            userId: u.id,
+            status: u.status === 'Suspended' ? 'Active' : 'Suspended',
+          })
+        ).unwrap();
         setNotice('Account access updated.');
       }
       setAction('');
     } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+      setError(typeof e === 'string' ? e : e.message || 'Action failed.');
     }
   }
+
   return (
     <div className="admin-page">
       <Link className="admin-count-label" to={back}>
         <ArrowLeft size={14} />
         Back to {section === 'admins' ? 'administrators' : section}
       </Link>
-      <AdminDataState {...state} />
+      <AdminDataState
+        {...state}
+        refresh={() => dispatch(fetchAccountById(userId))}
+      />
       {u && !state.error && (
         <>
           <AdminHeader title={u.name}>
@@ -410,6 +431,7 @@ export default function AccountDetails({ superAdmin = false }) {
     </div>
   );
 }
+
 function PaymentRecords({ records }) {
   return (
     <section>

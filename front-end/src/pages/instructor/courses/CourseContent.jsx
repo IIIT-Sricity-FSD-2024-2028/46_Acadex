@@ -1,5 +1,3 @@
-import { subscribeToStoreEvents } from '../../../store/listeners';
-import { useServerRecord } from '../../../hooks/useServerRecord';
 import { durationMinutes, formatDuration } from '../../../utils/duration';
 import '../../../styles/curriculum-controls.css';
 import { useState, useRef, useEffect } from 'react';
@@ -12,7 +10,19 @@ import {
   Badge,
 } from '../../../components/common';
 import { cn } from '../../../utils/cn';
-import { api } from '../../../utils/api';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import {
+  addModule as addCurriculumModule,
+  applyUploadedItem,
+  clearCurriculumNotices,
+  deleteModule as deleteCurriculumModule,
+  fetchCourseEditor,
+  resetEditor,
+  saveCurriculumDraft,
+  submitModuleRequest,
+  updateModule as updateCurriculumModule,
+  uploadLessonMedia,
+} from '../../../store/actions/curriculumActions';
 import {
   ChevronDown,
   ChevronRight,
@@ -101,10 +111,7 @@ function AddItemDropdown({ onAdd, position = 'bottom' }) {
   ];
 
   return (
-    <div
-      className="relative"
-      ref={dropdownRef}
-    >
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-primary-700 transition-colors group"
@@ -249,10 +256,11 @@ function InlineEdit({
 
 // ─── File Upload Modal ──────────────────────────────────────────────────────────
 function FileUploadModal({ item, courseId, onClose, onSave }) {
+  const dispatch = useAppDispatch();
+  const uploading = useAppSelector((s) => s.curriculum.uploading);
   const isVideo = item?.type === 'Video';
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [fileName, setFileName] = useState(item?.fileName || '');
   const [fileSize, setFileSize] = useState(item?.fileSize || '');
@@ -336,24 +344,25 @@ function FileUploadModal({ item, courseId, onClose, onSave }) {
       );
       return;
     }
-    setUploading(true);
     setUploadError('');
     try {
       let url = existingPath;
+      let nextFileName = fileName;
+      let nextFileSize = fileSize;
       if (selectedFile) {
-        const form = new FormData();
-        form.append('file', selectedFile);
-        const uploaded = await api.post(`/courses/${courseId}/upload`, form);
-        url = (uploaded.data || uploaded).path;
-        if (!url)
-          throw new Error('The server did not return an uploaded file.');
+        const uploaded = await dispatch(
+          uploadLessonMedia({ courseId, file: selectedFile })
+        ).unwrap();
+        url = uploaded.path;
+        nextFileName = uploaded.fileName || fileName;
+        nextFileSize = uploaded.fileSize || fileSize;
       }
       onSave({
         ...item,
         title: lessonTitle,
         duration: durationMinutes(duration),
-        fileName,
-        fileSize,
+        fileName: nextFileName,
+        fileSize: nextFileSize,
         url,
         videoUrl: isVideo ? url : null,
         resourceUrl: isVideo ? null : url,
@@ -362,9 +371,9 @@ function FileUploadModal({ item, courseId, onClose, onSave }) {
       });
       onClose();
     } catch (e) {
-      setUploadError(e.message);
-    } finally {
-      setUploading(false);
+      setUploadError(
+        (typeof e === 'string' ? e : e?.message) || 'Unable to upload file.'
+      );
     }
   };
 
@@ -541,11 +550,7 @@ function FileUploadModal({ item, courseId, onClose, onSave }) {
         )}
         {/* Footer */}
         <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClose}
-          >
+          <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button size="sm" onClick={handleSave} disabled={uploading}>
@@ -668,10 +673,7 @@ function CurriculumItem({
 
       {/* Item Actions */}
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0 ml-2">
-        <div
-          className="relative"
-          ref={menuRef}
-        >
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
@@ -958,126 +960,63 @@ function ModuleCard({
 export function CourseContent() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [course, setCourse] = useServerRecord('instructor.courseContent.course', null);
-  const [expandedModules, setExpandedModules] = useState([1]);
+  const dispatch = useAppDispatch();
+  const {
+    course,
+    modules,
+    pendingRequest: pending,
+    loading,
+    saving,
+    error,
+    saveError,
+    saveSuccessMessage: savedMessage,
+  } = useAppSelector((s) => s.curriculum);
+  const savedSuccess = Boolean(savedMessage);
+  const [expandedModules, setExpandedModules] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [uploadModalItem, setUploadModalItem] = useState(null);
-  const [modules, setModules] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
-  const [savedMessage, setSavedMessage] = useState('');
-  const [pending, setPending] = useServerRecord('instructor.courseContent.pending', null);
-  const [saveError, setSaveError] = useState('');
-  const dirty = useRef(false);
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    const refresh = () => setRevision((r) => r + 1);
-    return subscribeToStoreEvents(['focus', 'learning-data-changed'], refresh);
-  }, []);
+  const prevModuleIdsRef = useRef([]);
 
   useEffect(() => {
-    dirty.current = false;
-    setCourse(null);
-    setModules([]);
-    setLoading(true);
-  }, [id]);
+    prevModuleIdsRef.current = [];
+    dispatch(resetEditor());
+    if (id) dispatch(fetchCourseEditor(id));
+  }, [dispatch, id]);
+
   useEffect(() => {
-    let active = true;
-    api
-      .get(`/courses/${id}/editor`, 'instructor')
-      .then((data) => {
-        if (!active) return;
-        if (!data) {
-          setLoading(false);
-          return;
-        }
-        setCourse(data);
-        setPending(data.pendingModuleRequest);
-        const rawModules = Array.isArray(data.modules) ? data.modules : [];
-        const normalized = rawModules.map((mod, idx) => ({
-          ...mod,
-          id: mod.id || idx + 1,
-          title: mod.title || `Module ${idx + 1}`,
-          description: mod.description || '',
-          objectives: Array.isArray(mod.objectives) ? mod.objectives : [],
-          items: Array.isArray(mod.items)
-            ? mod.items
-            : Array.isArray(mod.lessons)
-              ? mod.lessons
-              : [],
-        }));
-        if (!dirty.current) setModules(normalized);
-        if (normalized.length > 0) {
-          setExpandedModules([normalized[0].id]);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!active) return;
-        setSaveError(err.message || 'Unable to load this course.');
-        setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [id, revision]);
-
-  const updateModules = (newModules) => {
-    dirty.current = true;
-    setModules(newModules);
-  };
-
-  const handleSaveDraft = async () => {
-    setSaving(true);
-    setSaveError('');
-    try {
-      await api.put(`/courses/${id}/curriculum-draft`, { modules });
-      setSavedSuccess(true);
-      setSavedMessage('Draft saved. Learner content is unchanged.');
-      dirty.current = false;
-    } catch (e) {
-      setSaveError(e.message);
-    } finally {
-      setSaving(false);
+    const prevIds = prevModuleIdsRef.current;
+    const nextIds = modules.map((m) => m.id);
+    if (prevIds.length === 0 && nextIds.length > 0) {
+      setExpandedModules([nextIds[0]]);
+    } else if (nextIds.length > prevIds.length) {
+      const added = nextIds.filter((mid) => !prevIds.includes(mid));
+      if (added.length > 0) {
+        setExpandedModules((prev) => [...prev, ...added]);
+      }
     }
+    prevModuleIdsRef.current = nextIds;
+  }, [modules]);
+
+  const handleSaveDraft = () => {
+    dispatch(saveCurriculumDraft({ courseId: id, modules }));
   };
-  const handleSaveToBackend = () => {
-    setSaving(true);
-    setSaveError('');
-    api
-      .post(`/courses/${id}/module-requests`, { modules }, 'instructor')
-      .then(() => {
-        setSaving(false);
-        setSavedSuccess(true);
-        setSavedMessage('Changes submitted to your organization.');
-        setPending({ status: 'Pending' });
-        dirty.current = false;
-        setTimeout(() => setSavedSuccess(false), 3000);
-      })
-      .catch((err) => {
-        setSaveError(err.message || 'Unable to submit curriculum changes.');
-        setSaving(false);
-      });
+
+  const handleSaveToBackend = async () => {
+    try {
+      await dispatch(submitModuleRequest({ courseId: id, modules })).unwrap();
+      setTimeout(() => dispatch(clearCurriculumNotices()), 3000);
+    } catch {
+      // handled by curriculumSlice
+    }
   };
 
   const handleSaveUploadedFile = (updatedItem) => {
-    setModules((prevModules) =>
-      prevModules.map((mod) => {
-        const modItems = Array.isArray(mod.items) ? mod.items : [];
-        return {
-          ...mod,
-          items: modItems.map((item) =>
-            item.id === updatedItem.id ? updatedItem : item
-          ),
-        };
-      }),
-    );
+    dispatch(applyUploadedItem(updatedItem));
   };
 
   const toggleModule = (modId) => {
     setExpandedModules((prev) =>
-      prev.includes(modId) ? prev.filter((m) => m !== modId) : [...prev, modId],
+      prev.includes(modId) ? prev.filter((m) => m !== modId) : [...prev, modId]
     );
   };
 
@@ -1085,26 +1024,15 @@ export function CourseContent() {
   const expandAll = () => setExpandedModules(modules.map((m) => m.id));
 
   const addModule = () => {
-    const newModule = {
-      id: crypto.randomUUID(),
-      title: `Module ${modules.length + 1}: New Module`,
-      description: '',
-      objectives: [],
-      items: [],
-    };
-    const newModules = [...modules, newModule];
-    updateModules(newModules);
-    setExpandedModules((prev) => [...prev, newModule.id]);
+    dispatch(addCurriculumModule());
   };
 
   const updateModule = (updatedModule) => {
-    updateModules(
-      modules.map((m) => (m.id === updatedModule.id ? updatedModule : m))
-    );
+    dispatch(updateCurriculumModule(updatedModule));
   };
 
   const deleteModule = (moduleId) => {
-    updateModules(modules.filter((m) => m.id !== moduleId));
+    dispatch(deleteCurriculumModule(moduleId));
     setConfirmDelete(null);
   };
 
@@ -1123,7 +1051,7 @@ export function CourseContent() {
     return (
       <div className="admin-card">
         <p role="alert" className="workspace-error">
-          {saveError || 'Course not found.'}
+          {error || saveError || 'Course not found.'}
         </p>
         <Link className="admin-button mt-4" to="/instructor/courses">
           My courses
@@ -1214,10 +1142,7 @@ export function CourseContent() {
       {/* Module List */}
       <div className="space-y-4">
         {modules.map((mod, idx) => (
-          <div
-            key={mod.id}
-            className="relative"
-          >
+          <div key={mod.id} className="relative">
             {confirmDelete === mod.id && (
               <div className="absolute inset-0 z-20 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center border-2 border-rose-200">
                 <div className="text-center p-6">
@@ -1262,10 +1187,10 @@ export function CourseContent() {
               onOpenUpload={(item) => setUploadModalItem(item)}
               courseId={id || course.id}
               onQuiz={async (item, moduleId) => {
-                setSaving(true);
-                setSaveError('');
                 try {
-                  await api.put(`/courses/${id}/curriculum-draft`, { modules });
+                  await dispatch(
+                    saveCurriculumDraft({ courseId: id, modules })
+                  ).unwrap();
                   const params = new URLSearchParams({
                     courseId: id,
                     moduleId: String(moduleId),
@@ -1276,10 +1201,8 @@ export function CourseContent() {
                       ? `/instructor/courses/quiz/${item.quizId}/edit?${params}`
                       : `/instructor/courses/quiz/create?${params}`
                   );
-                } catch (e) {
-                  setSaveError(e.message);
-                } finally {
-                  setSaving(false);
+                } catch {
+                  // handled by curriculumSlice
                 }
               }}
             />
@@ -1294,10 +1217,7 @@ export function CourseContent() {
           className="curriculum-add-module w-full border-2 border-dashed border-slate-200 rounded-xl py-6 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500 transition-all group"
         >
           <div className="curriculum-pale-icon w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-            <Plus
-              className="w-4 h-4"
-              strokeWidth={2.5}
-            />
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
           </div>
           Add new module
         </button>

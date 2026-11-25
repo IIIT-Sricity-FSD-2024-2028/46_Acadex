@@ -1,5 +1,3 @@
-import { store } from '../../store';
-import { clearSession } from '../../store/slices/authSlice';
 import NotificationBell from '../workspace/NotificationBell';
 import React, { Component, useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -13,10 +11,9 @@ import {
   LogOut,
 } from 'lucide-react';
 import { Sidebar } from './Sidebar';
-import {
-  AdminSessionProvider,
-  useAdminSession,
-} from '../../context/AdminSession';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { clearSession } from '../../store/actions/authActions';
+import { fetchAdminSession } from '../../store/actions/usersActions';
 import '../../styles/admin-panels.css';
 class AdminBoundary extends Component {
   state = { failed: false };
@@ -55,7 +52,18 @@ const titles = {
   profile: 'My profile',
 };
 function AdminShell() {
-  const session = useAdminSession();
+  const dispatch = useAppDispatch();
+  const adminSession = useAppSelector((s) => s.users.adminSession);
+  const session = {
+    profile: adminSession.data?.profile || null,
+    permissions: adminSession.data?.permissions || [],
+    loading: adminSession.loading,
+    error: adminSession.error,
+    refresh: () => dispatch(fetchAdminSession()),
+  };
+  useEffect(() => {
+    dispatch(fetchAdminSession());
+  }, [dispatch]);
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const location = useLocation();
@@ -83,12 +91,14 @@ function AdminShell() {
     };
   }, []);
   function logout() {
-    store.dispatch(clearSession([
-      'nexuspay_auth_token',
-      'auth_token',
-      'nexuspay_active_role',
-      'user_role',
-    ]));
+    dispatch(
+      clearSession([
+        'nexuspay_auth_token',
+        'auth_token',
+        'nexuspay_active_role',
+        'user_role',
+      ])
+    );
     navigate('/signin?role=Admin');
   }
   const title = location.pathname.endsWith('/approval')
@@ -180,9 +190,5 @@ function AdminShell() {
     </div>
   );
 }
-export const AdminLayout = () => (
-  <AdminSessionProvider>
-    <AdminShell />
-  </AdminSessionProvider>
-);
+export const AdminLayout = () => <AdminShell />;
 export default AdminLayout;

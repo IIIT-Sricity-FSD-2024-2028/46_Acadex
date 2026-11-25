@@ -1,6 +1,6 @@
 import { dateLabel } from '../../utils/adminDisplay';
 import { AdminDataState } from '../../components/admin/AdminUI';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Play,
@@ -15,9 +15,11 @@ import {
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import { LinearProgressBar } from '../../components/common/ProgressBar';
-import { useStudent } from '../../context/StudentContext';
-import { useToast } from '../../components/common/Toast';
-import api from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudentProfile } from '../../store/actions/learnersActions';
+import { fetchStudentEnrollments } from '../../store/actions/enrollmentsActions';
+import { createReview } from '../../store/actions/reviewsActions';
+import { showToast } from '../../store/actions/toastActions';
 
 const TABS = [
   { id: 'active', label: 'Active' },
@@ -25,8 +27,15 @@ const TABS = [
 ];
 
 export default function MyLearning() {
-  const { student, enrollments, isLoading, refreshData, error } = useStudent();
-  const { addToast } = useToast();
+  const dispatch = useAppDispatch();
+  const student = useAppSelector((s) => s.learners.studentProfile.data);
+  const {
+    data: enrollmentsData,
+    loading: isLoading,
+    error,
+  } = useAppSelector((s) => s.enrollments);
+  const enrollments = enrollmentsData || [];
+  const submittingReview = useAppSelector((s) => s.reviews.saving);
   const [tab, setTab] = useState('active');
   const [query, setQuery] = useState('');
 
@@ -34,7 +43,11 @@ export default function MyLearning() {
   const [reviewCourse, setReviewCourse] = useState(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const refreshData = useCallback(() => {
+    dispatch(fetchStudentProfile());
+    dispatch(fetchStudentEnrollments());
+  }, [dispatch]);
 
   useEffect(() => {
     document.title = 'My Learning | Acadex';
@@ -56,7 +69,7 @@ export default function MyLearning() {
           e.courseStatus !== 'Archived'
       ),
     }),
-    [enrollments],
+    [enrollments]
   );
 
   const list = useMemo(() => {
@@ -269,38 +282,42 @@ export default function MyLearning() {
               onSubmit={async (ev) => {
                 ev.preventDefault();
                 if (!student?.id)
-                  return addToast(
-                    'Your profile is still loading. Please retry.',
-                    'warning'
+                  return dispatch(
+                    showToast(
+                      'Your profile is still loading. Please retry.',
+                      'warning'
+                    )
                   );
                 if (!reviewComment.trim())
-                  return addToast(
-                    'Please enter your review feedback',
-                    'warning'
+                  return dispatch(
+                    showToast('Please enter your review feedback', 'warning')
                   );
-                setSubmittingReview(true);
                 try {
-                  await api.courses.addReview(
-                    reviewCourse.courseId,
-                    reviewRating,
-                    reviewComment.trim(),
-                    student.name,
-                    student.id,
-                  );
-                  addToast(
-                    'Your review was published successfully!',
-                    'success',
-                  );
-                  addToast(
-                    'Your review was published successfully!',
-                    'success'
+                  await dispatch(
+                    createReview({
+                      courseId: reviewCourse.courseId,
+                      rating: reviewRating,
+                      comment: reviewComment.trim(),
+                      learnerName: student.name,
+                      learnerId: student.id,
+                    })
+                  ).unwrap();
+                  dispatch(
+                    showToast(
+                      'Your review was published successfully!',
+                      'success'
+                    )
                   );
                   setReviewCourse(null);
                   setReviewComment('');
                 } catch (err) {
-                  addToast(err.message || 'Could not submit review', 'error');
-                } finally {
-                  setSubmittingReview(false);
+                  dispatch(
+                    showToast(
+                      (typeof err === 'string' ? err : err?.message) ||
+                        'Could not submit review',
+                      'error'
+                    )
+                  );
                 }
               }}
               className="space-y-4"
