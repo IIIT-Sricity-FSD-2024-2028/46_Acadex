@@ -419,7 +419,12 @@ function FileUploadModal({ item, courseId, onClose, onSave }) {
           {/* Lesson Title */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Lesson Title
+              <span>
+                Lesson Title{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
             </label>
             <Input
               value={lessonTitle}
@@ -432,7 +437,12 @@ function FileUploadModal({ item, courseId, onClose, onSave }) {
           {/* File Upload Zone */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              {isVideo ? 'Video File' : 'Document / Reading File'}
+              <span>
+                {isVideo ? 'Video File' : 'Document / Reading File'}{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
             </label>
             <input
               ref={fileInputRef}

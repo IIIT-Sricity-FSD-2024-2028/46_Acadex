@@ -262,7 +262,12 @@ export default function Checkout() {
                   <>
                     <div>
                       <label className="text-xs font-semibold text-slate-600 block mb-1">
-                        Name on card
+                        <span>
+                          Name on card{' '}
+                          <span className="required-marker" aria-hidden="true">
+                            *
+                          </span>
+                        </span>
                       </label>
                       <input
                         value={card.name}
@@ -278,7 +283,12 @@ export default function Checkout() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-600 block mb-1">
-                        Card number
+                        <span>
+                          Card number{' '}
+                          <span className="required-marker" aria-hidden="true">
+                            *
+                          </span>
+                        </span>
                       </label>
                       <input
                         value={card.number}
@@ -305,7 +315,15 @@ export default function Checkout() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1">
-                          Expiry
+                          <span>
+                            Expiry{' '}
+                            <span
+                              className="required-marker"
+                              aria-hidden="true"
+                            >
+                              *
+                            </span>
+                          </span>
                         </label>
                         <input
                           value={card.expiry}
@@ -333,7 +351,15 @@ export default function Checkout() {
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1">
-                          CVV
+                          <span>
+                            CVV{' '}
+                            <span
+                              className="required-marker"
+                              aria-hidden="true"
+                            >
+                              *
+                            </span>
+                          </span>
                         </label>
                         <input
                           type="password"
@@ -359,7 +385,12 @@ export default function Checkout() {
                 ) : (
                   <div>
                     <label className="text-xs font-semibold text-slate-600 block mb-1">
-                      UPI ID
+                      <span>
+                        UPI ID{' '}
+                        <span className="required-marker" aria-hidden="true">
+                          *
+                        </span>
+                      </span>
                     </label>
                     <input
                       value={upiId}

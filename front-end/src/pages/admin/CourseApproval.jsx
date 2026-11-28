@@ -202,7 +202,12 @@ export const CourseApproval = () => {
             </p>
             {selection.decision === 'reject' && (
               <label className="block text-sm">
-                Reason
+                <span>
+                  Reason{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <textarea
                   autoFocus
                   required

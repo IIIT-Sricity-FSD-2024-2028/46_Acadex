@@ -155,7 +155,12 @@ export function Reviews() {
                     }}
                   >
                     <label>
-                      Your reply
+                      <span>
+                        Your reply{' '}
+                        <span className="required-marker" aria-hidden="true">
+                          *
+                        </span>
+                      </span>
                       <textarea
                         className="admin-input"
                         rows={4}

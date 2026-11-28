@@ -119,7 +119,12 @@ export default function AssignCourses() {
                 </div>
                 <section className="admin-card">
                   <div className="admin-section-header">
-                    <h2>Choose instructors</h2>
+                    <h2>
+                      Choose instructors{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </h2>
                     <span>{eligibleIds.length} selected</span>
                   </div>
                   <div className="assignment-options">

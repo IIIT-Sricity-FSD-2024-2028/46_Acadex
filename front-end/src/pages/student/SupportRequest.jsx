@@ -60,7 +60,12 @@ export default function SupportRequest() {
         <form className="admin-card learner-form" onSubmit={submit}>
           <h2>Tell us what happened</h2>
           <label>
-            Subject
+            <span>
+              Subject{' '}
+              <span className="required-marker" aria-hidden="true">
+                *
+              </span>
+            </span>
             <input
               required
               maxLength={160}
@@ -107,7 +112,12 @@ export default function SupportRequest() {
             refresh={() => dispatch(fetchStudentEnrollments())}
           />
           <label>
-            Details
+            <span>
+              Details{' '}
+              <span className="required-marker" aria-hidden="true">
+                *
+              </span>
+            </span>
             <textarea
               required
               maxLength={5000}

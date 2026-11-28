@@ -626,7 +626,11 @@ export default function StudentReviews() {
             <form onSubmit={handleUpdateReview} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  Rating:{' '}
+                  Rating{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                  :{' '}
                   <span className="text-[#0056D2] font-semibold">
                     {RATING_LABELS[editRating] || `${editRating} Stars`}
                   </span>
@@ -646,7 +650,12 @@ export default function StudentReviews() {
 
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  Your Feedback & Comment
+                  <span>
+                    Your Feedback & Comment{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <textarea
                   value={editComment}
@@ -731,7 +740,11 @@ export default function StudentReviews() {
 
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  Rating:{' '}
+                  Rating{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                  :{' '}
                   <span className="text-[#0056D2] font-semibold">
                     {RATING_LABELS[newRating]}
                   </span>
@@ -751,7 +764,12 @@ export default function StudentReviews() {
 
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  Your Feedback & Comment
+                  <span>
+                    Your Feedback & Comment{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <textarea
                   value={newComment}

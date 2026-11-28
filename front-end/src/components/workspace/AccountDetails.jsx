@@ -187,7 +187,12 @@ export default function AccountDetails({ superAdmin = false }) {
               </p>
               {action === 'reject' && (
                 <label>
-                  Rejection reason
+                  <span>
+                    Rejection reason{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                   <textarea
                     className="admin-input mt-2"
                     value={reason}

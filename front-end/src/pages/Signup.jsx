@@ -189,9 +189,14 @@ export default function Signup() {
             )}
             <form onSubmit={submit}>
               <label>
-                {role === 'Organization'
-                  ? 'Institute or organization name'
-                  : 'Full name'}
+                <span>
+                  {role === 'Organization'
+                    ? 'Institute or organization name'
+                    : 'Full name'}{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <input
                   autoComplete={
                     role === 'Organization' ? 'organization' : 'name'
@@ -209,7 +214,12 @@ export default function Signup() {
                 />
               </label>
               <label>
-                Email address
+                <span>
+                  Email address{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <input
                   autoComplete="email"
                   required
@@ -253,7 +263,12 @@ export default function Signup() {
                 </label>
               )}
               <label>
-                Password
+                <span>
+                  Password{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <div className="saas-password">
                   <input
                     type={show ? 'text' : 'password'}

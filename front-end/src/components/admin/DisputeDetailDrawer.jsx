@@ -194,7 +194,12 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
                 </div>
                 <form onSubmit={sendComment} className="mt-4 grid gap-3">
                   <label className="text-xs text-slate-500">
-                    Comment visible to the case participants
+                    <span>
+                      Comment visible to the case participants{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
                     <textarea
                       className="admin-input mt-2"
                       required
@@ -240,7 +245,12 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
         <footer>
           <form onSubmit={update}>
             <label className="text-xs font-medium">
-              Update case
+              <span>
+                Update case{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
               <select
                 className="admin-input mt-2"
                 required
@@ -263,7 +273,12 @@ export const DisputeDetailDrawer = ({ dispute, onClose, onUpdated }) => {
             </label>
             {status && (
               <label className="text-xs">
-                Case note
+                <span>
+                  Case note{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <textarea
                   className="admin-input mt-2"
                   required

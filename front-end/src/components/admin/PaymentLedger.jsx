@@ -207,7 +207,12 @@ export function PaymentLedger() {
                     }))}
                   />
                   <label>
-                    Amount{selected ? ` (${selected.currency})` : ''}
+                    <span>
+                      Amount{selected ? ` (${selected.currency})` : ''}{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
                     <input
                       className="admin-input"
                       type="number"
@@ -222,7 +227,12 @@ export function PaymentLedger() {
                     />
                   </label>
                   <label>
-                    Method
+                    <span>
+                      Method{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
                     <select
                       className="admin-input"
                       value={form.method}
@@ -235,7 +245,12 @@ export function PaymentLedger() {
                     </select>
                   </label>
                   <label>
-                    Transfer reference
+                    <span>
+                      Transfer reference{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
                     <input
                       className="admin-input"
                       required

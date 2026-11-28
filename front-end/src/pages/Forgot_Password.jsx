@@ -242,7 +242,12 @@ export default function ForgotPassword() {
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Registered Email Address
+                  <span>
+                    Registered Email Address{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -293,7 +298,12 @@ export default function ForgotPassword() {
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 text-center mb-3">
-                  Enter 6-Digit Code
+                  <span>
+                    Enter 6-Digit Code{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <div className="flex items-center justify-center gap-2 sm:gap-3">
                   {otp.map((digit, index) => (
@@ -352,7 +362,12 @@ export default function ForgotPassword() {
               {/* New Password */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  New Password
+                  <span>
+                    New Password{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -449,7 +464,12 @@ export default function ForgotPassword() {
               {/* Confirm Password */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Confirm New Password
+                  <span>
+                    Confirm New Password{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">

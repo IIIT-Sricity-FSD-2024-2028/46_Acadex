@@ -91,7 +91,12 @@ export default function CourseActions({ course, onUpdated }) {
             {action === 'edit' ? (
               <>
                 <label className="block text-sm">
-                  Title
+                  <span>
+                    Title{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                   <input
                     className="admin-input mt-2"
                     required

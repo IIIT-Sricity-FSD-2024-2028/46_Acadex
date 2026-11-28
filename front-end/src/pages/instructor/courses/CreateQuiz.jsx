@@ -376,7 +376,10 @@ function QuestionCard({
           {/* Question Text */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 block">
-              Question Text <span className="text-rose-500">*</span>
+              Question Text{' '}
+              <span className="required-marker" aria-hidden="true">
+                *
+              </span>
             </label>
             <textarea
               ref={textareaRef}
@@ -403,7 +406,10 @@ function QuestionCard({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-2">
-                Answer Options <span className="text-rose-500">*</span>
+                Answer Options{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
                 {hasCorrectAnswer && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full normal-case tracking-normal">
                     <ShieldCheck className="w-3 h-3" />
@@ -463,7 +469,10 @@ function QuestionCard({
             <div className="w-full sm:w-36">
               <label className="block text-xs font-semibold text-slate-500 mb-1.5">
                 <Target className="w-3 h-3 inline mr-1" />
-                Points <span className="text-rose-500">*</span>
+                Points{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
               </label>
               <Input
                 type="number"
@@ -729,7 +738,10 @@ export function CreateQuiz() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                Quiz Title <span className="text-rose-500">*</span>
+                Quiz Title{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
               </label>
               <Input
                 value={quizTitle}

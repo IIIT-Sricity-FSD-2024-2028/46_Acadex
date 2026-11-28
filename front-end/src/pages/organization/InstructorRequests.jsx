@@ -80,19 +80,28 @@ export default function InstructorRequests() {
             </h2>
           </div>
           <form className="org-invite-form" onSubmit={lookup}>
-            <input
-              className="admin-input"
-              type="email"
-              aria-label="Instructor email"
-              required
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (teacher || lookupState.error)
-                  dispatch(clearInstructorLookup());
-              }}
-              placeholder="Instructor's registered email"
-            />
+            <div className="org-invite-field">
+              <label htmlFor="instructor-invite-email">
+                Instructor email{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </label>
+              <input
+                id="instructor-invite-email"
+                className="admin-input"
+                type="email"
+                aria-label="Instructor email"
+                required
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (teacher || lookupState.error)
+                    dispatch(clearInstructorLookup());
+                }}
+                placeholder="Instructor's registered email"
+              />
+            </div>
             <button className="admin-button" disabled={busy}>
               <Search size={15} />
               {busy ? 'Checking…' : 'Find instructor'}

@@ -4,11 +4,20 @@
  * Uses Vite's /api proxy in development, or VITE_API_URL when configured.
  */
 
+import {
+  responseCached,
+  cacheInvalidated,
+} from '../store/slices/apiCacheSlice';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 let readAuthState = () => null;
-export function attachStore(getStateFn) {
+let dispatchCache = () => {};
+const inFlight = new Map();
+export function attachStore(getStateFn, dispatch) {
   readAuthState = typeof getStateFn === 'function' ? getStateFn : () => null;
+  dispatchCache = typeof dispatch === 'function' ? dispatch : () => {};
+  inFlight.clear();
 }
 
 function getAuthValue(key) {
@@ -63,33 +72,82 @@ async function request(endpoint, options = {}) {
     config.body = JSON.stringify(options.body);
   }
 
-  try {
-    const response = await fetch(url, config);
-    if (response.status === 204) return null;
+  const method = (options.method || 'GET').toUpperCase();
+  const cache = readAuthState()?.apiCache;
+  const cacheable = method === 'GET' && cache && !options.signal;
+  // Do not store authorization credentials in cache keys. Session changes
+  // invalidate the whole cache; explicit role and identity headers distinguish
+  // requests within a session.
+  const key = JSON.stringify([
+    url,
+    Object.entries(headers)
+      .filter(([name]) => name.toLowerCase() !== 'authorization')
+      .sort(([a], [b]) => a.localeCompare(b)),
+  ]);
+  if (cacheable && Object.hasOwn(cache.entries, key)) {
+    return cache.entries[key];
+  }
 
-    const result = await response.json().catch(() => ({}));
+  const flightKey = cacheable ? `${cache.generation}:${key}` : null;
+  if (flightKey && inFlight.has(flightKey)) return inFlight.get(flightKey);
 
-    if (!response.ok) {
-      const errorMessage =
-        result?.message || result?.error || `HTTP error ${response.status}`;
-      const err = new Error(
-        Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage
+  const performRequest = async () => {
+    try {
+      const response = await fetch(url, config);
+      const result =
+        response.status === 204
+          ? null
+          : await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorMessage =
+          result?.message || result?.error || `HTTP error ${response.status}`;
+        const err = new Error(
+          Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage
+        );
+        err.status = response.status;
+        err.data = result;
+        throw err;
+      }
+
+      // Unpack TransformResponseInterceptor format if present
+      const data =
+        result && typeof result === 'object' && 'data' in result
+          ? result.data
+          : result;
+      const current = readAuthState()?.apiCache;
+      if (cache && current?.sessionVersion !== cache.sessionVersion) {
+        throw new Error('The session changed while the request was running.');
+      }
+      if (method !== 'GET' && method !== 'HEAD') {
+        // Invalidate before returning so any follow-up reads in a mutation thunk
+        // fetch fresh data, including related lists and dashboard aggregates.
+        dispatchCache(cacheInvalidated());
+      } else if (cacheable) {
+        if (current.generation !== cache.generation) {
+          return request(endpoint, options);
+        }
+        dispatchCache(
+          responseCached({ key, data, generation: cache.generation })
+        );
+      }
+      return data;
+    } catch (error) {
+      console.warn(
+        `API request notice [${options.method || 'GET'} ${endpoint}]:`,
+        error.message
       );
-      err.status = response.status;
-      err.data = result;
-      throw err;
+      throw error;
     }
+  };
 
-    // Unpack TransformResponseInterceptor format if present
-    return result && typeof result === 'object' && 'data' in result
-      ? result.data
-      : result;
-  } catch (error) {
-    console.warn(
-      `API request notice [${options.method || 'GET'} ${endpoint}]:`,
-      error.message
-    );
-    throw error;
+  const pending = performRequest();
+  if (!flightKey) return pending;
+  inFlight.set(flightKey, pending);
+  try {
+    return await pending;
+  } finally {
+    if (inFlight.get(flightKey) === pending) inFlight.delete(flightKey);
   }
 }
 

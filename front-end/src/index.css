@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+.required-marker {
+  color: #be123c;
+  font-weight: 700;
+  margin-inline-start: 0.15em;
+}
+
 @layer base {
   body {
     @apply bg-surface text-on-surface font-sans;

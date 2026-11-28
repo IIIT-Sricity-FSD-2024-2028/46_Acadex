@@ -81,7 +81,12 @@ export default function SearchableSelect({
     <div className="searchable-select" ref={root}>
       <label htmlFor={`${id}-trigger`}>
         {label}
-        {required && <span aria-hidden="true"> *</span>}
+        {required && (
+          <span className="required-marker" aria-hidden="true">
+            {' '}
+            *
+          </span>
+        )}
       </label>
       <button
         ref={trigger}

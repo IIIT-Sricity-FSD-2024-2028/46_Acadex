@@ -91,7 +91,12 @@ export default function SupportDetails() {
                 </div>
                 <form className="learner-form mt-6" onSubmit={submit}>
                   <label>
-                    Add a message
+                    <span>
+                      Add a message{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
                     <textarea
                       required
                       maxLength={4000}

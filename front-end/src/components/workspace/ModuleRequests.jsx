@@ -130,8 +130,14 @@ export default function ModuleRequests({ courseId, embedded = false }) {
                         : 'The existing course curriculum will stay as it is.'}
                     </p>
                     <label className="block text-xs mt-4">
-                      Review note
-                      {decision.value === 'reject' ? ' (required)' : ''}
+                      <span>
+                        Review note{' '}
+                        {decision.value === 'reject' && (
+                          <span className="required-marker" aria-hidden="true">
+                            *
+                          </span>
+                        )}
+                      </span>
                       <textarea
                         className="admin-input mt-2"
                         rows={3}

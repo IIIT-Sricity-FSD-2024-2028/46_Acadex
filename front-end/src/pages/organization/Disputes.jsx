@@ -172,7 +172,12 @@ export default function Disputes() {
               </header>
               <form onSubmit={submit} className="org-support-form">
                 <label>
-                  Category
+                  <span>
+                    Category{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                   <select
                     className="admin-input"
                     required
@@ -187,7 +192,12 @@ export default function Disputes() {
                 </label>
                 {form.category === 'Other' && (
                   <label>
-                    What is your issue about?
+                    <span>
+                      What is your issue about?{' '}
+                      <span className="required-marker" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
                     <input
                       className="admin-input"
                       required
@@ -212,7 +222,12 @@ export default function Disputes() {
                   ]}
                 />
                 <label>
-                  Subject
+                  <span>
+                    Subject{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                   <input
                     className="admin-input"
                     required
@@ -223,7 +238,12 @@ export default function Disputes() {
                   />
                 </label>
                 <label>
-                  Description
+                  <span>
+                    Description{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                   <textarea
                     className="admin-input"
                     required

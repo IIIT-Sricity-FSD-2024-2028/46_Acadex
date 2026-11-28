@@ -324,7 +324,12 @@ export default function MyLearning() {
             >
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  Rating
+                  <span>
+                    Rating{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
@@ -353,7 +358,12 @@ export default function MyLearning() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  Your Feedback
+                  <span>
+                    Your Feedback{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <textarea
                   value={reviewComment}

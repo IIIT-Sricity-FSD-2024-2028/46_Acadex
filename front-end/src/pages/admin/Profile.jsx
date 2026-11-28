@@ -94,7 +94,12 @@ export const Profile = () => {
               </p>
             )}
             <label className="block text-xs">
-              Full name
+              <span>
+                Full name{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
               <input
                 required
                 maxLength={160}
@@ -107,7 +112,12 @@ export const Profile = () => {
               />
             </label>
             <label className="block text-xs">
-              Email address
+              <span>
+                Email address{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
               <input
                 required
                 type="email"

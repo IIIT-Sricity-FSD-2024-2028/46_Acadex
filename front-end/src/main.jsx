@@ -12,7 +12,7 @@ import './index.css';
 import './styles/academy.css';
 import './styles/workspace.css';
 
-attachStore(() => store.getState());
+attachStore(() => store.getState(), store.dispatch);
 
 function StoreListeners() {
   React.useEffect(() => registerStoreListeners(store), []);

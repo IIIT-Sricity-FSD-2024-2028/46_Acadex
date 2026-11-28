@@ -486,11 +486,24 @@ export default function CourseDetails() {
                 </div>
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-slate-600">
-                    Your Rating
+                    Your Rating{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
                   </span>
                   <Stars value={rating} size="w-6 h-6" onPick={setRating} />
                 </div>
+                <label
+                  htmlFor="course-review-comment"
+                  className="block text-xs font-semibold text-slate-600"
+                >
+                  Your feedback{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </label>
                 <textarea
+                  id="course-review-comment"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={3}

@@ -192,7 +192,12 @@ export default function Profile() {
                   <>
                     <div className="learner-field-grid">
                       <label>
-                        Full name
+                        <span>
+                          Full name{' '}
+                          <span className="required-marker" aria-hidden="true">
+                            *
+                          </span>
+                        </span>
                         <input
                           required
                           minLength={2}
@@ -274,7 +279,12 @@ export default function Profile() {
                       ['confirm', 'Confirm new password'],
                     ].map(([key, label]) => (
                       <label key={key}>
-                        {label}
+                        <span>
+                          {label}{' '}
+                          <span className="required-marker" aria-hidden="true">
+                            *
+                          </span>
+                        </span>
                         <input
                           required
                           minLength={6}

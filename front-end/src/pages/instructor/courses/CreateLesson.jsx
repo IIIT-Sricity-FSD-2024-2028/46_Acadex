@@ -82,7 +82,12 @@ export function CreateLesson() {
             <CardContent className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Lesson Title
+                  <span>
+                    Lesson Title{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <Input
                   value={title}

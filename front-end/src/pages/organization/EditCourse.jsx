@@ -228,7 +228,12 @@ function CourseEditor({ course }) {
         >
           <div>
             <label className="text-xs font-bold text-on-surface block mb-1.5">
-              Course Title
+              <span>
+                Course Title{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
             </label>
             <input
               type="text"
@@ -274,7 +279,12 @@ function CourseEditor({ course }) {
             </div>
             <div>
               <label className="text-xs font-bold text-on-surface block mb-1.5">
-                Price (₹ INR)
+                <span>
+                  Price (₹ INR){' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
               </label>
               <input
                 type="number"
@@ -309,6 +319,7 @@ function CourseEditor({ course }) {
             <div>
               <SearchableSelect
                 label="Lead instructor"
+                required
                 value={courseForm.leadInstructorId}
                 onChange={handleLeadChange}
                 placeholder="Choose an instructor"
@@ -391,7 +402,12 @@ function CourseEditor({ course }) {
 
           <div>
             <label className="text-xs font-bold text-on-surface block mb-1.5">
-              Course Summary
+              <span>
+                Course Summary{' '}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
             </label>
             <textarea
               rows={4}

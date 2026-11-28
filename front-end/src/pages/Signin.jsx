@@ -94,7 +94,12 @@ export default function SignIn() {
         )}
         <form onSubmit={login}>
           <label>
-            Email address
+            <span>
+              Email address{' '}
+              <span className="required-marker" aria-hidden="true">
+                *
+              </span>
+            </span>
             <input
               autoComplete="username"
               type="email"
@@ -105,7 +110,12 @@ export default function SignIn() {
             />
           </label>
           <label>
-            Password
+            <span>
+              Password{' '}
+              <span className="required-marker" aria-hidden="true">
+                *
+              </span>
+            </span>
             <div className="saas-password">
               <input
                 autoComplete="current-password"

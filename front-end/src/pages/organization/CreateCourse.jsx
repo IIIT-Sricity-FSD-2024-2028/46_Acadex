@@ -191,7 +191,12 @@ export default function CreateCourse() {
             </h2>
             <div>
               <label className="text-xs font-bold text-on-surface block mb-1.5">
-                Course Title
+                <span>
+                  Course Title{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
               </label>
               <input
                 type="text"
@@ -220,7 +225,12 @@ export default function CreateCourse() {
               </div>
               <div>
                 <label className="text-xs font-bold text-on-surface block mb-1.5">
-                  Skill Level
+                  <span>
+                    Skill Level{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <select
                   required
@@ -240,7 +250,12 @@ export default function CreateCourse() {
               </div>
               <div>
                 <label className="text-xs font-bold text-on-surface block mb-1.5">
-                  Price (₹ INR)
+                  <span>
+                    Price (₹ INR){' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -257,7 +272,12 @@ export default function CreateCourse() {
             </div>
             <div>
               <label className="text-xs font-bold text-on-surface block mb-1.5">
-                Course Summary &amp; Syllabus Overview
+                <span>
+                  Course Summary &amp; Syllabus Overview{' '}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
               </label>
               <textarea
                 rows={3}
@@ -308,7 +328,12 @@ export default function CreateCourse() {
               <div className="flex items-center gap-5 text-[10px] text-outline font-semibold">
                 <span className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full border-2 border-primary inline-block" />
-                  Radio = Select as Lead
+                  <span>
+                    Radio = Select as Lead{' '}
+                    <span className="required-marker" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-3.5 h-3.5 rounded border border-secondary/60 bg-white inline-flex items-center justify-center">
