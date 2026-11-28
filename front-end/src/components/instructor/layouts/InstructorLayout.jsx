@@ -38,7 +38,6 @@ export function InstructorLayout() {
 
   const {
     data: workspace,
-    loading,
     error,
   } = useAppSelector((s) => s.instructors.workspace);
   const instructor = workspace?.instructor || null;
@@ -244,7 +243,7 @@ export function InstructorLayout() {
         {/* MAIN VIEWPORT: Onboarding if unaffiliated, or Normal Outlet   */}
         {/* ───────────────────────────────────────────────────────────── */}
         <main className="flex-1 w-full max-w-[1560px] mx-auto px-4 md:px-8 lg:px-10 py-8 space-y-8">
-          {loading ? (
+          {!workspace && !error ? (
             <div className="flex flex-col items-center justify-center min-h-[350px] gap-3 text-slate-400">
               <Loader2 className="w-7 h-7 animate-spin text-[#0056D2]" />
               <p className="text-xs font-medium">

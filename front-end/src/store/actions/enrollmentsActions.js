@@ -75,7 +75,8 @@ export const updateLessonProgress = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.message || 'Could not save progress.');
     }
-  }
+  },
+  { condition: (_, { getState }) => !getState().enrollments.progressMutation }
 );
 
 export const recordLearningActivity = createAsyncThunk(

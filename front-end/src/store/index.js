@@ -18,6 +18,7 @@ import notifications from './slices/notificationsSlice';
 import analytics from './slices/analyticsSlice';
 import settings from './slices/settingsSlice';
 import apiCache, { cacheSessionChanged } from './slices/apiCacheSlice';
+import { reduceOptimistic } from './optimisticUpdates';
 
 const rootReducer = combineReducers({
   auth,
@@ -54,19 +55,21 @@ const sessionKeys = [
   'user_organization_id',
 ];
 
+const sessionChanged = (state, next, action) =>
+  Boolean(
+    state &&
+    (action.type === 'auth/sessionCleared' ||
+      sessionKeys.some((key) => state.auth[key] !== next.auth[key]))
+  );
+
+function reduceConfirmed(state, action) {
+  const next = rootReducer(state, action);
+  return sessionChanged(state, next, action)
+    ? { ...next, apiCache: apiCache(next.apiCache, cacheSessionChanged()) }
+    : next;
+}
+
 export const store = configureStore({
-  reducer: (state, action) => {
-    const next = rootReducer(state, action);
-    if (
-      state &&
-      (action.type === 'auth/sessionCleared' ||
-        sessionKeys.some((key) => state.auth[key] !== next.auth[key]))
-    ) {
-      return {
-        ...next,
-        apiCache: apiCache(next.apiCache, cacheSessionChanged()),
-      };
-    }
-    return next;
-  },
+  reducer: (state, action) =>
+    reduceOptimistic(state, action, reduceConfirmed, sessionChanged),
 });

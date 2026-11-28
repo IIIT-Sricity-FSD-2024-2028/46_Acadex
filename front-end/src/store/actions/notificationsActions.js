@@ -27,6 +27,10 @@ export const markWorkspaceNotificationRead = createAsyncThunk(
         err.message || 'Unable to mark notification read.'
       );
     }
+  },
+  {
+    condition: (_, { getState }) =>
+      !getState().notifications.workspace.busyPath,
   }
 );
 
@@ -41,6 +45,10 @@ export const markAllWorkspaceNotificationsRead = createAsyncThunk(
         err.message || 'Unable to mark all notifications read.'
       );
     }
+  },
+  {
+    condition: (_, { getState }) =>
+      !getState().notifications.workspace.busyPath,
   }
 );
 
@@ -53,6 +61,10 @@ export const dismissWorkspaceNotification = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.message || 'Unable to dismiss notification.');
     }
+  },
+  {
+    condition: (_, { getState }) =>
+      !getState().notifications.workspace.busyPath,
   }
 );
 
@@ -108,6 +120,10 @@ export const markInstructorNotificationRead = createAsyncThunk(
         err.message || 'Unable to mark notification read.'
       );
     }
+  },
+  {
+    condition: (_, { getState }) =>
+      !getState().notifications.instructor.readMutation,
   }
 );
 
@@ -122,5 +138,9 @@ export const markAllInstructorNotificationsRead = createAsyncThunk(
         err.message || 'Unable to mark all notifications read.'
       );
     }
+  },
+  {
+    condition: (_, { getState }) =>
+      !getState().notifications.instructor.readMutation,
   }
 );

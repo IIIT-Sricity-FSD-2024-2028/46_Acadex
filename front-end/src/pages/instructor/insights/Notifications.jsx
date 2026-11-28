@@ -38,9 +38,12 @@ export function Notifications() {
   const instructor = useAppSelector(
     (s) => s.instructors.workspace.data?.instructor
   );
-  const { data: notificationsData, loading } = useAppSelector(
-    (s) => s.notifications.instructor
-  );
+  const {
+    data: notificationsData,
+    loading,
+    readMutation,
+    actionError,
+  } = useAppSelector((s) => s.notifications.instructor);
   const notifications = notificationsData || [];
   const [activeTab, setActiveTab] = useState('all');
 
@@ -59,7 +62,7 @@ export function Notifications() {
   };
 
   const handleNotificationClick = (notif) => {
-    if (!notif.read) {
+    if (!notif.read && !readMutation) {
       dispatch(markInstructorNotificationRead(notif.id));
     }
 
@@ -100,12 +103,19 @@ export function Notifications() {
         </div>
         <Button
           variant="ghost"
+          disabled={!!readMutation}
           onClick={markAllRead}
           className="text-[#0056D2] hover:bg-blue-50 font-semibold text-xs"
         >
           Mark all as read
         </Button>
       </div>
+
+      {actionError && (
+        <p role="alert" className="text-sm text-rose-600">
+          {actionError}
+        </p>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
